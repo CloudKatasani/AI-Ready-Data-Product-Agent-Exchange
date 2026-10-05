@@ -1,0 +1,16 @@
+// Keystone app-state model — see docs/build-spec/03-data-model.md.
+// Phase 0: datasource + generator only. Models arrive phase by phase (Phase 2: Persona, QueryLog,
+// Entitlement, AuditEvent, KnowledgeOverlay; Phase 3+: answers, lifecycle, marketplace, ...).
+//
+// Prisma does not allow the datasource provider to come from an env var. SQLite is the default;
+// Postgres support (DATABASE_PROVIDER=postgresql) is delivered in Phase 11 by switching provider at
+// build time (see docs/adr/0010-database-provider-switch.md).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}

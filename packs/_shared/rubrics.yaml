@@ -1,0 +1,71 @@
+# Starter rubrics — every threshold and weight the engines use. Engines must read from here, never literals.
+# Values ported from predecessors where noted. Changing a value requires presenter/owner approval (PROMPT.md rule 8).
+version: 1.0.0
+
+quality:                      # 0–100 product quality score
+  dimensions: { completeness: 0.25, validity: 0.20, uniqueness: 0.15, timeliness: 0.20, consistency: 0.10, accuracy: 0.10 }
+  tiers: { platinum: 95, gold: 90, silver: 80, bronze: 70 }
+
+certification:                # AI-Ready product-kit thresholds
+  dq_pass: 90
+  dq_warn: 80
+  min_verified_queries: 10
+  semantic_eval_min: 0.90
+  agent_eval_min: 0.90
+
+matcher:                      # AI-Ready respond.ts
+  run_threshold: 0.45
+  clarify_threshold: 0.25
+  redirect_margin: 0.15
+
+agentEval:                    # Marketplace evaluation.py defaults
+  golden_min: 0.92
+  groundedness_min: 1.0
+  boundary_min: 1.0
+  adversarial_min: 1.0
+  entitlement_min: 1.0
+  compositional_min: 0.9
+  weights: { golden: 0.4, groundedness: 0.2, boundary: 0.1, adversarial: 0.1, entitlement: 0.1, compositional: 0.1 }
+
+grounding:
+  derived_value_tolerance_rel: 0.005
+  ignore_numbers: [years, ordinals, numbers_below_10_without_unit]
+
+confidence:
+  trusted: { all_sources_certified: true, max_open_incidents: 0 }
+  questionable: { allow_in_certification: true, allow_degraded: true }
+  unsafe: { governance_off: true, uncertified_with_sensitive: true }
+
+query:
+  max_rows_agent: 500
+  max_rows_worksheet: 1000
+  statement_timeout_ms: 5000
+  preview_rows: 25
+
+llm:
+  timeout_ms: 12000
+  max_tool_rounds: 6
+  session_budget_usd: 5
+  pricing_illustrative_per_mtok:     # display only; label as illustrative
+    answer: { in: 3.0, out: 15.0 }
+    fast: { in: 1.0, out: 5.0 }
+
+intake:
+  duplicate_similarity: 0.55
+  triage_sla_hours: 72
+
+prioritisation:
+  model: WSJF                  # WSJF | RICE (ADPM scoring.ts)
+  wsjf_weights: { business_value: 1, time_criticality: 1, risk_reduction: 1, reuse: 1 }
+
+readiness:                     # AI-Ready readiness.ts — port values verbatim; these must match
+  target: 4.0
+  weights: { foundation: 1.0, modelling: 1.0, semantics: 1.2, vocabulary: 1.2, context: 1.0, governance: 1.2, ai_ops: 1.0 }
+  bands: { exploring: [1.0, 1.9], foundational: [2.0, 2.9], operational: [3.0, 3.9], ai_ready: [4.0, 4.5], ai_native: [4.6, 5.0] }
+
+contracts:
+  breaking_notice_days: 30
+
+demo:
+  reset_target_ms: 3000
+  scripted_answer_budget_ms: 800

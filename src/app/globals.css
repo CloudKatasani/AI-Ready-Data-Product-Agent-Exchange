@@ -1,0 +1,101 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Design tokens (07-ui-ux §2). Brand primary/accent are injected per Demo Profile via inline CSS
+ * variables (src/lib/presenter/branding.ts). Semantic and layer colours are fixed, never brand-driven.
+ */
+:root {
+  --brand-primary: #1d4ed8;
+  --brand-primary-foreground: #ffffff;
+  --brand-accent: #0f766e;
+  --brand-accent-foreground: #ffffff;
+
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --surface: #ffffff;
+  --surface-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #475569;
+  --border: #e2e8f0;
+  --ring: #1d4ed8;
+
+  --status-certified: #15803d;
+  --status-in-certification: #b45309;
+  --status-draft: #475569;
+  --status-degraded: #c2410c;
+  --status-fail: #b91c1c;
+  --actor-agent: #6d28d9;
+  --actor-human: #1d4ed8;
+
+  --layer-bronze: #9a3412;
+  --layer-silver: #475569;
+  --layer-gold: #a16207;
+  --layer-semantic: #0369a1;
+  --layer-glossary: #0f766e;
+  --layer-context: #4d7c0f;
+  --layer-product: #1d4ed8;
+  --layer-agent: #6d28d9;
+  --layer-governance: #be123c;
+}
+
+.dark {
+  --background: #0b1120;
+  --foreground: #e2e8f0;
+  --surface: #111827;
+  --surface-foreground: #e2e8f0;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --border: #334155;
+  --ring: #60a5fa;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-foreground: var(--surface-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+  --color-primary: var(--brand-primary);
+  --color-primary-foreground: var(--brand-primary-foreground);
+  --color-accent: var(--brand-accent);
+  --color-accent-foreground: var(--brand-accent-foreground);
+  --color-certified: var(--status-certified);
+  --color-in-certification: var(--status-in-certification);
+  --color-draft: var(--status-draft);
+  --color-degraded: var(--status-degraded);
+  --color-fail: var(--status-fail);
+  --color-agent: var(--actor-agent);
+  --color-human: var(--actor-human);
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+html {
+  font-size: 15px;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
