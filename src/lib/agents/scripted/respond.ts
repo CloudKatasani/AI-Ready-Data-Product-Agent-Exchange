@@ -11,7 +11,8 @@ import { PolicyDenied, type GovernedResult, type Principal } from '@/lib/query/t
 import type { AgentAnswer, Banner, Citation, Confidence, TraceStep } from '../types';
 import { checkGuardrails } from './guardrails';
 import { Matcher } from './matcher';
-import { detectKpi, metricMentioned, plan } from './planner';
+import { describeQuery, detectKpi, metricMentioned, plan } from './planner';
+import { verifiedMatcherFor } from './verified';
 import { renderTemplate } from './template';
 import { mentions } from './text';
 
@@ -81,12 +82,24 @@ export async function respondScripted(agentId: string, question: string, deps: R
 
   // A question that names a different covered KPI than the matched scenario is planned, not matched.
   const namedKpi = detectKpi(pack, agent, question);
-  const scenarioFits = (q: MetricQuery | null) => !namedKpi || !q || q.metrics.includes(namedKpi.metric) || q.metrics.some((m) => metricMentioned(pack, m, question));
-  const curated = mine && mine.score >= RUN && scenarioFits(mine.scenario.query) ? mine.scenario : undefined;
+  // A metric the question names that this agent does not cover must not ride generic wording
+  // ("trended month by month") onto one of this agent's scenarios.
+  const covered = new Set(agent.kpi_coverage.map((c) => pack.kpis.find((k) => k.id === c.kpi)?.metric));
+  const foreign = pack.semantic.flatMap((v) => v.metrics.map((m) => m.name)).filter((m) => !covered.has(m) && metricMentioned(pack, m, question));
+  const scenarioFits = (q: MetricQuery | null) =>
+    !q || ((!namedKpi || q.metrics.includes(namedKpi.metric) || q.metrics.some((m) => metricMentioned(pack, m, question))) && (namedKpi || !foreign.length || q.metrics.some((m) => foreign.includes(m))));
+  // A verified query wins over a curated scenario only when it matches the question more closely.
+  const candidate = mine && mine.score >= RUN && scenarioFits(mine.scenario.query) ? mine : undefined;
+  const vqMatch = verifiedMatcherFor(pack).best(agent, question, RUN);
+  // A near match must also name one of its metrics — shared wording alone ("by region this year") is not enough.
+  const vqNamed = (m: typeof vqMatch) => Boolean(m && (m.score === 1 || (scenarioFits(m.vq.query) && m.vq.query.metrics.some((x) => x === namedKpi?.metric || metricMentioned(pack, x, question)))));
+  const verified = vqMatch && vqNamed(vqMatch) && (!candidate || vqMatch.score > candidate.score) ? vqMatch : null;
+  const curated = verified ? undefined : candidate?.scenario;
 
-  // A curated decline keeps its own wording; only an out-of-scope hit yields to other curated scenarios —
-  // injection and record-level guards always win over a matched non-decline scenario.
-  if (guard && !(curated && (guard.kind === 'out_of_scope' || curated.kind === 'decline'))) {
+  // A curated decline keeps its own wording; only a partial out-of-scope hit yields to other curated
+  // scenarios — injection, record-level and full out-of-scope hits win over a matched non-decline scenario.
+  const partialOos = guard?.kind === 'out_of_scope' && !guard.full;
+  if (guard && !(curated && (partialOos || curated.kind === 'decline')) && !(verified?.score === 1 && partialOos)) {
     if (guard.kind === 'out_of_scope' && other && other.score >= RUN) {
       const to = pack.agents.find((a) => a.id === other.scenario.agent);
       if (to) return finish(textAnswer(agent, question, 'redirect', `${to.name} is the right agent for this.`, `${guard.reason} ${to.name} covers it: ${to.capability}`, trace, { redirectTo: { agentId: to.id, name: to.name } }));
@@ -95,8 +108,8 @@ export async function respondScripted(agentId: string, question: string, deps: R
   }
 
   // An agent that covers the KPI the other agent's scenario is about answers it itself (no redirect).
-  const plannedHere = !curated && other ? plan(pack, agent, question) : null;
-  const coversIt = Boolean(plannedHere);
+  const plannedHere = !curated && !verified && other ? plan(pack, agent, question) : null;
+  const coversIt = Boolean(verified ?? plannedHere);
   if (!curated && !coversIt && other && other.score >= RUN && other.score >= (mine?.score ?? 0) + MARGIN) {
     const to = pack.agents.find((a) => a.id === other.scenario.agent);
     if (to) return finish(textAnswer(agent, question, 'redirect', `${to.name} is the right agent for this.`, `${to.name} covers it: ${to.capability}`, trace, { redirectTo: { agentId: to.id, name: to.name }, suggestions: [other.scenario.question] }));
@@ -119,6 +132,12 @@ export async function respondScripted(agentId: string, question: string, deps: R
       );
     }
     return finish(await execute(deps, agent, question, s.query, s.answer.headline, s.answer.narrative, s.answer.chart, trace, clock, s.id, s.followups));
+  }
+
+  if (verified) {
+    const d = describeQuery(pack, verified.view, verified.kpi, verified.vq.query);
+    trace.push(step('context', 'Verified query', 'context', clock.lap(), `Matched ${verified.vq.id} (${verified.score.toFixed(2)}): ${verified.vq.question}`, [verified.vq.id]));
+    return finish(await execute(deps, agent, question, verified.vq.query, d.headline, d.narrative, d.chart, trace, clock, undefined, coverageFollowups(pack, agent, verified.vq.query)));
   }
 
   const p = plan(pack, agent, question);
@@ -208,7 +227,8 @@ async function execute(
     ...query.metrics.map((m) => ({ kind: 'metric' as const, ref: `${query.view}.${m}`, label: view?.metrics.find((x) => x.name === m)?.label ?? m, detail: view?.metrics.find((x) => x.name === m)?.term })),
     ...r.ruleRefs.map((id) => ({ kind: 'rule' as const, ref: id, label: id, detail: pack.rules.find((x) => x.id === id)?.text })),
     ...pack.verifiedQueries
-      .filter((v) => v.status === 'active' && v.query.view === query.view && v.query.metrics.join() === query.metrics.join() && (v.query.dimensions ?? []).join() === (query.dimensions ?? []).join())
+      .filter((v) => v.status === 'active' && v.query === query)
+      .concat(pack.verifiedQueries.filter((v) => v.status === 'active' && v.query !== query && v.query.view === query.view && v.query.metrics.join() === query.metrics.join() && (v.query.dimensions ?? []).join() === (query.dimensions ?? []).join()))
       .slice(0, 1)
       .map((v) => ({ kind: 'verified_query' as const, ref: v.id, label: v.id, detail: v.question })),
     { kind: 'sql' as const, ref: r.queryLogId, label: 'Governed query', detail: r.displaySql },
@@ -219,7 +239,8 @@ async function execute(
   for (const s of r.sources.filter((x) => !x.certified)) banners.push({ kind: 'not_certified', text: `${pack.products.find((p) => p.id === s.productId)?.name ?? s.productId} is not certified yet — treat this number as provisional.`, productId: s.productId });
   if (r.maskedColumns.length) banners.push({ kind: 'masked', text: `Some values are masked for you (${r.maskedColumns.join(', ')}).` });
   if (rowFilter) banners.push({ kind: 'row_filtered', text: `Showing ${rowFilter.detail} only (${rowFilter.ruleOrPolicyId}).` });
-  const confidence: Confidence = r.sources.some((s) => !s.certified || s.health !== 'healthy') ? 'questionable' : 'trusted';
+  for (const inc of r.policiesApplied.filter((p) => p.kind === 'incident')) banners.push({ kind: 'incident', text: inc.detail, productId: r.sources.find((s) => s.health !== 'healthy')?.productId });
+  const confidence: Confidence = r.sources.some((s) => !s.certified || s.health !== 'healthy') || banners.some((b) => b.kind === 'incident') ? 'questionable' : 'trusted';
   const numericClaims = (headline.match(/\d/g) ?? []).length > 0;
   trace.push(step('answer', 'Answer', 'agent', clock.lap(), numericClaims ? `${citations.length} citations; every number comes from ${r.queryLogId}` : 'Answer has no numeric claims', citations.map((c) => c.ref)));
 
@@ -233,7 +254,7 @@ async function execute(
     headline,
     narrative,
     chart: { type: r.rowCount > 1 ? (chartType === 'kpi' ? 'bar' : chartType) : 'kpi', x, y: metric?.name },
-    result: { columns: r.columns, rows: r.rows, fields: r.fields, maskedColumns: r.maskedColumns, rowFiltered: r.rowFiltered, displaySql: r.displaySql, policiesApplied: r.policiesApplied, sources: r.sources, queryLogId: r.queryLogId, elapsedMs: r.elapsedMs },
+    result: { columns: r.columns, rows: r.rows, totals, fields: r.fields, maskedColumns: r.maskedColumns, rowFiltered: r.rowFiltered, displaySql: r.displaySql, policiesApplied: r.policiesApplied, sources: r.sources, queryLogId: r.queryLogId, elapsedMs: r.elapsedMs },
     citations,
     confidence,
     banners,

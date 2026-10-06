@@ -148,6 +148,11 @@ async function groundingContext(deps: LiveDeps, state: ToolState): Promise<Groun
     maskedValues: await maskedValues(pack, qs, who),
     unentitledProducts: who.roles.some((r) => r === 'DATA_STEWARD' || r === 'PLATFORM_ADMIN') ? [] : [...products].filter((p) => !who.entitlements.includes(p)),
     tolerance: deps.rubrics.grounding.derived_value_tolerance_rel,
+    labels: [
+      ...[...state.results.values()].flatMap((r) => [...r.rows.flat().filter((v): v is string => typeof v === 'string'), ...r.fields.map((f) => f.label)]),
+      ...pack.kpis.map((k) => k.name),
+      ...pack.semantic.flatMap((v) => v.metrics.map((m) => m.label)),
+    ],
   };
 }
 

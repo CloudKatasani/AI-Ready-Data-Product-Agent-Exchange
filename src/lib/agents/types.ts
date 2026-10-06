@@ -34,6 +34,8 @@ export interface Banner {
 export interface AnswerResult {
   columns: { name: string; type: string }[];
   rows: (string | number | boolean | null)[][];
+  /** Unsliced totals the template used (`{{total.*}}`, `{{vsTarget.*}}`) — part of the governed evidence. */
+  totals?: Record<string, number | null>;
   fields: OutputField[];
   maskedColumns: string[];
   rowFiltered: boolean;

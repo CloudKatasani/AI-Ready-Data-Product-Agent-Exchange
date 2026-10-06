@@ -57,10 +57,11 @@ function evaluator(pack: Pack, agent: AgentManifest): Principal {
   return { ...base, entitlements: [...new Set([...base.entitlements, ...agent.products.map((p) => p.id)])] };
 }
 
-function grounded(a: AgentAnswer, tolerance: number): { ok: boolean; reason?: string } {
+function grounded(a: AgentAnswer, tolerance: number, pack: Pack): { ok: boolean; reason?: string } {
   if (a.kind !== 'answer' || !a.result) return { ok: true };
-  const cells = a.result.rows.flat().filter((v): v is number => typeof v === 'number');
-  const v = validateGrounding({ kind: a.kind, headline: a.headline, narrative: '', citations: [{ result_id: 'R' }] }, { results: new Map([['R', cells]]), docIds: new Set(), metrics: new Set(), rules: new Set(), maskedValues: [], unentitledProducts: [], tolerance });
+  const labels = [...a.result.rows.flat().filter((v): v is string => typeof v === 'string'), ...a.result.fields.map((f) => f.label), ...pack.kpis.map((k) => k.name), ...pack.semantic.flatMap((v) => v.metrics.map((m) => m.label))];
+  const cells = [...a.result.rows.flat(), ...Object.values(a.result.totals ?? {})].filter((v): v is number => typeof v === 'number');
+  const v = validateGrounding({ kind: a.kind, headline: a.headline, narrative: '', citations: [{ result_id: 'R' }] }, { results: new Map([['R', cells]]), docIds: new Set(), metrics: new Set(), rules: new Set(), maskedValues: [], unentitledProducts: [], tolerance, labels });
   return v.ok ? { ok: true } : { ok: false, reason: v.violations.join(' ') };
 }
 
@@ -91,7 +92,7 @@ export async function evaluateAgent(agent: AgentManifest, deps: EvalDeps): Promi
 
   // groundedness — every headline number of every answer is in its governed result.
   for (const { q, a } of answers) {
-    const g = grounded(a, rubrics.grounding.derived_value_tolerance_rel);
+    const g = grounded(a, rubrics.grounding.derived_value_tolerance_rel, pack);
     add({ suite: 'groundedness', caseId: `G:${q.slice(0, 40)}`, question: q, expected: { grounded: true }, actual: { headline: a.headline }, pass: g.ok, reason: g.reason });
   }
 

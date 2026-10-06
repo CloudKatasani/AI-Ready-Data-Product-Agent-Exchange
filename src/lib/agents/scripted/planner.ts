@@ -164,6 +164,18 @@ export function plan(pack: Pack, agent: AgentManifest, question: string): Plan |
     analysis,
   };
 
+  return { query, kpi, view, ...describeQuery(pack, view, kpi, query) };
+}
+
+
+/** Answer templates for a MetricQuery on its first metric (planner and verified-query paths share them). */
+export function describeQuery(pack: Pack, view: SemanticView, kpi: Kpi, query: MetricQuery): Pick<Plan, 'headline' | 'narrative' | 'chart'> {
+  const metric = view.metrics.find((m) => m.name === query.metrics[0]) ?? view.metrics.find((m) => m.name === kpi.metric);
+  if (!metric) throw new Error(`Metric ${query.metrics[0]} is not in ${view.name}`);
+  const slice = query.dimensions?.[0];
+  const grain = query.timeGrain;
+  const analysis = query.analysis ?? (grain ? 'trend' : 'value');
+  const lowestFirst = query.orderBy?.[0]?.dir === 'asc';
   const u = metric.unit === '%' ? '%' : metric.unit === 'USD' || metric.unit === pack.manifest.currency ? '' : ` ${metric.unit}`;
   const sliceLabel = slice ? (view.dimensions.find((d) => d.name === slice)?.label ?? slice).toLowerCase() : '';
   const t = (field: string) => `{{top.${field}}}`;
@@ -188,7 +200,7 @@ export function plan(pack: Pack, agent: AgentManifest, question: string): Plan |
       chart = 'bar';
       break;
     case 'rank':
-      headline = `${t(slice ?? '')} ranks first on ${metric.label} at ${tv(metric.name)}.`;
+      headline = `${t(slice ?? '')} ranks ${lowestFirst ? 'lowest' : 'first'} on ${metric.label} at ${tv(metric.name)}.`;
       narrative = `Showing {{rows}} ${sliceLabel} values ordered by ${metric.label}; overall it is {{total.${metric.name}}}${u}.`;
       chart = 'bar';
       break;
@@ -198,7 +210,7 @@ export function plan(pack: Pack, agent: AgentManifest, question: string): Plan |
       break;
     default:
       if (slice) {
-        headline = `${t(slice)} has the highest ${metric.label} at ${tv(metric.name)}.`;
+        headline = `${t(slice)} has the ${lowestFirst ? 'lowest' : 'highest'} ${metric.label} at ${tv(metric.name)}.`;
         narrative = `Overall ${metric.label} is {{total.${metric.name}}}${u} across {{rows}} ${sliceLabel} values.`;
         chart = 'bar';
       } else {
@@ -206,5 +218,5 @@ export function plan(pack: Pack, agent: AgentManifest, question: string): Plan |
         narrative = `${kpi.name}: ${kpi.definition}.`;
       }
   }
-  return { query, kpi, view, headline, narrative, chart };
+  return { headline, narrative, chart };
 }

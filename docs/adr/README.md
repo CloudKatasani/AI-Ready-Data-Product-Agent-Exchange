@@ -16,5 +16,9 @@
 | [0012](0012-pack-schema-additions.md) | Pack schema additions beyond the 04 examples | Accepted |
 | [0013](0013-calibri-font.md) | Calibri as the UI typeface | Accepted |
 | [0014](0014-sql-safety-duckdb-parser.md) | Worksheet SQL safety uses DuckDB's parser | Accepted |
+| [0015](0015-scripted-matching-precedence.md) | Scripted answer precedence and record-level nouns | Accepted |
+| [0016](0016-platform-vocabulary-lint.md) | Platform vocabulary exempt from the domain-string lint | Accepted |
+| [0017](0017-gate-roles-and-quorum.md) | Gate roles, quorum and the governance-council persona | Accepted |
+| [0018](0018-verified-query-path.md) | Verified queries as a scripted answer path | Accepted |
 
 New decisions: copy the shape of an existing ADR, take the next number, add a row here.

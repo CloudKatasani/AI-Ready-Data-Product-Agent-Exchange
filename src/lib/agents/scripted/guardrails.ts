@@ -43,7 +43,8 @@ function recordLevel(nouns: string[]): RegExp[] {
   return res;
 }
 
-export type GuardrailHit = { kind: 'injection' | 'out_of_scope' | 'customer_level'; reason: string };
+/** `full` — every content word of an out-of-scope phrase is in the question (it then beats curated matches). */
+export type GuardrailHit = { kind: 'injection' | 'out_of_scope' | 'customer_level'; reason: string; full?: boolean };
 
 /** Fraction of an out-of-scope phrase's content words present in the question. */
 function overlap(question: string, phrase: string): number {
@@ -56,7 +57,8 @@ export function checkGuardrails(agent: AgentManifest, question: string, entityNo
   const q = normalise(question);
   if (INJECTION.some((re) => re.test(q))) return { kind: 'injection', reason: 'The request asks me to change my instructions, bypass governance, reveal protected values or act on approvals — I only answer governed, aggregate questions.' };
   for (const phrase of agent.out_of_scope) {
-    if (overlap(question, phrase) >= 0.6) return { kind: 'out_of_scope', reason: `"${phrase}" is outside what ${agent.name} covers.` };
+    const o = overlap(question, phrase);
+    if (o >= 0.6) return { kind: 'out_of_scope', reason: `"${phrase}" is outside what ${agent.name} covers.`, full: o === 1 };
   }
   if (agent.guardrails.refuse_customer_level && recordLevel(entityNouns).some((re) => re.test(q))) {
     return { kind: 'customer_level', reason: `${agent.name} answers at an aggregate level and does not look up individual records.` };

@@ -45,6 +45,8 @@ export interface GroundingContext {
   /** Products used by results that the persona is not entitled to (should be empty). */
   unentitledProducts: string[];
   tolerance: number;
+  /** Names that may carry digits ("30+ days past due", a "90+ DPD" bucket); removed before number checks. */
+  labels?: string[];
 }
 
 export interface AnswerCitation {
@@ -93,7 +95,8 @@ export function validateGrounding(answer: { kind: string; headline: string; narr
     if (c.rule_id && !ctx.rules.has(c.rule_id)) violations.push(`Unknown business rule ${c.rule_id}.`);
   }
   const text = `${answer.headline}\n${answer.narrative}`;
-  const numbers = extractNumbers(text);
+  const labels = (ctx.labels ?? []).filter((l) => /\d/.test(l)).sort((a, b) => b.length - a.length);
+  const numbers = extractNumbers(labels.reduce((t, l) => t.split(l).join(' '), text));
   const cited = answer.citations.flatMap((c) => (c.result_id ? (ctx.results.get(c.result_id) ?? []) : []));
   if (answer.kind === 'answer' && numbers.length > 0 && cited.length === 0) violations.push('The answer states numbers but cites no query result.');
   for (const n of numbers) if (cited.length && !matches(n, cited, ctx.tolerance)) violations.push(`"${n.raw}" does not appear in any cited result (or a simple derivation of two cited values).`);
