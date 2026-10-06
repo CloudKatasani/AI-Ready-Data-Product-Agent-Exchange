@@ -1,0 +1,332 @@
+# KPIs with target bands, calibrated against the scale-M warehouse (AI-Ready banking kpis.ts + Marketplace KPI manifests).
+# `window` is evaluated relative to pack asOf; `last n unit` = the n most recent complete units (ADR-0011).
+- id: KPI-BNK-ACTIVE
+  name: Active customers
+  definition: "Customers with Active status in the governed customer sample"
+  formula: "count of customers with CIF status Active"
+  unit: "customers"
+  direction: target_band
+  target: { min: 19000, max: 23000 }
+  window: {}
+  term: GT-BNK-ACTIVE-CUSTOMER
+  metric: active_customers
+  products: [DP-BNK-001]
+- id: KPI-BNK-DIGITAL
+  name: Digital active rate
+  definition: "Share of active customers who used the mobile app or online banking in the last 30 days"
+  formula: "digitally active customers ÷ active customers"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 52, max: 65 }
+  window: {}
+  term: GT-BNK-DIGITAL-ACTIVE
+  metric: digital_active_rate
+  products: [DP-BNK-001]
+- id: KPI-BNK-PPC
+  name: Products per customer
+  definition: "Average open deposit accounts, loans and cards per active customer"
+  formula: "products held ÷ active customers"
+  unit: "products"
+  direction: higher_is_better
+  target: { min: 2.2, max: 2.8 }
+  window: {}
+  term: GT-BNK-PRODUCTS-PER-CUSTOMER
+  metric: products_per_customer
+  products: [DP-BNK-001]
+- id: KPI-BNK-REL-BAL
+  name: Average relationship balance
+  definition: "Mean combined deposit and investment balance per active customer"
+  formula: "Σ relationship balance ÷ active customers"
+  unit: "USD"
+  direction: higher_is_better
+  target: { min: 38000, max: 48000 }
+  window: {}
+  term: GT-BNK-RELATIONSHIP-BALANCE
+  metric: avg_relationship_balance
+  products: [DP-BNK-001]
+- id: KPI-BNK-ATTRITION
+  name: Customer attrition rate
+  definition: "Share of customers whose relationship closed in the trailing 12 months"
+  formula: "customers closed in 12 months ÷ customers"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 5, max: 9 }
+  window: {}
+  term: GT-BNK-ATTRITION
+  metric: attrition_rate
+  products: [DP-BNK-001]
+- id: KPI-BNK-KYC-OVERDUE
+  name: KYC reviews overdue
+  definition: "Share of active customers whose due-diligence refresh is past due for their risk rating"
+  formula: "active customers with an overdue KYC review ÷ active customers"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 3, max: 10 }
+  window: {}
+  term: GT-BNK-KYC-REFRESH
+  metric: kyc_overdue_pct
+  products: [DP-BNK-001]
+- id: KPI-BNK-DEPOSITS
+  name: Total deposits
+  definition: "Average month-end deposit balances in the quarter (governed account sample)"
+  formula: "Σ month-end ledger balance ÷ months"
+  unit: "USD"
+  direction: target_band
+  target: { min: 190000000, max: 240000000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-BNK-DEPOSITS
+  metric: total_deposits
+  products: [DP-BNK-002]
+- id: KPI-BNK-COST-DEP
+  name: Cost of deposits
+  definition: "Annualised interest paid on deposits as a share of balances"
+  formula: "12 × interest expense ÷ deposit balances"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 0.9, max: 1.4 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-BNK-COST-OF-DEPOSITS
+  metric: cost_of_deposits
+  products: [DP-BNK-002]
+- id: KPI-BNK-NIB
+  name: Non-interest-bearing share
+  definition: "Share of deposit balances in non-interest-bearing checking accounts"
+  formula: "checking balances ÷ all deposit balances"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 38, max: 48 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-BNK-NIB
+  metric: noninterest_bearing_share
+  products: [DP-BNK-002]
+- id: KPI-BNK-UNINSURED
+  name: Uninsured deposit share
+  definition: "Share of deposit balances above the $250,000 insured limit"
+  formula: "Σ balance above 250,000 ÷ Σ balance"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 15, max: 30 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-BNK-UNINSURED
+  metric: uninsured_deposit_share
+  products: [DP-BNK-002]
+- id: KPI-BNK-LOANS
+  name: Total loans outstanding
+  definition: "Average month-end principal outstanding in the quarter, excluding loans held for sale (governed loan sample)"
+  formula: "Σ month-end principal ÷ months"
+  unit: "USD"
+  direction: target_band
+  target: { min: 820000000, max: 960000000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-BNK-LOANS
+  metric: total_loans
+  products: [DP-BNK-003]
+- id: KPI-BNK-NPL
+  name: NPL ratio
+  definition: "Non-performing loans (90+ days past due or non-accrual) as a share of total loans, excluding loans held for sale"
+  formula: "non-performing principal ÷ total principal"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 0.8, max: 2.0 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-BNK-NPL
+  metric: npl_ratio
+  products: [DP-BNK-003]
+- id: KPI-BNK-DPD30
+  name: 30+ days past due rate
+  definition: "Loan balances 30 or more days past due as a share of total loans"
+  formula: "principal with DPD ≥ 30 ÷ total principal"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 1.5, max: 3.5 }
+  window: { ytd: true }
+  term: GT-BNK-DELINQUENCY
+  metric: delinquency_30_plus_rate
+  products: [DP-BNK-003]
+- id: KPI-BNK-NCO
+  name: Net charge-off ratio
+  definition: "Annualised net charge-offs over average loans, year to date"
+  formula: "12 × Σ net charge-offs ÷ Σ month-end principal"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 0.3, max: 0.8 }
+  window: { ytd: true }
+  term: GT-BNK-NCO
+  metric: net_charge_off_ratio
+  products: [DP-BNK-003]
+- id: KPI-BNK-ACL-COVER
+  name: Allowance coverage of NPLs
+  definition: "Allowance for credit losses as a share of non-performing loans"
+  formula: "allowance ÷ non-performing principal"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 75, max: 150 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-BNK-ACL
+  metric: allowance_coverage
+  products: [DP-BNK-003]
+- id: KPI-BNK-YIELD
+  name: Loan yield
+  definition: "Balance-weighted note rate on loans outstanding"
+  formula: "Σ principal × rate ÷ Σ principal"
+  unit: "%"
+  direction: target_band
+  target: { min: 6.0, max: 7.0 }
+  window: { ytd: true }
+  term: GT-BNK-LOAN-YIELD
+  metric: loan_yield
+  products: [DP-BNK-003]
+- id: KPI-BNK-CARD-VOL
+  name: Card purchase volume
+  definition: "Approved card purchase volume in the quarter (governed card sample)"
+  formula: "Σ approved purchase amount"
+  unit: "USD"
+  direction: higher_is_better
+  target: { min: 3500000, max: 4800000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-BNK-PURCHASE-VOLUME
+  metric: purchase_volume
+  products: [DP-BNK-004]
+- id: KPI-BNK-FRAUD-BPS
+  name: Card fraud loss rate
+  definition: "Confirmed fraud losses per 10,000 dollars of approved purchase volume"
+  formula: "10,000 × fraud losses ÷ approved volume"
+  unit: "bps"
+  direction: lower_is_better
+  target: { min: 6, max: 15 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-BNK-FRAUD-LOSS
+  metric: fraud_loss_bps
+  products: [DP-BNK-004]
+- id: KPI-BNK-APPROVAL
+  name: Authorization approval rate
+  definition: "Share of card authorisations approved"
+  formula: "approved authorisations ÷ all authorisations"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 93, max: 97 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-BNK-APPROVAL-RATE
+  metric: auth_approval_rate
+  products: [DP-BNK-004]
+- id: KPI-BNK-TICKET
+  name: Average ticket
+  definition: "Average approved card purchase"
+  formula: "approved volume ÷ approved authorisations"
+  unit: "USD"
+  direction: target_band
+  target: { min: 75, max: 95 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-BNK-PURCHASE-VOLUME
+  metric: avg_ticket
+  products: [DP-BNK-004]
+- id: KPI-BNK-CURE
+  name: Cure rate
+  definition: "Share of resolved collection cases that returned to current, year to date"
+  formula: "cured cases ÷ resolved cases"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 60, max: 75 }
+  window: { ytd: true }
+  term: GT-BNK-CURE
+  metric: cure_rate
+  products: [DP-BNK-005]
+- id: KPI-BNK-PTP
+  name: Promise-to-pay kept rate
+  definition: "Share of promises to pay honoured in full and on time, year to date"
+  formula: "kept promises ÷ promises made"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 65, max: 80 }
+  window: { ytd: true }
+  term: GT-BNK-PTP
+  metric: promise_kept_rate
+  products: [DP-BNK-005]
+- id: KPI-BNK-ROLL-CO
+  name: Roll rate to charge-off
+  definition: "Share of resolved collection cases that ended in charge-off, year to date"
+  formula: "charged-off cases ÷ resolved cases"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 8, max: 15 }
+  window: { ytd: true }
+  term: GT-BNK-ROLL-RATE
+  metric: chargeoff_roll_rate
+  products: [DP-BNK-005]
+- id: KPI-BNK-RESOLVE-DAYS
+  name: Days to resolve
+  definition: "Average days from collections entry to resolution, year to date"
+  formula: "mean of resolution date − entry date"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 20, max: 35 }
+  window: { ytd: true }
+  term: GT-BNK-COLLECTION-CASE
+  metric: avg_days_to_resolve
+  products: [DP-BNK-005]
+- id: KPI-BNK-ALERTS
+  name: AML alerts raised
+  definition: "Transaction-monitoring alerts generated in the quarter"
+  formula: "count of alerts"
+  unit: "alerts"
+  direction: target_band
+  target: { min: 1100, max: 1500 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-BNK-AML-ALERT
+  metric: alerts_raised
+  products: [DP-BNK-006]
+- id: KPI-BNK-ALERT-CASE
+  name: AML alert-to-case rate
+  definition: "Share of dispositioned alerts escalated to an investigation case, year to date"
+  formula: "escalated alerts ÷ dispositioned alerts"
+  unit: "%"
+  direction: target_band
+  target: { min: 10, max: 20 }
+  window: { ytd: true }
+  term: GT-BNK-ALERT-TO-CASE
+  metric: alert_to_case_rate
+  products: [DP-BNK-006]
+- id: KPI-BNK-SAR-CONV
+  name: SAR conversion rate
+  definition: "Share of closed AML cases that resulted in a SAR filing, year to date"
+  formula: "SARs filed ÷ closed cases"
+  unit: "%"
+  direction: target_band
+  target: { min: 25, max: 45 }
+  window: { ytd: true }
+  term: GT-BNK-SAR
+  metric: sar_conversion_rate
+  products: [DP-BNK-006]
+- id: KPI-BNK-AML-DAYS
+  name: Alert disposition time
+  definition: "Average days from alert to disposition, year to date"
+  formula: "mean of disposition date − alert date"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 5, max: 30 }
+  window: { ytd: true }
+  term: GT-BNK-AML-ALERT
+  metric: avg_days_to_disposition
+  products: [DP-BNK-006]
+- id: KPI-BNK-LOGIN
+  name: Login success rate
+  definition: "Share of digital sessions with a successful login in the month"
+  formula: "successful logins ÷ sessions"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 96, max: 99.5 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-BNK-DIGITAL-SESSION
+  metric: login_success_rate
+  products: [DP-BNK-007]
+- id: KPI-BNK-MOBILE-SHARE
+  name: Mobile share of sessions
+  definition: "Share of digital sessions on the mobile app, year to date"
+  formula: "mobile app sessions ÷ all digital sessions"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 65, max: 80 }
+  window: { ytd: true }
+  term: GT-BNK-DIGITAL-ACTIVE
+  metric: mobile_share
+  products: [DP-BNK-007]

@@ -1,0 +1,58 @@
+# Online order, returns and payment DQ rules.
+- id: DQ-RTL-041
+  object: CONFORMED_GOLD.FCT_ONLINE_ORDER
+  column: order_value
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every order has an order value (AOV, return rate).
+- id: DQ-RTL-042
+  object: CONFORMED_GOLD.FCT_ONLINE_ORDER
+  column: order_value
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: Order values are positive.
+- id: DQ-RTL-043
+  object: CONFORMED_GOLD.FCT_ONLINE_ORDER
+  column: returned_value
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Returned value is never negative.
+- id: DQ-RTL-044
+  object: CONFORMED_GOLD.FCT_ONLINE_ORDER
+  column: returned_value
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Returned value is populated (zero when nothing was returned) for the return rate.
+- id: DQ-RTL-045
+  object: CONFORMED_GOLD.FCT_ONLINE_ORDER
+  column: order_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per web-store order.
+- id: DQ-RTL-046
+  object: CONFORMED_GOLD.FCT_ONLINE_ORDER
+  column: order_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: medium
+  alert_route: engineering
+  description: Orders from the order management system are no more than a day behind.
+- id: DQ-RTL-047
+  object: CURATED_SILVER.ORDER_PAYMENT
+  column: card_number
+  dimension: validity
+  assertion: "regex_rate >= 0.999"
+  pattern: "^[0-9]{4}-[0-9]{4}-.+$"
+  severity: medium
+  alert_route: steward
+  description: Card references are in the tokenised format expected by MASK_PCI.

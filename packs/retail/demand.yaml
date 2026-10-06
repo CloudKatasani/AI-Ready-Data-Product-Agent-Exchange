@@ -1,0 +1,82 @@
+# Seeded intake requests and demand-board items. REQ-RTL-001 deliberately near-duplicates DP-RTL-002
+# (Store & Digital Sales) so the intake duplicate detector fires (AC5.1).
+requests:
+  - id: REQ-RTL-001
+    title: Regional sales scorecard
+    requester: retail:store-ops-northeast
+    decision: Which stores in my region get extra labour hours and local marketing first next quarter
+    decider: Regional Store Operations Manager
+    cadence: Quarterly, with a weekly check-in
+    workaround: POS exports pasted into a spreadsheet and split by store and department by hand
+    questions:
+      - What were net sales by region last quarter?
+      - Which stores had the highest net sales?
+      - How does gross margin rate compare with plan?
+      - What share of sales were on promotion?
+    stakes: Labour and marketing go to stores that are not driving like-for-like growth, and regional plans are missed
+    freshness: Daily by 07:00
+    status: SUBMITTED
+  - id: REQ-RTL-002
+    title: Returns abuse early warning
+    requester: retail:coo
+    decision: Whether to tighten return policies for categories with unusually high serial returns
+    decider: VP E-commerce Operations
+    cadence: Monthly
+    workaround: Loss prevention keeps a manual log of suspected serial returners and checks orders in the order system
+    questions:
+      - Which categories have the highest share of orders returned more than once?
+      - How has the return rate moved since the returns-portal migration?
+      - How much refund value is concentrated in the top 1% of returning accounts, in aggregate?
+    stakes: Returns abuse grows unchecked while genuine customers face blanket policy changes
+    freshness: Weekly
+    status: IN_TRIAGE
+  - id: REQ-RTL-003
+    title: Holiday peak availability
+    requester: retail:merch-analyst
+    decision: How to set store safety stock and allocation ahead of the holiday peak
+    decider: Director of Inventory Planning
+    cadence: Before each peak, plus a post-peak review
+    workaround: Post-peak reviews built from gap scans and sales over several weeks
+    questions:
+      - Which categories had the lowest in-stock rate during last year's peak?
+      - How did days of supply compare between Flagship and Neighborhood stores?
+      - Which stores ran out first on promoted items?
+    stakes: Empty shelves during the highest-trading weeks and excess stock left to mark down in January
+    freshness: Daily during peak
+    status: APPROVED
+  - id: REQ-RTL-004
+    title: Store labour productivity
+    requester: retail:commercial-dpo
+    decision: How to allocate store labour hours against traffic and sales by hour of day
+    decider: VP Store Operations
+    cadence: Monthly with weekly refresh
+    workaround: Store managers estimate staffing from door-counter reports and gut feel
+    questions:
+      - Which stores have the lowest sales per labour hour?
+      - How does conversion vary with staffing at peak hours?
+      - Which stores are overstaffed on weekday mornings?
+    stakes: Labour budget is spent where traffic is low while peak hours are understaffed
+    freshness: Weekly
+    status: SUBMITTED
+  - id: REQ-RTL-005
+    title: Northeast sales by department dashboard
+    requester: retail:store-ops-northeast
+    decision: Which departments to target in the Northeast store improvement plan
+    decider: Regional Store Operations Manager
+    cadence: Monthly
+    workaround: Monthly email from the merchandise analyst with a pivot table
+    questions:
+      - Which departments had the most net sales in the Northeast this year?
+      - What was the promotional sales share in the Northeast last quarter?
+      - What is the average basket value by department in the Northeast?
+    stakes: Improvement effort spent on departments that are not driving Northeast sales
+    freshness: Daily
+    status: MERGED
+
+demand_items:
+  - { id: DM-RTL-001, title: Store labour productivity product, kind: product, description: "Sales per labour hour, traffic and conversion by store and hour, for labour scheduling.", requested_by: retail:commercial-dpo, votes: 15 }
+  - { id: DM-RTL-002, title: Holiday peak readiness agent, kind: agent, description: "Answers how availability and cover are tracking against peak plans from certified inventory data.", requested_by: retail:merch-analyst, votes: 12 }
+  - { id: DM-RTL-003, title: Markdown optimisation product, kind: product, description: "Sell-through, weeks of cover and markdown depth by item to recommend clearance timing.", requested_by: retail:coo, votes: 10 }
+  - { id: DM-RTL-004, title: Returns abuse insights, kind: product, description: "Serial-return patterns by category and fulfilment method, aggregated only.", requested_by: retail:coo, votes: 7 }
+  - { id: DM-RTL-005, title: Care contact reason analyst agent, kind: agent, description: "Explains why members contact care and which reasons self-service could remove, once Customer Care Contacts is certified.", requested_by: retail:customer-steward, votes: 6 }
+  - { id: DM-RTL-006, title: Planogram compliance product, kind: product, description: "Shelf-capacity and facing compliance by store and category from planogram audits.", requested_by: retail:commercial-dpo, votes: 4 }

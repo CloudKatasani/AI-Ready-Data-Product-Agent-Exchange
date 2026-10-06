@@ -45,7 +45,8 @@ export function renderTemplate(tpl: string, d: TemplateData): string {
     if (helper === 'total' && field) return formatValue(d.totals[field] ?? (d.rows.length === 1 ? d.rows[0]?.[col(field)] : null), fieldFormat(d, field));
     if (helper === 'vsTarget') {
       const m = firstMetric;
-      const v = m ? d.rows[0]?.[col(m)] : null;
+      // A multi-row result (trend, breakdown) compares its total to the target, not its first row.
+      const v = m ? (d.rows.length > 1 && typeof d.totals[m] === 'number' ? d.totals[m] : d.rows[0]?.[col(m)]) : null;
       return typeof v === 'number' && m ? vsTarget(v, d.kpiFor(m)) : 'no target set for';
     }
     if (helper === 'delta' && field) {

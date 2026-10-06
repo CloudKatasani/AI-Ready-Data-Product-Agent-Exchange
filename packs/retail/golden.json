@@ -1,0 +1,1284 @@
+{
+  "pack": "retail",
+  "version": "1.0.0",
+  "scale": "M",
+  "scenarios": {
+    "SC-RTL-001": {
+      "agent": "AG-RTL-002",
+      "kind": "answer",
+      "headline": "Northeast had the highest comparable-store net sales last quarter at $301,511.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Non-comparable stores are excluded (BR-RTL-012). Pacific was lowest at $100,440 across 5 regions.",
+      "sqlHash": "8b8188269f327b03",
+      "columns": [
+        "region",
+        "net_sales"
+      ],
+      "rows": [
+        [
+          "Northeast",
+          301511
+        ],
+        [
+          "Midwest",
+          257998
+        ],
+        [
+          "Southeast",
+          253555
+        ],
+        [
+          "Southwest",
+          131989
+        ],
+        [
+          "Pacific",
+          100440
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-002@3.1.0",
+        "metric:SALES_PERFORMANCE.net_sales",
+        "rule:BR-RTL-012",
+        "verified_query:VQ-RTL-001",
+        "document:DOC-RTL-SALES-REPORTING#5"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Northeast had the highest comparable-store net sales last quarter at $301,511.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-RTL-002": {
+      "agent": "AG-RTL-002",
+      "kind": "answer",
+      "headline": "Including all stores, Southwest had the highest net sales last quarter at $595,922.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "You asked for all stores, so the comparable-store rule in BR-RTL-012 is not applied. New stores reorder the ranking — compare with the standard comparable-store view.",
+      "sqlHash": "97cfa99c9948054d",
+      "columns": [
+        "region",
+        "net_sales"
+      ],
+      "rows": [
+        [
+          "Southwest",
+          595922
+        ],
+        [
+          "Northeast",
+          301511
+        ],
+        [
+          "Midwest",
+          257998
+        ],
+        [
+          "Southeast",
+          253555
+        ],
+        [
+          "Pacific",
+          100440
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-002@3.1.0",
+        "metric:SALES_PERFORMANCE.net_sales",
+        "verified_query:VQ-RTL-001",
+        "document:DOC-RTL-SALES-REPORTING#5"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Including all stores, Northeast had the highest net sales last quarter at $301,511.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-RTL-003": {
+      "agent": "AG-RTL-002",
+      "kind": "answer",
+      "headline": "ST-007 was the top store last quarter with $46,565 in comparable net sales.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Ranked over 10 stores, comparable stores only (BR-RTL-012). The leading stores set the benchmark for labour and marketing investment.",
+      "sqlHash": "4f089ac54ecf049f",
+      "columns": [
+        "store",
+        "net_sales"
+      ],
+      "rows": [
+        [
+          "ST-007",
+          46564.6
+        ],
+        [
+          "ST-028",
+          21617.3
+        ],
+        [
+          "ST-001",
+          21547.1
+        ],
+        [
+          "ST-009",
+          21337.5
+        ],
+        [
+          "ST-010",
+          21242.8
+        ],
+        [
+          "ST-043",
+          21162.2
+        ],
+        [
+          "ST-038",
+          21086.3
+        ],
+        [
+          "ST-019",
+          21046.7
+        ],
+        [
+          "ST-013",
+          21025.4
+        ],
+        [
+          "ST-025",
+          20849.1
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-002@3.1.0",
+        "metric:SALES_PERFORMANCE.net_sales",
+        "rule:BR-RTL-012",
+        "verified_query:VQ-RTL-004",
+        "document:DOC-RTL-SALES-REPORTING#3"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "ST-007 was the top store last quarter with $46,565 in comparable net sales.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-RTL-004": {
+      "agent": "AG-RTL-002",
+      "kind": "answer",
+      "headline": "Home was the largest driver of net sales last quarter at $310,316.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Total comparable-store net sales were $1,045,492 across 5 departments (BR-RTL-012).",
+      "sqlHash": "674b81d7f7ee87b3",
+      "columns": [
+        "department",
+        "net_sales",
+        "net_sales_share_pct"
+      ],
+      "rows": [
+        [
+          "Home",
+          310316,
+          29.6813
+        ],
+        [
+          "Food & pantry",
+          257155,
+          24.5966
+        ],
+        [
+          "Apparel",
+          249189,
+          23.8346
+        ],
+        [
+          "Health & beauty",
+          124306,
+          11.8897
+        ],
+        [
+          "Seasonal & outdoor",
+          104527,
+          9.99785
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-002@3.1.0",
+        "metric:SALES_PERFORMANCE.net_sales",
+        "rule:BR-RTL-012",
+        "verified_query:VQ-RTL-005",
+        "document:DOC-RTL-SALES-REPORTING#5"
+      ],
+      "personas": {}
+    },
+    "SC-RTL-005": {
+      "agent": "AG-RTL-002",
+      "kind": "redirect",
+      "headline": "That's a supply chain question — the Supply Chain Copilot answers it.",
+      "narrative": "I cover store and digital sales performance. The Supply Chain Copilot is certified on purchase-order cost and agreed-cost compliance.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-RTL-006": {
+      "agent": "AG-RTL-002",
+      "kind": "decline",
+      "headline": "I can't change prices or approve markdowns — that is outside what this agent is allowed to do.",
+      "narrative": "Price changes are raised by merchandising in the pricing engine and executed by stores. I can show you sales and promotional share for the category so the merchant has the evidence.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-RTL-007": {
+      "agent": "AG-RTL-002",
+      "kind": "answer",
+      "headline": "Comparable-store net sales are $2,925,598 year to date.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Monthly net sales over 9 months, comparable stores only (BR-RTL-012).",
+      "sqlHash": "e1e05d7549b8c6dc",
+      "columns": [
+        "period",
+        "net_sales"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          300041
+        ],
+        [
+          "2026-02-01",
+          253640
+        ],
+        [
+          "2026-03-01",
+          323480
+        ],
+        [
+          "2026-04-01",
+          316372
+        ],
+        [
+          "2026-05-01",
+          353700
+        ],
+        [
+          "2026-06-01",
+          332873
+        ],
+        [
+          "2026-07-01",
+          350910
+        ],
+        [
+          "2026-08-01",
+          373051
+        ],
+        [
+          "2026-09-01",
+          321532
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-002@3.1.0",
+        "metric:SALES_PERFORMANCE.net_sales",
+        "rule:BR-RTL-012",
+        "verified_query:VQ-RTL-006",
+        "document:DOC-RTL-SALES-REPORTING#5"
+      ],
+      "personas": {}
+    },
+    "SC-RTL-008": {
+      "agent": "AG-RTL-004",
+      "kind": "answer",
+      "headline": "Across 14 categories, the median category carries 46.9% initial margin.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "The middle 80% of categories sit between 46.1% and 47.4%; the weakest category averages 40.2%.",
+      "sqlHash": "5d6bfee03f875c89",
+      "columns": [
+        "category_count",
+        "avg_initial_margin_pct_p10",
+        "avg_initial_margin_pct_p50",
+        "avg_initial_margin_pct_p90",
+        "avg_initial_margin_pct_min",
+        "avg_initial_margin_pct_max"
+      ],
+      "rows": [
+        [
+          14,
+          46.0841,
+          46.9269,
+          47.4416,
+          40.1886,
+          48.3221
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-004@1.6.0",
+        "metric:ASSORTMENT.avg_initial_margin_pct",
+        "verified_query:VQ-RTL-034",
+        "document:DOC-RTL-MERCH-PRICING#2"
+      ],
+      "personas": {}
+    },
+    "SC-RTL-009": {
+      "agent": "AG-RTL-004",
+      "kind": "answer",
+      "headline": "Price change compliance is 68.4% year to date — below target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Price changes executed in store on or before their effective date as a share of price changes due this year.",
+      "sqlHash": "f93043088c608506",
+      "columns": [
+        "price_change_compliance_pct",
+        "price_change_compliance_pct_target_min",
+        "price_change_compliance_pct_target_max"
+      ],
+      "rows": [
+        [
+          68.4143,
+          75,
+          92
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-004@1.6.0",
+        "metric:PRICE_EXECUTION.price_change_compliance_pct",
+        "document:DOC-RTL-MERCH-PRICING#4"
+      ],
+      "personas": {}
+    },
+    "SC-RTL-010": {
+      "agent": "AG-RTL-004",
+      "kind": "answer",
+      "headline": "Private label items carry the higher initial margin at 51.7%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "4.2% of Private label items are low margin, versus 15.9% for National brand items.",
+      "sqlHash": "1af0f1580da2bc19",
+      "columns": [
+        "brand_type",
+        "avg_initial_margin_pct",
+        "low_margin_items_pct"
+      ],
+      "rows": [
+        [
+          "Private label",
+          51.6635,
+          4.17076
+        ],
+        [
+          "National brand",
+          44.0941,
+          15.9011
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-004@1.6.0",
+        "metric:ASSORTMENT.avg_initial_margin_pct",
+        "metric:ASSORTMENT.low_margin_items_pct",
+        "document:DOC-RTL-MERCH-PRICING#3"
+      ],
+      "personas": {}
+    },
+    "SC-RTL-011": {
+      "agent": "AG-RTL-004",
+      "kind": "answer",
+      "headline": "Southwest has the largest price change backlog with 1,098 overdue price changes.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "\"Price change backlog\" maps to overdue price changes: changes not executed and past their effective date. 4,360 are overdue across 5 regions.",
+      "sqlHash": "12f512790998d1ad",
+      "columns": [
+        "region",
+        "overdue_price_changes"
+      ],
+      "rows": [
+        [
+          "Southwest",
+          1098
+        ],
+        [
+          "Northeast",
+          1032
+        ],
+        [
+          "Midwest",
+          940
+        ],
+        [
+          "Southeast",
+          908
+        ],
+        [
+          "Pacific",
+          382
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-004@1.6.0",
+        "metric:PRICE_EXECUTION.overdue_price_changes",
+        "document:DOC-RTL-MERCH-PRICING#4"
+      ],
+      "personas": {
+        "A": {
+          "kind": "decline",
+          "headline": "You don’t have access to Merchandise & Price Execution yet."
+        }
+      }
+    },
+    "SC-RTL-024": {
+      "agent": "AG-RTL-004",
+      "kind": "answer",
+      "headline": "In-stock averaged 93.28% last quarter.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Daily in-stock rate over 92 days. Look for the late-August dip after the replenishment release — out-of-stocks follow it.",
+      "sqlHash": "21faa7943a6c01b5",
+      "columns": [
+        "period",
+        "in_stock_rate"
+      ],
+      "rows": [
+        [
+          "2026-07-01",
+          94.7967
+        ],
+        [
+          "2026-07-02",
+          94.4089
+        ],
+        [
+          "2026-07-03",
+          95.1938
+        ],
+        [
+          "2026-07-04",
+          94.6064
+        ],
+        [
+          "2026-07-05",
+          95.8395
+        ],
+        [
+          "2026-07-06",
+          92.5982
+        ],
+        [
+          "2026-07-07",
+          92.0489
+        ],
+        [
+          "2026-07-08",
+          95.6857
+        ],
+        [
+          "2026-07-09",
+          95.5621
+        ],
+        [
+          "2026-07-10",
+          95.8269
+        ],
+        [
+          "2026-07-11",
+          95.6338
+        ],
+        [
+          "2026-07-12",
+          94.9704
+        ],
+        [
+          "2026-07-13",
+          92.2039
+        ],
+        [
+          "2026-07-14",
+          94.4984
+        ],
+        [
+          "2026-07-15",
+          94.7692
+        ],
+        [
+          "2026-07-16",
+          94.7867
+        ],
+        [
+          "2026-07-17",
+          93.3036
+        ],
+        [
+          "2026-07-18",
+          94.5161
+        ],
+        [
+          "2026-07-19",
+          95.4472
+        ],
+        [
+          "2026-07-20",
+          93.1624
+        ],
+        [
+          "2026-07-21",
+          94.9686
+        ],
+        [
+          "2026-07-22",
+          94.3089
+        ],
+        [
+          "2026-07-23",
+          95.5056
+        ],
+        [
+          "2026-07-24",
+          95.2522
+        ],
+        [
+          "2026-07-25",
+          95.5316
+        ],
+        [
+          "2026-07-26",
+          93.7898
+        ],
+        [
+          "2026-07-27",
+          94.2161
+        ],
+        [
+          "2026-07-28",
+          94.6221
+        ],
+        [
+          "2026-07-29",
+          94.2647
+        ],
+        [
+          "2026-07-30",
+          95.935
+        ],
+        [
+          "2026-07-31",
+          95.3172
+        ],
+        [
+          "2026-08-01",
+          93.6073
+        ],
+        [
+          "2026-08-02",
+          95.4683
+        ],
+        [
+          "2026-08-03",
+          94.8357
+        ],
+        [
+          "2026-08-04",
+          95.1378
+        ],
+        [
+          "2026-08-05",
+          95.6452
+        ],
+        [
+          "2026-08-06",
+          93.7206
+        ],
+        [
+          "2026-08-07",
+          94.8795
+        ],
+        [
+          "2026-08-08",
+          94.0549
+        ],
+        [
+          "2026-08-09",
+          95.9302
+        ],
+        [
+          "2026-08-10",
+          93.949
+        ],
+        [
+          "2026-08-11",
+          93.8235
+        ],
+        [
+          "2026-08-12",
+          95.4969
+        ],
+        [
+          "2026-08-13",
+          93.8211
+        ],
+        [
+          "2026-08-14",
+          93.5229
+        ],
+        [
+          "2026-08-15",
+          95.2314
+        ],
+        [
+          "2026-08-16",
+          94.0035
+        ],
+        [
+          "2026-08-17",
+          95.7413
+        ],
+        [
+          "2026-08-18",
+          95.3488
+        ],
+        [
+          "2026-08-19",
+          95.4041
+        ],
+        [
+          "2026-08-20",
+          79.8122
+        ],
+        [
+          "2026-08-21",
+          80.5031
+        ],
+        [
+          "2026-08-22",
+          80.5556
+        ],
+        [
+          "2026-08-23",
+          80.0305
+        ],
+        [
+          "2026-08-24",
+          81.8991
+        ],
+        [
+          "2026-08-25",
+          79.784
+        ],
+        [
+          "2026-08-26",
+          81.1966
+        ],
+        [
+          "2026-08-27",
+          82.1114
+        ],
+        [
+          "2026-08-28",
+          94.0532
+        ],
+        [
+          "2026-08-29",
+          93.0496
+        ],
+        [
+          "2026-08-30",
+          93.9815
+        ],
+        [
+          "2026-08-31",
+          94.391
+        ],
+        [
+          "2026-09-01",
+          93.8556
+        ],
+        [
+          "2026-09-02",
+          94.1807
+        ],
+        [
+          "2026-09-03",
+          94.5161
+        ],
+        [
+          "2026-09-04",
+          94.152
+        ],
+        [
+          "2026-09-05",
+          94.3804
+        ],
+        [
+          "2026-09-06",
+          94.4785
+        ],
+        [
+          "2026-09-07",
+          96.9984
+        ],
+        [
+          "2026-09-08",
+          94.2815
+        ],
+        [
+          "2026-09-09",
+          93.7407
+        ],
+        [
+          "2026-09-10",
+          92.8251
+        ],
+        [
+          "2026-09-11",
+          94.965
+        ],
+        [
+          "2026-09-12",
+          93.4272
+        ],
+        [
+          "2026-09-13",
+          95.6857
+        ],
+        [
+          "2026-09-14",
+          94.4282
+        ],
+        [
+          "2026-09-15",
+          93.1402
+        ],
+        [
+          "2026-09-16",
+          94.9848
+        ],
+        [
+          "2026-09-17",
+          93.8776
+        ],
+        [
+          "2026-09-18",
+          94.5513
+        ],
+        [
+          "2026-09-19",
+          94.3252
+        ],
+        [
+          "2026-09-20",
+          94.2097
+        ],
+        [
+          "2026-09-21",
+          93.9086
+        ],
+        [
+          "2026-09-22",
+          93.9828
+        ],
+        [
+          "2026-09-23",
+          92.1997
+        ],
+        [
+          "2026-09-24",
+          94.6625
+        ],
+        [
+          "2026-09-25",
+          94.5736
+        ],
+        [
+          "2026-09-26",
+          94.5904
+        ],
+        [
+          "2026-09-27",
+          93.4853
+        ],
+        [
+          "2026-09-28",
+          95.36
+        ],
+        [
+          "2026-09-29",
+          94.1791
+        ],
+        [
+          "2026-09-30",
+          95.3125
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-003@1.4.0",
+        "metric:INVENTORY_AVAILABILITY.in_stock_rate",
+        "verified_query:VQ-RTL-024",
+        "document:DOC-RTL-INVENTORY-STANDARD#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "In-stock averaged 92.60% last quarter.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-RTL-025": {
+      "agent": "AG-RTL-004",
+      "kind": "answer",
+      "headline": "Pacific had the highest in-stock rate last month at 94.80%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Share of store-item-days with stock on hand across 5 regions you are entitled to see; the region row-access policy applies.",
+      "sqlHash": "fb9f7b5eb1ec8dc9",
+      "columns": [
+        "region",
+        "in_stock_rate"
+      ],
+      "rows": [
+        [
+          "Pacific",
+          94.8044
+        ],
+        [
+          "Southwest",
+          94.6363
+        ],
+        [
+          "Midwest",
+          94.4392
+        ],
+        [
+          "Southeast",
+          94.2417
+        ],
+        [
+          "Northeast",
+          93.7145
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-003@1.4.0",
+        "metric:INVENTORY_AVAILABILITY.in_stock_rate",
+        "verified_query:VQ-RTL-025",
+        "document:DOC-RTL-INVENTORY-STANDARD#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Northeast had the highest in-stock rate last month at 93.71%.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-RTL-012": {
+      "agent": "AG-RTL-001",
+      "kind": "answer",
+      "headline": "Pacific leads app adoption at 60.2% of active members.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Southwest trails at 41.2%. Adoption counts active members enrolled in the mobile app.",
+      "sqlHash": "a0a3d964a26e4273",
+      "columns": [
+        "region",
+        "app_adoption_rate"
+      ],
+      "rows": [
+        [
+          "Pacific",
+          60.1629
+        ],
+        [
+          "Midwest",
+          44.1162
+        ],
+        [
+          "Northeast",
+          43.2732
+        ],
+        [
+          "Southeast",
+          43.0478
+        ],
+        [
+          "Southwest",
+          41.2021
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-001@2.2.0",
+        "metric:LOYALTY_360.app_adoption_rate",
+        "verified_query:VQ-RTL-013",
+        "document:DOC-RTL-LOYALTY-PROGRAM#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Northeast leads app adoption at 43.3% of active members.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-RTL-013": {
+      "agent": "AG-RTL-001",
+      "kind": "answer",
+      "headline": "The highest churn-risk active member scores 61.5.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Member names are masked unless your persona is cleared for PII under the masking policy. Showing the top 5 active members by churn risk score.",
+      "sqlHash": "ee3993d5362bc857",
+      "columns": [
+        "member_name",
+        "avg_churn_risk"
+      ],
+      "rows": [
+        [
+          "Betty Scott",
+          61.5
+        ],
+        [
+          "William Baker",
+          54.7833
+        ],
+        [
+          "David Nguyen",
+          53.4
+        ],
+        [
+          "Priya Young",
+          50.64
+        ],
+        [
+          "Thomas Walker",
+          50.6
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-001@2.2.0",
+        "metric:LOYALTY_360.avg_churn_risk",
+        "document:DOC-RTL-LOYALTY-PROGRAM#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "The highest churn-risk active member scores 79.3.",
+          "rowFiltered": true,
+          "masked": [
+            "member_name"
+          ]
+        },
+        "D": {
+          "kind": "answer",
+          "headline": "The highest churn-risk active member scores 61.5.",
+          "rowFiltered": false,
+          "masked": []
+        }
+      }
+    },
+    "SC-RTL-014": {
+      "agent": "AG-RTL-001",
+      "kind": "answer",
+      "headline": "The online return rate was 7.7% last quarter — within target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Returns & Refunds is still in certification, so treat this figure as provisional. The return-window rule BR-RTL-021 is applied.",
+      "sqlHash": "f65aa8265b0d097a",
+      "columns": [
+        "return_rate"
+      ],
+      "rows": [
+        [
+          7.73432
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-005@1.0.0-rc.1",
+        "metric:RETURNS_REFUNDS.return_rate",
+        "rule:BR-RTL-021",
+        "verified_query:VQ-RTL-049",
+        "document:DOC-RTL-RETURNS-POLICY#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "decline",
+          "headline": "You don’t have access to Returns & Refunds yet."
+        }
+      }
+    },
+    "SC-RTL-015": {
+      "agent": "AG-RTL-001",
+      "kind": "answer",
+      "headline": "Bronze is the largest tier with 11,078 active members.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Active members in the governed member sample across 3 tiers you are entitled to see; the region row-access policy applies.",
+      "sqlHash": "2b2a04ed4bbd75ed",
+      "columns": [
+        "tier",
+        "active_members"
+      ],
+      "rows": [
+        [
+          "Bronze",
+          11078
+        ],
+        [
+          "Silver",
+          5053
+        ],
+        [
+          "Gold",
+          1782
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-001@2.2.0",
+        "metric:LOYALTY_360.active_members",
+        "verified_query:VQ-RTL-015",
+        "document:DOC-RTL-LOYALTY-PROGRAM#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Bronze is the largest tier with 2,810 active members.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-RTL-016": {
+      "agent": "AG-RTL-001",
+      "kind": "answer",
+      "headline": "Average order value moved −$1.55 from the first to the latest month of last quarter.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Consumer orders only (BR-RTL-020), for each of the 3 months. Returns & Refunds is still in certification, so treat these figures as provisional.",
+      "sqlHash": "cd371032cd1445fa",
+      "columns": [
+        "period",
+        "avg_order_value"
+      ],
+      "rows": [
+        [
+          "2026-07-01",
+          75.1336
+        ],
+        [
+          "2026-08-01",
+          74.1117
+        ],
+        [
+          "2026-09-01",
+          73.5878
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-005@1.0.0-rc.1",
+        "metric:RETURNS_REFUNDS.avg_order_value",
+        "rule:BR-RTL-020",
+        "verified_query:VQ-RTL-051",
+        "document:DOC-RTL-RETURNS-POLICY#2"
+      ],
+      "personas": {}
+    },
+    "SC-RTL-017": {
+      "agent": "AG-RTL-001",
+      "kind": "clarify",
+      "headline": "\"Returns\" can mean a few things — which one do you need?",
+      "narrative": "I can show the online return rate, the refund cycle time, or the value refunded. Pick one and a period.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-RTL-018": {
+      "agent": "AG-RTL-003",
+      "kind": "answer",
+      "headline": "83.2% of purchase-order cost this year was at the agreed cost.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "PO cost placed at the cost agreed in an active vendor agreement, as a share of total PO cost year to date.",
+      "sqlHash": "0f66c1abafb26392",
+      "columns": [
+        "cost_compliance_pct"
+      ],
+      "rows": [
+        [
+          83.2245
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-006@2.0.3",
+        "metric:VENDOR_SUPPLY.cost_compliance_pct",
+        "verified_query:VQ-RTL-056",
+        "document:DOC-RTL-VENDOR-COMPLIANCE#2"
+      ],
+      "personas": {}
+    },
+    "SC-RTL-019": {
+      "agent": "AG-RTL-003",
+      "kind": "answer",
+      "headline": "Oakmont Industries has the lowest OTIF this year at 68.0%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "The 5 lowest-performing vendors by on-time-in-full delivery year to date.",
+      "sqlHash": "3052b383cc109cfd",
+      "columns": [
+        "vendor",
+        "vendor_otif_pct"
+      ],
+      "rows": [
+        [
+          "Oakmont Industries",
+          68
+        ],
+        [
+          "Summit Supply Co.",
+          68.6567
+        ],
+        [
+          "Northstar Partners",
+          70.3704
+        ],
+        [
+          "Silverline Works",
+          70.5882
+        ],
+        [
+          "Redfield Industries",
+          72.3958
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-006@2.0.3",
+        "metric:VENDOR_SUPPLY.vendor_otif_pct",
+        "verified_query:VQ-RTL-058",
+        "document:DOC-RTL-VENDOR-COMPLIANCE#5"
+      ],
+      "personas": {}
+    },
+    "SC-RTL-020": {
+      "agent": "AG-RTL-003",
+      "kind": "answer",
+      "headline": "Seasonal decor drives the most off-agreement spend this year at $2,254,442.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Off-agreement spend is PO cost not placed at an agreed vendor cost. Total off-agreement spend is $6,939,170 across 8 vendor categories.",
+      "sqlHash": "267dd85560cc1383",
+      "columns": [
+        "vendor_category",
+        "off_agreement_spend",
+        "off_agreement_spend_share_pct"
+      ],
+      "rows": [
+        [
+          "Seasonal decor",
+          2254440,
+          32.4886
+        ],
+        [
+          "Electronics accessories",
+          1249520,
+          18.0068
+        ],
+        [
+          "Beauty & personal care",
+          1065920,
+          15.3609
+        ],
+        [
+          "Kitchen & dining",
+          673299,
+          9.70287
+        ],
+        [
+          "Apparel",
+          645586,
+          9.30351
+        ],
+        [
+          "Packaged food",
+          540846,
+          7.79411
+        ],
+        [
+          "Beverages",
+          334136,
+          4.81522
+        ],
+        [
+          "Home textiles",
+          175422,
+          2.528
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-006@2.0.3",
+        "metric:VENDOR_SUPPLY.off_agreement_spend",
+        "verified_query:VQ-RTL-057",
+        "document:DOC-RTL-VENDOR-COMPLIANCE#1"
+      ],
+      "personas": {}
+    },
+    "SC-RTL-021": {
+      "agent": "AG-RTL-003",
+      "kind": "answer",
+      "headline": "PO lead time moved −1.0 days from the first to the latest quarter this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Average days from purchase order to receipt for each of the 3 quarters this year.",
+      "sqlHash": "04990b5743d6edf6",
+      "columns": [
+        "period",
+        "po_lead_time_days"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          17.052
+        ],
+        [
+          "2026-04-01",
+          17.1014
+        ],
+        [
+          "2026-07-01",
+          16.0826
+        ]
+      ],
+      "citations": [
+        "product:DP-RTL-006@2.0.3",
+        "metric:VENDOR_SUPPLY.po_lead_time_days",
+        "verified_query:VQ-RTL-059",
+        "document:DOC-RTL-VENDOR-COMPLIANCE#3"
+      ],
+      "personas": {}
+    },
+    "SC-RTL-022": {
+      "agent": "AG-RTL-005",
+      "kind": "help",
+      "headline": "I explain governance across the data estate — I don't analyse business KPIs.",
+      "narrative": "Ask me what a glossary term or metric means, the certification status of a data product, or where governance gaps such as missing stewards or masking sit. For KPI numbers, ask the domain agents.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-RTL-023": {
+      "agent": "AG-RTL-005",
+      "kind": "decline",
+      "headline": "I can't approve access requests — agents act, humans decide.",
+      "narrative": "Access to a data product is granted only by its owner or steward through the access workflow. I can show you the request status and who can approve it.",
+      "citations": [],
+      "personas": {}
+    }
+  }
+}

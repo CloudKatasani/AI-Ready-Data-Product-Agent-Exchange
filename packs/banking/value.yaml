@@ -1,0 +1,83 @@
+# Value cases per product (marketplace value model). All figures are illustrative and synthetic.
+- id: VC-BNK-001
+  product: DP-BNK-001
+  hypothesis: One certified customer record lets retail target deepening and digital campaigns at the right markets and keeps KYC refresh backlogs visible.
+  baseline: "Quarterly CIF extracts reconciled by hand; about 80 analyst hours a quarter; campaigns allocated evenly across markets."
+  benefit_model: "incremental_products_sold * annual_margin_per_product + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Incremental products sold through targeted deepening campaigns", value: 9500, unit: products, source: "Retail campaign pilot, H1 2026" }
+    - { text: "Annual margin per additional product", value: 62, unit: usd, source: "Retail finance product profitability model FY26" }
+    - { text: "Analyst hours saved per year", value: 300, unit: hours, source: "Retail analytics time study" }
+    - { text: "Fully loaded analyst rate", value: 110, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 622000
+  measured: { value_usd: 514000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-BNK-002
+  product: DP-BNK-002
+  hypothesis: Certified deposit balances by product and market let ALCO price promotions precisely and spot rate-sensitive outflows early, lowering funding cost.
+  baseline: "Core extracts pasted into the ALCO workbook; month-end figures arrive ten days after close."
+  benefit_model: "deposit_balances_repriced * basis_points_saved / 10000 + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Deposit balances repriced more precisely each year", value: 2400000000, unit: usd, source: "Treasury pricing review, 2026" }
+    - { text: "Funding cost saved through targeted pricing", value: 4, unit: bps, source: "ALCO promotion post-mortems" }
+    - { text: "Analyst hours saved per year", value: 520, unit: hours, source: "Treasury time study" }
+    - { text: "Fully loaded analyst rate", value: 110, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 1017200
+  measured: { value_usd: 861000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-BNK-003
+  product: DP-BNK-003
+  hypothesis: One governed NPL and charge-off source, with held-for-sale loans excluded consistently, shortens month-end credit reporting and directs workout capacity to the segments that drive losses.
+  baseline: "Analyst-built NPL workbook rebuilt each month-end; about 90 manual minutes per credit quality question."
+  benefit_model: "losses_avoided_through_earlier_workout + questions_per_year * minutes_saved / 60 * loaded_analyst_rate"
+  assumptions:
+    - { text: "Credit losses avoided by earlier workout of emerging problem segments", value: 1800000, unit: usd, source: "Chief Credit Office estimate, 2026" }
+    - { text: "Manual minutes per credit quality question", value: 90, unit: minutes, source: "Analyst time study (n=21)" }
+    - { text: "Credit quality questions per year", value: 1100, unit: questions, source: "Credit risk request log" }
+    - { text: "Fully loaded analyst rate", value: 110, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 1981500
+  measured: { value_usd: 1540000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-BNK-004
+  product: DP-BNK-004
+  hypothesis: Near-real-time fraud loss rates by merchant category and channel let fraud strategy switch on enhanced authentication within days, not weeks.
+  baseline: "Processor fraud reports e-mailed as PDFs weekly; rule changes lag fraud rings by three to four weeks."
+  benefit_model: "fraud_losses_avoided + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Fraud losses avoided per year through faster rule changes", value: 1350000, unit: usd, source: "Card fraud strategy back-test of 2025 rings" }
+    - { text: "Analyst hours saved per year", value: 640, unit: hours, source: "Fraud analytics time study" }
+    - { text: "Fully loaded analyst rate", value: 110, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 1420400
+  measured: { value_usd: 1125000, period: "2026-Q1..2026-Q3 annualised", confidence: high }
+- id: VC-BNK-005
+  product: DP-BNK-005
+  hypothesis: Visible cure and promise-kept rates by strategy move case volume to digital self-service, curing more accounts at lower cost.
+  baseline: "Collections platform exports joined to loan data in a desktop database monthly."
+  benefit_model: "additional_cures * average_loss_avoided_per_cure + contact_cost_saved"
+  assumptions:
+    - { text: "Additional cures per year from strategy rebalancing", value: 420, unit: cases, source: "Collections pilot, Q2 2026" }
+    - { text: "Average loss avoided per cure", value: 2100, unit: usd, source: "Collections loss model FY26" }
+    - { text: "Contact-centre cost saved by shifting to digital self-service", value: 310000, unit: usd, source: "Contact centre cost model FY26" }
+  annual_value_usd: 1192000
+  measured: { value_usd: 870000, period: "2026-Q1..2026-Q3 annualised", confidence: low }
+- id: VC-BNK-006
+  product: DP-BNK-006
+  hypothesis: A certified alert and case view lets the BSA office retune low-yield scenarios and staff the productive ones, cutting false positives and ageing.
+  baseline: "Case-management exports reconciled to alert queues in spreadsheets; scenario tuning reviews twice a year."
+  benefit_model: "alerts_avoided * cost_per_alert_review + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Low-value alerts avoided per year through scenario tuning", value: 6000, unit: alerts, source: "BSA office tuning study, 2026" }
+    - { text: "Cost per alert review", value: 48, unit: usd, source: "Financial crimes operations cost model" }
+    - { text: "Analyst hours saved per year", value: 400, unit: hours, source: "BSA reporting time study" }
+    - { text: "Fully loaded analyst rate", value: 110, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 332000
+  measured: null
+- id: VC-BNK-007
+  product: DP-BNK-007
+  hypothesis: Linking digital sessions to customer segment and market finds failing journeys faster and moves servicing from branches to digital.
+  baseline: "App analytics dashboards with no link to customer segment or market; release regressions found through complaints."
+  benefit_model: "branch_transactions_shifted * cost_per_branch_transaction + complaints_avoided * cost_per_complaint"
+  assumptions:
+    - { text: "Branch transactions shifted to digital per year", value: 180000, unit: transactions, source: "Digital banking roadmap FY27" }
+    - { text: "Cost per branch transaction", value: 3.4, unit: usd, source: "Branch cost model FY26" }
+    - { text: "Complaints avoided per year", value: 1500, unit: complaints, source: "Complaints analysis of 2026 release incidents" }
+    - { text: "Cost per complaint handled", value: 85, unit: usd, source: "Customer care cost model FY26" }
+  annual_value_usd: 739500
+  measured: null

@@ -1,0 +1,89 @@
+name: LOAN_PORTFOLIO
+description: Month-end loan snapshots — balances, delinquency, non-performing loans, charge-offs and allowance
+tables:
+  - { alias: l, fqn: CONFORMED_GOLD.FCT_LOAN_BALANCE, pk: loan_balance_key }
+  - { alias: n, fqn: CONFORMED_GOLD.DIM_LOAN, pk: loan_key }
+  - { alias: br, fqn: CONFORMED_GOLD.DIM_BRANCH, pk: branch_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: l.loan_key, to: n.loan_key }
+  - { from: l.branch_key, to: br.branch_key }
+  - { from: l.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: br.region, label: Market, synonyms: [region, territory, footprint], term: GT-BNK-MARKET }
+  - { name: branch, expr: br.branch_name, label: Branch, synonyms: [banking center], term: GT-BNK-BRANCH }
+  - { name: loan_segment, expr: n.loan_segment, label: Loan segment, synonyms: [loan type, portfolio segment, asset class, product line], term: GT-BNK-LOAN-SEGMENT }
+  - { name: segment_group, expr: n.segment_group, label: Consumer or commercial, synonyms: [book, consumer vs commercial] }
+  - { name: dpd_bucket, expr: l.dpd_bucket, label: Delinquency bucket, synonyms: [days past due bucket, aging bucket, dpd band], term: GT-BNK-DPD }
+  - { name: fico_band, expr: n.fico_band, label: Credit score band, synonyms: [fico band, credit band, score band] }
+  - { name: vintage_year, expr: n.vintage_year, label: Vintage, synonyms: [origination year, vintage year] }
+  - { name: held_for_sale, expr: l.held_for_sale, label: Held for sale, synonyms: [hfs, loans for sale], term: GT-BNK-HFS }
+time_dimensions:
+  - { name: month_end, expr: d.date, default: true }
+facts:
+  - { name: principal, expr: l.principal }
+  - { name: dpd_days, expr: l.dpd_days }
+metrics:
+  - name: total_loans
+    label: Total loans
+    expr: SUM(l.principal) / COUNT(DISTINCT l.date_key)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [loans outstanding, loan balances, loan book, gross loans]
+    term: GT-BNK-LOANS
+    description: Average month-end principal outstanding across the months in the period (governed loan sample)
+    default_filters: [ { rule: BR-BNK-012 } ]
+    naive_expr: SUM(l.principal)
+  - name: npl_ratio
+    label: NPL ratio
+    expr: 100.0 * SUM(CASE WHEN l.non_performing THEN l.principal ELSE 0 END) / SUM(l.principal)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [non-performing loan ratio, npl rate, bad loan ratio, nonperforming ratio]
+    term: GT-BNK-NPL
+    description: Principal 90+ days past due or on non-accrual as a share of total principal
+    default_filters: [ { rule: BR-BNK-012 } ]
+    naive_expr: 100.0 * AVG(CASE WHEN l.dpd_days > 0 THEN 1 ELSE 0 END)
+  - name: delinquency_30_plus_rate
+    label: 30+ days past due rate
+    expr: 100.0 * SUM(CASE WHEN l.dpd_days >= 30 THEN l.principal ELSE 0 END) / SUM(l.principal)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [delinquency rate, 30 plus delinquency, past due rate, dpd rate]
+    term: GT-BNK-DELINQUENCY
+    description: Principal 30 or more days past due as a share of total principal
+    default_filters: [ { rule: BR-BNK-012 } ]
+  - name: net_charge_off_ratio
+    label: Net charge-off ratio
+    expr: 100.0 * 12 * SUM(l.net_charge_off) / SUM(l.principal)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [nco ratio, net charge-offs, nco rate, loss rate, credit losses]
+    term: GT-BNK-NCO
+    description: Annualised charge-offs net of recoveries as a share of average loans
+    default_filters: [ { rule: BR-BNK-012 } ]
+  - name: allowance_coverage
+    label: Allowance coverage of NPLs
+    expr: 100.0 * SUM(l.allowance_amount) / NULLIF(SUM(CASE WHEN l.non_performing THEN l.principal ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [acl coverage, reserve coverage, allowance coverage ratio, cecl coverage]
+    term: GT-BNK-ACL
+    description: Allowance for credit losses as a share of non-performing loans
+    default_filters: [ { rule: BR-BNK-012 } ]
+  - name: loan_yield
+    label: Loan yield
+    expr: SUM(l.rate_weighted_principal) / SUM(l.principal)
+    unit: '%'
+    decimals: 2
+    direction: higher_is_better
+    synonyms: [portfolio yield, average note rate, yield on loans]
+    term: GT-BNK-LOAN-YIELD
+    description: Balance-weighted note rate on loans outstanding
+    default_filters: [ { rule: BR-BNK-012 } ]
+products: [DP-BNK-003]

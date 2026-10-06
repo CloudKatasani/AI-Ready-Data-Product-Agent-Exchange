@@ -1,0 +1,54 @@
+name: DIGITAL_ENGAGEMENT
+description: Mobile app and online banking sessions — login success, mobile share and session length
+tables:
+  - { alias: s, fqn: CONFORMED_GOLD.FCT_DIGITAL_SESSION, pk: session_key }
+  - { alias: c, fqn: CONFORMED_GOLD.DIM_CUSTOMER, pk: customer_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: s.customer_key, to: c.customer_key }
+  - { from: s.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: c.region, label: Market, synonyms: [region, territory, footprint], term: GT-BNK-MARKET }
+  - { name: digital_channel, expr: s.digital_channel, label: Digital channel, synonyms: [app or web, platform] }
+  - { name: feature, expr: s.feature, label: Feature used, synonyms: [journey, task, feature] }
+  - { name: segment, expr: c.segment, label: Customer segment, synonyms: [customer type, tier], term: GT-BNK-SEGMENT }
+time_dimensions:
+  - { name: session_date, expr: d.date, default: true }
+facts:
+  - { name: duration_min, expr: s.duration_min }
+metrics:
+  - name: digital_sessions
+    label: Digital sessions
+    expr: COUNT(*)
+    unit: sessions
+    decimals: 0
+    synonyms: [logins, sessions, digital visits]
+    term: GT-BNK-DIGITAL-SESSION
+    description: Mobile app and online banking sessions in the period
+  - name: login_success_rate
+    label: Login success rate
+    expr: 100.0 * AVG(CASE WHEN s.login_success THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 2
+    direction: higher_is_better
+    synonyms: [login rate, authentication success, sign-in success]
+    term: GT-BNK-DIGITAL-SESSION
+    description: Share of digital sessions with a successful login
+  - name: mobile_share
+    label: Mobile share of sessions
+    expr: 100.0 * AVG(CASE WHEN s.digital_channel = 'Mobile app' THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [mobile share, app share, mobile mix]
+    term: GT-BNK-DIGITAL-ACTIVE
+    description: Share of digital sessions on the mobile app
+  - name: avg_session_minutes
+    label: Average session length
+    expr: AVG(s.duration_min)
+    unit: minutes
+    decimals: 2
+    synonyms: [session length, time in app, session duration]
+    term: GT-BNK-DIGITAL-SESSION
+    description: Mean session duration in minutes
+products: [DP-BNK-007]

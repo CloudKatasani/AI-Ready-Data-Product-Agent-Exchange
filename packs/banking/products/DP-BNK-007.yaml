@@ -1,0 +1,24 @@
+id: DP-BNK-007
+name: Digital Engagement
+domain: Branch & Digital Channels
+archetype: CONSUMER_ALIGNED
+initial_status: IN_DEVELOPMENT
+seed_stage: 6
+version: 0.4.0
+owner: banking:lending-dpo
+steward: banking:data-steward
+description: Mobile app and online banking sessions with login outcome, feature used and session length, joined to the customer record.
+purpose: Show where digital journeys fail and which markets and segments are ready to move servicing from branches to digital.
+decision: { persona: Head of Digital Banking, decision: "Which journeys to fix first and which branches to convert to advice-only", cadence: Monthly, workaround: "App analytics dashboards with no link to customer segment or market", consequence: "Login failures after releases go unnoticed until complaints arrive" }
+sample_questions: ["Login success rate by day last month", "Mobile share of sessions by market", "Sessions by feature"]
+semantic_view: DIGITAL_ENGAGEMENT
+output_ports:
+  - { kind: semantic, ref: DIGITAL_ENGAGEMENT }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_BNK_007_DIGITAL_ENGAGEMENT }
+sla: { freshness_minutes: 60, availability_pct: 99.0, max_null_rate_pct: 1.0 }
+kpis: [KPI-BNK-LOGIN, KPI-BNK-MOBILE-SHARE]
+upstream: [CONFORMED_GOLD.FCT_DIGITAL_SESSION, CONFORMED_GOLD.DIM_CUSTOMER]
+consumers: [Digital banking]
+lifecycle_seed: { artifacts: auto, open_proposals: true }
+certification_script: null
+value_case: VC-BNK-007

@@ -1,0 +1,179 @@
+# Ridgeline Bank business rules (synthetic). Rules with an `apply` block are applied by the metric
+# compiler as default filters; the rest are definitions, thresholds and policies cited in answers.
+
+# ── Credit risk ─────────────────────────────────────────────────────────────────────────────────────
+- id: BR-BNK-001
+  domain: Credit risk
+  text: "A loan is non-performing when it is 90 or more days past due or on non-accrual status; the NPL ratio is non-performing principal divided by total principal at month-end."
+  kind: definition
+  metric: npl_ratio
+  source_doc: DOC-BNK-CREDIT-POLICY
+
+- id: BR-BNK-002
+  domain: Credit risk
+  text: "Delinquency is measured on principal, not loan count: the 30+ days past due rate is principal 30 or more days past due divided by total principal."
+  kind: definition
+  metric: delinquency_30_plus_rate
+  source_doc: DOC-BNK-CREDIT-POLICY
+
+- id: BR-BNK-003
+  domain: Credit risk
+  text: "The net charge-off ratio annualises monthly charge-offs net of recoveries and divides by average month-end loans for the period."
+  kind: definition
+  metric: net_charge_off_ratio
+  source_doc: DOC-BNK-CREDIT-POLICY
+
+- id: BR-BNK-004
+  domain: Credit risk
+  text: "Allowance coverage compares the CECL allowance for credit losses with non-performing loans; coverage below 60% is escalated to the allowance committee."
+  kind: threshold
+  metric: allowance_coverage
+  source_doc: DOC-BNK-CREDIT-POLICY
+
+- id: BR-BNK-005
+  domain: Credit risk
+  text: "Balance metrics from month-end snapshots are averaged across the months in the period, never summed, so a quarter is not counted three times."
+  kind: definition
+  metric: total_loans
+  source_doc: DOC-BNK-CREDIT-POLICY
+
+- id: BR-BNK-012
+  domain: Credit risk
+  text: "Credit quality ratios and loans outstanding exclude loans held for sale unless explicitly requested."
+  kind: filter
+  metric: npl_ratio
+  source_doc: DOC-BNK-CREDIT-POLICY
+  apply:
+    filter: { dimension: held_for_sale, op: "=", value: false }
+    unless_question_mentions: [including held for sale, including held-for-sale, including hfs, all loans, including loans held for sale]
+
+# ── Deposits & treasury ─────────────────────────────────────────────────────────────────────────────
+- id: BR-BNK-006
+  domain: Treasury
+  text: "Cost of deposits is annualised interest expense divided by average deposit balances; it is reported to ALCO monthly and quarterly."
+  kind: definition
+  metric: cost_of_deposits
+  source_doc: DOC-BNK-LIQUIDITY
+
+- id: BR-BNK-007
+  domain: Treasury
+  text: "Balances above the $250,000 insured limit are treated as uninsured; an uninsured share above 30% of deposits triggers a liquidity contingency review."
+  kind: threshold
+  metric: uninsured_deposit_share
+  source_doc: DOC-BNK-LIQUIDITY
+
+- id: BR-BNK-008
+  domain: Treasury
+  text: "Non-interest-bearing deposits are checking (demand deposit) balances; savings, money market and time deposits are interest-bearing."
+  kind: definition
+  metric: noninterest_bearing_share
+  source_doc: DOC-BNK-LIQUIDITY
+
+- id: BR-BNK-009
+  domain: Treasury
+  text: "Total deposits are the average of month-end ledger balances across the months in the period."
+  kind: definition
+  metric: total_deposits
+  source_doc: DOC-BNK-LIQUIDITY
+
+# ── Customer & KYC ──────────────────────────────────────────────────────────────────────────────────
+- id: BR-BNK-010
+  domain: Customer
+  text: "An active customer has CIF status Active; digital, product and balance metrics are measured over active customers only."
+  kind: definition
+  metric: active_customers
+  source_doc: DOC-BNK-DATA-GOVERNANCE
+
+- id: BR-BNK-011
+  domain: Customer
+  text: "A customer is digitally active when they logged in to the mobile app or online banking at least once in the last 30 days."
+  kind: definition
+  metric: digital_active_rate
+  source_doc: DOC-BNK-DIGITAL-STANDARDS
+
+- id: BR-BNK-013
+  domain: Financial crime
+  text: "KYC refresh cycles are one year for high-risk, two years for medium-risk and three years for low-risk customers; a review past its due date is overdue."
+  kind: threshold
+  metric: kyc_overdue_pct
+  source_doc: DOC-BNK-BSA-AML
+
+# ── Cards & payments ────────────────────────────────────────────────────────────────────────────────
+- id: BR-BNK-014
+  domain: Cards
+  text: "Card fraud loss rate is confirmed fraud losses on approved authorisations per 10,000 dollars of approved purchase volume; suspected but unconfirmed fraud is excluded."
+  kind: definition
+  metric: fraud_loss_bps
+  source_doc: DOC-BNK-CARD-FRAUD
+
+- id: BR-BNK-015
+  domain: Cards
+  text: "A merchant category whose fraud loss rate exceeds 50 bps for a quarter is placed on enhanced card-not-present authentication."
+  kind: threshold
+  metric: fraud_loss_bps
+  source_doc: DOC-BNK-CARD-FRAUD
+
+- id: BR-BNK-016
+  domain: Cards
+  text: "Purchase volume and average ticket count approved authorisations only; declined authorisations count toward the approval rate denominator."
+  kind: definition
+  metric: purchase_volume
+  source_doc: DOC-BNK-CARD-FRAUD
+
+# ── Collections ─────────────────────────────────────────────────────────────────────────────────────
+- id: BR-BNK-017
+  domain: Collections
+  text: "A promise to pay is kept when the promised amount arrives by the promised date; partial payments do not count as kept."
+  kind: definition
+  metric: promise_kept_rate
+  source_doc: DOC-BNK-COLLECTIONS
+
+- id: BR-BNK-018
+  domain: Collections
+  text: "Cure rate and roll rate to charge-off are measured over resolved cases only; cases still open are excluded unless explicitly requested."
+  kind: filter
+  metric: cure_rate
+  source_doc: DOC-BNK-COLLECTIONS
+  apply:
+    filter: { dimension: case_closed, op: "=", value: true }
+    unless_question_mentions: [including open cases, including open, all cases]
+
+# ── Financial crime ─────────────────────────────────────────────────────────────────────────────────
+- id: BR-BNK-019
+  domain: Financial crime
+  text: "Alert-to-case rate divides escalated alerts by dispositioned alerts; alerts still pending review are excluded from both."
+  kind: definition
+  metric: alert_to_case_rate
+  source_doc: DOC-BNK-BSA-AML
+
+- id: BR-BNK-020
+  domain: Financial crime
+  text: "SAR conversion counts SARs filed on closed investigation cases; the existence or content of an individual SAR is never disclosed."
+  kind: policy
+  metric: sar_conversion_rate
+  source_doc: DOC-BNK-BSA-AML
+
+# ── Governance policies ─────────────────────────────────────────────────────────────────────────────
+- id: BR-BNK-021
+  domain: Governance
+  text: "Customer names, addresses, emails, phone numbers, dates of birth and taxpayer identifiers are masked for every persona without clearance, in every surface including agent answers."
+  kind: policy
+  source_doc: DOC-BNK-DATA-GOVERNANCE
+
+- id: BR-BNK-022
+  domain: Governance
+  text: "Market personas see only rows for their own market; totals across other markets are not disclosed to them."
+  kind: policy
+  source_doc: DOC-BNK-DATA-GOVERNANCE
+
+- id: BR-BNK-023
+  domain: Governance
+  text: "Agents answer with aggregates only. Requests for an individual customer's balances, loans, card activity, alerts or contact details are declined and redirected to the servicing process."
+  kind: policy
+  source_doc: DOC-BNK-DATA-GOVERNANCE
+
+- id: BR-BNK-024
+  domain: Governance
+  text: "Agents never approve, decline or price credit, change credit limits, block cards or file SARs; those decisions belong to named people."
+  kind: policy
+  source_doc: DOC-BNK-DATA-GOVERNANCE

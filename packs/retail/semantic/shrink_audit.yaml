@@ -1,0 +1,82 @@
+name: SHRINK_AUDIT
+description: Store category cycle counts with shrink, accuracy and count-cycle status
+tables:
+  - { alias: c, fqn: CONFORMED_GOLD.FCT_CYCLE_COUNT, pk: count_key }
+  - { alias: st, fqn: CONFORMED_GOLD.DIM_STORE, pk: store_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: c.store_key, to: st.store_key }
+  - { from: c.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: st.region, label: Region, synonyms: [territory, store region, area], term: GT-RTL-REGION }
+  - { name: store, expr: st.store_id, label: Store, synonyms: [shop, location] }
+  - { name: count_category, expr: c.count_category, label: Count category, synonyms: [counted category] }
+  - { name: cycle_months, expr: c.cycle_months, label: Count cycle (months), synonyms: [count cycle, cycle] }
+time_dimensions:
+  - { name: count_date, expr: d.date, default: true }
+facts:
+  - { name: risk_score, expr: c.risk_score }
+metrics:
+  - name: shrink_rate_pct
+    label: Shrink rate
+    expr: 100.0 * SUM(c.shrink_value) / SUM(c.system_value)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [shrinkage, inventory loss, shrink percent]
+    term: GT-RTL-SHRINK
+    description: Shrink value found by cycle counts as a share of system inventory value counted
+  - name: counts_overdue_pct
+    label: Counts overdue
+    expr: 100.0 * AVG(CASE WHEN c.overdue THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [overdue counts, count backlog, counts past cycle]
+    term: GT-RTL-COUNT-CYCLE
+    description: Share of counted store categories past their full-count cycle
+  - name: count_cycle_compliance
+    label: Count cycle compliance
+    expr: 100.0 - 100.0 * AVG(CASE WHEN c.overdue THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [cycle compliance, counted on cycle]
+    term: GT-RTL-COUNT-CYCLE
+    description: Share of counted store categories within their full-count cycle
+  - name: inventory_accuracy_pct
+    label: Inventory accuracy
+    expr: 100.0 * AVG(CASE WHEN c.within_tolerance THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [record accuracy, count accuracy]
+    term: GT-RTL-SHRINK
+    description: Share of counts where shrink is within the 2% tolerance
+  - name: avg_shrink_risk
+    label: Shrink risk score
+    expr: AVG(c.risk_score)
+    unit: score
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [shrink risk, loss risk]
+    term: GT-RTL-SHRINK-RISK
+    description: Mean loss-prevention risk score (0-100) across counts
+  - name: cycle_counts
+    label: Cycle counts
+    expr: COUNT(*)
+    unit: counts
+    decimals: 0
+    synonyms: [counts, number of counts]
+    term: GT-RTL-CYCLE-COUNT
+    description: Cycle counts completed in the period
+  - name: high_risk_counts
+    label: High-risk counts
+    expr: COUNT_IF(c.risk_score >= 70)
+    unit: counts
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [risky counts, critical counts]
+    term: GT-RTL-SHRINK-RISK
+    description: Counts with a risk score of 70 or more
+products: [DP-RTL-007]

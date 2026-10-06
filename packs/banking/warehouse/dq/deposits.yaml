@@ -1,0 +1,57 @@
+# Deposit balance DQ rules.
+- id: DQ-BNK-017
+  object: CONFORMED_GOLD.FCT_DEPOSIT_BALANCE
+  column: ledger_balance
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every account-month carries a ledger balance (total deposits and funding cost depend on it).
+- id: DQ-BNK-018
+  object: CONFORMED_GOLD.FCT_DEPOSIT_BALANCE
+  column: ledger_balance
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Ledger balances are not negative; overdrafts are reported as loans.
+- id: DQ-BNK-019
+  object: CONFORMED_GOLD.FCT_DEPOSIT_BALANCE
+  column: balance_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per account-month balance record after CDC deduplication.
+- id: DQ-BNK-020
+  object: CONFORMED_GOLD.FCT_DEPOSIT_BALANCE
+  column: month_end
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: The latest month-end balances have landed (no more than a day behind the reporting date).
+- id: DQ-BNK-021
+  object: CONFORMED_GOLD.FCT_DEPOSIT_BALANCE
+  column: deposit_product
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Checking, Savings, Money market, Time deposit]
+  severity: medium
+  alert_route: steward
+  description: Deposit products conform to the deposit product catalogue.
+- id: DQ-BNK-022
+  object: CONFORMED_GOLD.FCT_DEPOSIT_BALANCE
+  column: interest_expense
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: medium
+  alert_route: steward
+  description: Interest expense is never negative.
+- id: DQ-BNK-023
+  object: CONFORMED_GOLD.FCT_DEPOSIT_BALANCE
+  dimension: consistency
+  assertion: "row_count >= 1000"
+  severity: high
+  alert_route: engineering
+  description: Deposit balances hold a full history; a sharp drop indicates a missing core extract.

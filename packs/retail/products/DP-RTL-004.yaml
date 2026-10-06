@@ -1,0 +1,26 @@
+id: DP-RTL-004
+name: Merchandise & Price Execution
+domain: Merchandising & Pricing
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 1.6.0
+owner: retail:commercial-dpo
+steward: retail:customer-steward
+description: Item assortment with initial margin and private label mix, plus in-store price change execution and backlog.
+purpose: Line reviews and pricing accuracy — protect margin at intake and make sure shelf prices match the till.
+decision: { persona: Chief Merchandising Officer, decision: "Which categories get a margin recovery plan and which stores a pricing audit", cadence: Quarterly with weekly pricing review, workaround: "PIM exports joined to pricing engine logs in a desktop database", consequence: "Margin erodes at intake while overdue price changes cause till disputes" }
+sample_questions: ["Initial margin by category", "Price change compliance this year by region", "How many price changes are overdue?"]
+semantic_view: ASSORTMENT
+output_ports:
+  - { kind: semantic, ref: ASSORTMENT }
+  - { kind: semantic, ref: PRICE_EXECUTION }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_RTL_004_MERCHANDISE_PRICE_EXECUTION }
+  - { kind: agent, ref: AG-RTL-004 }
+sla: { freshness_minutes: 1440, availability_pct: 99.0, max_null_rate_pct: 1.0 }
+kpis: [KPI-RTL-IMU, KPI-RTL-LOW-MARGIN, KPI-RTL-PRIVATE-LABEL, KPI-RTL-PRICE-COMP, KPI-RTL-PRICE-BACKLOG]
+upstream: [CONFORMED_GOLD.DIM_ITEM, CONFORMED_GOLD.FCT_PRICE_CHANGE, CONFORMED_GOLD.DIM_STORE]
+consumers: [Merchandising, Pricing, Store operations, Merchandise & Inventory Advisor agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-RTL-004

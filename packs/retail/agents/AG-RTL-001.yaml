@@ -1,0 +1,40 @@
+id: AG-RTL-001
+name: Customer & Loyalty Insights
+domain: Customer & Loyalty
+status: PRODUCTION
+owner: retail:commercial-dpo
+on_call: Customer Data Ops
+avatar: { icon: users, hue: 265 }
+capability: "Answers questions on active members, app adoption, churn risk, points liability, online orders, returns and refunds."
+personas_served: [Director of Loyalty, VP E-commerce Operations, Regional Store Operations Manager]
+out_of_scope: ["individual member account lookups", "returns abuse decisions or refund approvals", "points adjustments for a member", "marketing message drafting"]
+products:
+  - { id: DP-RTL-001, columns: "*" }
+  - { id: DP-RTL-005, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [LOYALTY_360, RETURNS_REFUNDS], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-RTL-LOYALTY-PROGRAM, DOC-RTL-RETURNS-POLICY, DOC-RTL-DATA-GOVERNANCE] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+  - { tool: request_access_link }
+kpi_coverage:
+  - { kpi: KPI-RTL-APP, grains: [], slices: [region, tier], depth: rank_drivers }
+  - { kpi: KPI-RTL-CHURN, grains: [], slices: [region, tier], depth: explain }
+  - { kpi: KPI-RTL-HIGH-CHURN, grains: [], slices: [region, tier], depth: value }
+  - { kpi: KPI-RTL-POINTS, grains: [], slices: [region, tier], depth: value }
+  - { kpi: KPI-RTL-AOV, grains: [month, quarter], slices: [region, tier, fulfilment_method], depth: trend }
+  - { kpi: KPI-RTL-ONLINE-ORDERS, grains: [month], slices: [region, fulfilment_method], depth: value }
+  - { kpi: KPI-RTL-RETURN-RATE, grains: [month, quarter], slices: [region, tier, fulfilment_method], depth: explain }
+  - { kpi: KPI-RTL-REFUND-DAYS, grains: [month, quarter], slices: [region, fulfilment_method], depth: explain }
+  - { kpi: KPI-RTL-REFUNDS, grains: [month, quarter], slices: [region, tier], depth: rank_drivers }
+  - { kpi: KPI-RTL-OTD, grains: [month, quarter], slices: [region, fulfilment_method], depth: trend }
+instructions: [INS-RTL-001-P, INS-RTL-001-R, INS-RTL-001-G, INS-RTL-001-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: masked, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-RTL-012, SC-RTL-013, SC-RTL-014, SC-RTL-015, SC-RTL-016, SC-RTL-017]
+quality_fix:
+  feedback_question: "What share of active members are app fans?"
+  fix: { type: synonym, payload: { term: app fans, synonyms: [app fan, app regulars], maps_to: { kind: metric, ref: app_adoption_rate } } }
+  eval_before_pct: 88
+  eval_after_pct: 94

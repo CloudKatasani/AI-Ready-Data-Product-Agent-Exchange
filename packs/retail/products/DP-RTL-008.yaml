@@ -1,0 +1,23 @@
+id: DP-RTL-008
+name: Customer Care Contacts
+domain: Customer & Loyalty
+archetype: CONSUMER_ALIGNED
+initial_status: DRAFT
+seed_stage: 2
+version: 0.1.0
+owner: retail:commercial-dpo
+steward: null
+description: Customer-care contacts, reasons and satisfaction joined to the member record.
+purpose: Understand why members contact customer care and where self-service would remove the contact.
+decision: { persona: Director of Customer Care, decision: "Which contact reasons to move to self-service first", cadence: Quarterly, workaround: "Telephony reports with no link to the member record", consequence: "Where-is-my-order contacts keep growing after every peak" }
+sample_questions: ["Top contact reasons last month", "Average handle time by channel"]
+semantic_view: null
+output_ports:
+  - { kind: sql, ref: DATA_PRODUCTS.DP_RTL_008_CUSTOMER_CARE_CONTACTS }
+sla: { freshness_minutes: 1440, availability_pct: 98.0, max_null_rate_pct: 2.0 }
+kpis: []
+upstream: [CONFORMED_GOLD.FCT_CARE_CONTACT]
+consumers: [Customer care]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: null

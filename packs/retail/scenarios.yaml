@@ -1,0 +1,413 @@
+# Scripted scenarios for Harbor & Pine — ported from the AI-Ready retail scenarios and the Marketplace RTL
+# demo exchanges. Numbers come from golden.json; `expect` holds shape assertions only. Together the 25
+# scenarios cover all 15 patterns (04 §6).
+
+# ================================================================ AG-RTL-002 Sales Performance Analyst
+- id: SC-RTL-001
+  agent: AG-RTL-002
+  pattern: 3
+  question: "What were net sales by region last quarter?"
+  paraphrases:
+    - "What were net sales by region last quarter, comparable stores only?"
+    - "net sales per region last qtr"
+    - "comp sales by territory for Q3"
+  kind: answer
+  query: { view: SALES_PERFORMANCE, metrics: [net_sales], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: net_sales, dir: desc }] }
+  answer:
+    headline: "{{top.region}} had the highest comparable-store net sales last quarter at {{top.net_sales}}."
+    narrative: "Non-comparable stores are excluded (BR-RTL-012). {{bottom.region}} was lowest at {{bottom.net_sales}} across {{rows}} regions."
+    chart: bar
+  followups: ["Which stores drove the Northeast?", "Include all stores", "Trend over the last 4 quarters"]
+  expect: { rows: 5, top: { region: Northeast }, rules: [BR-RTL-012] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-RTL-002
+  agent: AG-RTL-002
+  pattern: 10
+  question: "What were net sales by region last quarter, including all stores?"
+  paraphrases:
+    - "Net sales by region last quarter including new stores"
+    - "total company sales per region last qtr"
+  kind: answer
+  query: { view: SALES_PERFORMANCE, metrics: [net_sales], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: net_sales, dir: desc }] }
+  answer:
+    headline: "Including all stores, {{top.region}} had the highest net sales last quarter at {{top.net_sales}}."
+    narrative: "You asked for all stores, so the comparable-store rule in BR-RTL-012 is not applied. New stores reorder the ranking — compare with the standard comparable-store view."
+    chart: bar
+  followups: ["Comparable stores only", "Which new stores drove the Southwest?"]
+  expect: { rows: 5, top: { region: Southwest } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-RTL-003
+  agent: AG-RTL-002
+  pattern: 5
+  question: "Which 10 stores had the highest net sales last quarter?"
+  paraphrases:
+    - "Top 10 stores by net sales last quarter"
+    - "best performing shops by sales last qtr"
+  kind: answer
+  query: { view: SALES_PERFORMANCE, metrics: [net_sales], dimensions: [store], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: net_sales, dir: desc }], limit: 10, analysis: rank }
+  answer:
+    headline: "{{top.store}} was the top store last quarter with {{top.net_sales}} in comparable net sales."
+    narrative: "Ranked over {{rows}} stores, comparable stores only (BR-RTL-012). The leading stores set the benchmark for labour and marketing investment."
+    chart: bar
+  followups: ["Basket value at ST-007", "Gross margin rate by store"]
+  expect: { rows: 10, top: { store: ST-007 }, rules: [BR-RTL-012] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-RTL-004
+  agent: AG-RTL-002
+  pattern: 6
+  question: "What is driving net sales last quarter, by department?"
+  paraphrases:
+    - "Which departments contribute most to net sales?"
+    - "sales by dept last quarter"
+  kind: answer
+  query: { view: SALES_PERFORMANCE, metrics: [net_sales], dimensions: [department], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: net_sales, dir: desc }], analysis: contribution }
+  answer:
+    headline: "{{top.department}} was the largest driver of net sales last quarter at {{top.net_sales}}."
+    narrative: "Total comparable-store net sales were {{total.net_sales}} across {{rows}} departments (BR-RTL-012)."
+    chart: bar
+  followups: ["Gross margin rate by department", "Promotional share by department"]
+  expect: { rows: 5, rules: [BR-RTL-012] }
+
+- id: SC-RTL-005
+  agent: AG-RTL-002
+  pattern: 15
+  question: "What share of our purchase-order cost this year was at the agreed cost?"
+  paraphrases:
+    - "How much of our buying is at the agreed vendor cost?"
+  kind: redirect
+  query: null
+  redirect_to: AG-RTL-003
+  answer:
+    headline: "That's a supply chain question — the Supply Chain Copilot answers it."
+    narrative: "I cover store and digital sales performance. The Supply Chain Copilot is certified on purchase-order cost and agreed-cost compliance."
+    chart: none
+  followups: ["Ask the Supply Chain Copilot", "What can you answer?"]
+
+- id: SC-RTL-006
+  agent: AG-RTL-002
+  pattern: 15
+  question: "Push a 30% markdown to garden furniture in every store."
+  paraphrases:
+    - "Mark down garden furniture by 30 percent"
+    - "Can you change the price of the outdoor range?"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't change prices or approve markdowns — that is outside what this agent is allowed to do."
+    narrative: "Price changes are raised by merchandising in the pricing engine and executed by stores. I can show you sales and promotional share for the category so the merchant has the evidence."
+    chart: none
+  followups: ["Net sales for Garden & outdoor last quarter", "Promotional sales share by category"]
+
+- id: SC-RTL-007
+  agent: AG-RTL-002
+  pattern: 4
+  question: "How have net sales trended month by month this year?"
+  paraphrases:
+    - "Monthly net sales year to date"
+    - "net sales trend ytd by month"
+  kind: answer
+  query: { view: SALES_PERFORMANCE, metrics: [net_sales], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "Comparable-store net sales are {{total.net_sales}} year to date."
+    narrative: "Monthly net sales over {{rows}} months, comparable stores only (BR-RTL-012)."
+    chart: line
+  followups: ["Net sales by region last quarter", "Which departments drove the peak month?"]
+  expect: { rows: 9, rules: [BR-RTL-012] }
+
+# ================================================================ AG-RTL-004 Merchandise & Inventory Advisor
+- id: SC-RTL-008
+  agent: AG-RTL-004
+  pattern: 8
+  question: "How is initial margin distributed across categories?"
+  paraphrases:
+    - "Spread of initial margin by category"
+    - "imu percentiles across categories"
+  kind: answer
+  query: { view: ASSORTMENT, metrics: [avg_initial_margin_pct], dimensions: [category], analysis: distribution }
+  answer:
+    headline: "Across {{top.category_count}} categories, the median category carries {{top.avg_initial_margin_pct_p50}}% initial margin."
+    narrative: "The middle 80% of categories sit between {{top.avg_initial_margin_pct_p10}}% and {{top.avg_initial_margin_pct_p90}}%; the weakest category averages {{top.avg_initial_margin_pct_min}}%."
+    chart: table
+  followups: ["Which categories have the most low-margin items?", "Initial margin by brand type"]
+  expect: { rows: 1 }
+
+- id: SC-RTL-009
+  agent: AG-RTL-004
+  pattern: 2
+  question: "Is price change compliance within target this year?"
+  paraphrases:
+    - "Are stores executing price changes on time year to date?"
+    - "price execution vs target ytd"
+  kind: answer
+  query: { view: PRICE_EXECUTION, metrics: [price_change_compliance_pct], timeRange: { ytd: true }, analysis: compare_target }
+  answer:
+    headline: "Price change compliance is {{top.price_change_compliance_pct}}% year to date — {{vsTarget.top}} target."
+    narrative: "Price changes executed in store on or before their effective date as a share of price changes due this year."
+    chart: kpi
+  followups: ["Price change compliance by region", "How big is the price change backlog?"]
+  expect: { rows: 1 }
+
+- id: SC-RTL-010
+  agent: AG-RTL-004
+  pattern: 9
+  question: "How does initial margin compare between private label and national brands?"
+  paraphrases:
+    - "Compare initial margin by brand type"
+    - "imu own brand vs national brand"
+  kind: answer
+  query: { view: ASSORTMENT, metrics: [avg_initial_margin_pct, low_margin_items_pct], dimensions: [brand_type], orderBy: [{ field: avg_initial_margin_pct, dir: desc }] }
+  answer:
+    headline: "{{top.brand_type}} items carry the higher initial margin at {{top.avg_initial_margin_pct}}%."
+    narrative: "{{top.low_margin_items_pct}}% of {{top.brand_type}} items are low margin, versus {{bottom.low_margin_items_pct}}% for {{bottom.brand_type}} items."
+    chart: bar
+  followups: ["Same comparison for Apparel only", "Private label share by category"]
+  expect: { rows: 2, top: { brand_type: Private label } }
+
+- id: SC-RTL-011
+  agent: AG-RTL-004
+  pattern: 11
+  question: "How big is the price change backlog by region?"
+  paraphrases:
+    - "ticketing backlog per territory"
+    - "pricing backlog by area"
+  kind: answer
+  query: { view: PRICE_EXECUTION, metrics: [overdue_price_changes], dimensions: [region], orderBy: [{ field: overdue_price_changes, dir: desc }] }
+  answer:
+    headline: "{{top.region}} has the largest price change backlog with {{top.overdue_price_changes}} overdue price changes."
+    narrative: "\"Price change backlog\" maps to overdue price changes: changes not executed and past their effective date. {{total.overdue_price_changes}} are overdue across {{rows}} regions."
+    chart: bar
+  followups: ["Split by change type", "Price change compliance by region"]
+  expect: { rows: 5 }
+  personas_expect: { A: { kind: decline } }
+
+- id: SC-RTL-024
+  agent: AG-RTL-004
+  pattern: 4
+  question: "How did the in-stock rate trend day by day last quarter?"
+  paraphrases:
+    - "daily on-shelf availability last quarter"
+    - "in stock trend last qtr"
+  kind: answer
+  query: { view: INVENTORY_AVAILABILITY, metrics: [in_stock_rate], timeGrain: day, timeRange: { last: { n: 1, unit: quarter } }, limit: 100, analysis: trend }
+  answer:
+    headline: "In-stock averaged {{total.in_stock_rate}}% last quarter."
+    narrative: "Daily in-stock rate over {{rows}} days. Look for the late-August dip after the replenishment release — out-of-stocks follow it."
+    chart: line
+  followups: ["In-stock rate by store", "Days of supply by department"]
+  expect: { rows: 92 }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-RTL-025
+  agent: AG-RTL-004
+  pattern: 13
+  question: "What was the in-stock rate by region last month?"
+  paraphrases:
+    - "on-shelf availability by territory last month"
+    - "in stock per region for September"
+  kind: answer
+  query: { view: INVENTORY_AVAILABILITY, metrics: [in_stock_rate], dimensions: [region], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: in_stock_rate, dir: desc }] }
+  answer:
+    headline: "{{top.region}} had the highest in-stock rate last month at {{top.in_stock_rate}}%."
+    narrative: "Share of store-item-days with stock on hand across {{rows}} regions you are entitled to see; the region row-access policy applies."
+    chart: bar
+  followups: ["In-stock by department", "Days of supply by region"]
+  expect: { rows: 5 }
+  personas_expect: { A: { rowFiltered: true } }
+
+# ================================================================ AG-RTL-001 Customer & Loyalty Insights
+- id: SC-RTL-012
+  agent: AG-RTL-001
+  pattern: 3
+  question: "What is our app adoption rate by region?"
+  paraphrases:
+    - "Which region has the highest app adoption?"
+    - "app enrolment by territory"
+  kind: answer
+  query: { view: LOYALTY_360, metrics: [app_adoption_rate], dimensions: [region], orderBy: [{ field: app_adoption_rate, dir: desc }] }
+  answer:
+    headline: "{{top.region}} leads app adoption at {{top.app_adoption_rate}}% of active members."
+    narrative: "{{bottom.region}} trails at {{bottom.app_adoption_rate}}%. Adoption counts active members enrolled in the mobile app."
+    chart: bar
+  followups: ["App adoption by member tier", "Churn risk by region"]
+  expect: { rows: 5, top: { region: Pacific } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-RTL-013
+  agent: AG-RTL-001
+  pattern: 12
+  question: "Which five active members have the highest churn risk?"
+  paraphrases:
+    - "Top 5 members most likely to lapse"
+    - "highest attrition risk loyalty members"
+  kind: answer
+  query: { view: LOYALTY_360, metrics: [avg_churn_risk], dimensions: [member_name], filters: [{ dimension: member_status, op: "=", value: Active }], orderBy: [{ field: avg_churn_risk, dir: desc }], limit: 5, analysis: rank }
+  answer:
+    headline: "The highest churn-risk active member scores {{top.avg_churn_risk}}."
+    narrative: "Member names are masked unless your persona is cleared for PII under the masking policy. Showing the top {{rows}} active members by churn risk score."
+    chart: table
+  followups: ["Churn risk by tier", "High churn-risk share by region"]
+  expect: { rows: 5 }
+  personas_expect: { A: { masked: [member_name], rowFiltered: true }, D: { masked: [] } }
+
+- id: SC-RTL-014
+  agent: AG-RTL-001
+  pattern: 14
+  question: "What is our online return rate this quarter?"
+  paraphrases:
+    - "What is our returns rate this quarter?"
+    - "return percentage last quarter"
+  kind: answer
+  query: { view: RETURNS_REFUNDS, metrics: [return_rate], timeRange: { last: { n: 1, unit: quarter } } }
+  answer:
+    headline: "The online return rate was {{top.return_rate}}% last quarter — {{vsTarget.top}} target."
+    narrative: "Returns & Refunds is still in certification, so treat this figure as provisional. The return-window rule BR-RTL-021 is applied."
+    chart: kpi
+  followups: ["Refund cycle time by fulfilment method", "When will Returns & Refunds be certified?"]
+  expect: { rows: 1, certified: false, rules: [BR-RTL-021] }
+  personas_expect: { A: { kind: decline } }
+
+- id: SC-RTL-015
+  agent: AG-RTL-001
+  pattern: 13
+  question: "How many active loyalty members do we have by tier?"
+  paraphrases:
+    - "active rewards members per tier"
+    - "how many active rewards members are in each loyalty tier"
+  kind: answer
+  query: { view: LOYALTY_360, metrics: [active_members], dimensions: [tier], orderBy: [{ field: active_members, dir: desc }] }
+  answer:
+    headline: "{{top.tier}} is the largest tier with {{top.active_members}} active members."
+    narrative: "Active members in the governed member sample across {{rows}} tiers you are entitled to see; the region row-access policy applies."
+    chart: bar
+  followups: ["App adoption by tier", "Points liability by tier"]
+  expect: { rows: 3, top: { tier: Bronze } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-RTL-016
+  agent: AG-RTL-001
+  pattern: 7
+  question: "How has average order value changed month over month this quarter?"
+  paraphrases:
+    - "AOV by month last quarter"
+    - "is our average online order growing month on month?"
+  kind: answer
+  query: { view: RETURNS_REFUNDS, metrics: [avg_order_value], timeGrain: month, timeRange: { last: { n: 1, unit: quarter } }, analysis: trend }
+  answer:
+    headline: "Average order value moved {{delta.avg_order_value}} from the first to the latest month of last quarter."
+    narrative: "Consumer orders only (BR-RTL-020), for each of the {{rows}} months. Returns & Refunds is still in certification, so treat these figures as provisional."
+    chart: line
+  followups: ["AOV by fulfilment method", "Online return rate this quarter"]
+  expect: { rows: 3, certified: false, rules: [BR-RTL-020] }
+
+- id: SC-RTL-017
+  agent: AG-RTL-001
+  pattern: 11
+  question: "How are our returns looking?"
+  paraphrases:
+    - "returns update"
+  kind: clarify
+  query: null
+  answer:
+    headline: "\"Returns\" can mean a few things — which one do you need?"
+    narrative: "I can show the online return rate, the refund cycle time, or the value refunded. Pick one and a period."
+    chart: none
+  followups: ["Online return rate last quarter by region", "Refund cycle time trend this year", "Refund value last month"]
+
+# ================================================================ AG-RTL-003 Supply Chain Copilot
+- id: SC-RTL-018
+  agent: AG-RTL-003
+  pattern: 1
+  question: "What share of our purchase-order cost this year was at the agreed cost?"
+  paraphrases:
+    - "cost compliance year to date"
+    - "agreed cost compliance ytd"
+  kind: answer
+  query: { view: VENDOR_SUPPLY, metrics: [cost_compliance_pct], timeRange: { ytd: true }, analysis: value }
+  answer:
+    headline: "{{top.cost_compliance_pct}}% of purchase-order cost this year was at the agreed cost."
+    narrative: "PO cost placed at the cost agreed in an active vendor agreement, as a share of total PO cost year to date."
+    chart: kpi
+  followups: ["Where is off-agreement spend highest?", "Cost compliance by vendor category"]
+  expect: { rows: 1 }
+
+- id: SC-RTL-019
+  agent: AG-RTL-003
+  pattern: 5
+  question: "Which five vendors have the worst OTIF this year?"
+  paraphrases:
+    - "Bottom 5 vendors by on time in full"
+    - "worst delivery performance suppliers ytd"
+  kind: answer
+  query: { view: VENDOR_SUPPLY, metrics: [vendor_otif_pct], dimensions: [vendor], timeRange: { ytd: true }, orderBy: [{ field: vendor_otif_pct, dir: asc }], limit: 5, analysis: rank }
+  answer:
+    headline: "{{top.vendor}} has the lowest OTIF this year at {{top.vendor_otif_pct}}%."
+    narrative: "The {{rows}} lowest-performing vendors by on-time-in-full delivery year to date."
+    chart: bar
+  followups: ["PO lead time by vendor category", "Fill rate for these vendors"]
+  expect: { rows: 5 }
+
+- id: SC-RTL-020
+  agent: AG-RTL-003
+  pattern: 6
+  question: "Where is our off-agreement spend by vendor category this year?"
+  paraphrases:
+    - "Where are spot buys highest by category?"
+    - "maverick buying by commodity"
+  kind: answer
+  query: { view: VENDOR_SUPPLY, metrics: [off_agreement_spend], dimensions: [vendor_category], timeRange: { ytd: true }, orderBy: [{ field: off_agreement_spend, dir: desc }], analysis: contribution }
+  answer:
+    headline: "{{top.vendor_category}} drives the most off-agreement spend this year at {{top.off_agreement_spend}}."
+    narrative: "Off-agreement spend is PO cost not placed at an agreed vendor cost. Total off-agreement spend is {{total.off_agreement_spend}} across {{rows}} vendor categories."
+    chart: bar
+  followups: ["Off-agreement spend by vendor", "Cost compliance trend"]
+  expect: { rows: 8 }
+
+- id: SC-RTL-021
+  agent: AG-RTL-003
+  pattern: 7
+  question: "How has PO lead time changed quarter over quarter this year?"
+  paraphrases:
+    - "PO to receipt days by quarter ytd"
+    - "is vendor lead time improving quarter on quarter?"
+  kind: answer
+  query: { view: VENDOR_SUPPLY, metrics: [po_lead_time_days], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "PO lead time moved {{delta.po_lead_time_days}} days from the first to the latest quarter this year."
+    narrative: "Average days from purchase order to receipt for each of the {{rows}} quarters this year."
+    chart: line
+  followups: ["Lead time by vendor category", "Which vendors have the worst OTIF?"]
+  expect: { rows: 3 }
+
+# ================================================================ AG-RTL-005 Data Steward Assistant (no semantic views)
+- id: SC-RTL-022
+  agent: AG-RTL-005
+  pattern: 15
+  question: "What can you answer?"
+  paraphrases:
+    - "What can you help me with?"
+    - "help"
+  kind: help
+  query: null
+  answer:
+    headline: "I explain governance across the data estate — I don't analyse business KPIs."
+    narrative: "Ask me what a glossary term or metric means, the certification status of a data product, or where governance gaps such as missing stewards or masking sit. For KPI numbers, ask the domain agents."
+    chart: none
+  followups: ["Which products are not yet certified?", "What is a comparable store?", "Which critical data elements lack a steward?"]
+
+- id: SC-RTL-023
+  agent: AG-RTL-005
+  pattern: 15
+  question: "Approve the access request for Returns & Refunds."
+  paraphrases:
+    - "Grant me access to DP-RTL-005"
+    - "Can you approve my access request?"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't approve access requests — agents act, humans decide."
+    narrative: "Access to a data product is granted only by its owner or steward through the access workflow. I can show you the request status and who can approve it."
+    chart: none
+  followups: ["Who can approve access to Returns & Refunds?", "What is the certification status of Returns & Refunds?"]

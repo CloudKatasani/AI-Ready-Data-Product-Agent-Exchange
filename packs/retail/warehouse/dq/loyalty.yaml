@@ -1,0 +1,69 @@
+# Loyalty member DQ rules.
+- id: DQ-RTL-026
+  object: CONFORMED_GOLD.DIM_MEMBER
+  column: member_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: One row per member id after CDC deduplication.
+- id: DQ-RTL-027
+  object: CONFORMED_GOLD.DIM_MEMBER
+  column: member_id
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^M[0-9]{9}$"
+  severity: high
+  alert_route: steward
+  description: Member ids follow the loyalty platform format.
+- id: DQ-RTL-028
+  object: CONFORMED_GOLD.DIM_MEMBER
+  column: member_id
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every member row has a member id.
+- id: DQ-RTL-029
+  object: CONFORMED_GOLD.DIM_MEMBER
+  column: email
+  dimension: validity
+  assertion: "regex_rate >= 0.99"
+  pattern: "^[^@ ]+@[^@ ]+[.][a-z]+$"
+  severity: medium
+  alert_route: steward
+  description: Member emails, where present, are well formed.
+- id: DQ-RTL-030
+  object: CONFORMED_GOLD.DIM_MEMBER
+  column: region
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Northeast, Southeast, Midwest, Southwest, Pacific]
+  severity: high
+  alert_route: steward
+  description: Member home region is one of the five regions (row access policy RAP_REGION).
+- id: DQ-RTL-032
+  object: CONFORMED_GOLD.DIM_MEMBER
+  column: tier
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Bronze, Silver, Gold]
+  severity: medium
+  alert_route: steward
+  description: Tiers conform to the rewards programme.
+- id: DQ-RTL-033
+  object: CONFORMED_GOLD.DIM_MEMBER
+  column: join_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: medium
+  alert_route: engineering
+  description: New members from the loyalty platform arrive within a day.
+- id: DQ-RTL-034
+  object: CONFORMED_GOLD.DIM_MEMBER
+  column: email
+  dimension: completeness
+  assertion: "null_rate <= 0.1"
+  severity: low
+  alert_route: owner
+  description: At least 90% of members have an email address for digital receipts.

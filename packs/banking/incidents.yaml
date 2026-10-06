@@ -1,0 +1,67 @@
+# "Break something" templates (05 §2.4). Ported from AI-Ready ext/operate.ts INC-1..INC-5 and retargeted to the
+# Ridgeline Gold objects. Effects are applied as overlay views in the _INCIDENT schema while an incident is open.
+- id: INC-BNK-LATE-FEED
+  kind: late_feed
+  title: Card authorisation feed six hours late
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_CARD_TXN
+  params: { lag_hours: 6 }
+  affects: { products: [DP-BNK-004], agents: [AG-BNK-003, AG-BNK-001] }
+  narrative: >-
+    The processor's authorisation file stalled and no card authorisations have landed for six hours. Card
+    Transactions is now behind its 15-minute freshness SLA, so today's purchase volume and fraud loss rate understate
+    activity and any agent answer about recent card fraud is stale.
+  detection: Freshness rule DQ-BNK-040 on FCT_CARD_TXN.auth_ts fails and the product moves to Degraded.
+  resolution: Re-request the processor file, backfill the six-hour gap and re-run the DQ rules; the product returns to Healthy.
+- id: INC-BNK-NULL-SPIKE
+  kind: null_spike
+  title: Null spike in loan principal
+  severity: SEV1
+  object: CONFORMED_GOLD.FCT_LOAN_BALANCE
+  column: principal
+  params: { null_pct: 15 }
+  affects: { products: [DP-BNK-003], agents: [AG-BNK-002, AG-BNK-004] }
+  narrative: >-
+    A core banking month-end extract change left 15% of loan snapshots without principal, so total loans, the NPL
+    ratio and delinquency are computed over a partial book. Principal is a critical data element feeding board risk
+    reporting.
+  detection: Completeness rule DQ-BNK-024 on principal fails; Loan Portfolio Risk is Degraded.
+  resolution: Revert the extract mapping, reload the affected month-end and confirm the null rate is back to zero.
+- id: INC-BNK-DUP-LOAD
+  kind: duplicate_load
+  title: Duplicate deposit balance load
+  severity: SEV3
+  object: CONFORMED_GOLD.FCT_DEPOSIT_BALANCE
+  params: { duplicate_pct: 10 }
+  affects: { products: [DP-BNK-002], agents: [AG-BNK-002] }
+  narrative: >-
+    A replayed core batch loaded 10% of account-month balances twice. Total deposits and the uninsured share are
+    inflated while the duplicates remain, and the ALCO pack would overstate funding.
+  detection: Uniqueness rule DQ-BNK-019 on balance_id fails and the row count jumps against the trailing average.
+  resolution: Delete the replayed batch by load id, re-run deduplication and confirm dup_rate returns to zero.
+- id: INC-BNK-SCHEMA-DRIFT
+  kind: schema_drift
+  title: AML disposition column renamed upstream
+  severity: SEV1
+  object: CONFORMED_GOLD.FCT_AML_ALERT
+  column: disposition
+  params: { rename_to: alert_disposition_cd }
+  affects: { products: [DP-BNK-006], agents: [AG-BNK-003] }
+  narrative: >-
+    A monitoring platform release renamed the disposition column to alert_disposition_cd without a contract change.
+    Every AML metric that depends on disposition fails to compile, so the Financial Crimes Copilot declines with an
+    incident banner instead of answering.
+  detection: Metric compilation for AML_ALERTS fails and DQ-BNK-044 cannot find its column; the contract check flags a breaking change.
+  resolution: Map alert_disposition_cd back to disposition in Silver, raise a contract major version with a 30-day notice, and re-run checks.
+- id: INC-BNK-VOLUME
+  kind: volume_anomaly
+  title: Missing days of digital sessions
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_DIGITAL_SESSION
+  params: { missing_days: 2 }
+  affects: { products: [DP-BNK-007], agents: [] }
+  narrative: >-
+    Two days of digital banking events never arrived from the event stream, so the most recent sessions are missing.
+    Login success and mobile share show a false drop at the end of the series.
+  detection: Timeliness rule DQ-BNK-057 on session_ts fails and daily session volume drops against the trailing average.
+  resolution: Replay the event stream for the missing days and confirm daily volumes match the trailing average.

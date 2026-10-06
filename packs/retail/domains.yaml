@@ -1,0 +1,67 @@
+# Domains, conformed backbone entities and links (ported from the ADPM retail-cpg pack, adapted to the
+# Harbor & Pine warehouse). Owners are persona refs; golden sources are Gold objects in HPR_AI_PLATFORM.
+domains:
+  - id: customer-loyalty
+    name: Customer & Loyalty
+    description: Loyalty members, their tier, app enrolment, points balance and churn risk, and the care contacts they make.
+    owner: retail:customer-steward
+    entities: [Loyalty member, Care contact]
+  - id: sales-channels
+    name: Sales & Channels
+    description: Store and digital sales at line level — stores, channels, baskets, promotions and comparable-store status.
+    owner: retail:commercial-dpo
+    entities: [Store, Sales line, Store traffic]
+  - id: merchandising-pricing
+    name: Merchandising & Pricing
+    description: The item master and assortment, initial margin, private label mix, promotions calendar and in-store price change execution.
+    owner: retail:commercial-dpo
+    entities: [Item, Price change, Promotion]
+  - id: inventory-availability
+    name: Inventory & Availability
+    description: Daily store inventory positions, in-stock and days of supply, plus cycle counts, shrink and inventory accuracy.
+    owner: retail:commercial-dpo
+    entities: [Inventory position, Cycle count]
+  - id: returns-refunds
+    name: Returns & Refunds
+    description: Web-store orders, delivery promise, returns, refunds and the payments taken against them.
+    owner: retail:coo
+    entities: [Online order, Order payment]
+  - id: supply-vendors
+    name: Supply Chain & Vendors
+    description: Vendors, vendor agreements and purchase-order lines, including cost compliance, fill rate, OTIF and lead time.
+    owner: retail:coo
+    entities: [Vendor, Vendor agreement, Purchase order line]
+
+backbone:
+  entities:
+    - { name: Loyalty member, description: "A person enrolled in the Harbor & Pine rewards programme", key: member_id, domain: customer-loyalty, golden_source: CONFORMED_GOLD.DIM_MEMBER }
+    - { name: Care contact, description: "One customer-care interaction (phone, chat, email or social) with a member", key: contact_id, domain: customer-loyalty, golden_source: CONFORMED_GOLD.FCT_CARE_CONTACT }
+    - { name: Store, description: "A physical store with region, format, opening date and comparable-store status", key: store_id, domain: sales-channels, golden_source: CONFORMED_GOLD.DIM_STORE }
+    - { name: Sales line, description: "One item line of a store or digital sale, with quantity, discount, net amount and cost", key: line_id, domain: sales-channels, golden_source: CONFORMED_GOLD.FCT_SALES_LINE }
+    - { name: Store traffic, description: "Daily door-counter footfall and conversion for a store", key: reading_id, domain: sales-channels, golden_source: CURATED_SILVER.STORE_TRAFFIC }
+    - { name: Item, description: "A sellable item (SKU) with category, brand type, cost and ticket price", key: item_id, domain: merchandising-pricing, golden_source: CONFORMED_GOLD.DIM_ITEM }
+    - { name: Price change, description: "A markdown, promotional or permanent price change to execute in a store by its effective date", key: change_id, domain: merchandising-pricing, golden_source: CONFORMED_GOLD.FCT_PRICE_CHANGE }
+    - { name: Promotion, description: "A planned promotion on a category with dates, mechanic and vendor funding", key: promo_id, domain: merchandising-pricing, golden_source: CURATED_SILVER.PROMOTION_CALENDAR }
+    - { name: Inventory position, description: "One store-item-day of on-hand units, days of supply and in-stock status", key: snapshot_id, domain: inventory-availability, golden_source: CONFORMED_GOLD.FCT_STORE_INVENTORY }
+    - { name: Cycle count, description: "A loss-prevention count of a store category comparing system and counted value", key: count_id, domain: inventory-availability, golden_source: CONFORMED_GOLD.FCT_CYCLE_COUNT }
+    - { name: Online order, description: "A web-store order with delivery promise, return and refund outcome", key: order_id, domain: returns-refunds, golden_source: CONFORMED_GOLD.FCT_ONLINE_ORDER }
+    - { name: Order payment, description: "The tender taken against an online order", key: payment_id, domain: returns-refunds, golden_source: CURATED_SILVER.ORDER_PAYMENT }
+    - { name: Vendor, description: "A supplier of merchandise", key: vendor_id, domain: supply-vendors, golden_source: CONFORMED_GOLD.DIM_VENDOR }
+    - { name: Vendor agreement, description: "A cost and terms agreement with a vendor and its annual commitment", key: agreement_id, domain: supply-vendors, golden_source: CURATED_SILVER.VENDOR_AGREEMENT }
+    - { name: Purchase order line, description: "One line of a purchase order with agreed-cost flag, fill and receipt outcome", key: po_line_id, domain: supply-vendors, golden_source: CONFORMED_GOLD.FCT_PO_LINE }
+  links:
+    - { from: Loyalty member, to: Sales line, cardinality: 1:N, via: member_id }
+    - { from: Loyalty member, to: Online order, cardinality: 1:N, via: member_id }
+    - { from: Loyalty member, to: Care contact, cardinality: 1:N, via: member_id }
+    - { from: Store, to: Sales line, cardinality: 1:N, via: store_id }
+    - { from: Store, to: Store traffic, cardinality: 1:N, via: store_id }
+    - { from: Store, to: Inventory position, cardinality: 1:N, via: store_id }
+    - { from: Store, to: Price change, cardinality: 1:N, via: store_id }
+    - { from: Store, to: Cycle count, cardinality: 1:N, via: store_id }
+    - { from: Item, to: Sales line, cardinality: 1:N, via: item_id }
+    - { from: Item, to: Inventory position, cardinality: 1:N, via: item_id }
+    - { from: Item, to: Price change, cardinality: 1:N, via: item_id }
+    - { from: Online order, to: Order payment, cardinality: 1:1, via: order_id }
+    - { from: Vendor, to: Item, cardinality: 1:N, via: vendor_id }
+    - { from: Vendor, to: Vendor agreement, cardinality: 1:N, via: vendor_id }
+    - { from: Vendor, to: Purchase order line, cardinality: 1:N, via: vendor_id }

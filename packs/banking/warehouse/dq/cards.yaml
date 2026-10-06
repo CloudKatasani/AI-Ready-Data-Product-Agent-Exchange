@@ -1,0 +1,76 @@
+# Card authorisation DQ rules.
+- id: DQ-BNK-035
+  object: CONFORMED_GOLD.FCT_CARD_TXN
+  column: approved_amount
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every authorisation carries an approved amount (zero when declined).
+- id: DQ-BNK-036
+  object: CONFORMED_GOLD.FCT_CARD_TXN
+  column: approved_amount
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Approved amounts are never negative; refunds are separate credits.
+- id: DQ-BNK-037
+  object: CONFORMED_GOLD.FCT_CARD_TXN
+  column: fraud_loss
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Fraud loss is populated (zero when no confirmed fraud) for the fraud loss rate.
+- id: DQ-BNK-038
+  object: CONFORMED_GOLD.FCT_CARD_TXN
+  column: fraud_loss
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Confirmed fraud losses are never negative.
+- id: DQ-BNK-039
+  object: CONFORMED_GOLD.FCT_CARD_TXN
+  column: auth_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per authorisation (replayed processor files are removed).
+- id: DQ-BNK-040
+  object: CONFORMED_GOLD.FCT_CARD_TXN
+  column: auth_ts
+  dimension: timeliness
+  assertion: "freshness_min <= 240"
+  severity: high
+  alert_route: engineering
+  description: 'The processor feed is current: the latest authorisation is no more than four hours old at the end of the reporting day.'
+- id: DQ-BNK-041
+  object: CONFORMED_GOLD.FCT_CARD_TXN
+  column: merchant_category
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Grocery, Fuel, Dining, Travel, Online retail, Digital goods, Healthcare, Utilities & telecom]
+  severity: medium
+  alert_route: steward
+  description: Merchant categories conform to the card MCC grouping.
+- id: DQ-BNK-042
+  object: CURATED_SILVER.CARD_ACCOUNT
+  column: card_number
+  dimension: validity
+  assertion: "regex_rate >= 0.999"
+  pattern: "^[0-9]{4}-[0-9]{4}-.+$"
+  severity: medium
+  alert_route: steward
+  description: Card numbers are in the tokenised format expected by MASK_PCI.
+- id: DQ-BNK-043
+  object: CONFORMED_GOLD.DIM_CARD
+  column: card_product
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Classic, Rewards, Premium, Business]
+  severity: medium
+  alert_route: steward
+  description: Card products conform to the card product catalogue.

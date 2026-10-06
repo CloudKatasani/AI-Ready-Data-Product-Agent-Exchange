@@ -1,0 +1,76 @@
+name: CARD_PAYMENTS
+description: Card authorisations — purchase volume, approval, average ticket and confirmed fraud losses
+tables:
+  - { alias: t, fqn: CONFORMED_GOLD.FCT_CARD_TXN, pk: txn_key }
+  - { alias: k, fqn: CONFORMED_GOLD.DIM_CARD, pk: card_key }
+  - { alias: c, fqn: CONFORMED_GOLD.DIM_CUSTOMER, pk: customer_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: t.card_key, to: k.card_key }
+  - { from: t.customer_key, to: c.customer_key }
+  - { from: t.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: c.region, label: Market, synonyms: [region, territory, footprint], term: GT-BNK-MARKET }
+  - { name: card_product, expr: k.card_product, label: Card product, synonyms: [card type, card tier, card program] }
+  - { name: merchant_category, expr: t.merchant_category, label: Merchant category, synonyms: [mcc, merchant type, spend category], term: GT-BNK-MCC }
+  - { name: card_channel, expr: t.card_channel, label: Card channel, synonyms: [entry mode, card present or not, payment channel], term: GT-BNK-CNP }
+  - { name: approved, expr: t.approved, label: Approved, synonyms: [approved or declined] }
+time_dimensions:
+  - { name: txn_date, expr: d.date, default: true }
+facts:
+  - { name: amount, expr: t.amount }
+  - { name: fraud_loss, expr: t.fraud_loss }
+metrics:
+  - name: purchase_volume
+    label: Card purchase volume
+    expr: SUM(t.approved_amount)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [card spend, card spending, purchase volume, card volume]
+    term: GT-BNK-PURCHASE-VOLUME
+    description: Approved card purchase volume (governed card sample)
+  - name: fraud_loss_bps
+    label: Card fraud loss rate
+    expr: 10000.0 * SUM(t.fraud_loss) / SUM(t.approved_amount)
+    unit: bps
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [fraud loss rate, fraud bps, fraud losses in basis points, fraud rate]
+    term: GT-BNK-FRAUD-LOSS
+    description: Confirmed fraud losses per 10,000 dollars of approved purchase volume
+  - name: fraud_losses
+    label: Card fraud losses
+    expr: SUM(t.fraud_loss)
+    unit: USD
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [fraud losses, fraud dollars, confirmed fraud]
+    term: GT-BNK-FRAUD-LOSS
+    description: Confirmed fraud losses on approved authorisations
+  - name: auth_approval_rate
+    label: Authorization approval rate
+    expr: 100.0 * AVG(CASE WHEN t.approved THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 2
+    direction: higher_is_better
+    synonyms: [approval rate, auth rate, decline rate inverse, authorization rate]
+    term: GT-BNK-APPROVAL-RATE
+    description: Share of card authorisation requests approved
+  - name: avg_ticket
+    label: Average ticket
+    expr: AVG(CASE WHEN t.approved THEN t.amount END)
+    unit: USD
+    decimals: 2
+    synonyms: [average purchase, ticket size, average transaction value]
+    term: GT-BNK-PURCHASE-VOLUME
+    description: Average approved card purchase amount
+  - name: card_authorizations
+    label: Card authorisations
+    expr: COUNT(*)
+    unit: authorisations
+    decimals: 0
+    synonyms: [card transactions, number of authorisations, swipes]
+    term: GT-BNK-AUTHORIZATION
+    description: Count of card authorisation requests
+products: [DP-BNK-004]

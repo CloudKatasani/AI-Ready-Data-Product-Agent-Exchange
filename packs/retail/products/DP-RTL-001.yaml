@@ -1,0 +1,25 @@
+id: DP-RTL-001
+name: Loyalty Member 360
+domain: Customer & Loyalty
+archetype: ENTITY_MASTER
+initial_status: CERTIFIED
+seed_stage: 12
+version: 2.2.0
+owner: retail:commercial-dpo
+steward: retail:customer-steward
+description: One trusted view of every rewards member — status, tier, app enrolment, points and churn risk.
+purpose: Give loyalty, marketing and store teams one certified member record for reporting, targeting and agents.
+decision: { persona: Director of Loyalty, decision: "Which regions and tiers get the next app-enrolment campaign", cadence: Quarterly, workaround: "CDP extracts reconciled by hand in spreadsheets", consequence: "Campaign budget spent where app adoption is already high" }
+sample_questions: ["What is our app adoption rate by region?", "How many active members are high churn risk?", "Average churn risk by member tier"]
+semantic_view: LOYALTY_360
+output_ports:
+  - { kind: semantic, ref: LOYALTY_360 }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_RTL_001_LOYALTY_MEMBER_360 }
+  - { kind: agent, ref: AG-RTL-001 }
+sla: { freshness_minutes: 1440, availability_pct: 99.5, max_null_rate_pct: 1.0 }
+kpis: [KPI-RTL-APP, KPI-RTL-CHURN, KPI-RTL-HIGH-CHURN, KPI-RTL-POINTS]
+upstream: [CONFORMED_GOLD.DIM_MEMBER]
+consumers: [Loyalty marketing, Store operations, Customer & Loyalty Insights agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-RTL-001

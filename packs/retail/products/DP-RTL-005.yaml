@@ -1,0 +1,29 @@
+id: DP-RTL-005
+name: Returns & Refunds
+domain: Returns & Refunds
+archetype: AGGREGATE
+initial_status: IN_CERTIFICATION
+seed_stage: 11
+version: 1.0.0-rc.1
+owner: retail:commercial-dpo
+steward: retail:customer-steward
+description: Web-store orders with delivery promise, returns, refunds and refund cycle time for e-commerce operations.
+purpose: Give e-commerce operations and the Customer & Loyalty Insights agent a certified returns view (return rate, refund cycle time).
+decision: { persona: VP E-commerce Operations, decision: "Where to focus returns-reduction and refund-speed improvements", cadence: Monthly, workaround: "Returns report rebuilt from the order management system each month-end", consequence: "Refund complaints grow in fulfilment methods nobody is watching" }
+sample_questions: ["What is our online return rate this quarter?", "Refund cycle time by fulfilment method", "Average order value trend"]
+semantic_view: RETURNS_REFUNDS
+output_ports:
+  - { kind: semantic, ref: RETURNS_REFUNDS }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_RTL_005_RETURNS_REFUNDS }
+  - { kind: agent, ref: AG-RTL-001 }
+sla: { freshness_minutes: 1440, availability_pct: 99.5, max_null_rate_pct: 0.5 }
+kpis: [KPI-RTL-AOV, KPI-RTL-ONLINE-ORDERS, KPI-RTL-RETURN-RATE, KPI-RTL-REFUND-DAYS, KPI-RTL-REFUNDS, KPI-RTL-OTD]
+upstream: [CONFORMED_GOLD.FCT_ONLINE_ORDER, CONFORMED_GOLD.DIM_MEMBER]
+consumers: [E-commerce operations, Customer care, Customer & Loyalty Insights agent]
+lifecycle_seed: { artifacts: auto }
+certification_script:
+  initial: { gate4: warn, gate6: fail }
+  fixes:
+    - { id: FIX-1, check: semantic.verified_queries, label: "Add 3 verified queries for refund cycle time", effect: { overlay: VERIFIED_QUERY, keys: [VQ-RTL-071, VQ-RTL-072, VQ-RTL-073] } }
+    - { id: FIX-2, check: governance.masking, label: "Attach PII masking to member email and phone", effect: { policy_attach: { policy: MASK_EMAIL, columns: [CONFORMED_GOLD.DIM_MEMBER.email, CONFORMED_GOLD.DIM_MEMBER.phone] } } }
+value_case: VC-RTL-005

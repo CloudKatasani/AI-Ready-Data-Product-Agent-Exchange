@@ -1,0 +1,139 @@
+# Harbor & Pine synonyms (synthetic): retail jargon → governed metric, dimension, value or glossary term.
+
+# ── Sales ───────────────────────────────────────────────────────────────────────────────────────────
+- term: Net sales
+  synonyms: [sales, revenue, takings, top line, comp sales, like-for-like sales]
+  maps_to: { kind: metric, ref: net_sales }
+- term: Gross margin rate
+  synonyms: [margin rate, gm rate, gross margin percent, margin percentage]
+  maps_to: { kind: metric, ref: gross_margin_pct }
+- term: Gross margin
+  synonyms: [margin dollars, gross profit, gm dollars]
+  maps_to: { kind: metric, ref: gross_margin }
+- term: Units sold
+  synonyms: [unit sales, volume sold, units moved]
+  maps_to: { kind: metric, ref: units_sold }
+- term: Sales transactions
+  synonyms: [baskets, tickets, checkouts, footfall conversions]
+  maps_to: { kind: metric, ref: transactions }
+- term: Average basket value
+  synonyms: [basket size, average ticket, atv, spend per visit]
+  maps_to: { kind: metric, ref: avg_basket_value }
+- term: Promotional sales share
+  synonyms: [promo share, promo mix, sales on deal]
+  maps_to: { kind: metric, ref: promo_sales_share }
+- term: Digital sales share
+  synonyms: [digital penetration, ecommerce share, online penetration]
+  maps_to: { kind: metric, ref: digital_sales_share }
+- term: Comparable store
+  synonyms: [comp stores, like for like stores, lfl stores]
+  maps_to: { kind: dimension, ref: comp_store }
+- term: Store
+  synonyms: [shops, locations, branches, doors]
+  maps_to: { kind: dimension, ref: store }
+- term: Department
+  synonyms: [dept, merchandise division]
+  maps_to: { kind: dimension, ref: department }
+- term: Channel
+  synonyms: [sales channel, how customers bought]
+  maps_to: { kind: dimension, ref: channel }
+- term: Click & collect
+  synonyms: [bopis, buy online pick up in store, click and collect]
+  maps_to: { kind: value, ref: channel=Click & collect }
+- term: Region
+  synonyms: [territory, store region, market area, district]
+  maps_to: { kind: dimension, ref: region }
+- term: Northeast
+  synonyms: [north east region, northeast stores]
+  maps_to: { kind: value, ref: region=Northeast }
+- term: Southwest
+  synonyms: [south west region, southwest stores]
+  maps_to: { kind: value, ref: region=Southwest }
+
+# ── Loyalty ─────────────────────────────────────────────────────────────────────────────────────────
+- term: App adoption rate
+  synonyms: [app users share, members on the app, app take-up]
+  maps_to: { kind: metric, ref: app_adoption_rate }
+- term: Member churn risk score
+  synonyms: [lapse risk, member attrition risk, likely to lapse]
+  maps_to: { kind: metric, ref: avg_churn_risk }
+- term: Active members
+  synonyms: [rewards members, active cardholders, live members]
+  maps_to: { kind: metric, ref: active_members }
+- term: Points liability
+  synonyms: [points owed, unredeemed rewards, points on the books]
+  maps_to: { kind: metric, ref: points_liability }
+- term: Member tier
+  synonyms: [rewards tier, gold silver bronze]
+  maps_to: { kind: dimension, ref: tier }
+
+# ── Inventory ───────────────────────────────────────────────────────────────────────────────────────
+- term: In-stock rate
+  synonyms: [on shelf availability, shelf availability, availability rate]
+  maps_to: { kind: metric, ref: in_stock_rate }
+- term: Out-of-stock rate
+  synonyms: [stockout rate, empty shelves, gaps on shelf]
+  maps_to: { kind: metric, ref: out_of_stock_rate }
+- term: Days of supply
+  synonyms: [days cover, stock cover, weeks of supply]
+  maps_to: { kind: metric, ref: avg_days_of_supply }
+- term: Shrink rate
+  synonyms: [shrinkage, stock loss, inventory loss rate]
+  maps_to: { kind: metric, ref: shrink_rate_pct }
+
+# ── Merchandising & pricing ─────────────────────────────────────────────────────────────────────────
+- term: Initial margin
+  synonyms: [imu, intake margin, initial markup, ticket margin]
+  maps_to: { kind: metric, ref: avg_initial_margin_pct }
+- term: Private label share
+  synonyms: [own brand share, own label mix]
+  maps_to: { kind: metric, ref: private_label_share }
+- term: Overdue price changes
+  synonyms: [price change backlog, ticketing backlog, unexecuted price changes, pricing backlog]
+  maps_to: { kind: metric, ref: overdue_price_changes }
+- term: Price change compliance
+  synonyms: [price execution, ticketing compliance, re-ticketing on time]
+  maps_to: { kind: metric, ref: price_change_compliance_pct }
+- term: Private label
+  synonyms: [own brand, own label, house brand]
+  maps_to: { kind: value, ref: brand_type=Private label }
+
+# ── Returns & online ────────────────────────────────────────────────────────────────────────────────
+- term: Online return rate
+  synonyms: [returns rate, rate of returns, return percentage]
+  maps_to: { kind: metric, ref: return_rate }
+- term: Refund cycle time
+  synonyms: [days to refund, refund turnaround, refund speed]
+  maps_to: { kind: metric, ref: refund_cycle_days }
+- term: Average order value
+  synonyms: [aov, basket value online, average web order]
+  maps_to: { kind: metric, ref: avg_order_value }
+- term: Trade
+  synonyms: [business accounts, trade accounts, b2b orders]
+  maps_to: { kind: value, ref: account_type=Trade }
+
+# ── Supply chain ────────────────────────────────────────────────────────────────────────────────────
+- term: Cost compliance
+  synonyms: [agreed cost compliance, buying at agreed cost, on-agreement buying]
+  maps_to: { kind: metric, ref: cost_compliance_pct }
+- term: Off-agreement spend
+  synonyms: [spot buys, maverick buying, off-contract buying, non-agreement spend]
+  maps_to: { kind: metric, ref: off_agreement_spend }
+- term: Vendor OTIF
+  synonyms: [on time in full, vendor delivery performance, otif]
+  maps_to: { kind: metric, ref: vendor_otif_pct }
+- term: Vendor fill rate
+  synonyms: [case fill, unit fill rate, fill]
+  maps_to: { kind: metric, ref: vendor_fill_rate_pct }
+- term: PO lead time
+  synonyms: [lead time, order to receipt, vendor lead time]
+  maps_to: { kind: metric, ref: po_lead_time_days }
+- term: Vendor category
+  synonyms: [buying category, commodity, purchase category]
+  maps_to: { kind: dimension, ref: vendor_category }
+- term: Vendor
+  synonyms: [supplier, suppliers, brand owner]
+  maps_to: { kind: dimension, ref: vendor }
+- term: Comparable Store
+  synonyms: [comp, lfl]
+  maps_to: { kind: term, ref: GT-RTL-COMP-STORE }

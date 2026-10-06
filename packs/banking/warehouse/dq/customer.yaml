@@ -1,0 +1,135 @@
+# Customer, KYC and branch DQ rules.
+- id: DQ-BNK-001
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: customer_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: One row per customer id after CDC deduplication.
+- id: DQ-BNK-002
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: customer_id
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^CU[0-9]{9}$"
+  severity: high
+  alert_route: steward
+  description: Customer ids follow the core CIF format.
+- id: DQ-BNK-003
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: customer_id
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every customer row has a customer id.
+- id: DQ-BNK-004
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: region
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Mountain, Plains, Great Lakes, Southeast]
+  severity: critical
+  alert_route: steward
+  description: Customer market is one of the four markets (row access policy RAP_REGION depends on it).
+- id: DQ-BNK-005
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: status
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Active, Closed, Dormant]
+  severity: high
+  alert_route: steward
+  description: 'Customer status is Active, Closed or Dormant.'
+- id: DQ-BNK-006
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: status
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every customer has a status (active-customer and attrition metrics depend on it).
+- id: DQ-BNK-007
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: kyc_risk_rating
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Low, Medium, High]
+  severity: high
+  alert_route: steward
+  description: KYC risk ratings conform to the CDD standard.
+- id: DQ-BNK-008
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: kyc_risk_rating
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every customer carries a KYC risk rating so the refresh cycle can be applied.
+- id: DQ-BNK-009
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: email
+  dimension: validity
+  assertion: "regex_rate >= 0.99"
+  pattern: "^[^@ ]+@[^@ ]+[.][a-z]+$"
+  severity: medium
+  alert_route: steward
+  description: 'Customer emails, where present, are well formed.'
+- id: DQ-BNK-010
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: email
+  dimension: completeness
+  assertion: "null_rate <= 0.12"
+  severity: low
+  alert_route: owner
+  description: 'At least 88% of customers have an email address on file for e-statements.'
+- id: DQ-BNK-011
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: relationship_balance
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: medium
+  alert_route: steward
+  description: Relationship balances are never negative (overdrafts are carried on the deposit account).
+- id: DQ-BNK-012
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: open_date
+  dimension: timeliness
+  assertion: "freshness_min <= 46080"
+  severity: medium
+  alert_route: engineering
+  description: The new-customer feed from the core CIF has delivered within the last month.
+- id: DQ-BNK-013
+  object: CURATED_SILVER.KYC_REVIEW
+  column: review_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: medium
+  alert_route: engineering
+  description: KYC reviews from the KYC platform are no more than a day behind.
+- id: DQ-BNK-014
+  object: CONFORMED_GOLD.DIM_BRANCH
+  column: region
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Mountain, Plains, Great Lakes, Southeast]
+  severity: critical
+  alert_route: steward
+  description: Branch market is one of the four markets (row access policy RAP_REGION depends on it).
+- id: DQ-BNK-015
+  object: CONFORMED_GOLD.DIM_BRANCH
+  column: region
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every branch is assigned to a market.
+- id: DQ-BNK-016
+  object: CONFORMED_GOLD.DIM_BRANCH
+  column: branch_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per branch.

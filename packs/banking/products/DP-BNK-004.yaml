@@ -1,0 +1,25 @@
+id: DP-BNK-004
+name: Card Transactions
+domain: Cards & Payments
+archetype: SOURCE_ALIGNED
+initial_status: CERTIFIED
+seed_stage: 12
+version: 2.0.3
+owner: banking:lending-dpo
+steward: banking:data-steward
+description: Card authorisations with merchant category, channel, approval outcome and confirmed fraud loss.
+purpose: Fraud strategy, card portfolio performance and customer spend insight.
+decision: { persona: Head of Card Fraud Strategy, decision: "Which merchant categories and channels get enhanced authentication next", cadence: Weekly, workaround: "Processor fraud reports e-mailed as PDFs", consequence: "Fraud rings run for weeks on card-not-present merchants before rules change" }
+sample_questions: ["What is our card fraud loss rate this quarter?", "Card purchase volume by merchant category", "Approval rate by card channel"]
+semantic_view: CARD_PAYMENTS
+output_ports:
+  - { kind: semantic, ref: CARD_PAYMENTS }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_BNK_004_CARD_TRANSACTIONS }
+  - { kind: agent, ref: AG-BNK-003 }
+sla: { freshness_minutes: 15, availability_pct: 99.9, max_null_rate_pct: 0.5 }
+kpis: [KPI-BNK-CARD-VOL, KPI-BNK-FRAUD-BPS, KPI-BNK-APPROVAL, KPI-BNK-TICKET]
+upstream: [CONFORMED_GOLD.FCT_CARD_TXN, CONFORMED_GOLD.DIM_CARD]
+consumers: [Fraud strategy, Card marketing, Financial Crimes Copilot agent, Relationship Manager Assistant agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-BNK-004

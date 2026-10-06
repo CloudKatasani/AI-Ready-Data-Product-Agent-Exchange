@@ -1,0 +1,74 @@
+name: CUSTOMER_360
+description: Customer master metrics — status, digital engagement, relationship depth and KYC currency
+tables:
+  - { alias: c, fqn: CONFORMED_GOLD.DIM_CUSTOMER, pk: customer_key }
+dimensions:
+  - { name: region, expr: c.region, label: Market, synonyms: [region, territory, footprint], term: GT-BNK-MARKET }
+  - { name: segment, expr: c.segment, label: Customer segment, synonyms: [segment, customer type, tier], term: GT-BNK-SEGMENT }
+  - { name: customer_status, expr: c.status, label: Status, synonyms: [account status, relationship status] }
+  - { name: digital_active, expr: c.digital_active, label: Digitally active, synonyms: [digital user, online user] }
+  - { name: kyc_risk_rating, expr: c.kyc_risk_rating, label: KYC risk rating, synonyms: [risk rating, cdd rating, aml risk], term: GT-BNK-KYC-RISK }
+  - { name: tenure_band, expr: c.tenure_band, label: Tenure band, synonyms: [tenure, customer tenure, years with us] }
+  - { name: age_band, expr: c.age_band, label: Age band, synonyms: [age group] }
+  - { name: customer_name, expr: c.full_name, label: Customer name, synonyms: [name, client name] }
+time_dimensions:
+  - { name: customer_since, expr: c.open_date, default: true }
+facts:
+  - { name: relationship_balance, expr: c.relationship_balance }
+  - { name: products_held, expr: c.products_held }
+metrics:
+  - name: active_customers
+    label: Active customers
+    expr: COUNT_IF(c.status = 'Active')
+    unit: customers
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [customer count, number of customers, active relationships]
+    term: GT-BNK-ACTIVE-CUSTOMER
+    description: Customers with Active status in the governed customer sample
+  - name: digital_active_rate
+    label: Digital active rate
+    expr: 100.0 * AVG(CASE WHEN c.status = 'Active' THEN CASE WHEN c.digital_active THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [digital adoption, digital engagement, mobile adoption, digitally active share]
+    term: GT-BNK-DIGITAL-ACTIVE
+    description: Share of active customers who used the mobile app or online banking in the last 30 days
+  - name: products_per_customer
+    label: Products per customer
+    expr: AVG(CASE WHEN c.status = 'Active' THEN c.products_held END)
+    unit: products
+    decimals: 2
+    direction: higher_is_better
+    synonyms: [cross-sell ratio, product holding, products held, wallet share]
+    term: GT-BNK-PRODUCTS-PER-CUSTOMER
+    description: Average open deposit accounts, loans and cards per active customer
+  - name: avg_relationship_balance
+    label: Average relationship balance
+    expr: AVG(CASE WHEN c.status = 'Active' THEN c.relationship_balance END)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [relationship balance, balance per customer, average balance per customer]
+    term: GT-BNK-RELATIONSHIP-BALANCE
+    description: Mean combined deposit and investment balance per active customer
+  - name: attrition_rate
+    label: Customer attrition rate
+    expr: 100.0 * AVG(CASE WHEN c.closed_12m THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [attrition, churn, closed relationships, customer churn]
+    term: GT-BNK-ATTRITION
+    description: Share of customers whose relationship closed in the trailing 12 months
+  - name: kyc_overdue_pct
+    label: KYC reviews overdue
+    expr: 100.0 * AVG(CASE WHEN c.status = 'Active' THEN CASE WHEN c.kyc_overdue THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [overdue kyc, cdd overdue, kyc backlog, overdue reviews]
+    term: GT-BNK-KYC-REFRESH
+    description: Share of active customers whose due-diligence refresh is past due for their risk rating
+products: [DP-BNK-001]

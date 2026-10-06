@@ -1,0 +1,29 @@
+id: AG-BNK-004
+name: Collections Advisor
+domain: Collections & Recovery
+status: PRODUCTION
+owner: banking:lending-dpo
+on_call: Collections Analytics
+avatar: { icon: hand-coins, hue: 32 }
+capability: "Answers questions on cure rates, promise-to-pay performance, roll rates to charge-off, time to resolve, recoveries and early delinquency."
+personas_served: [Head of Collections, Collections Strategy Manager, Credit Risk Analyst]
+out_of_scope: ["approving payment plans", "settling or charging off balances", "placing accounts with agencies", "borrower contact details"]
+products:
+  - { id: DP-BNK-005, columns: "*" }
+  - { id: DP-BNK-003, columns: [dpd_days, dpd_bucket, principal, fico_band, loan_segment, region] }
+tools:
+  - { tool: semantic_query, views: [COLLECTIONS, LOAN_PORTFOLIO], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-BNK-COLLECTIONS, DOC-BNK-CREDIT-POLICY] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-BNK-CURE, grains: [month, quarter], slices: [strategy, entry_bucket, loan_segment, region], depth: rank_drivers }
+  - { kpi: KPI-BNK-PTP, grains: [month, quarter], slices: [strategy, loan_segment, region], depth: rank_drivers }
+  - { kpi: KPI-BNK-ROLL-CO, grains: [month, quarter], slices: [loan_segment, entry_bucket, strategy], depth: explain }
+  - { kpi: KPI-BNK-RESOLVE-DAYS, grains: [month, quarter], slices: [strategy, entry_bucket], depth: trend }
+  - { kpi: KPI-BNK-DPD30, grains: [month, quarter], slices: [loan_segment, fico_band, region], depth: trend }
+instructions: [INS-BNK-004-P, INS-BNK-004-R, INS-BNK-004-G, INS-BNK-004-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.05, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-BNK-019, SC-BNK-020, SC-BNK-021, SC-BNK-022, SC-BNK-023]

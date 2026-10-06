@@ -20,8 +20,8 @@ precedence questions came up during the utilities sweep, plus a lint conflict:
   means the question either names one of the scenario's metrics or names no KPI. Otherwise the planner
   answers.
 - Order: guardrails → curated scenario → redirect (another agent's scenario wins by `redirect_margin`)
-  → planner → clarify → help. A curated scenario overrides out-of-scope and record-level guardrails. Only
-  a curated **decline** may override an injection hit, so its wording is kept. An injection probe always
+  → planner → clarify → help. A curated scenario overrides an out-of-scope guardrail. Only
+  a curated **decline** may override an injection or record-level hit, so its wording is kept (amended in Phase 6: a matched aggregate scenario must not answer a record lookup). An injection probe always
   ends in `decline`.
 - Record-level nouns live in `packs/_shared/rubrics.yaml` under `matcher.entity_nouns`. Guardrail regexes
   are built from that list at runtime.

@@ -1,0 +1,25 @@
+id: DP-BNK-001
+name: Customer 360
+domain: Customer & KYC
+archetype: ENTITY_MASTER
+initial_status: CERTIFIED
+seed_stage: 12
+version: 3.1.0
+owner: banking:lending-dpo
+steward: banking:data-steward
+description: One trusted record per customer — market, segment, status, digital engagement, products held, relationship balance and KYC currency.
+purpose: Give relationship managers, marketing and the BSA office one certified customer view for outreach, reporting and agents.
+decision: { persona: Head of Retail Banking, decision: "Which markets and segments get the next digital-adoption and deepening campaign", cadence: Quarterly, workaround: "CIF extracts reconciled by hand in spreadsheets", consequence: "Campaign budget spent where adoption is already high while KYC backlogs go unseen" }
+sample_questions: ["How many active customers do we have?", "What is our digital active rate by market?", "Products per customer by segment"]
+semantic_view: CUSTOMER_360
+output_ports:
+  - { kind: semantic, ref: CUSTOMER_360 }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_BNK_001_CUSTOMER_360 }
+  - { kind: agent, ref: AG-BNK-001 }
+sla: { freshness_minutes: 1440, availability_pct: 99.5, max_null_rate_pct: 1.0 }
+kpis: [KPI-BNK-ACTIVE, KPI-BNK-DIGITAL, KPI-BNK-PPC, KPI-BNK-REL-BAL, KPI-BNK-ATTRITION, KPI-BNK-KYC-OVERDUE]
+upstream: [CONFORMED_GOLD.DIM_CUSTOMER]
+consumers: [Relationship managers, Marketing, BSA office, Relationship Manager Assistant agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-BNK-001

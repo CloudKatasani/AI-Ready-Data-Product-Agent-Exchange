@@ -1,0 +1,410 @@
+# Scripted scenarios for Ridgeline Bank — ported from AI-Ready banking `scenarios.ts` and the Marketplace
+# AG-BNK-001..004 demo exchanges. Numbers come from golden.json; `expect` holds shape assertions only.
+# Together the 25 scenarios cover all 15 patterns (04 §6).
+
+# ================================================================ AG-BNK-002 Risk & Liquidity Analyst
+- id: SC-BNK-001
+  agent: AG-BNK-002
+  pattern: 3
+  question: "What was the NPL ratio by market last quarter?"
+  paraphrases:
+    - "What was the NPL ratio by region last quarter, excluding loans held for sale?"
+    - "npl rate per market last qtr"
+    - "non-performing loan ratio by footprint for Q3"
+  kind: answer
+  query: { view: LOAN_PORTFOLIO, metrics: [npl_ratio], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: npl_ratio, dir: desc }] }
+  answer:
+    headline: "{{top.region}} had the highest NPL ratio last quarter at {{top.npl_ratio}}%."
+    narrative: "Loans held for sale are excluded (BR-BNK-012). {{bottom.region}} was lowest at {{bottom.npl_ratio}}% across {{rows}} markets; the bank-wide ratio was {{total.npl_ratio}}%."
+    chart: bar
+  followups: ["Which loan segments drove Southeast?", "Include loans held for sale", "NPL ratio trend this year"]
+  expect: { rows: 4, top: { region: Southeast }, rules: [BR-BNK-012] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-BNK-002
+  agent: AG-BNK-002
+  pattern: 10
+  question: "What was the NPL ratio by market last quarter, including loans held for sale?"
+  paraphrases:
+    - "NPL ratio by market last quarter including held for sale"
+    - "npl per market last qtr all loans"
+  kind: answer
+  query: { view: LOAN_PORTFOLIO, metrics: [npl_ratio], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: npl_ratio, dir: desc }] }
+  answer:
+    headline: "Including loans held for sale, {{top.region}} had the highest NPL ratio last quarter at {{top.npl_ratio}}%."
+    narrative: "You asked for all loans, so the held-for-sale exclusion in BR-BNK-012 is not applied. The distressed Plains mortgage pool marked for sale reorders the ranking — compare with the standard view that excludes it."
+    chart: bar
+  followups: ["Exclude loans held for sale", "NPL ratio by loan segment in Plains"]
+  expect: { rows: 4, top: { region: Plains } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-BNK-003
+  agent: AG-BNK-002
+  pattern: 4
+  question: "How has the net charge-off ratio trended month by month this year?"
+  paraphrases:
+    - "Monthly net charge-off ratio year to date"
+    - "nco trend ytd by month"
+  kind: answer
+  query: { view: LOAN_PORTFOLIO, metrics: [net_charge_off_ratio], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "The net charge-off ratio is {{total.net_charge_off_ratio}}% year to date, moving {{delta.net_charge_off_ratio}} points from January to the latest month."
+    narrative: "Annualised monthly net charge-offs over {{rows}} months, excluding loans held for sale (BR-BNK-012). Watch the July spike from Southeast commercial real estate."
+    chart: line
+  followups: ["NPL ratio by loan segment last quarter", "Allowance coverage by market"]
+  expect: { rows: 9, rules: [BR-BNK-012] }
+
+- id: SC-BNK-004
+  agent: AG-BNK-002
+  pattern: 7
+  question: "How have total deposits changed quarter over quarter this year?"
+  paraphrases:
+    - "Total deposits by quarter year to date"
+    - "is the deposit base growing quarter on quarter?"
+  kind: answer
+  query: { view: DEPOSITS, metrics: [total_deposits], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "Total deposits moved {{delta.total_deposits}} from the first to the latest quarter this year."
+    narrative: "Average month-end deposits for each of the {{rows}} quarters this year (BR-BNK-009); the Q3 certificate-of-deposit promotion offset money market outflows in Southeast."
+    chart: line
+  followups: ["Deposits by product last quarter", "Cost of deposits by month this year"]
+  expect: { rows: 3 }
+  personas_expect: { A: { kind: decline } }
+
+- id: SC-BNK-005
+  agent: AG-BNK-002
+  pattern: 2
+  question: "Is the 30+ days past due rate within target this year?"
+  paraphrases:
+    - "Are we inside our delinquency target year to date?"
+    - "30 plus dpd vs target ytd"
+  kind: answer
+  query: { view: LOAN_PORTFOLIO, metrics: [delinquency_30_plus_rate], timeRange: { ytd: true }, analysis: compare_target }
+  answer:
+    headline: "The 30+ days past due rate is {{top.delinquency_30_plus_rate}}% year to date — {{vsTarget.top}} target."
+    narrative: "Principal 30 or more days past due as a share of total principal, excluding loans held for sale (BR-BNK-012)."
+    chart: kpi
+  followups: ["30+ DPD by loan segment", "NPL ratio by market last quarter"]
+  expect: { rows: 1, rules: [BR-BNK-012] }
+
+- id: SC-BNK-006
+  agent: AG-BNK-002
+  pattern: 15
+  question: "What is our card fraud loss rate this quarter?"
+  paraphrases:
+    - "How much are we losing to card fraud?"
+  kind: redirect
+  query: null
+  redirect_to: AG-BNK-003
+  answer:
+    headline: "That's a card fraud question — the Financial Crimes Copilot answers it."
+    narrative: "I cover credit risk, deposits and liquidity. The Financial Crimes Copilot is certified on card transactions and fraud losses."
+    chart: none
+  followups: ["Ask the Financial Crimes Copilot", "What can you answer?"]
+
+- id: SC-BNK-007
+  agent: AG-BNK-002
+  pattern: 15
+  question: "Approve a loan modification for this borrower."
+  paraphrases:
+    - "Can you sign off the loan modification request?"
+    - "Reprice this commercial loan for me"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't approve or price loans — that is outside what this agent is allowed to do."
+    narrative: "Loan modifications are decided by credit officers under delegated authority. I can show you credit quality for the segment and market so the decision has the evidence."
+    chart: none
+  followups: ["NPL ratio by loan segment last quarter", "30+ days past due rate by market"]
+
+# ================================================================ AG-BNK-001 Relationship Manager Assistant
+- id: SC-BNK-008
+  agent: AG-BNK-001
+  pattern: 3
+  question: "What is our digital active rate by market?"
+  paraphrases:
+    - "Which market has the highest digital adoption?"
+    - "digital engagement by footprint"
+  kind: answer
+  query: { view: CUSTOMER_360, metrics: [digital_active_rate], dimensions: [region], orderBy: [{ field: digital_active_rate, dir: desc }] }
+  answer:
+    headline: "{{top.region}} leads digital engagement at {{top.digital_active_rate}}% of active customers."
+    narrative: "{{bottom.region}} trails at {{bottom.digital_active_rate}}%. Digitally active means a mobile or online login in the last 30 days (BR-BNK-011)."
+    chart: bar
+  followups: ["Digital active rate by age band", "Products per customer by market"]
+  expect: { rows: 4, top: { region: Great Lakes } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-BNK-009
+  agent: AG-BNK-001
+  pattern: 12
+  question: "Which five active customers have the highest relationship balance?"
+  paraphrases:
+    - "Top 5 clients by relationship balance"
+    - "largest relationships by balance"
+  kind: answer
+  query: { view: CUSTOMER_360, metrics: [avg_relationship_balance], dimensions: [customer_name], filters: [{ dimension: customer_status, op: "=", value: Active }], orderBy: [{ field: avg_relationship_balance, dir: desc }], limit: 5, analysis: rank }
+  answer:
+    headline: "The largest active relationship holds {{top.avg_relationship_balance}}."
+    narrative: "Customer names are masked unless your persona is cleared for PII under the masking policy. Showing the top {{rows}} active relationships by balance."
+    chart: table
+  followups: ["Relationship balance by segment", "Products per customer by segment"]
+  expect: { rows: 5 }
+  personas_expect: { A: { masked: [customer_name], rowFiltered: true }, D: { masked: [] } }
+
+- id: SC-BNK-010
+  agent: AG-BNK-001
+  pattern: 11
+  question: "How are our customers doing?"
+  paraphrases:
+    - "customer update"
+  kind: clarify
+  query: null
+  answer:
+    headline: "\"How customers are doing\" can mean a few things — which one do you need?"
+    narrative: "I can show active customers, the digital active rate, products per customer or the attrition rate. Pick one and a slice."
+    chart: none
+  followups: ["Active customers by segment", "Digital active rate by market", "Customer attrition rate by market"]
+
+- id: SC-BNK-011
+  agent: AG-BNK-001
+  pattern: 13
+  question: "What is the average relationship balance by market?"
+  paraphrases:
+    - "balance per customer by region"
+    - "average relationship balance per footprint"
+  kind: answer
+  query: { view: CUSTOMER_360, metrics: [avg_relationship_balance], dimensions: [region], orderBy: [{ field: avg_relationship_balance, dir: desc }] }
+  answer:
+    headline: "{{top.region}} has the highest average relationship balance at {{top.avg_relationship_balance}}."
+    narrative: "Mean relationship balance per active customer across the {{rows}} markets you are entitled to see; the market row-access policy applies."
+    chart: bar
+  followups: ["Relationship balance by segment", "Digital active rate by market"]
+  expect: { rows: 4 }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-BNK-012
+  agent: AG-BNK-001
+  pattern: 8
+  question: "How is average ticket distributed across merchant categories this year?"
+  paraphrases:
+    - "Spread of average ticket by merchant category"
+    - "average purchase percentiles across mcc groups"
+  kind: answer
+  query: { view: CARD_PAYMENTS, metrics: [avg_ticket], dimensions: [merchant_category], timeRange: { ytd: true }, analysis: distribution }
+  answer:
+    headline: "Across {{top.merchant_category_count}} merchant categories, the median average ticket is {{top.avg_ticket_p50}}."
+    narrative: "The middle 80% of categories sit between {{top.avg_ticket_p10}} and {{top.avg_ticket_p90}}; the highest category averages {{top.avg_ticket_max}}."
+    chart: table
+  followups: ["Card purchase volume by merchant category", "Average ticket by card product"]
+  expect: { rows: 1 }
+
+- id: SC-BNK-013
+  agent: AG-BNK-001
+  pattern: 1
+  question: "How many active customers do we have?"
+  paraphrases:
+    - "number of active relationships"
+    - "active customer count"
+  kind: answer
+  query: { view: CUSTOMER_360, metrics: [active_customers], analysis: value }
+  answer:
+    headline: "There are {{top.active_customers}} active customers in the governed customer sample."
+    narrative: "Customers with Active status in the core CIF (BR-BNK-010)."
+    chart: kpi
+  followups: ["Active customers by segment", "Customer attrition rate by market"]
+  expect: { rows: 1 }
+
+# ================================================================ AG-BNK-003 Financial Crimes Copilot
+- id: SC-BNK-014
+  agent: AG-BNK-003
+  pattern: 5
+  question: "Which five merchant categories had the highest card fraud loss rate last quarter?"
+  paraphrases:
+    - "Top 5 merchant categories by fraud bps last quarter"
+    - "worst mcc groups for fraud last qtr"
+  kind: answer
+  query: { view: CARD_PAYMENTS, metrics: [fraud_loss_bps], dimensions: [merchant_category], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: fraud_loss_bps, dir: desc }], limit: 5, analysis: rank }
+  answer:
+    headline: "{{top.merchant_category}} had the highest card fraud loss rate last quarter at {{top.fraud_loss_bps}} bps."
+    narrative: "The {{rows}} worst merchant categories by confirmed fraud losses per 10,000 dollars of approved volume. Categories above 50 bps qualify for enhanced card-not-present authentication (BR-BNK-015)."
+    chart: bar
+  followups: ["Fraud losses by card channel", "Approval rate by card channel"]
+  expect: { rows: 5, top: { merchant_category: Digital goods } }
+
+- id: SC-BNK-015
+  agent: AG-BNK-003
+  pattern: 14
+  question: "What is our AML alert-to-case rate this year?"
+  paraphrases:
+    - "AML alert-to-case rate year to date"
+    - "alert escalation rate ytd"
+  kind: answer
+  query: { view: AML_ALERTS, metrics: [alert_to_case_rate], timeRange: { ytd: true } }
+  answer:
+    headline: "The alert-to-case rate is {{top.alert_to_case_rate}}% this year."
+    narrative: "AML Alerts & Cases is still in certification, so treat this figure as provisional. Pending alerts are excluded (BR-BNK-019)."
+    chart: kpi
+  followups: ["Alert-to-case rate by monitoring scenario", "When will AML Alerts & Cases be certified?"]
+  expect: { rows: 1, certified: false }
+  personas_expect: { A: { kind: decline } }
+
+- id: SC-BNK-016
+  agent: AG-BNK-003
+  pattern: 6
+  question: "What is driving card fraud losses by card channel last quarter?"
+  paraphrases:
+    - "Which card channels contribute most to fraud losses?"
+    - "fraud dollars by entry mode last quarter"
+  kind: answer
+  query: { view: CARD_PAYMENTS, metrics: [fraud_losses], dimensions: [card_channel], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: fraud_losses, dir: desc }], analysis: contribution }
+  answer:
+    headline: "{{top.card_channel}} drove the most card fraud losses last quarter at {{top.fraud_losses}}."
+    narrative: "Total confirmed fraud losses were {{total.fraud_losses}} across {{rows}} card channels."
+    chart: bar
+  followups: ["Fraud loss rate by merchant category", "Approval rate by card channel"]
+  expect: { rows: 3, top: { card_channel: Card not present } }
+
+- id: SC-BNK-017
+  agent: AG-BNK-003
+  pattern: 9
+  question: "How do the approval rate and fraud loss rate compare across card products this year?"
+  paraphrases:
+    - "Compare approval rate and fraud bps by card tier"
+    - "card product comparison of approvals and fraud"
+  kind: answer
+  query: { view: CARD_PAYMENTS, metrics: [auth_approval_rate, fraud_loss_bps], dimensions: [card_product], timeRange: { ytd: true }, orderBy: [{ field: fraud_loss_bps, dir: desc }] }
+  answer:
+    headline: "{{top.card_product}} cards have the highest fraud loss rate this year at {{top.fraud_loss_bps}} bps, with a {{top.auth_approval_rate}}% approval rate."
+    narrative: "{{bottom.card_product}} is lowest at {{bottom.fraud_loss_bps}} bps and {{bottom.auth_approval_rate}}% approval, across {{rows}} card products."
+    chart: bar
+  followups: ["Fraud loss rate by merchant category", "Card purchase volume by card product"]
+  expect: { rows: 4 }
+
+- id: SC-BNK-018
+  agent: AG-BNK-003
+  pattern: 15
+  question: "Block the card that triggered the fraud alert."
+  paraphrases:
+    - "Reissue the compromised card"
+    - "Please block that card now"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't block or reissue cards — card operations does that."
+    narrative: "Card blocks and reissues are performed by card operations staff in the card platform. I can show fraud trends by merchant category and channel to support their decision."
+    chart: none
+  followups: ["Fraud loss rate by merchant category last quarter", "Fraud losses by card channel"]
+
+# ================================================================ AG-BNK-004 Collections Advisor
+- id: SC-BNK-019
+  agent: AG-BNK-004
+  pattern: 2
+  question: "Is the cure rate within target this year?"
+  paraphrases:
+    - "Are collections cures on target year to date?"
+    - "cure rate vs target ytd"
+  kind: answer
+  query: { view: COLLECTIONS, metrics: [cure_rate], timeRange: { ytd: true }, analysis: compare_target }
+  answer:
+    headline: "The cure rate is {{top.cure_rate}}% year to date — {{vsTarget.top}} target."
+    narrative: "Resolved collection cases that returned to current, as a share of resolved cases (BR-BNK-018)."
+    chart: kpi
+  followups: ["Cure rate by entry bucket", "Promise-to-pay kept rate by strategy"]
+  expect: { rows: 1, rules: [BR-BNK-018] }
+
+- id: SC-BNK-020
+  agent: AG-BNK-004
+  pattern: 5
+  question: "Which collection strategies have the best promise-to-pay kept rate this year?"
+  paraphrases:
+    - "Rank contact strategies by kept promises"
+    - "best treatment for ptp kept rate ytd"
+  kind: answer
+  query: { view: COLLECTIONS, metrics: [promise_kept_rate], dimensions: [strategy], timeRange: { ytd: true }, orderBy: [{ field: promise_kept_rate, dir: desc }], limit: 4, analysis: rank }
+  answer:
+    headline: "{{top.strategy}} has the best promise-to-pay kept rate this year at {{top.promise_kept_rate}}%."
+    narrative: "{{bottom.strategy}} is lowest at {{bottom.promise_kept_rate}}% across {{rows}} strategies; a promise counts only when paid in full on time (BR-BNK-017)."
+    chart: bar
+  followups: ["Cure rate by collection strategy", "Days to resolve by strategy"]
+  expect: { rows: 4, top: { strategy: Digital self-service } }
+
+- id: SC-BNK-021
+  agent: AG-BNK-004
+  pattern: 11
+  question: "What's our roll rate by loan segment last quarter?"
+  paraphrases:
+    - "flow to loss by lending product last qtr"
+    - "roll to charge-off per loan type last quarter"
+  kind: answer
+  query: { view: COLLECTIONS, metrics: [chargeoff_roll_rate], dimensions: [loan_segment], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: chargeoff_roll_rate, dir: desc }] }
+  answer:
+    headline: "{{top.loan_segment}} has the highest roll rate to charge-off last quarter at {{top.chargeoff_roll_rate}}%."
+    narrative: "\"Roll rate\" maps to the roll rate to charge-off: resolved cases that ended in charge-off (BR-BNK-018). Shown across {{rows}} loan segments."
+    chart: bar
+  followups: ["Cure rate by loan segment", "Recoveries by loan segment"]
+  expect: { rows: 6, rules: [BR-BNK-018] }
+
+- id: SC-BNK-022
+  agent: AG-BNK-004
+  pattern: 7
+  question: "How has the cure rate changed month over month this year?"
+  paraphrases:
+    - "Monthly cure rate year to date"
+    - "is our cure rate improving each month?"
+  kind: answer
+  query: { view: COLLECTIONS, metrics: [cure_rate], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "The cure rate moved {{delta.cure_rate}} points from January to the latest month this year."
+    narrative: "Monthly cure rate over {{rows}} months for resolved cases (BR-BNK-018); the latest months hold fewer resolved cases."
+    chart: line
+  followups: ["Cure rate by strategy last quarter", "Roll rate by loan segment"]
+  expect: { rows: 9, rules: [BR-BNK-018] }
+
+- id: SC-BNK-023
+  agent: AG-BNK-004
+  pattern: 13
+  question: "How many collection cases did each market open last quarter?"
+  paraphrases:
+    - "collection cases by region last quarter"
+    - "collections volume per market last qtr"
+  kind: answer
+  query: { view: COLLECTIONS, metrics: [collection_cases], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: collection_cases, dir: desc }] }
+  answer:
+    headline: "{{top.region}} opened the most collection cases last quarter: {{top.collection_cases}}."
+    narrative: "Collection cases opened across the {{rows}} markets you are entitled to see; the market row-access policy applies."
+    chart: bar
+  followups: ["Cure rate by market", "Roll rate by loan segment"]
+  expect: { rows: 4 }
+  personas_expect: { A: { rowFiltered: true } }
+
+# ================================================================ AG-BNK-005 Data Steward Assistant (no semantic views)
+- id: SC-BNK-024
+  agent: AG-BNK-005
+  pattern: 15
+  question: "What can you answer?"
+  paraphrases:
+    - "What can you help me with?"
+    - "help"
+  kind: help
+  query: null
+  answer:
+    headline: "I explain governance across the data estate — I don't analyse business KPIs."
+    narrative: "Ask me what a glossary term or metric means, the certification status of a data product, or where governance gaps such as missing stewards or masking sit. For KPI numbers, ask the domain agents."
+    chart: none
+  followups: ["Which products are not yet certified?", "What does NPL ratio mean?", "Which critical data elements lack a steward?"]
+
+- id: SC-BNK-025
+  agent: AG-BNK-005
+  pattern: 15
+  question: "Approve the access request for AML Alerts & Cases."
+  paraphrases:
+    - "Grant me access to DP-BNK-006"
+    - "Can you approve my access request?"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't approve access requests — agents act, humans decide."
+    narrative: "Access to a data product is granted only by its owner or steward through the access workflow. I can show you the request status and who can approve it."
+    chart: none
+  followups: ["Who can approve access to AML Alerts & Cases?", "What is the certification status of AML Alerts & Cases?"]

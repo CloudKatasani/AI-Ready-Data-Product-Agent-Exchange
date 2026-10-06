@@ -1,0 +1,48 @@
+# Five demo identities, one per archetype (01-functional-spec §2.2). People are generated, not real.
+- id: banking:market-manager-mountain
+  archetype: A
+  name: Imogen Forsythe
+  title: Market Banking Manager, Mountain
+  domain: Retail banking
+  roles: [DATA_CONSUMER]
+  row_filter: { dimension: region, allowed: [Mountain] }
+  unmasked: []
+  cares: Customer relationships, digital engagement, credit quality and collections in the Mountain market; wants plain answers she can act on with her branch managers this week.
+  sees: Mountain market only; customer PII, card and government identifiers masked.
+- id: banking:credit-risk-analyst
+  archetype: B
+  name: Daniel Ashworth
+  title: Credit Risk Analyst
+  domain: Credit risk
+  roles: [DATA_CONSUMER, ANALYST]
+  unmasked: []
+  cares: NPL ratio, delinquency, net charge-offs, allowance coverage and deposit funding for ALCO and board risk reporting.
+  sees: All markets; customer PII masked.
+- id: banking:lending-dpo
+  archetype: C
+  name: Teresa Vance
+  title: Lending Data Product Owner
+  domain: Lending
+  roles: [DOMAIN_PRODUCT_OWNER, DATA_ENGINEER]
+  unmasked: []
+  cares: Shipping certified credit, card and collections products that agents can trust.
+  sees: All markets; PII masked; can build and submit products for review.
+- id: banking:data-steward
+  archetype: D
+  name: Graham Ellery
+  title: Enterprise Data Steward
+  domain: Governance
+  roles: [DATA_STEWARD, GOVERNANCE_COUNCIL, PRIVACY_OFFICER]
+  unmasked: [PII, PCI, GOV_ID]
+  cares: Glossary health, CDE ownership, masking coverage, BSA/AML data lineage and certification decisions.
+  sees: Everything, unmasked; approves access requests and certification gates.
+- id: banking:cro
+  archetype: E
+  name: Nadia Kowalczyk
+  title: Chief Risk Officer
+  domain: Executive
+  roles: [EXECUTIVE, PORTFOLIO_LEAD, GOVERNANCE_COUNCIL]
+  unmasked: []
+  aggregates_only: true
+  cares: Credit quality against risk appetite, liquidity and funding cost, fraud losses and where to invest next.
+  sees: Aggregates only; portfolio, value and readiness.

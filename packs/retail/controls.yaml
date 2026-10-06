@@ -1,0 +1,128 @@
+# Control library for Harbor & Pine (fictional). Regulators and jurisdictions are invented; frameworks are named
+# for the public standards they are modelled on. Illustrative, not legal advice.
+jurisdictions:
+  - { id: JUR-HPR-STATE, name: "State of Marlow (headquarters and most stores)", regulator: "Marlow Office of Consumer Protection" }
+  - { id: JUR-HPR-MULTI, name: "Multi-state consumer privacy regimes", regulator: "State attorneys general (CCPA-style statutes)" }
+  - { id: JUR-HPR-CARD, name: "Payment card brands", regulator: "Acquiring bank and card scheme compliance programme" }
+  - { id: JUR-HPR-CORP, name: "Corporate policy", regulator: "Harbor & Pine Audit & Risk Committee" }
+
+controls:
+  - id: CTL-RTL-001
+    name: Sales and margin financial reporting
+    framework: SOX-style ICFR
+    description: >-
+      Net sales, gross margin and comparable-store sales used in financial and investor reporting come from one
+      certified product with a reconciled metric definition; changes to the comparable-store rule require a
+      versioned contract and Finance approval.
+    jurisdiction: JUR-HPR-CORP
+    applies_to: { domains: [sales-channels] }
+    evidence: Reconciliation of governed net sales to the general ledger and the approved contract version history.
+    stage: 11
+  - id: CTL-RTL-002
+    name: Loyalty member personal data protection
+    framework: State consumer privacy acts (CCPA-style)
+    description: >-
+      Member names, addresses, emails and phone numbers are masked for every persona without PII clearance and are
+      never released to agents or analytical outputs; members may request access and deletion at any time.
+    jurisdiction: JUR-HPR-MULTI
+    applies_to: { classes: [PII], domains: [customer-loyalty, returns-refunds] }
+    evidence: Masking policy attachment report for every PII-tagged column and a sample of masked query logs.
+    stage: 6
+  - id: CTL-RTL-003
+    name: Payment card data protection
+    framework: PCI DSS v4.0
+    description: >-
+      Card numbers are tokenised at the payment gateway, held only in the order payment Silver table, shown last-four
+      only via MASK_PCI, and never land in Gold facts, data products or agent answers.
+    jurisdiction: JUR-HPR-CARD
+    applies_to: { classes: [PCI], domains: [returns-refunds] }
+    evidence: Column classification scan showing PCI only in CURATED_SILVER.ORDER_PAYMENT and masking attached.
+    stage: 6
+  - id: CTL-RTL-004
+    name: Returns and refund policy disclosure
+    framework: State consumer protection (refund disclosure rules)
+    description: >-
+      Refunds are issued within the period disclosed at checkout (10 business days for card refunds) and return
+      windows are applied exactly as published; refund timeliness is monitored and reported monthly.
+    jurisdiction: JUR-HPR-STATE
+    applies_to: { domains: [returns-refunds] }
+    evidence: Refund cycle time report from the certified returns product and the published returns policy version.
+    stage: 11
+  - id: CTL-RTL-005
+    name: Pricing accuracy and price change execution
+    framework: State weights & measures pricing accuracy rules
+    description: >-
+      Shelf and system prices must match by the effective date of every price change; overdue price changes are
+      tracked by store and corrected before the next pricing audit.
+    jurisdiction: JUR-HPR-STATE
+    applies_to: { domains: [merchandising-pricing] }
+    evidence: Price change compliance and overdue price change report by store from the certified product.
+    stage: 11
+  - id: CTL-RTL-006
+    name: Marketing consent and loyalty communications
+    framework: CAN-SPAM / TCPA-style consent rules
+    description: >-
+      Members are contacted only through channels they have consented to; analytical products expose consent and
+      app enrolment in aggregate and never hand contact lists to agents.
+    jurisdiction: JUR-HPR-MULTI
+    applies_to: { classes: [PII], domains: [customer-loyalty] }
+    evidence: Agent manifests with refuse_customer_level guardrail and aggregate-only loyalty output ports.
+    stage: 10
+  - id: CTL-RTL-007
+    name: Vendor due diligence
+    framework: Third-party risk management policy
+    description: >-
+      Vendors are onboarded only after tax identity, sanctions, product safety and factory audit checks; vendor tax
+      ids are classified GOV_ID and masked outside merchandising stewardship.
+    jurisdiction: JUR-HPR-CORP
+    applies_to: { classes: [GOV_ID], domains: [supply-vendors] }
+    evidence: Due diligence completion status per active vendor and masking on DIM_VENDOR.tax_id.
+    stage: 4
+  - id: CTL-RTL-008
+    name: Inventory valuation and shrink reserve
+    framework: Retail inventory method / SOX-style ICFR
+    description: >-
+      Shrink accruals are trued up from cycle counts; counts are performed on their assigned cycle and every store
+      category is counted at least annually before the shrink reserve is booked.
+    jurisdiction: JUR-HPR-CORP
+    applies_to: { domains: [inventory-availability] }
+    evidence: Cycle count completion and shrink rate by store from the shrink product, reconciled to the reserve.
+    stage: 11
+  - id: CTL-RTL-009
+    name: Fair treatment in returns abuse decisions
+    framework: State consumer protection rules
+    description: >-
+      Decisions to refuse a return or flag a member for returns abuse are made by a named human; any score is
+      explainable and overridable, and agents never recommend action against an individual member.
+    jurisdiction: JUR-HPR-STATE
+    applies_to: { domains: [returns-refunds, customer-loyalty] }
+    evidence: Agent out-of-scope list, refusal test results and the decision log for returns exceptions.
+    stage: 10
+  - id: CTL-RTL-010
+    name: Critical data element ownership
+    framework: Enterprise data governance policy
+    description: >-
+      Every critical data element has a named owner and steward, at least one executable data quality rule and a
+      glossary term before the product that exposes it can be certified.
+    jurisdiction: JUR-HPR-CORP
+    applies_to: { domains: [customer-loyalty, sales-channels, merchandising-pricing, inventory-availability, returns-refunds, supply-vendors] }
+    evidence: CDE register with owners, linked DQ rules and their latest results.
+    stage: 8
+  - id: CTL-RTL-011
+    name: Data residency
+    framework: Corporate information security standard
+    description: Member and payment data are processed and stored within the primary operating region only.
+    jurisdiction: JUR-HPR-CORP
+    applies_to: { classes: [PII, PCI], domains: [customer-loyalty, returns-refunds] }
+    evidence: Platform region configuration and storage location report.
+    stage: 5
+  - id: CTL-RTL-012
+    name: Promotional claims substantiation
+    framework: FTC-style advertising guides
+    description: >-
+      "Was" prices and percentage-off claims used in promotions must be substantiated by the item's selling history;
+      promotional sales share and markdown depth are reported from the governed sales product.
+    jurisdiction: JUR-HPR-STATE
+    applies_to: { domains: [merchandising-pricing, sales-channels] }
+    evidence: Promotion calendar, markdown depth by change and promotional sales share by category.
+    stage: 11

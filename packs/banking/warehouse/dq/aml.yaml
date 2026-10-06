@@ -1,0 +1,51 @@
+# Financial crime (transaction monitoring) DQ rules.
+- id: DQ-BNK-044
+  object: CONFORMED_GOLD.FCT_AML_ALERT
+  column: disposition
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every alert carries a disposition state.
+- id: DQ-BNK-045
+  object: CONFORMED_GOLD.FCT_AML_ALERT
+  column: disposition
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Closed - no suspicion, Escalated to case, Pending review]
+  severity: high
+  alert_route: steward
+  description: Dispositions conform to the BSA/AML programme states.
+- id: DQ-BNK-046
+  object: CONFORMED_GOLD.FCT_AML_ALERT
+  column: alert_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per alert.
+- id: DQ-BNK-047
+  object: CONFORMED_GOLD.FCT_AML_ALERT
+  column: alert_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: Alerts from the monitoring engine are no more than a day behind.
+- id: DQ-BNK-048
+  object: CONFORMED_GOLD.FCT_AML_ALERT
+  column: monitoring_scenario
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Structuring, Rapid movement of funds, High-risk geography, Cash-intensive activity, Wire pattern anomaly]
+  severity: medium
+  alert_route: steward
+  description: Monitoring scenarios conform to the tuned scenario library.
+- id: DQ-BNK-049
+  object: CONFORMED_GOLD.FCT_AML_ALERT
+  column: days_to_disposition
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: medium
+  alert_route: engineering
+  description: Disposition time is never negative.

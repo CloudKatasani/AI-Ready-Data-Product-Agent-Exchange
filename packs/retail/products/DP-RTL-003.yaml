@@ -1,0 +1,24 @@
+id: DP-RTL-003
+name: Inventory & Availability
+domain: Inventory & Availability
+archetype: SOURCE_ALIGNED
+initial_status: CERTIFIED
+seed_stage: 12
+version: 1.4.0
+owner: retail:commercial-dpo
+steward: retail:customer-steward
+description: Daily store-item inventory positions with in-stock status, days of supply and value at cost.
+purpose: Replenishment, store operations and merchandising work from one certified availability feed.
+decision: { persona: Director of Inventory Planning, decision: "Which stores and categories need a replenishment parameter fix or a field visit", cadence: Weekly, workaround: "Store gap-scan reports emailed as CSV", consequence: "Empty shelves and lost sales persist for weeks before anyone notices" }
+sample_questions: ["What is the in-stock rate this month?", "Days of supply by department", "In-stock rate by region last month"]
+semantic_view: INVENTORY_AVAILABILITY
+output_ports:
+  - { kind: semantic, ref: INVENTORY_AVAILABILITY }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_RTL_003_INVENTORY_AVAILABILITY }
+sla: { freshness_minutes: 30, availability_pct: 99.0, max_null_rate_pct: 0.5 }
+kpis: [KPI-RTL-INSTOCK, KPI-RTL-OOS, KPI-RTL-DOS]
+upstream: [CONFORMED_GOLD.FCT_STORE_INVENTORY, CONFORMED_GOLD.DIM_STORE]
+consumers: [Inventory planning, Store operations, Merchandise & Inventory Advisor agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-RTL-003

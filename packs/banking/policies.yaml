@@ -1,0 +1,84 @@
+sensitivity_classes:
+  - { class: PII, description: "Nonpublic personal information about customers, employees or contacts" }
+  - { class: PCI, description: "Payment card data (primary account numbers)" }
+  - { class: GOV_ID, description: "Government or taxpayer identifiers" }
+
+masking_policies:
+  - { id: MASK_PII, class: PII, macro: mask_pii, description: "Replace personal data with ••• unless the persona is cleared for PII" }
+  - { id: MASK_EMAIL, class: PII, macro: mask_email, description: "Hash the local part of email addresses" }
+  - { id: MASK_PHONE, class: PII, macro: mask_phone, description: "Show only the last four digits of phone numbers" }
+  - { id: MASK_PCI, class: PCI, macro: mask_pci, description: "Show only the last four digits of card numbers" }
+  - { id: MASK_GOV_ID, class: GOV_ID, macro: mask_gov_id, description: "Show only the last four characters of taxpayer identifiers" }
+
+row_access_policies:
+  - id: RAP_REGION
+    dimension: region
+    description: "Market personas see only rows for their own market (via the customer's or the booking branch's region)"
+    bindings:
+      - { object: CONFORMED_GOLD.DIM_CUSTOMER, column: region }
+      - { object: CONFORMED_GOLD.DIM_BRANCH, column: region }
+      - { object: CURATED_SILVER.CUSTOMER, column: region }
+      - { object: CURATED_SILVER.BRANCH, column: region }
+
+column_tags:
+  # Customer PII and identifiers — masked for every persona without clearance.
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.first_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.last_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.full_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.phone, classes: [PII], masking: MASK_PHONE }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.street_address, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.date_of_birth, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.ssn, classes: [GOV_ID], masking: MASK_GOV_ID }
+  # Certification demo (DP-BNK-006 gate 6): AML subject name and address masking is not attached until FIX-2.
+  - { column: CONFORMED_GOLD.FCT_AML_ALERT.subject_name, classes: [PII], masking: MASK_PII, mask_pending_fix: FIX-2 }
+  - { column: CONFORMED_GOLD.FCT_AML_ALERT.subject_address, classes: [PII], masking: MASK_PII, mask_pending_fix: FIX-2 }
+  - { column: CONFORMED_GOLD.FCT_COLLECTION_CASE.collector_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.CUSTOMER.first_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.CUSTOMER.last_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.CUSTOMER.email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.CUSTOMER.phone, classes: [PII], masking: MASK_PHONE }
+  - { column: CURATED_SILVER.CUSTOMER.street_address, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.CUSTOMER.date_of_birth, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.CUSTOMER.ssn, classes: [GOV_ID], masking: MASK_GOV_ID }
+  - { column: CURATED_SILVER.RELATIONSHIP_MANAGER.rm_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.KYC_REVIEW.analyst_notes, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.CARD_ACCOUNT.card_number, classes: [PCI], masking: MASK_PCI }
+  - { column: CURATED_SILVER.AML_ALERT.investigator_notes, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.COLLECTION_CASE.collector_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.COMPLAINT.complaint_notes, classes: [PII], masking: MASK_PII }
+  # Critical data elements (each has DQ rules in warehouse/dq).
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.customer_id, cde: true }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.region, cde: true }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.status, cde: true }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.kyc_risk_rating, cde: true }
+  - { column: CONFORMED_GOLD.DIM_BRANCH.region, cde: true }
+  - { column: CONFORMED_GOLD.FCT_DEPOSIT_BALANCE.ledger_balance, cde: true }
+  - { column: CONFORMED_GOLD.FCT_LOAN_BALANCE.principal, cde: true }
+  - { column: CONFORMED_GOLD.FCT_LOAN_BALANCE.dpd_days, cde: true }
+  - { column: CONFORMED_GOLD.FCT_LOAN_BALANCE.non_performing, cde: true }
+  - { column: CONFORMED_GOLD.FCT_LOAN_BALANCE.held_for_sale, cde: true }
+  - { column: CONFORMED_GOLD.FCT_CARD_TXN.approved_amount, cde: true }
+  - { column: CONFORMED_GOLD.FCT_CARD_TXN.fraud_loss, cde: true }
+  - { column: CONFORMED_GOLD.FCT_AML_ALERT.disposition, cde: true }
+  - { column: CONFORMED_GOLD.FCT_COLLECTION_CASE.outcome, cde: true }
+
+grants:
+  - persona: banking:market-manager-mountain
+    products: [DP-BNK-001, DP-BNK-003, DP-BNK-004, DP-BNK-005]
+    agents: [AG-BNK-001, AG-BNK-002, AG-BNK-004]
+  - persona: banking:credit-risk-analyst
+    products: [DP-BNK-002, DP-BNK-003, DP-BNK-005, DP-BNK-007]
+    agents: [AG-BNK-002, AG-BNK-004]
+  - persona: banking:lending-dpo
+    products: [DP-BNK-002, DP-BNK-003, DP-BNK-004, DP-BNK-005, DP-BNK-007]
+    agents: [AG-BNK-002, AG-BNK-003, AG-BNK-004]
+  - persona: banking:data-steward
+    products: [DP-BNK-001, DP-BNK-002, DP-BNK-003, DP-BNK-004, DP-BNK-005, DP-BNK-006, DP-BNK-007, DP-BNK-008]
+    agents: [AG-BNK-001, AG-BNK-002, AG-BNK-003, AG-BNK-004, AG-BNK-005]
+  - persona: banking:cro
+    # Aggregates only (archetype E): sees every headline KPI tile, never row-level data.
+    products: [DP-BNK-001, DP-BNK-002, DP-BNK-003, DP-BNK-004, DP-BNK-005, DP-BNK-006]
+    agents: [AG-BNK-001, AG-BNK-002, AG-BNK-003, AG-BNK-004]
+
+public_products: []

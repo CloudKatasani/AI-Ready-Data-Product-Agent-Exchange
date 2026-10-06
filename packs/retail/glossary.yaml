@@ -1,0 +1,672 @@
+# Harbor & Pine business glossary (synthetic). Ported from the AI-Ready retail glossary and the ADPM retail-cpg pack;
+# ids, owners and mappings adapted to this pack's personas, warehouse and semantic views.
+
+- id: GT-RTL-NET-SALES
+  name: Net Sales
+  definition: "Sales value after line discounts and markdowns, excluding sales tax, on comparable stores unless all stores are requested."
+  formula: "Σ net line amount (gross amount − discount); comparable stores only by default (BR-RTL-012)"
+  domain: Sales
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [sales, revenue, takings, turnover]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SALES_LINE.net_amount, CONFORMED_GOLD.FCT_SALES_LINE.gross_amount, CONFORMED_GOLD.FCT_SALES_LINE.discount_amount]
+    metrics: [net_sales]
+
+- id: GT-RTL-GROSS-MARGIN
+  name: Gross Margin
+  definition: "Net sales less the cost of the goods sold; reported in dollars and as a rate of net sales."
+  formula: "(net sales − cost of goods sold) ÷ net sales × 100"
+  domain: Sales
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [gross profit, margin, GM]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SALES_LINE.cost_amount, CONFORMED_GOLD.FCT_SALES_LINE.margin_amount]
+    metrics: [gross_margin_pct, gross_margin]
+
+- id: GT-RTL-UNITS
+  name: Units Sold
+  definition: "The number of individual units sold on sales lines."
+  formula: "Σ quantity"
+  domain: Sales
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [unit sales, volume]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SALES_LINE.quantity]
+    metrics: [units_sold]
+
+- id: GT-RTL-TRANSACTION
+  name: Sales Transaction
+  definition: "One till or web-store checkout, which may contain several sales lines."
+  formula: "count of distinct transaction ids"
+  domain: Sales
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [basket, ticket, checkout]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SALES_LINE.txn_id]
+    metrics: [transactions]
+
+- id: GT-RTL-BASKET
+  name: Average Basket Value
+  definition: "Net sales per transaction — how much a customer spends per checkout."
+  formula: "net sales ÷ distinct transactions"
+  domain: Sales
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [ATV, average ticket, basket size]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SALES_LINE.net_amount, CONFORMED_GOLD.FCT_SALES_LINE.txn_id]
+    metrics: [avg_basket_value]
+
+- id: GT-RTL-PROMO-SALES
+  name: Promotional Sales
+  definition: "Net sales sold at a promotional or markdown price (any line discount greater than zero)."
+  formula: "Σ net amount where on_promo ÷ Σ net amount"
+  domain: Sales
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [promo sales, sales on deal]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SALES_LINE.on_promo, CONFORMED_GOLD.FCT_SALES_LINE.discount_amount]
+    metrics: [promo_sales_share]
+
+- id: GT-RTL-CHANNEL
+  name: Sales Channel
+  definition: "How a sale was placed: In-store at a till, Online for delivery, or Click & collect (ordered online, collected in store)."
+  formula: "Conformed from the order capture channel code"
+  domain: Sales
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [channel, digital, omnichannel]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SALES_LINE.channel]
+    metrics: [digital_sales_share]
+
+- id: GT-RTL-MEMBER-SALES
+  name: Loyalty-Identified Sales
+  definition: "Net sales where a loyalty member scanned their card or app at checkout."
+  formula: "Σ net amount where a member was identified ÷ Σ net amount"
+  domain: Sales
+  owner: retail:customer-steward
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [identified sales, member sales]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SALES_LINE.member_identified, CONFORMED_GOLD.FCT_SALES_LINE.member_key]
+    metrics: [member_sales_share]
+
+- id: GT-RTL-STORE
+  name: Store
+  definition: "A Harbor & Pine physical store with a region, format and opening date. Web-store sales are attributed to the fulfilling or nearest store."
+  formula: "One record per store_id"
+  domain: Stores
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [shop, location, branch]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_STORE.store_id, CONFORMED_GOLD.DIM_STORE.store_format, CONFORMED_GOLD.DIM_STORE.open_date, CURATED_SILVER.STORE_LOCATION.store_id]
+    metrics: []
+
+- id: GT-RTL-COMP-STORE
+  name: Comparable Store
+  definition: "A store open for at least 13 full months at the reporting date and not closed for remodel. Sales KPIs are reported on comparable stores unless all stores are requested."
+  formula: "comp_store = open_date ≤ reporting date − 13 months AND NOT under_remodel"
+  domain: Stores
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [comp store, like-for-like, LFL, comparable]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_STORE.comp_store, CONFORMED_GOLD.DIM_STORE.comp_status, CONFORMED_GOLD.DIM_STORE.months_open]
+    metrics: []
+
+- id: GT-RTL-REGION
+  name: Store Region
+  definition: "One of Harbor & Pine's five operating regions (Northeast, Southeast, Midwest, Southwest, Pacific). Drives regional reporting and the regional row-access policy."
+  formula: "Store region for store data; member home region for loyalty and online order data"
+  domain: Enterprise
+  owner: retail:coo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [territory, area, region]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_STORE.region, CONFORMED_GOLD.DIM_MEMBER.region, CURATED_SILVER.STORE_LOCATION.region, CURATED_SILVER.LOYALTY_MEMBER.region]
+    metrics: []
+
+- id: GT-RTL-DEPARTMENT
+  name: Department
+  definition: "The top level of the merchandise hierarchy: Home, Apparel, Food & pantry, Health & beauty, Seasonal & outdoor."
+  formula: "Rolled up from category"
+  domain: Merchandising
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [dept, division]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_ITEM.department]
+    metrics: []
+
+- id: GT-RTL-CATEGORY
+  name: Merchandise Category
+  definition: "The second level of the merchandise hierarchy, such as Bedding, Womenswear or Snacks; the unit of category management."
+  formula: "Conformed from the item master category code"
+  domain: Merchandising
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [category, merchandise category]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_ITEM.category, CURATED_SILVER.MERCH_ITEM.category]
+    metrics: []
+
+- id: GT-RTL-ITEM
+  name: Item (SKU)
+  definition: "A sellable item identified by a stock-keeping unit, with a category, brand type, cost and ticket price."
+  formula: "One record per item_id"
+  domain: Merchandising
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [SKU, product line, article]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_ITEM.item_id, CONFORMED_GOLD.DIM_ITEM.unit_price, CONFORMED_GOLD.DIM_ITEM.unit_cost]
+    metrics: [item_count]
+
+- id: GT-RTL-IMU
+  name: Initial Margin
+  definition: "The margin built into an item's ticket price before any markdown: ticket price less cost, as a share of ticket price. Below 35% is Low, 35–49% Medium, 50% and above High."
+  formula: "(unit_price − unit_cost) ÷ unit_price × 100; band Low < 35 ≤ Medium < 50 ≤ High"
+  domain: Merchandising
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [IMU, initial markup, intake margin]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_ITEM.initial_margin_pct, CONFORMED_GOLD.DIM_ITEM.margin_band]
+    metrics: [avg_initial_margin_pct, low_margin_items_pct, low_margin_item_count]
+
+- id: GT-RTL-PRIVATE-LABEL
+  name: Private Label
+  definition: "Items sold under Harbor & Pine's own brands rather than a national brand."
+  formula: "brand_type = Private label"
+  domain: Merchandising
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [own brand, exclusive brand]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_ITEM.brand_type]
+    metrics: [private_label_share]
+
+- id: GT-RTL-PRICE-CHANGE
+  name: Price Change
+  definition: "An instruction to change an item's shelf price in a store from an effective date: a markdown, a promotion or a permanent change. Unexecuted changes past their effective date are overdue."
+  formula: "overdue = executed_date IS NULL AND effective_date < reporting date"
+  domain: Pricing
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [repricing, ticket change, price change]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PRICE_CHANGE.change_id, CONFORMED_GOLD.FCT_PRICE_CHANGE.effective_date, CONFORMED_GOLD.FCT_PRICE_CHANGE.overdue]
+    metrics: [overdue_price_changes, price_changes, execution_labour_hours]
+
+- id: GT-RTL-PRICE-COMPLIANCE
+  name: Price Change Compliance
+  definition: "The share of price changes executed in store on or before their effective date, so shelf and system prices match."
+  formula: "price changes executed on or before effective date ÷ price changes due × 100"
+  domain: Pricing
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [price execution, pricing compliance, ticketing compliance]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PRICE_CHANGE.executed_date, CONFORMED_GOLD.FCT_PRICE_CHANGE.executed_on_time]
+    metrics: [price_change_compliance_pct]
+
+- id: GT-RTL-MARKDOWN
+  name: Markdown
+  definition: "A permanent price reduction to clear stock, expressed as a percentage off the ticket price."
+  formula: "markdown_pct on price changes of type Markdown"
+  domain: Pricing
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: IN_REVIEW
+  cde: false
+  synonyms: [clearance, reduction]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PRICE_CHANGE.markdown_pct, CONFORMED_GOLD.FCT_PRICE_CHANGE.change_type]
+    metrics: [avg_markdown_depth]
+
+- id: GT-RTL-IN-STOCK
+  name: In-Stock Rate
+  definition: "The share of store-item-days on which an item had stock on hand in a store. The complement is the out-of-stock rate."
+  formula: "in-stock store-item-days ÷ store-item-days × 100"
+  domain: Inventory
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [on-shelf availability, OSA, availability]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_STORE_INVENTORY.in_stock, CONFORMED_GOLD.FCT_STORE_INVENTORY.on_hand_units]
+    metrics: [in_stock_rate, out_of_stock_rate]
+
+- id: GT-RTL-DAYS-OF-SUPPLY
+  name: Days of Supply
+  definition: "How many days the stock on hand would last at the item's current average daily rate of sale."
+  formula: "on_hand_units ÷ avg_daily_units, in-stock positions only"
+  domain: Inventory
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [days of cover, weeks of cover]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_STORE_INVENTORY.days_of_supply, CONFORMED_GOLD.FCT_STORE_INVENTORY.avg_daily_units]
+    metrics: [avg_days_of_supply]
+
+- id: GT-RTL-INVENTORY-POSITION
+  name: Inventory Position
+  definition: "One store-item-day record of on-hand units, on-order units and value at cost from the perpetual inventory system."
+  formula: "One row per store, item and snapshot date"
+  domain: Inventory
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [stock position, on hand]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_STORE_INVENTORY.snapshot_date, CONFORMED_GOLD.FCT_STORE_INVENTORY.inventory_value, CONFORMED_GOLD.FCT_STORE_INVENTORY.on_order_units]
+    metrics: [inventory_value, store_item_days]
+
+- id: GT-RTL-CYCLE-COUNT
+  name: Cycle Count
+  definition: "A loss-prevention count of one store category comparing counted stock with the system record."
+  formula: "One record per count_id"
+  domain: Inventory
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [stock count, inventory count]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CYCLE_COUNT.count_id, CONFORMED_GOLD.FCT_CYCLE_COUNT.count_date, CURATED_SILVER.CYCLE_COUNT.count_id]
+    metrics: [cycle_counts]
+
+- id: GT-RTL-SHRINK
+  name: Shrink
+  definition: "Inventory lost to theft, damage, administrative error or vendor fraud, measured as the gap between system and counted value."
+  formula: "Σ shrink value ÷ Σ system value counted × 100; within tolerance when shrink ≤ 2%"
+  domain: Inventory
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [shrinkage, inventory loss]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CYCLE_COUNT.shrink_value, CONFORMED_GOLD.FCT_CYCLE_COUNT.system_value, CONFORMED_GOLD.FCT_CYCLE_COUNT.within_tolerance]
+    metrics: [shrink_rate_pct, inventory_accuracy_pct]
+
+- id: GT-RTL-COUNT-CYCLE
+  name: Count Cycle
+  definition: "The planned interval (6, 12 or 18 months) between full counts of a store category. A category is overdue when its last full count is older than its cycle."
+  formula: "overdue = last_full_count_date + cycle_months < reporting date"
+  domain: Inventory
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [count backlog, overdue count]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CYCLE_COUNT.last_full_count_date, CONFORMED_GOLD.FCT_CYCLE_COUNT.cycle_months, CONFORMED_GOLD.FCT_CYCLE_COUNT.next_count_due, CONFORMED_GOLD.FCT_CYCLE_COUNT.overdue]
+    metrics: [counts_overdue_pct, count_cycle_compliance]
+
+- id: GT-RTL-SHRINK-RISK
+  name: Shrink Risk Score
+  definition: "A loss-prevention 0–100 score of the likelihood of further loss in a store category before the next count. Counts scoring 70 or more are high risk."
+  formula: "risk_score per count; high risk ≥ 70"
+  domain: Inventory
+  owner: retail:commercial-dpo
+  steward: retail:customer-steward
+  status: IN_REVIEW
+  cde: false
+  synonyms: [loss risk]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CYCLE_COUNT.risk_score]
+    metrics: [avg_shrink_risk, high_risk_counts]
+
+- id: GT-RTL-MEMBER
+  name: Loyalty Member
+  definition: "A person enrolled in the Harbor & Pine rewards programme."
+  formula: "One record per member_id"
+  domain: Loyalty
+  owner: retail:customer-steward
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [member, rewards member, cardholder]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_MEMBER.member_id, CONFORMED_GOLD.DIM_MEMBER.join_date, CURATED_SILVER.LOYALTY_MEMBER.member_id]
+    metrics: []
+
+- id: GT-RTL-ACTIVE-MEMBER
+  name: Active Member
+  definition: "A loyalty member with Active status (a purchase or engagement in the last 12 months)."
+  formula: "status = Active"
+  domain: Loyalty
+  owner: retail:customer-steward
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [active member, engaged member]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_MEMBER.status, CURATED_SILVER.LOYALTY_MEMBER.status]
+    metrics: [active_members]
+
+- id: GT-RTL-TIER
+  name: Member Tier
+  definition: "The loyalty tier a member holds based on annual spend: Bronze, Silver or Gold."
+  formula: "Conformed from the loyalty platform tier code"
+  domain: Loyalty
+  owner: retail:customer-steward
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [loyalty tier, status tier]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_MEMBER.tier]
+    metrics: []
+
+- id: GT-RTL-APP-ADOPTION
+  name: App Adoption
+  definition: "The share of active members enrolled in the Harbor & Pine mobile app."
+  formula: "active members with app_enrolled = TRUE ÷ active members × 100"
+  domain: Loyalty
+  owner: retail:customer-steward
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [app enrolment, app penetration]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_MEMBER.app_enrolled, CURATED_SILVER.LOYALTY_MEMBER.app_enrolled]
+    metrics: [app_adoption_rate]
+
+- id: GT-RTL-CHURN-RISK
+  name: Member Churn Risk Score
+  definition: "Model score (0–100) estimating the likelihood a member lapses in the next 12 months. Scores of 60 or more are High risk. Draft: model card pending review."
+  formula: "Gradient-boosted model over visit frequency, spend trend, returns and tenure; High ≥ 60, Medium ≥ 35, else Low"
+  domain: Loyalty
+  owner: retail:customer-steward
+  steward: retail:customer-steward
+  status: DRAFT
+  cde: false
+  synonyms: [churn risk, lapse risk, attrition risk]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_MEMBER.churn_risk_score, CONFORMED_GOLD.DIM_MEMBER.churn_risk_band]
+    metrics: [avg_churn_risk, high_churn_risk_pct]
+
+- id: GT-RTL-POINTS
+  name: Points Liability
+  definition: "The dollar value of unredeemed reward points held by active members; one point is worth one cent."
+  formula: "Σ points_balance of active members × $0.01"
+  domain: Loyalty
+  owner: retail:customer-steward
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [points balance, unredeemed points]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_MEMBER.points_balance]
+    metrics: [points_liability]
+
+- id: GT-RTL-ONLINE-ORDER
+  name: Online Order
+  definition: "A web-store order with its fulfilment method, delivery promise and return outcome."
+  formula: "One record per order_id"
+  domain: Returns
+  owner: retail:customer-steward
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [web order, ecommerce order]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ONLINE_ORDER.order_id, CONFORMED_GOLD.FCT_ONLINE_ORDER.order_value, CONFORMED_GOLD.FCT_ONLINE_ORDER.delivered_on_time]
+    metrics: [online_orders, online_revenue, on_time_delivery_pct]
+
+- id: GT-RTL-AOV
+  name: Average Order Value
+  definition: "The mean value of consumer web-store orders; trade (business) account orders are excluded unless all accounts are requested."
+  formula: "Σ consumer order value ÷ consumer orders"
+  domain: Returns
+  owner: retail:customer-steward
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [AOV, order size]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ONLINE_ORDER.order_value, CONFORMED_GOLD.FCT_ONLINE_ORDER.account_type]
+    metrics: [avg_order_value]
+
+- id: GT-RTL-ACCOUNT-TYPE
+  name: Account Type
+  definition: "Whether a web-store order was placed on a Consumer account or a Trade (business) account."
+  formula: "Conformed from the order account type"
+  domain: Returns
+  owner: retail:customer-steward
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [trade account, consumer account]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ONLINE_ORDER.account_type]
+    metrics: []
+
+- id: GT-RTL-RETURN-RATE
+  name: Online Return Rate
+  definition: "The value of web-store orders returned as a share of order value, measured on orders whose 30-day return window has closed."
+  formula: "Σ returned value ÷ Σ order value × 100, orders older than 30 days"
+  domain: Returns
+  owner: retail:customer-steward
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [returns rate, return percentage]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ONLINE_ORDER.returned_value, CONFORMED_GOLD.FCT_ONLINE_ORDER.order_value, CONFORMED_GOLD.FCT_ONLINE_ORDER.mature]
+    metrics: [return_rate]
+
+- id: GT-RTL-REFUND
+  name: Refund
+  definition: "Money returned to a member for a returned web-store order."
+  formula: "returned_value on returned orders"
+  domain: Returns
+  owner: retail:customer-steward
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [refunded value, money back]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ONLINE_ORDER.returned_value, CONFORMED_GOLD.FCT_ONLINE_ORDER.returned]
+    metrics: [refund_value]
+
+- id: GT-RTL-REFUND-CYCLE
+  name: Refund Cycle Time
+  definition: "Days from a return being received to the refund being issued, averaged over returned orders whose return window has closed."
+  formula: "mean days_to_refund on returned orders older than 30 days"
+  domain: Returns
+  owner: retail:customer-steward
+  steward: retail:customer-steward
+  status: IN_REVIEW
+  cde: false
+  synonyms: [days to refund, refund turnaround]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ONLINE_ORDER.days_to_refund]
+    metrics: [refund_cycle_days]
+
+- id: GT-RTL-VENDOR
+  name: Vendor
+  definition: "A company Harbor & Pine buys merchandise from, registered in the ERP vendor master."
+  formula: "One record per vendor_id"
+  domain: Supply chain
+  owner: retail:coo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [supplier, brand owner]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_VENDOR.vendor_id, CONFORMED_GOLD.DIM_VENDOR.vendor_name, CONFORMED_GOLD.DIM_VENDOR.preferred]
+    metrics: []
+
+- id: GT-RTL-VENDOR-AGREEMENT
+  name: Vendor Agreement
+  definition: "An agreement with a vendor that fixes cost prices, terms and an annual commitment for a buying category."
+  formula: "One record per agreement_id"
+  domain: Supply chain
+  owner: retail:coo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [cost agreement, terms agreement]
+  mappings:
+    columns: [CURATED_SILVER.VENDOR_AGREEMENT.agreement_id, CURATED_SILVER.VENDOR_AGREEMENT.start_date, CURATED_SILVER.VENDOR_AGREEMENT.end_date]
+    metrics: []
+
+- id: GT-RTL-PO-COST
+  name: Purchase Order Cost
+  definition: "All purchase-order line cost in a period, before vendor allowances and returns to vendor."
+  formula: "Σ po_cost_usd"
+  domain: Supply chain
+  owner: retail:coo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [PO cost, buying spend]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PO_LINE.po_cost_usd, CONFORMED_GOLD.FCT_PO_LINE.po_line_id]
+    metrics: [total_po_cost, po_lines]
+
+- id: GT-RTL-COST-COMPLIANCE
+  name: Cost Compliance
+  definition: "The share of purchase-order cost placed at the cost agreed in an active vendor agreement."
+  formula: "PO cost at agreed cost ÷ total PO cost × 100"
+  domain: Supply chain
+  owner: retail:coo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [agreed cost compliance, on-agreement spend]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PO_LINE.at_agreed_cost, CONFORMED_GOLD.FCT_PO_LINE.po_cost_usd]
+    metrics: [cost_compliance_pct]
+
+- id: GT-RTL-OFF-AGREEMENT
+  name: Off-Agreement Spend
+  definition: "Purchase-order cost placed outside an agreed vendor cost, including spot buys."
+  formula: "Σ po_cost_usd where at_agreed_cost = FALSE"
+  domain: Supply chain
+  owner: retail:coo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [spot buys, maverick buying]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PO_LINE.at_agreed_cost, CONFORMED_GOLD.FCT_PO_LINE.po_cost_usd]
+    metrics: [off_agreement_spend]
+
+- id: GT-RTL-OTIF
+  name: Vendor OTIF
+  definition: "The share of received PO lines a vendor delivered on or before the promised date and in full quantity."
+  formula: "lines received on time and in full ÷ lines received × 100"
+  domain: Supply chain
+  owner: retail:coo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [OTIF, on time in full]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PO_LINE.otif, CONFORMED_GOLD.FCT_PO_LINE.received]
+    metrics: [vendor_otif_pct]
+
+- id: GT-RTL-FILL-RATE
+  name: Vendor Fill Rate
+  definition: "Units received as a share of units ordered on received purchase-order lines."
+  formula: "Σ units received ÷ Σ units ordered × 100"
+  domain: Supply chain
+  owner: retail:coo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [fill rate, unit fill]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PO_LINE.units_received, CONFORMED_GOLD.FCT_PO_LINE.units_ordered]
+    metrics: [vendor_fill_rate_pct]
+
+- id: GT-RTL-LEAD-TIME
+  name: PO Lead Time
+  definition: "Days from purchase-order creation to goods receipt at the distribution centre."
+  formula: "receipt date − PO date"
+  domain: Supply chain
+  owner: retail:coo
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [lead time, vendor lead time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PO_LINE.lead_time_days, CONFORMED_GOLD.FCT_PO_LINE.po_date]
+    metrics: [po_lead_time_days]
+
+- id: GT-RTL-PII
+  name: Personal Information (PII)
+  definition: "Any data that identifies a member, employee or vendor contact — names, emails, phone numbers, street addresses and free-text notes. Masked for every persona without PII clearance."
+  domain: Governance
+  owner: retail:customer-steward
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [personal data, personally identifiable information]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_MEMBER.full_name, CONFORMED_GOLD.DIM_MEMBER.email, CONFORMED_GOLD.DIM_MEMBER.phone, CONFORMED_GOLD.DIM_MEMBER.street_address, CONFORMED_GOLD.FCT_CARE_CONTACT.agent_notes]
+    metrics: []
+
+- id: GT-RTL-CDE
+  name: Critical Data Element
+  definition: "A data element whose accuracy directly affects financial reporting, pricing accuracy or a certified KPI. Every CDE has a named owner, a steward and data-quality rules."
+  domain: Governance
+  owner: retail:customer-steward
+  steward: retail:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [CDE, critical data]
+  mappings:
+    columns: []
+    metrics: []

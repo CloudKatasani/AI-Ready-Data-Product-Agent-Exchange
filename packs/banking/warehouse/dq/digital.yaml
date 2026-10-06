@@ -1,0 +1,50 @@
+# Digital channel and complaint DQ rules.
+- id: DQ-BNK-056
+  object: CONFORMED_GOLD.FCT_DIGITAL_SESSION
+  column: session_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per digital session.
+- id: DQ-BNK-057
+  object: CONFORMED_GOLD.FCT_DIGITAL_SESSION
+  column: session_ts
+  dimension: timeliness
+  assertion: "freshness_min <= 240"
+  severity: medium
+  alert_route: engineering
+  description: 'Digital banking events are streaming: the latest session is no more than four hours old.'
+- id: DQ-BNK-058
+  object: CONFORMED_GOLD.FCT_DIGITAL_SESSION
+  column: login_success
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: high
+  alert_route: steward
+  description: Every session records a login outcome.
+- id: DQ-BNK-059
+  object: CONFORMED_GOLD.FCT_DIGITAL_SESSION
+  column: digital_channel
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Mobile app, Online banking]
+  severity: medium
+  alert_route: steward
+  description: Sessions are on the mobile app or online banking.
+- id: DQ-BNK-060
+  object: CONFORMED_GOLD.FCT_COMPLAINT
+  column: complaint_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per complaint.
+- id: DQ-BNK-061
+  object: CONFORMED_GOLD.FCT_COMPLAINT
+  column: received_date
+  dimension: timeliness
+  assertion: "freshness_min <= 4320"
+  severity: medium
+  alert_route: engineering
+  description: Complaints logged in CRM are no more than two days behind.

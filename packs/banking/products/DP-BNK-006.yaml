@@ -1,0 +1,29 @@
+id: DP-BNK-006
+name: AML Alerts & Cases
+domain: Financial Crime
+archetype: AGGREGATE
+initial_status: IN_CERTIFICATION
+seed_stage: 11
+version: 1.0.0-rc.1
+owner: banking:lending-dpo
+steward: banking:data-steward
+description: Transaction-monitoring alerts with disposition, case escalation and SAR outcome by market, scenario and customer risk.
+purpose: Give the BSA/AML office and the Financial Crimes Copilot a certified view of alert volumes, escalation and SAR conversion.
+decision: { persona: BSA Officer, decision: "Which monitoring scenarios to retune and where to add investigator capacity", cadence: Monthly, workaround: "Case-management exports reconciled to alert queues in spreadsheets", consequence: "Alert backlogs age past the disposition standard and productive scenarios stay under-staffed" }
+sample_questions: ["How many AML alerts were raised last quarter?", "What is our AML alert-to-case rate this year?", "SAR conversion rate by scenario"]
+semantic_view: AML_ALERTS
+output_ports:
+  - { kind: semantic, ref: AML_ALERTS }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_BNK_006_AML_ALERTS }
+  - { kind: agent, ref: AG-BNK-003 }
+sla: { freshness_minutes: 1440, availability_pct: 99.5, max_null_rate_pct: 0.5 }
+kpis: [KPI-BNK-ALERTS, KPI-BNK-ALERT-CASE, KPI-BNK-SAR-CONV, KPI-BNK-AML-DAYS]
+upstream: [CONFORMED_GOLD.FCT_AML_ALERT, CONFORMED_GOLD.DIM_CUSTOMER]
+consumers: [BSA/AML office, Financial Crimes Copilot agent]
+lifecycle_seed: { artifacts: auto }
+certification_script:
+  initial: { gate4: warn, gate6: fail }
+  fixes:
+    - { id: FIX-1, check: semantic.verified_queries, label: "Add 3 verified queries for SAR conversion and disposition time", effect: { overlay: VERIFIED_QUERY, keys: [VQ-BNK-062, VQ-BNK-063, VQ-BNK-064] } }
+    - { id: FIX-2, check: governance.masking, label: "Attach PII masking to alert subject name and address", effect: { policy_attach: { policy: MASK_PII, columns: [CONFORMED_GOLD.FCT_AML_ALERT.subject_name, CONFORMED_GOLD.FCT_AML_ALERT.subject_address] } } }
+value_case: VC-BNK-006

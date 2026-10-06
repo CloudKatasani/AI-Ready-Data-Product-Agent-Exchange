@@ -1,0 +1,120 @@
+# Ridgeline Bank synonyms (synthetic): banking jargon → governed metric, dimension, value or glossary term.
+
+# ── Credit risk ─────────────────────────────────────────────────────────────────────────────────────
+- term: NPL ratio
+  synonyms: [non-performing loans ratio, bad loan ratio, npls, nonaccrual and 90 plus]
+  maps_to: { kind: metric, ref: npl_ratio }
+- term: 30+ days past due rate
+  synonyms: [delinquencies, early delinquency, 30 plus dpd, past dues]
+  maps_to: { kind: metric, ref: delinquency_30_plus_rate }
+- term: Net charge-off ratio
+  synonyms: [ncos, net charge-off rate, write-off rate, annualised losses]
+  maps_to: { kind: metric, ref: net_charge_off_ratio }
+- term: Allowance coverage of NPLs
+  synonyms: [reserve coverage, alll coverage, reserves to npls]
+  maps_to: { kind: metric, ref: allowance_coverage }
+- term: Total loans
+  synonyms: [loan book, loans on the books, gross loans outstanding]
+  maps_to: { kind: metric, ref: total_loans }
+- term: Loan yield
+  synonyms: [loan rate, average loan rate, what we earn on loans]
+  maps_to: { kind: metric, ref: loan_yield }
+- term: Loan segment
+  synonyms: [lending product, loan portfolio segment, asset class]
+  maps_to: { kind: dimension, ref: loan_segment }
+- term: Commercial real estate
+  synonyms: [cre, commercial property, office loans]
+  maps_to: { kind: value, ref: loan_segment=Commercial real estate }
+- term: Held for sale
+  synonyms: [hfs pool, loan sale pool]
+  maps_to: { kind: dimension, ref: held_for_sale }
+
+# ── Deposits & treasury ─────────────────────────────────────────────────────────────────────────────
+- term: Total deposits
+  synonyms: [deposit book, core deposits, how much money customers hold with us]
+  maps_to: { kind: metric, ref: total_deposits }
+- term: Cost of deposits
+  synonyms: [cost of funds, deposit beta cost, what we pay on deposits]
+  maps_to: { kind: metric, ref: cost_of_deposits }
+- term: Uninsured deposit share
+  synonyms: [uninsured concentration, deposits over 250k, uninsured funding]
+  maps_to: { kind: metric, ref: uninsured_deposit_share }
+- term: Non-interest-bearing share
+  synonyms: [noninterest bearing mix, free deposits share]
+  maps_to: { kind: metric, ref: noninterest_bearing_share }
+- term: Time deposit
+  synonyms: [cds, certificates of deposit, term deposits]
+  maps_to: { kind: value, ref: deposit_product=Time deposit }
+- term: Money market
+  synonyms: [mmda, money market accounts]
+  maps_to: { kind: value, ref: deposit_product=Money market }
+
+# ── Customer ────────────────────────────────────────────────────────────────────────────────────────
+- term: Digital active rate
+  synonyms: [digital penetration, share of customers using the app, online adoption]
+  maps_to: { kind: metric, ref: digital_active_rate }
+- term: Products per customer
+  synonyms: [relationship depth, products per household, cross sell]
+  maps_to: { kind: metric, ref: products_per_customer }
+- term: Customer attrition rate
+  synonyms: [customer churn, lost customers, closed customers]
+  maps_to: { kind: metric, ref: attrition_rate }
+- term: KYC reviews overdue
+  synonyms: [kyc refresh backlog, overdue due diligence, cdd backlog]
+  maps_to: { kind: metric, ref: kyc_overdue_pct }
+- term: Market
+  synonyms: [region, footprint, territory, geography]
+  maps_to: { kind: dimension, ref: region }
+- term: Private client
+  synonyms: [private banking, wealth clients, high net worth]
+  maps_to: { kind: value, ref: segment=Private client }
+
+# ── Cards ───────────────────────────────────────────────────────────────────────────────────────────
+- term: Card fraud loss rate
+  synonyms: [fraud basis points, card fraud bps, fraud losses as bps of spend]
+  maps_to: { kind: metric, ref: fraud_loss_bps }
+- term: Card purchase volume
+  synonyms: [card sales volume, spend on our cards, interchange volume]
+  maps_to: { kind: metric, ref: purchase_volume }
+- term: Authorization approval rate
+  synonyms: [approval rates, approvals, decline rate]
+  maps_to: { kind: metric, ref: auth_approval_rate }
+- term: Card not present
+  synonyms: [cnp, ecommerce card transactions, online card payments]
+  maps_to: { kind: value, ref: card_channel=Card not present }
+- term: Merchant category
+  synonyms: [merchant category code, mcc group, merchant segment]
+  maps_to: { kind: dimension, ref: merchant_category }
+
+# ── Collections ─────────────────────────────────────────────────────────────────────────────────────
+- term: Cure rate
+  synonyms: [back to current, cures in collections, collections cures]
+  maps_to: { kind: metric, ref: cure_rate }
+- term: Promise-to-pay kept rate
+  synonyms: [broken promises inverse, kept ptps, promise performance]
+  maps_to: { kind: metric, ref: promise_kept_rate }
+- term: Roll rate to charge-off
+  synonyms: [flow to charge-off, roll to loss, flow rate to charge-off]
+  maps_to: { kind: metric, ref: chargeoff_roll_rate }
+- term: Collection strategy
+  synonyms: [treatment path, collections treatment, contact channel]
+  maps_to: { kind: dimension, ref: strategy }
+
+# ── Financial crime ─────────────────────────────────────────────────────────────────────────────────
+- term: Alert-to-case rate
+  synonyms: [alert escalation rate, alerts escalated, case conversion]
+  maps_to: { kind: metric, ref: alert_to_case_rate }
+- term: SAR conversion rate
+  synonyms: [sar filing rate, suspicious activity filing rate]
+  maps_to: { kind: metric, ref: sar_conversion_rate }
+- term: Monitoring scenario
+  synonyms: [aml scenario, typology, tm rule]
+  maps_to: { kind: dimension, ref: monitoring_scenario }
+
+# ── Glossary pointers ───────────────────────────────────────────────────────────────────────────────
+- term: Non-accrual
+  synonyms: [nonaccrual status, interest not accruing]
+  maps_to: { kind: term, ref: GT-BNK-NON-ACCRUAL }
+- term: CECL
+  synonyms: [current expected credit loss, lifetime loss reserve]
+  maps_to: { kind: term, ref: GT-BNK-ACL }

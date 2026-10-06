@@ -1,0 +1,397 @@
+# Verified queries — curated question -> MetricQuery pairs, ported from AI-Ready banking `queries.ts` and the
+# Marketplace AG-BNK demo exchanges. Every query compiles through compileMetricQuery() on the named view.
+# AML_ALERTS deliberately has only 7 active entries: the DP-BNK-006 certification story (gate 4) activates
+# the three SAR and disposition-time queries (pending_fix) via FIX-1.
+
+# ---------------------------------------------------------------- CUSTOMER_360
+- id: VQ-BNK-001
+  question: "How many active customers do we have?"
+  query: { view: CUSTOMER_360, metrics: [active_customers] }
+  agent: AG-BNK-001
+  verified_by: banking:data-steward
+  verified_at: 2026-06-01
+- id: VQ-BNK-002
+  question: "What is the digital active rate by market?"
+  query: { view: CUSTOMER_360, metrics: [digital_active_rate], dimensions: [region], orderBy: [{ field: digital_active_rate, dir: desc }] }
+  agent: AG-BNK-001
+  verified_by: banking:data-steward
+  verified_at: 2026-06-03
+- id: VQ-BNK-003
+  question: "Products per customer by segment"
+  query: { view: CUSTOMER_360, metrics: [products_per_customer], dimensions: [segment], orderBy: [{ field: products_per_customer, dir: desc }] }
+  agent: AG-BNK-001
+  verified_by: banking:data-steward
+  verified_at: 2026-06-05
+- id: VQ-BNK-004
+  question: "Average relationship balance by market"
+  query: { view: CUSTOMER_360, metrics: [avg_relationship_balance], dimensions: [region], orderBy: [{ field: avg_relationship_balance, dir: desc }] }
+  agent: AG-BNK-001
+  verified_by: banking:data-steward
+  verified_at: 2026-06-07
+- id: VQ-BNK-005
+  question: "Average relationship balance by segment"
+  query: { view: CUSTOMER_360, metrics: [avg_relationship_balance], dimensions: [segment], orderBy: [{ field: avg_relationship_balance, dir: desc }] }
+  agent: AG-BNK-001
+  verified_by: banking:data-steward
+  verified_at: 2026-06-09
+- id: VQ-BNK-006
+  question: "Customer attrition rate by market"
+  query: { view: CUSTOMER_360, metrics: [attrition_rate], dimensions: [region], orderBy: [{ field: attrition_rate, dir: desc }] }
+  agent: AG-BNK-001
+  verified_by: banking:data-steward
+  verified_at: 2026-06-11
+- id: VQ-BNK-007
+  question: "What share of active customers have an overdue KYC review by risk rating?"
+  query: { view: CUSTOMER_360, metrics: [kyc_overdue_pct], dimensions: [kyc_risk_rating], orderBy: [{ field: kyc_overdue_pct, dir: desc }] }
+  agent: AG-BNK-001
+  verified_by: banking:data-steward
+  verified_at: 2026-06-13
+- id: VQ-BNK-008
+  question: "Active customers by segment"
+  query: { view: CUSTOMER_360, metrics: [active_customers], dimensions: [segment], orderBy: [{ field: active_customers, dir: desc }] }
+  agent: AG-BNK-001
+  verified_by: banking:data-steward
+  verified_at: 2026-06-15
+- id: VQ-BNK-009
+  question: "Digital active rate by age band"
+  query: { view: CUSTOMER_360, metrics: [digital_active_rate], dimensions: [age_band], orderBy: [{ field: digital_active_rate, dir: desc }] }
+  agent: AG-BNK-001
+  verified_by: banking:data-steward
+  verified_at: 2026-06-17
+- id: VQ-BNK-010
+  question: "Products per customer by tenure band"
+  query: { view: CUSTOMER_360, metrics: [products_per_customer], dimensions: [tenure_band] }
+  agent: AG-BNK-001
+  verified_by: banking:data-steward
+  verified_at: 2026-06-19
+# ---------------------------------------------------------------- DEPOSITS
+- id: VQ-BNK-011
+  question: "What were total deposits last quarter?"
+  query: { view: DEPOSITS, metrics: [total_deposits], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-06-21
+- id: VQ-BNK-012
+  question: "Total deposits by market last quarter"
+  query: { view: DEPOSITS, metrics: [total_deposits], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: total_deposits, dir: desc }] }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-06-23
+- id: VQ-BNK-013
+  question: "Total deposits by quarter this year"
+  query: { view: DEPOSITS, metrics: [total_deposits], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-06-25
+- id: VQ-BNK-014
+  question: "Cost of deposits by product last quarter"
+  query: { view: DEPOSITS, metrics: [cost_of_deposits], dimensions: [deposit_product], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: cost_of_deposits, dir: desc }] }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-06-27
+- id: VQ-BNK-015
+  question: "Cost of deposits by month this year"
+  query: { view: DEPOSITS, metrics: [cost_of_deposits], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-06-29
+- id: VQ-BNK-016
+  question: "Deposit mix by product last quarter"
+  query: { view: DEPOSITS, metrics: [total_deposits], dimensions: [deposit_product], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: total_deposits, dir: desc }], analysis: contribution }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-07-01
+- id: VQ-BNK-017
+  question: "Non-interest-bearing share by market last quarter"
+  query: { view: DEPOSITS, metrics: [noninterest_bearing_share], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: noninterest_bearing_share, dir: desc }] }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-07-03
+- id: VQ-BNK-018
+  question: "Uninsured deposit share by segment last quarter"
+  query: { view: DEPOSITS, metrics: [uninsured_deposit_share], dimensions: [segment], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: uninsured_deposit_share, dir: desc }] }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-07-05
+- id: VQ-BNK-019
+  question: "Which 10 branches hold the most deposits?"
+  query: { view: DEPOSITS, metrics: [total_deposits], dimensions: [branch], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: total_deposits, dir: desc }], limit: 10, analysis: rank }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-07-07
+- id: VQ-BNK-020
+  question: "Average account balance by product this year"
+  query: { view: DEPOSITS, metrics: [avg_deposit_balance], dimensions: [deposit_product], timeRange: { ytd: true }, orderBy: [{ field: avg_deposit_balance, dir: desc }] }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-07-09
+# ---------------------------------------------------------------- LOAN_PORTFOLIO
+- id: VQ-BNK-021
+  question: "What was the NPL ratio by market last quarter?"
+  query: { view: LOAN_PORTFOLIO, metrics: [npl_ratio], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: npl_ratio, dir: desc }] }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-07-11
+- id: VQ-BNK-022
+  question: "NPL ratio by loan segment last quarter"
+  query: { view: LOAN_PORTFOLIO, metrics: [npl_ratio], dimensions: [loan_segment], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: npl_ratio, dir: desc }] }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-07-13
+- id: VQ-BNK-023
+  question: "NPL ratio by month this year"
+  query: { view: LOAN_PORTFOLIO, metrics: [npl_ratio], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-07-15
+- id: VQ-BNK-024
+  question: "30+ days past due rate by loan segment this year"
+  query: { view: LOAN_PORTFOLIO, metrics: [delinquency_30_plus_rate], dimensions: [loan_segment], timeRange: { ytd: true }, orderBy: [{ field: delinquency_30_plus_rate, dir: desc }] }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-07-17
+- id: VQ-BNK-025
+  question: "Net charge-off ratio year to date"
+  query: { view: LOAN_PORTFOLIO, metrics: [net_charge_off_ratio], timeRange: { ytd: true } }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-07-19
+- id: VQ-BNK-026
+  question: "Net charge-off ratio by quarter for the last four quarters"
+  query: { view: LOAN_PORTFOLIO, metrics: [net_charge_off_ratio], timeGrain: quarter, timeRange: { last: { n: 4, unit: quarter } }, analysis: trend }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-07-21
+- id: VQ-BNK-027
+  question: "Allowance coverage of NPLs by market last quarter"
+  query: { view: LOAN_PORTFOLIO, metrics: [allowance_coverage], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: allowance_coverage, dir: asc }] }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-07-23
+- id: VQ-BNK-028
+  question: "Total loans by loan segment last quarter"
+  query: { view: LOAN_PORTFOLIO, metrics: [total_loans], dimensions: [loan_segment], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: total_loans, dir: desc }], analysis: contribution }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-07-25
+- id: VQ-BNK-029
+  question: "Loan yield by loan segment this year"
+  query: { view: LOAN_PORTFOLIO, metrics: [loan_yield], dimensions: [loan_segment], timeRange: { ytd: true }, orderBy: [{ field: loan_yield, dir: desc }] }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-07-27
+- id: VQ-BNK-030
+  question: "Delinquency by bucket last quarter"
+  query: { view: LOAN_PORTFOLIO, metrics: [total_loans], dimensions: [dpd_bucket], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: total_loans, dir: desc }] }
+  agent: AG-BNK-002
+  verified_by: banking:credit-risk-analyst
+  verified_at: 2026-07-29
+- id: VQ-BNK-031
+  question: "NPL ratio by credit score band this year"
+  query: { view: LOAN_PORTFOLIO, metrics: [npl_ratio], dimensions: [fico_band], timeRange: { ytd: true }, orderBy: [{ field: npl_ratio, dir: desc }] }
+  agent: AG-BNK-004
+  verified_by: banking:lending-dpo
+  verified_at: 2026-07-31
+# ---------------------------------------------------------------- CARD_PAYMENTS
+- id: VQ-BNK-032
+  question: "What is our card fraud loss rate this quarter?"
+  query: { view: CARD_PAYMENTS, metrics: [fraud_loss_bps], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-BNK-003
+  verified_by: banking:lending-dpo
+  verified_at: 2026-08-02
+- id: VQ-BNK-033
+  question: "Card fraud loss rate by merchant category last quarter"
+  query: { view: CARD_PAYMENTS, metrics: [fraud_loss_bps], dimensions: [merchant_category], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: fraud_loss_bps, dir: desc }] }
+  agent: AG-BNK-003
+  verified_by: banking:lending-dpo
+  verified_at: 2026-08-04
+- id: VQ-BNK-034
+  question: "Card fraud losses by card channel last quarter"
+  query: { view: CARD_PAYMENTS, metrics: [fraud_losses], dimensions: [card_channel], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: fraud_losses, dir: desc }], analysis: contribution }
+  agent: AG-BNK-003
+  verified_by: banking:lending-dpo
+  verified_at: 2026-08-06
+- id: VQ-BNK-035
+  question: "Card fraud loss rate by month this year"
+  query: { view: CARD_PAYMENTS, metrics: [fraud_loss_bps], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-BNK-003
+  verified_by: banking:lending-dpo
+  verified_at: 2026-08-08
+- id: VQ-BNK-036
+  question: "Authorization approval rate by card channel last quarter"
+  query: { view: CARD_PAYMENTS, metrics: [auth_approval_rate], dimensions: [card_channel], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: auth_approval_rate, dir: asc }] }
+  agent: AG-BNK-003
+  verified_by: banking:lending-dpo
+  verified_at: 2026-08-10
+- id: VQ-BNK-037
+  question: "Card purchase volume by merchant category last quarter"
+  query: { view: CARD_PAYMENTS, metrics: [purchase_volume], dimensions: [merchant_category], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: purchase_volume, dir: desc }] }
+  agent: AG-BNK-001
+  verified_by: banking:lending-dpo
+  verified_at: 2026-08-12
+- id: VQ-BNK-038
+  question: "Card purchase volume by month this year"
+  query: { view: CARD_PAYMENTS, metrics: [purchase_volume], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-BNK-001
+  verified_by: banking:lending-dpo
+  verified_at: 2026-08-14
+- id: VQ-BNK-039
+  question: "Average ticket by card product last quarter"
+  query: { view: CARD_PAYMENTS, metrics: [avg_ticket], dimensions: [card_product], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_ticket, dir: desc }] }
+  agent: AG-BNK-001
+  verified_by: banking:lending-dpo
+  verified_at: 2026-08-16
+- id: VQ-BNK-040
+  question: "Card purchase volume by market last quarter"
+  query: { view: CARD_PAYMENTS, metrics: [purchase_volume], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: purchase_volume, dir: desc }] }
+  agent: AG-BNK-001
+  verified_by: banking:lending-dpo
+  verified_at: 2026-08-18
+- id: VQ-BNK-041
+  question: "Card authorisations by card product this year"
+  query: { view: CARD_PAYMENTS, metrics: [card_authorizations], dimensions: [card_product], timeRange: { ytd: true }, orderBy: [{ field: card_authorizations, dir: desc }] }
+  agent: AG-BNK-003
+  verified_by: banking:lending-dpo
+  verified_at: 2026-08-20
+# ---------------------------------------------------------------- COLLECTIONS
+- id: VQ-BNK-042
+  question: "What is the cure rate this year?"
+  query: { view: COLLECTIONS, metrics: [cure_rate], timeRange: { ytd: true } }
+  agent: AG-BNK-004
+  verified_by: banking:lending-dpo
+  verified_at: 2026-08-22
+- id: VQ-BNK-043
+  question: "Cure rate by entry bucket this year"
+  query: { view: COLLECTIONS, metrics: [cure_rate], dimensions: [entry_bucket], timeRange: { ytd: true }, orderBy: [{ field: cure_rate, dir: desc }] }
+  agent: AG-BNK-004
+  verified_by: banking:lending-dpo
+  verified_at: 2026-08-24
+- id: VQ-BNK-044
+  question: "Promise-to-pay kept rate by collection strategy this year"
+  query: { view: COLLECTIONS, metrics: [promise_kept_rate], dimensions: [strategy], timeRange: { ytd: true }, orderBy: [{ field: promise_kept_rate, dir: desc }] }
+  agent: AG-BNK-004
+  verified_by: banking:lending-dpo
+  verified_at: 2026-08-26
+- id: VQ-BNK-045
+  question: "Roll rate to charge-off by loan segment last quarter"
+  query: { view: COLLECTIONS, metrics: [chargeoff_roll_rate], dimensions: [loan_segment], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: chargeoff_roll_rate, dir: desc }] }
+  agent: AG-BNK-004
+  verified_by: banking:lending-dpo
+  verified_at: 2026-08-28
+- id: VQ-BNK-046
+  question: "Roll rate to charge-off by entry bucket this year"
+  query: { view: COLLECTIONS, metrics: [chargeoff_roll_rate], dimensions: [entry_bucket], timeRange: { ytd: true }, orderBy: [{ field: chargeoff_roll_rate, dir: desc }] }
+  agent: AG-BNK-004
+  verified_by: banking:lending-dpo
+  verified_at: 2026-08-30
+- id: VQ-BNK-047
+  question: "Collection cases by month this year"
+  query: { view: COLLECTIONS, metrics: [collection_cases], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-BNK-004
+  verified_by: banking:lending-dpo
+  verified_at: 2026-09-01
+- id: VQ-BNK-048
+  question: "Collection cases by market last quarter"
+  query: { view: COLLECTIONS, metrics: [collection_cases], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: collection_cases, dir: desc }] }
+  agent: AG-BNK-004
+  verified_by: banking:lending-dpo
+  verified_at: 2026-09-03
+- id: VQ-BNK-049
+  question: "Days to resolve by collection strategy this year"
+  query: { view: COLLECTIONS, metrics: [avg_days_to_resolve], dimensions: [strategy], timeRange: { ytd: true }, orderBy: [{ field: avg_days_to_resolve, dir: asc }] }
+  agent: AG-BNK-004
+  verified_by: banking:lending-dpo
+  verified_at: 2026-09-05
+- id: VQ-BNK-050
+  question: "Recoveries by loan segment this year"
+  query: { view: COLLECTIONS, metrics: [recoveries], dimensions: [loan_segment], timeRange: { ytd: true }, orderBy: [{ field: recoveries, dir: desc }] }
+  agent: AG-BNK-004
+  verified_by: banking:lending-dpo
+  verified_at: 2026-09-07
+- id: VQ-BNK-051
+  question: "Cure rate by collection strategy last quarter"
+  query: { view: COLLECTIONS, metrics: [cure_rate], dimensions: [strategy], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: cure_rate, dir: desc }] }
+  agent: AG-BNK-004
+  verified_by: banking:lending-dpo
+  verified_at: 2026-09-09
+# ---------------------------------------------------------------- AML_ALERTS
+- id: VQ-BNK-052
+  question: "How many AML alerts were raised last quarter?"
+  query: { view: AML_ALERTS, metrics: [alerts_raised], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-BNK-003
+  verified_by: banking:data-steward
+  verified_at: 2026-09-11
+- id: VQ-BNK-053
+  question: "AML alerts raised by monitoring scenario this year"
+  query: { view: AML_ALERTS, metrics: [alerts_raised], dimensions: [monitoring_scenario], timeRange: { ytd: true }, orderBy: [{ field: alerts_raised, dir: desc }] }
+  agent: AG-BNK-003
+  verified_by: banking:data-steward
+  verified_at: 2026-09-13
+- id: VQ-BNK-054
+  question: "What is our AML alert-to-case rate this year?"
+  query: { view: AML_ALERTS, metrics: [alert_to_case_rate], timeRange: { ytd: true } }
+  agent: AG-BNK-003
+  verified_by: banking:data-steward
+  verified_at: 2026-09-15
+- id: VQ-BNK-055
+  question: "Alert-to-case rate by monitoring scenario last quarter"
+  query: { view: AML_ALERTS, metrics: [alert_to_case_rate], dimensions: [monitoring_scenario], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: alert_to_case_rate, dir: desc }] }
+  agent: AG-BNK-003
+  verified_by: banking:data-steward
+  verified_at: 2026-09-17
+- id: VQ-BNK-056
+  question: "AML alerts raised by month this year"
+  query: { view: AML_ALERTS, metrics: [alerts_raised], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-BNK-003
+  verified_by: banking:data-steward
+  verified_at: 2026-06-01
+- id: VQ-BNK-057
+  question: "Alert false-positive rate by market this year"
+  query: { view: AML_ALERTS, metrics: [false_positive_rate], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: false_positive_rate, dir: desc }] }
+  agent: AG-BNK-003
+  verified_by: banking:data-steward
+  verified_at: 2026-06-03
+- id: VQ-BNK-058
+  question: "Alerts raised by customer risk rating this year"
+  query: { view: AML_ALERTS, metrics: [alerts_raised], dimensions: [customer_risk], timeRange: { ytd: true }, orderBy: [{ field: alerts_raised, dir: desc }] }
+  agent: AG-BNK-003
+  verified_by: banking:data-steward
+  verified_at: 2026-06-05
+# ---------------------------------------------------------------- DIGITAL_ENGAGEMENT
+- id: VQ-BNK-059
+  question: "Login success rate by day last month"
+  query: { view: DIGITAL_ENGAGEMENT, metrics: [login_success_rate], timeGrain: day, timeRange: { last: { n: 1, unit: month } }, analysis: trend }
+  verified_by: banking:lending-dpo
+  verified_at: 2026-06-07
+- id: VQ-BNK-060
+  question: "Mobile share of sessions by market this year"
+  query: { view: DIGITAL_ENGAGEMENT, metrics: [mobile_share], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: mobile_share, dir: desc }] }
+  verified_by: banking:lending-dpo
+  verified_at: 2026-06-09
+- id: VQ-BNK-061
+  question: "Digital sessions by feature last quarter"
+  query: { view: DIGITAL_ENGAGEMENT, metrics: [digital_sessions], dimensions: [feature], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: digital_sessions, dir: desc }] }
+  verified_by: banking:lending-dpo
+  verified_at: 2026-06-11
+# ---------------------------------------------------------------- AML_ALERTS
+- id: VQ-BNK-062
+  question: "What is the SAR conversion rate this year?"
+  query: { view: AML_ALERTS, metrics: [sar_conversion_rate], timeRange: { ytd: true } }
+  agent: AG-BNK-003
+  verified_by: banking:data-steward
+  verified_at: 2026-06-13
+  status: pending_fix
+- id: VQ-BNK-063
+  question: "SAR conversion rate by monitoring scenario this year"
+  query: { view: AML_ALERTS, metrics: [sar_conversion_rate], dimensions: [monitoring_scenario], timeRange: { ytd: true }, orderBy: [{ field: sar_conversion_rate, dir: desc }] }
+  agent: AG-BNK-003
+  verified_by: banking:data-steward
+  verified_at: 2026-06-15
+  status: pending_fix
+- id: VQ-BNK-064
+  question: "Alert disposition time by priority this year"
+  query: { view: AML_ALERTS, metrics: [avg_days_to_disposition], dimensions: [alert_priority], timeRange: { ytd: true }, orderBy: [{ field: avg_days_to_disposition, dir: desc }] }
+  agent: AG-BNK-003
+  verified_by: banking:data-steward
+  verified_at: 2026-06-17
+  status: pending_fix

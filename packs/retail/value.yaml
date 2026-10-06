@@ -1,0 +1,84 @@
+# Value cases per product (marketplace value model). All figures are illustrative and synthetic.
+- id: VC-RTL-001
+  product: DP-RTL-001
+  hypothesis: A single certified member record lets loyalty target app-enrolment campaigns at low-adoption regions and tiers, lifting identified sales and personalised offer redemption.
+  baseline: "Quarterly CDP extracts reconciled by hand; about 60 analyst hours a quarter; campaigns allocated evenly across regions."
+  benefit_model: "incremental_app_members * annual_incremental_margin_per_app_member + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Incremental app enrolments from targeted campaigns", value: 42000, unit: members, source: "Loyalty campaign pilot, H1 2026" }
+    - { text: "Annual incremental gross margin per app member", value: 6.4, unit: usd, source: "Loyalty economics model FY26" }
+    - { text: "Analyst hours saved per quarter", value: 50, unit: hours, source: "Customer analytics time study" }
+    - { text: "Fully loaded analyst rate", value: 90, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 286800
+  measured: { value_usd: 231000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-RTL-002
+  product: DP-RTL-002
+  hypothesis: One governed comparable-store sales source directs labour and marketing investment to stores with real like-for-like momentum, and removes the Monday flash-report rebuild.
+  baseline: "Finance flash report rebuilt from POS exports every Monday; about 75 manual minutes per trading question; investment follows new openings."
+  benefit_model: "net_sales_uplift * gross_margin_rate + questions_per_year * minutes_saved / 60 * loaded_analyst_rate"
+  assumptions:
+    - { text: "Net sales uplift from reallocating store investment", value: 2600000, unit: usd, source: "Store operations pilot in two regions, 2026" }
+    - { text: "Gross margin rate on incremental sales", value: 0.38, unit: ratio, source: "Finance FY26 plan" }
+    - { text: "Manual minutes per trading question", value: 75, unit: minutes, source: "Analyst time study (n=21)" }
+    - { text: "Trading questions per year", value: 1800, unit: questions, source: "Commercial analytics request log" }
+  annual_value_usd: 1190500
+  measured: { value_usd: 1012000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-RTL-003
+  product: DP-RTL-003
+  hypothesis: Daily in-stock monitoring by store and category catches replenishment failures within a day, recovering lost sales from empty shelves.
+  baseline: "Store gap-scan reports emailed as CSV; replenishment failures found one to two weeks later through store complaints."
+  benefit_model: "recovered_sales * gross_margin_rate + avoided_expedite_cost"
+  assumptions:
+    - { text: "Lost sales recovered per year through earlier detection", value: 1900000, unit: usd, source: "Inventory planning analysis of 2025 incidents" }
+    - { text: "Gross margin rate on recovered sales", value: 0.38, unit: ratio, source: "Finance FY26 plan" }
+    - { text: "Expedited freight avoided per year", value: 120000, unit: usd, source: "Logistics cost model FY26" }
+  annual_value_usd: 842000
+  measured: { value_usd: 655000, period: "2026-Q1..2026-Q3 annualised", confidence: low }
+- id: VC-RTL-004
+  product: DP-RTL-004
+  hypothesis: Visible initial margin by category and an overdue price change backlog by store protect margin at intake and cut till disputes and pricing fines.
+  baseline: "PIM exports joined to pricing engine logs in a desktop database; about 110 analyst hours a month; pricing audits by rotation."
+  benefit_model: "margin_points_recovered * category_sales + avoided_pricing_fines + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Initial margin points recovered on reviewed categories", value: 0.4, unit: percent_points, source: "Merchandising line review plan FY27" }
+    - { text: "Annual net sales in reviewed categories (synthetic)", value: 180000000, unit: usd, source: "Synthetic finance summary" }
+    - { text: "Pricing accuracy fines avoided per year", value: 95000, unit: usd, source: "Legal and compliance 2025 summary" }
+    - { text: "Analyst hours saved per year", value: 900, unit: hours, source: "Merchandise analytics time study" }
+    - { text: "Fully loaded analyst rate", value: 90, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 896000
+  measured: { value_usd: 611000, period: "2026-Q1..2026-Q3 annualised", confidence: low }
+- id: VC-RTL-005
+  product: DP-RTL-005
+  hypothesis: A certified returns view with one return-rate definition focuses returns reduction on the fulfilment methods driving returns and speeds refunds, cutting care contacts.
+  baseline: "Returns report rebuilt from the order management system at each month-end; two return-rate definitions in circulation; about 40 analyst hours a month."
+  benefit_model: "reduction_in_return_rate * annual_online_sales * recovery_margin + avoided_care_contacts * cost_per_contact"
+  assumptions:
+    - { text: "Reduction in online return rate", value: 0.5, unit: percent_points, source: "E-commerce operations target, FY27 plan" }
+    - { text: "Annual online sales (synthetic)", value: 210000000, unit: usd, source: "Synthetic finance summary" }
+    - { text: "Margin recovered on a return avoided", value: 0.35, unit: ratio, source: "Returns cost model FY26" }
+    - { text: "Refund-status care contacts avoided per year", value: 38000, unit: contacts, source: "Care reason-code analysis" }
+    - { text: "Cost per care contact", value: 5.8, unit: usd, source: "Customer care cost model FY26" }
+  annual_value_usd: 588900
+  measured: null
+- id: VC-RTL-006
+  product: DP-RTL-006
+  hypothesis: Visible off-agreement spend by vendor category moves seasonal and electronics buying onto cost agreements, capturing negotiated cost.
+  baseline: "ERP spend cube refreshed monthly by a contractor; off-agreement spend reported quarterly with a six-week lag."
+  benefit_model: "spend_moved_onto_agreement * average_agreement_saving + contractor_cost_avoided"
+  assumptions:
+    - { text: "Annual PO cost moved from spot buys to cost agreements", value: 11000000, unit: usd, source: "Buying plan FY26" }
+    - { text: "Average saving at agreed cost versus spot buying", value: 7.0, unit: percent, source: "Supply chain benchmark of 2025 tenders" }
+    - { text: "Contractor reporting cost avoided per year", value: 80000, unit: usd, source: "Supply chain operating budget FY26" }
+  annual_value_usd: 850000
+  measured: { value_usd: 702000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-RTL-007
+  product: DP-RTL-007
+  hypothesis: Directing loss-prevention visits to stores where overdue counts coincide with high shrink recovers more stock than calendar rotation.
+  baseline: "Count sheets and incident logs cross-checked by hand; loss-prevention visits rotate on a calendar."
+  benefit_model: "shrink_reduction_points * counted_inventory_value + avoided_reserve_true_up"
+  assumptions:
+    - { text: "Shrink reduction at targeted hot-spot stores", value: 0.3, unit: percent_points, source: "Loss prevention pilot on hot-spot stores" }
+    - { text: "Annual inventory value at hot-spot stores (synthetic)", value: 140000000, unit: usd, source: "Synthetic finance summary" }
+    - { text: "Year-end shrink reserve true-up avoided", value: 150000, unit: usd, source: "Finance 2025 reserve analysis" }
+  annual_value_usd: 570000
+  measured: null

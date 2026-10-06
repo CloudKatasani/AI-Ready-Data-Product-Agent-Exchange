@@ -1,0 +1,845 @@
+{
+  "pack": "banking",
+  "version": "1.0.0",
+  "scale": "M",
+  "scenarios": {
+    "SC-BNK-001": {
+      "agent": "AG-BNK-002",
+      "kind": "answer",
+      "headline": "Southeast had the highest NPL ratio last quarter at 6.09%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Loans held for sale are excluded (BR-BNK-012). Mountain was lowest at 1.23% across 4 markets; the bank-wide ratio was 2.28%.",
+      "sqlHash": "628545c29c6d7d6d",
+      "columns": [
+        "region",
+        "npl_ratio"
+      ],
+      "rows": [
+        [
+          "Southeast",
+          6.09222
+        ],
+        [
+          "Plains",
+          2.07552
+        ],
+        [
+          "Great Lakes",
+          1.62084
+        ],
+        [
+          "Mountain",
+          1.23301
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-003@1.6.0",
+        "metric:LOAN_PORTFOLIO.npl_ratio",
+        "rule:BR-BNK-012",
+        "verified_query:VQ-BNK-021",
+        "document:DOC-BNK-CREDIT-POLICY#5"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Mountain had the highest NPL ratio last quarter at 1.23%.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-BNK-002": {
+      "agent": "AG-BNK-002",
+      "kind": "answer",
+      "headline": "Including loans held for sale, Plains had the highest NPL ratio last quarter at 8.68%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "You asked for all loans, so the held-for-sale exclusion in BR-BNK-012 is not applied. The distressed Plains mortgage pool marked for sale reorders the ranking — compare with the standard view that excludes it.",
+      "sqlHash": "99e3b7043620b8bd",
+      "columns": [
+        "region",
+        "npl_ratio"
+      ],
+      "rows": [
+        [
+          "Plains",
+          8.67983
+        ],
+        [
+          "Southeast",
+          5.91835
+        ],
+        [
+          "Great Lakes",
+          1.72551
+        ],
+        [
+          "Mountain",
+          1.31455
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-003@1.6.0",
+        "metric:LOAN_PORTFOLIO.npl_ratio",
+        "verified_query:VQ-BNK-021",
+        "document:DOC-BNK-CREDIT-POLICY#5"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Including loans held for sale, Mountain had the highest NPL ratio last quarter at 1.31%.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-BNK-003": {
+      "agent": "AG-BNK-002",
+      "kind": "answer",
+      "headline": "The net charge-off ratio is 0.77% year to date, moving +0.64 points from January to the latest month.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Annualised monthly net charge-offs over 9 months, excluding loans held for sale (BR-BNK-012). Watch the July spike from Southeast commercial real estate.",
+      "sqlHash": "9c7aa746ea164a8d",
+      "columns": [
+        "period",
+        "net_charge_off_ratio"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          0.244156
+        ],
+        [
+          "2026-02-01",
+          0.706904
+        ],
+        [
+          "2026-03-01",
+          0.407689
+        ],
+        [
+          "2026-04-01",
+          0.313264
+        ],
+        [
+          "2026-05-01",
+          0.597742
+        ],
+        [
+          "2026-06-01",
+          0.880064
+        ],
+        [
+          "2026-07-01",
+          2.7123
+        ],
+        [
+          "2026-08-01",
+          0.00962598
+        ],
+        [
+          "2026-09-01",
+          0.880804
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-003@1.6.0",
+        "metric:LOAN_PORTFOLIO.net_charge_off_ratio",
+        "rule:BR-BNK-012",
+        "verified_query:VQ-BNK-025",
+        "document:DOC-BNK-CREDIT-POLICY#6"
+      ],
+      "personas": {}
+    },
+    "SC-BNK-004": {
+      "agent": "AG-BNK-002",
+      "kind": "answer",
+      "headline": "Total deposits moved +$11,184,577 from the first to the latest quarter this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Average month-end deposits for each of the 3 quarters this year (BR-BNK-009); the Q3 certificate-of-deposit promotion offset money market outflows in Southeast.",
+      "sqlHash": "bfd7b41690e0b370",
+      "columns": [
+        "period",
+        "total_deposits"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          209103000
+        ],
+        [
+          "2026-04-01",
+          197982000
+        ],
+        [
+          "2026-07-01",
+          220288000
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-002@2.2.1",
+        "metric:DEPOSITS.total_deposits",
+        "verified_query:VQ-BNK-011",
+        "document:DOC-BNK-LIQUIDITY#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "decline",
+          "headline": "You don’t have access to Deposits & Liquidity yet."
+        }
+      }
+    },
+    "SC-BNK-005": {
+      "agent": "AG-BNK-002",
+      "kind": "answer",
+      "headline": "The 30+ days past due rate is 3.26% year to date — within target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Principal 30 or more days past due as a share of total principal, excluding loans held for sale (BR-BNK-012).",
+      "sqlHash": "339b5d7c463ae582",
+      "columns": [
+        "delinquency_30_plus_rate",
+        "delinquency_30_plus_rate_target_min",
+        "delinquency_30_plus_rate_target_max"
+      ],
+      "rows": [
+        [
+          3.26174,
+          1.5,
+          3.5
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-003@1.6.0",
+        "metric:LOAN_PORTFOLIO.delinquency_30_plus_rate",
+        "rule:BR-BNK-012",
+        "document:DOC-BNK-CREDIT-POLICY#4"
+      ],
+      "personas": {}
+    },
+    "SC-BNK-006": {
+      "agent": "AG-BNK-002",
+      "kind": "redirect",
+      "headline": "That's a card fraud question — the Financial Crimes Copilot answers it.",
+      "narrative": "I cover credit risk, deposits and liquidity. The Financial Crimes Copilot is certified on card transactions and fraud losses.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-BNK-007": {
+      "agent": "AG-BNK-002",
+      "kind": "decline",
+      "headline": "I can't approve or price loans — that is outside what this agent is allowed to do.",
+      "narrative": "Loan modifications are decided by credit officers under delegated authority. I can show you credit quality for the segment and market so the decision has the evidence.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-BNK-008": {
+      "agent": "AG-BNK-001",
+      "kind": "answer",
+      "headline": "Great Lakes leads digital engagement at 69.3% of active customers.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Mountain trails at 55.4%. Digitally active means a mobile or online login in the last 30 days (BR-BNK-011).",
+      "sqlHash": "39142687c702c270",
+      "columns": [
+        "region",
+        "digital_active_rate"
+      ],
+      "rows": [
+        [
+          "Great Lakes",
+          69.3111
+        ],
+        [
+          "Plains",
+          56.5804
+        ],
+        [
+          "Southeast",
+          55.8212
+        ],
+        [
+          "Mountain",
+          55.4497
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-001@3.1.0",
+        "metric:CUSTOMER_360.digital_active_rate",
+        "verified_query:VQ-BNK-002",
+        "document:DOC-BNK-DIGITAL-STANDARDS#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Mountain leads digital engagement at 55.4% of active customers.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-BNK-009": {
+      "agent": "AG-BNK-001",
+      "kind": "answer",
+      "headline": "The largest active relationship holds $1,212,566.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Customer names are masked unless your persona is cleared for PII under the masking policy. Showing the top 5 active relationships by balance.",
+      "sqlHash": "1242a6aaebd081f3",
+      "columns": [
+        "customer_name",
+        "avg_relationship_balance"
+      ],
+      "rows": [
+        [
+          "Linda Green",
+          1212570
+        ],
+        [
+          "Matthew Hall",
+          538021
+        ],
+        [
+          "Matthew Moore",
+          515057
+        ],
+        [
+          "William Hall",
+          489715
+        ],
+        [
+          "Patricia Rivera",
+          488704
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-001@3.1.0",
+        "metric:CUSTOMER_360.avg_relationship_balance",
+        "document:DOC-BNK-DIGITAL-STANDARDS#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "The largest active relationship holds $1,874,947.",
+          "rowFiltered": true,
+          "masked": [
+            "customer_name"
+          ]
+        },
+        "D": {
+          "kind": "answer",
+          "headline": "The largest active relationship holds $1,212,566.",
+          "rowFiltered": false,
+          "masked": []
+        }
+      }
+    },
+    "SC-BNK-010": {
+      "agent": "AG-BNK-001",
+      "kind": "clarify",
+      "headline": "\"How customers are doing\" can mean a few things — which one do you need?",
+      "narrative": "I can show active customers, the digital active rate, products per customer or the attrition rate. Pick one and a slice.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-BNK-011": {
+      "agent": "AG-BNK-001",
+      "kind": "answer",
+      "headline": "Southeast has the highest average relationship balance at $43,396.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Mean relationship balance per active customer across the 4 markets you are entitled to see; the market row-access policy applies.",
+      "sqlHash": "4407e4ea4789fe2b",
+      "columns": [
+        "region",
+        "avg_relationship_balance"
+      ],
+      "rows": [
+        [
+          "Southeast",
+          43396.3
+        ],
+        [
+          "Mountain",
+          43047.1
+        ],
+        [
+          "Great Lakes",
+          42986.1
+        ],
+        [
+          "Plains",
+          40287.3
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-001@3.1.0",
+        "metric:CUSTOMER_360.avg_relationship_balance",
+        "verified_query:VQ-BNK-004",
+        "document:DOC-BNK-DATA-GOVERNANCE#3"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Mountain has the highest average relationship balance at $43,047.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-BNK-012": {
+      "agent": "AG-BNK-001",
+      "kind": "answer",
+      "headline": "Across 8 merchant categories, the median average ticket is $69.91.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "The middle 80% of categories sit between $69.45 and $134.32; the highest category averages $280.99.",
+      "sqlHash": "2c5b4c2150061154",
+      "columns": [
+        "merchant_category_count",
+        "avg_ticket_p10",
+        "avg_ticket_p50",
+        "avg_ticket_p90",
+        "avg_ticket_min",
+        "avg_ticket_max"
+      ],
+      "rows": [
+        [
+          8,
+          69.4508,
+          69.9106,
+          134.321,
+          69.4081,
+          280.99
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-004@2.0.3",
+        "metric:CARD_PAYMENTS.avg_ticket",
+        "document:DOC-BNK-BSA-AML#4"
+      ],
+      "personas": {}
+    },
+    "SC-BNK-013": {
+      "agent": "AG-BNK-001",
+      "kind": "answer",
+      "headline": "There are 21,029 active customers in the governed customer sample.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Customers with Active status in the core CIF (BR-BNK-010).",
+      "sqlHash": "e7d55a0e08b3badd",
+      "columns": [
+        "active_customers"
+      ],
+      "rows": [
+        [
+          21029
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-001@3.1.0",
+        "metric:CUSTOMER_360.active_customers",
+        "verified_query:VQ-BNK-001",
+        "document:DOC-BNK-DIGITAL-STANDARDS#1"
+      ],
+      "personas": {}
+    },
+    "SC-BNK-014": {
+      "agent": "AG-BNK-003",
+      "kind": "answer",
+      "headline": "Digital goods had the highest card fraud loss rate last quarter at 219.3 bps.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "The 5 worst merchant categories by confirmed fraud losses per 10,000 dollars of approved volume. Categories above 50 bps qualify for enhanced card-not-present authentication (BR-BNK-015).",
+      "sqlHash": "c4c8948d4ae25349",
+      "columns": [
+        "merchant_category",
+        "fraud_loss_bps"
+      ],
+      "rows": [
+        [
+          "Digital goods",
+          219.285
+        ],
+        [
+          "Utilities & telecom",
+          34.4596
+        ],
+        [
+          "Dining",
+          10.8629
+        ],
+        [
+          "Grocery",
+          10.4579
+        ],
+        [
+          "Travel",
+          10.0156
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-004@2.0.3",
+        "metric:CARD_PAYMENTS.fraud_loss_bps",
+        "verified_query:VQ-BNK-033",
+        "document:DOC-BNK-CARD-FRAUD#2"
+      ],
+      "personas": {}
+    },
+    "SC-BNK-015": {
+      "agent": "AG-BNK-003",
+      "kind": "answer",
+      "headline": "The alert-to-case rate is 14.8% this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "AML Alerts & Cases is still in certification, so treat this figure as provisional. Pending alerts are excluded (BR-BNK-019).",
+      "sqlHash": "49533ae2e3219906",
+      "columns": [
+        "alert_to_case_rate"
+      ],
+      "rows": [
+        [
+          14.8412
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-006@1.0.0-rc.1",
+        "metric:AML_ALERTS.alert_to_case_rate",
+        "verified_query:VQ-BNK-054",
+        "document:DOC-BNK-BSA-AML#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "decline",
+          "headline": "You don’t have access to AML Alerts & Cases yet."
+        }
+      }
+    },
+    "SC-BNK-016": {
+      "agent": "AG-BNK-003",
+      "kind": "answer",
+      "headline": "Card not present drove the most card fraud losses last quarter at $5,958.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Total confirmed fraud losses were $8,677 across 3 card channels.",
+      "sqlHash": "f9ae349d4eac8f2b",
+      "columns": [
+        "card_channel",
+        "fraud_losses",
+        "fraud_losses_share_pct"
+      ],
+      "rows": [
+        [
+          "Card not present",
+          5957.66,
+          68.661
+        ],
+        [
+          "Card present",
+          2158.38,
+          24.875
+        ],
+        [
+          "Contactless",
+          560.88,
+          6.46404
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-004@2.0.3",
+        "metric:CARD_PAYMENTS.fraud_losses",
+        "verified_query:VQ-BNK-034",
+        "document:DOC-BNK-CARD-FRAUD#2"
+      ],
+      "personas": {}
+    },
+    "SC-BNK-017": {
+      "agent": "AG-BNK-003",
+      "kind": "answer",
+      "headline": "Premium cards have the highest fraud loss rate this year at 21.6 bps, with a 94.15% approval rate.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Business is lowest at 12.7 bps and 93.96% approval, across 4 card products.",
+      "sqlHash": "114e99753ea3cc99",
+      "columns": [
+        "card_product",
+        "auth_approval_rate",
+        "fraud_loss_bps"
+      ],
+      "rows": [
+        [
+          "Premium",
+          94.1508,
+          21.6444
+        ],
+        [
+          "Classic",
+          94.1369,
+          15.3558
+        ],
+        [
+          "Rewards",
+          94.0633,
+          13.132
+        ],
+        [
+          "Business",
+          93.959,
+          12.7413
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-004@2.0.3",
+        "metric:CARD_PAYMENTS.auth_approval_rate",
+        "metric:CARD_PAYMENTS.fraud_loss_bps",
+        "document:DOC-BNK-CARD-FRAUD#1"
+      ],
+      "personas": {}
+    },
+    "SC-BNK-018": {
+      "agent": "AG-BNK-003",
+      "kind": "decline",
+      "headline": "I can't block or reissue cards — card operations does that.",
+      "narrative": "Card blocks and reissues are performed by card operations staff in the card platform. I can show fraud trends by merchant category and channel to support their decision.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-BNK-019": {
+      "agent": "AG-BNK-004",
+      "kind": "answer",
+      "headline": "The cure rate is 63.5% year to date — within target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Resolved collection cases that returned to current, as a share of resolved cases (BR-BNK-018).",
+      "sqlHash": "57f587b857717ac0",
+      "columns": [
+        "cure_rate",
+        "cure_rate_target_min",
+        "cure_rate_target_max"
+      ],
+      "rows": [
+        [
+          63.4574,
+          60,
+          75
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-005@1.2.0",
+        "metric:COLLECTIONS.cure_rate",
+        "rule:BR-BNK-018",
+        "verified_query:VQ-BNK-042",
+        "document:DOC-BNK-COLLECTIONS#3"
+      ],
+      "personas": {}
+    },
+    "SC-BNK-020": {
+      "agent": "AG-BNK-004",
+      "kind": "answer",
+      "headline": "Digital self-service has the best promise-to-pay kept rate this year at 79.8%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Third-party agency is lowest at 63.6% across 4 strategies; a promise counts only when paid in full on time (BR-BNK-017).",
+      "sqlHash": "6b538f393e796f46",
+      "columns": [
+        "strategy",
+        "promise_kept_rate"
+      ],
+      "rows": [
+        [
+          "Digital self-service",
+          79.8013
+        ],
+        [
+          "Field collections",
+          67.2365
+        ],
+        [
+          "Contact centre",
+          64.7368
+        ],
+        [
+          "Third-party agency",
+          63.6095
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-005@1.2.0",
+        "metric:COLLECTIONS.promise_kept_rate",
+        "verified_query:VQ-BNK-044",
+        "document:DOC-BNK-COLLECTIONS#2"
+      ],
+      "personas": {}
+    },
+    "SC-BNK-021": {
+      "agent": "AG-BNK-004",
+      "kind": "answer",
+      "headline": "Commercial real estate has the highest roll rate to charge-off last quarter at 17.9%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "\"Roll rate\" maps to the roll rate to charge-off: resolved cases that ended in charge-off (BR-BNK-018). Shown across 6 loan segments.",
+      "sqlHash": "808bc86621796a7f",
+      "columns": [
+        "loan_segment",
+        "chargeoff_roll_rate"
+      ],
+      "rows": [
+        [
+          "Commercial real estate",
+          17.8571
+        ],
+        [
+          "Commercial & industrial",
+          13.9344
+        ],
+        [
+          "Auto",
+          13.6842
+        ],
+        [
+          "Residential mortgage",
+          12.4424
+        ],
+        [
+          "Home equity",
+          11.6667
+        ],
+        [
+          "Personal",
+          11.3333
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-005@1.2.0",
+        "metric:COLLECTIONS.chargeoff_roll_rate",
+        "rule:BR-BNK-018",
+        "verified_query:VQ-BNK-045",
+        "document:DOC-BNK-COLLECTIONS#3"
+      ],
+      "personas": {}
+    },
+    "SC-BNK-022": {
+      "agent": "AG-BNK-004",
+      "kind": "answer",
+      "headline": "The cure rate moved −3.8 points from January to the latest month this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Monthly cure rate over 9 months for resolved cases (BR-BNK-018); the latest months hold fewer resolved cases.",
+      "sqlHash": "687ba30ff3334022",
+      "columns": [
+        "period",
+        "cure_rate"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          62.5243
+        ],
+        [
+          "2026-02-01",
+          61.8534
+        ],
+        [
+          "2026-03-01",
+          66.1885
+        ],
+        [
+          "2026-04-01",
+          61.8736
+        ],
+        [
+          "2026-05-01",
+          65.3445
+        ],
+        [
+          "2026-06-01",
+          65.3153
+        ],
+        [
+          "2026-07-01",
+          65.0728
+        ],
+        [
+          "2026-08-01",
+          59.2105
+        ],
+        [
+          "2026-09-01",
+          58.7302
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-005@1.2.0",
+        "metric:COLLECTIONS.cure_rate",
+        "rule:BR-BNK-018",
+        "verified_query:VQ-BNK-042",
+        "document:DOC-BNK-COLLECTIONS#3"
+      ],
+      "personas": {}
+    },
+    "SC-BNK-023": {
+      "agent": "AG-BNK-004",
+      "kind": "answer",
+      "headline": "Mountain opened the most collection cases last quarter: 758.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Collection cases opened across the 4 markets you are entitled to see; the market row-access policy applies.",
+      "sqlHash": "3c499f8d1266b5bf",
+      "columns": [
+        "region",
+        "collection_cases"
+      ],
+      "rows": [
+        [
+          "Mountain",
+          758
+        ],
+        [
+          "Plains",
+          362
+        ],
+        [
+          "Southeast",
+          309
+        ],
+        [
+          "Great Lakes",
+          283
+        ]
+      ],
+      "citations": [
+        "product:DP-BNK-005@1.2.0",
+        "metric:COLLECTIONS.collection_cases",
+        "verified_query:VQ-BNK-048",
+        "document:DOC-BNK-COLLECTIONS#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Mountain opened the most collection cases last quarter: 758.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-BNK-024": {
+      "agent": "AG-BNK-005",
+      "kind": "help",
+      "headline": "I explain governance across the data estate — I don't analyse business KPIs.",
+      "narrative": "Ask me what a glossary term or metric means, the certification status of a data product, or where governance gaps such as missing stewards or masking sit. For KPI numbers, ask the domain agents.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-BNK-025": {
+      "agent": "AG-BNK-005",
+      "kind": "decline",
+      "headline": "I can't approve access requests — agents act, humans decide.",
+      "narrative": "Access to a data product is granted only by its owner or steward through the access workflow. I can show you the request status and who can approve it.",
+      "citations": [],
+      "personas": {}
+    }
+  }
+}

@@ -1,0 +1,361 @@
+# Bronze source tables for Ridgeline Bank (RLB_AI_PLATFORM).
+# Converted from the AI-Ready banking generators and the Marketplace DP-BNK-001..003 manifests.
+# The branch network and relationship managers are full populations at every scale; customer-side and
+# event tables scale S/M/L. Month-end snapshot tables carry `month_no` (1 = Jan 2025 … 21 = Sep 2026).
+tables:
+  - name: CORE_BRANCH
+    system: Core banking
+    description: Branch and commercial banking centre master
+    key: branch_id
+    rows: { S: 48, M: 48, L: 48 }
+    cdc_noise: { duplicate_updates_pct: 2 }
+    columns:
+      - { name: branch_id, type: VARCHAR, gen: { seq: { prefix: "BR-", pad: 3 } } }
+      - { name: region, type: VARCHAR, gen: { choice: { values: [Mountain, Plains, Great Lakes, Southeast], weights: [27, 22, 27, 24] } }, dirty: false }
+      - { name: city, type: VARCHAR, gen: { formula: "if(region == 'Mountain', 'Cedar Ridge', if(region == 'Plains', 'Prairie Fork', if(region == 'Great Lakes', 'Lakehaven', 'Magnolia Bay')))" }, dirty: false }
+      - { name: branch_type, type: VARCHAR, gen: { choice: { values: [Full service, In-store, Commercial center, Drive-up], weights: [55, 20, 15, 10] } } }
+      - { name: open_year, type: INTEGER, gen: { uniform: { min: 1958, max: 2022 } } }
+    plant:
+      - id: P-BNK-01
+        description: "BR-001 is the Cedar Ridge headquarters branch in Mountain"
+        where: { branch_id: BR-001 }
+        adjust: { region: { set: Mountain }, city: { set: Cedar Ridge }, branch_type: { set: Full service } }
+
+  - name: CRM_RELATIONSHIP_MANAGER
+    system: CRM
+    description: Relationship managers and the book they cover
+    key: rm_id
+    rows: { S: 90, M: 90, L: 90 }
+    columns:
+      - { name: rm_id, type: VARCHAR, gen: { seq: { prefix: "RM-", pad: 3 } } }
+      - { name: rm_name, type: VARCHAR, gen: { person: full }, tags: [PII] }
+      - { name: branch_id, type: VARCHAR, gen: { fk: { table: CORE_BRANCH, column: branch_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: branch_id, parent_column: region } }, dirty: false }
+      - { name: book_type, type: VARCHAR, gen: { choice: { values: [Retail, Private, Small business, Commercial], weights: [45, 15, 25, 15] } } }
+
+  - name: CORE_CUSTOMER
+    system: Core banking (mainframe CIF via CDC)
+    description: Customer information file — one row per customer with KYC rating and relationship summary
+    key: customer_id
+    rows: { S: 2400, M: 24000, L: 240000 }
+    loaded_at_from: open_date
+    cdc_noise: { duplicate_updates_pct: 5, deletes_pct: 0.4, dirty_strings_pct: 6, late_arrivals_pct: 1 }
+    columns:
+      - { name: customer_id, type: VARCHAR, gen: { seq: { prefix: "CU", pad: 9 } } }
+      - { name: first_name, type: VARCHAR, gen: { person: first }, tags: [PII] }
+      - { name: last_name, type: VARCHAR, gen: { person: last }, tags: [PII] }
+      - { name: email, type: VARCHAR, gen: { email: { first: first_name, last: last_name, domain: examplemail.com } }, tags: [PII], null_pct: 9 }
+      - { name: phone, type: VARCHAR, gen: { phone: true }, tags: [PII], null_pct: 4 }
+      - { name: street_address, type: VARCHAR, gen: { address: true }, tags: [PII] }
+      - { name: date_of_birth, type: DATE, gen: { date: { from: "1942-01-01", to: "2006-12-31" } }, tags: [PII] }
+      - { name: ssn, type: VARCHAR, gen: { template: "900-55-{customer_id}" }, tags: [GOV_ID], dirty: false }
+      - { name: home_branch_id, type: VARCHAR, gen: { fk: { table: CORE_BRANCH, column: branch_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: home_branch_id, parent_column: region } }, dirty: false }
+      - { name: segment, type: VARCHAR, gen: { choice: { values: [Mass market, Mass affluent, Private client, Small business], weights: [62, 24, 4, 10] } } }
+      - { name: status_code, type: VARCHAR, gen: { choice: { values: [A, C, D], weights: [88, 7, 5] } }, dirty: false }
+      - { name: digital_flag, type: VARCHAR, gen: { choice: { values: [Y, N], weights: [56, 44] } }, dirty: false }
+      - { name: products_held, type: INTEGER, gen: { poisson: { lambda: 2.2, min: 1, max: 9 } } }
+      - { name: relationship_balance, type: DOUBLE, gen: { lognormal: { mu: 9.45, sigma: 1.25, min: 0, max: 30000000, decimals: 2 } } }
+      - { name: kyc_risk_rating, type: VARCHAR, gen: { choice: { values: [Low, Medium, High], weights: [68, 25, 7] } } }
+      - { name: kyc_last_review, type: DATE, gen: { date: { from: "2023-10-01", to: asOf } } }
+      - { name: open_date, type: DATE, gen: { date: { from: "1990-01-01", to: "2026-08-31" } } }
+    plant:
+      - id: P-BNK-02
+        description: "Digital engagement is markedly higher in the Great Lakes market (mobile-first branch redesign)"
+        where: { region: Great Lakes }
+        adjust: { digital_flag: { set: Y, pct: 32 } }
+      - id: P-BNK-03
+        description: "Private clients hold roughly ten times the relationship balance of the mass market"
+        where: { segment: Private client }
+        adjust: { relationship_balance: { multiply: 10 }, products_held: { add: 2 } }
+      - id: P-BNK-04
+        description: "Small business relationships carry larger operating balances"
+        where: { segment: Small business }
+        adjust: { relationship_balance: { multiply: 3 } }
+
+  - name: KYC_REVIEW
+    system: KYC platform
+    description: Know-your-customer reviews (periodic refresh, event-driven and onboarding)
+    key: review_id
+    rows: { S: 1500, M: 15000, L: 150000 }
+    loaded_at_from: review_date
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 4 }
+    columns:
+      - { name: review_id, type: VARCHAR, gen: { seq: { prefix: "KYC-", pad: 8 } } }
+      - { name: customer_id, type: VARCHAR, gen: { fk: { table: CORE_CUSTOMER, column: customer_id } } }
+      - { name: review_date, type: DATE, gen: { date: { from: "2024-01-01", to: asOf } } }
+      - { name: review_type, type: VARCHAR, gen: { choice: { values: [Periodic refresh, Event-driven, Onboarding], weights: [64, 16, 20] } } }
+      - { name: risk_rating, type: VARCHAR, gen: { derive_from: { fk_column: customer_id, parent_column: kyc_risk_rating } } }
+      - { name: outcome, type: VARCHAR, gen: { choice: { values: [Cleared, Enhanced due diligence, Exit recommended], weights: [86, 12, 2] } } }
+      - { name: analyst_notes, type: VARCHAR, gen: { template: "Review {review_id} for {customer_id}: {outcome}" }, tags: [PII] }
+
+  - name: CORE_DEPOSIT_ACCOUNT
+    system: Core banking deposits
+    description: Deposit accounts (checking, savings, money market, time deposits)
+    key: account_id
+    rows: { S: 3600, M: 36000, L: 360000 }
+    loaded_at_from: open_date
+    cdc_noise: { duplicate_updates_pct: 3, deletes_pct: 0.3, dirty_strings_pct: 3 }
+    columns:
+      - { name: account_id, type: VARCHAR, gen: { seq: { prefix: "DA", pad: 9 } } }
+      - { name: customer_id, type: VARCHAR, gen: { fk: { table: CORE_CUSTOMER, column: customer_id } } }
+      - { name: branch_id, type: VARCHAR, gen: { derive_from: { fk_column: customer_id, parent_column: home_branch_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: customer_id, parent_column: region } } }
+      - { name: segment, type: VARCHAR, gen: { derive_from: { fk_column: customer_id, parent_column: segment } } }
+      - { name: deposit_product, type: VARCHAR, gen: { choice: { values: [Checking, Savings, Money market, Time deposit], weights: [44, 30, 14, 12] } } }
+      - { name: interest_rate_pct, type: DOUBLE, gen: { formula: "if(deposit_product == 'Checking', 0.05, if(deposit_product == 'Savings', 0.85, if(deposit_product == 'Money market', 2.35, 4.05)))", decimals: 2 } }
+      - { name: account_status, type: VARCHAR, gen: { choice: { values: [Open, Closed], weights: [93, 7] } }, dirty: false }
+      - { name: open_date, type: DATE, gen: { date: { from: "2005-01-01", to: "2026-09-29" } } }
+
+  - name: CORE_DEPOSIT_BALANCE
+    system: Core banking deposits
+    description: Month-end ledger balance per deposit account (sampled account-months)
+    key: balance_id
+    rows: { S: 12000, M: 120000, L: 1200000 }
+    cdc_noise: { duplicate_updates_pct: 2, late_arrivals_pct: 1 }
+    columns:
+      - { name: balance_id, type: VARCHAR, gen: { seq: { prefix: "DB", pad: 10 } } }
+      - { name: account_id, type: VARCHAR, gen: { fk: { table: CORE_DEPOSIT_ACCOUNT, column: account_id } } }
+      - { name: customer_id, type: VARCHAR, gen: { derive_from: { fk_column: account_id, parent_column: customer_id } } }
+      - { name: branch_id, type: VARCHAR, gen: { derive_from: { fk_column: account_id, parent_column: branch_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: account_id, parent_column: region } } }
+      - { name: segment, type: VARCHAR, gen: { derive_from: { fk_column: account_id, parent_column: segment } } }
+      - { name: deposit_product, type: VARCHAR, gen: { derive_from: { fk_column: account_id, parent_column: deposit_product } } }
+      - { name: interest_rate_pct, type: DOUBLE, gen: { derive_from: { fk_column: account_id, parent_column: interest_rate_pct } } }
+      - { name: month_no, type: INTEGER, gen: { choice: { values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21] } } }
+      - { name: ledger_balance, type: DOUBLE, gen: { lognormal: { mu: 9.0, sigma: 1.4, min: 0, max: 25000000, decimals: 2 } } }
+    plant:
+      - id: P-BNK-05
+        description: "Private-client and small-business accounts carry far larger balances"
+        where: { segment: { in: [Private client, Small business] } }
+        adjust: { ledger_balance: { multiply: 6 } }
+      - id: P-BNK-06
+        description: "A Q3 2026 certificate-of-deposit promotion pulls time-deposit balances up 35%"
+        where: { deposit_product: Time deposit, month_no: { in: [19, 20, 21] } }
+        adjust: { ledger_balance: { multiply: 1.35 } }
+      - id: P-BNK-07
+        description: "Rate-sensitive money market outflows in Southeast during Q2–Q3 2026"
+        where: { deposit_product: Money market, region: Southeast, month_no: { in: [16, 17, 18, 19, 20, 21] } }
+        adjust: { ledger_balance: { multiply: 0.7 } }
+
+  - name: LOS_LOAN
+    system: Loan origination system
+    description: Funded loans with segment, origination terms, credit score and loan-to-value
+    key: loan_id
+    rows: { S: 1500, M: 15000, L: 150000 }
+    loaded_at_from: orig_date
+    cdc_noise: { duplicate_updates_pct: 3, deletes_pct: 0.2, dirty_strings_pct: 3 }
+    columns:
+      - { name: loan_id, type: VARCHAR, gen: { seq: { prefix: "LN", pad: 9 } } }
+      - { name: customer_id, type: VARCHAR, gen: { fk: { table: CORE_CUSTOMER, column: customer_id } } }
+      - { name: branch_id, type: VARCHAR, gen: { derive_from: { fk_column: customer_id, parent_column: home_branch_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: customer_id, parent_column: region } } }
+      - { name: loan_segment, type: VARCHAR, gen: { choice: { values: [Residential mortgage, Home equity, Auto, Personal, Commercial real estate, Commercial & industrial], weights: [26, 12, 22, 14, 12, 14] } } }
+      - { name: base_amount, type: DOUBLE, gen: { lognormal: { mu: 10.4, sigma: 0.6, min: 2000, decimals: 0 } } }
+      - { name: orig_amount, type: DOUBLE, gen: { formula: "if(loan_segment == 'Residential mortgage', base_amount * 9, if(loan_segment == 'Home equity', base_amount * 2.5, if(loan_segment == 'Auto', base_amount * 0.9, if(loan_segment == 'Personal', base_amount * 0.4, if(loan_segment == 'Commercial real estate', base_amount * 30, base_amount * 12)))))", decimals: 0 } }
+      - { name: rate_spread, type: DOUBLE, gen: { normal: { mean: 0, sd: 0.55, min: -1.5, max: 2.5, decimals: 3 } } }
+      - { name: note_rate_pct, type: DOUBLE, gen: { formula: "rate_spread + if(loan_segment == 'Residential mortgage', 5.4, if(loan_segment == 'Home equity', 7.6, if(loan_segment == 'Auto', 6.9, if(loan_segment == 'Personal', 11.8, if(loan_segment == 'Commercial real estate', 6.6, 7.4)))))", decimals: 3 } }
+      - { name: fico_score, type: INTEGER, gen: { normal: { mean: 726, sd: 55, min: 540, max: 850 } } }
+      - { name: ltv_pct, type: DOUBLE, gen: { normal: { mean: 71, sd: 13, min: 20, max: 125, decimals: 1 } } }
+      - { name: held_for_sale, type: BOOLEAN, gen: { bernoulli: 0.03 } }
+      - { name: orig_date, type: DATE, gen: { date: { from: "2016-01-01", to: "2026-09-15" } } }
+    plant:
+      - id: P-BNK-08
+        description: "A Plains residential-mortgage pool is marked held for sale ahead of a whole-loan sale"
+        where: { region: Plains, loan_segment: Residential mortgage }
+        adjust: { held_for_sale: { set: true, pct: 22 } }
+
+  - name: CORE_LOAN_BALANCE
+    system: Core banking loans
+    description: Month-end loan snapshot — principal, days past due, non-accrual, charge-off and recovery flags
+    key: balance_id
+    rows: { S: 9000, M: 90000, L: 900000 }
+    cdc_noise: { duplicate_updates_pct: 2, deletes_pct: 0.2, late_arrivals_pct: 1 }
+    columns:
+      - { name: balance_id, type: VARCHAR, gen: { seq: { prefix: "LB", pad: 10 } } }
+      - { name: loan_id, type: VARCHAR, gen: { fk: { table: LOS_LOAN, column: loan_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: loan_id, parent_column: region } } }
+      - { name: loan_segment, type: VARCHAR, gen: { derive_from: { fk_column: loan_id, parent_column: loan_segment } } }
+      - { name: held_for_sale, type: BOOLEAN, gen: { derive_from: { fk_column: loan_id, parent_column: held_for_sale } } }
+      - { name: orig_amount, type: DOUBLE, gen: { derive_from: { fk_column: loan_id, parent_column: orig_amount } } }
+      - { name: branch_id, type: VARCHAR, gen: { derive_from: { fk_column: loan_id, parent_column: branch_id } } }
+      - { name: note_rate_pct, type: DOUBLE, gen: { derive_from: { fk_column: loan_id, parent_column: note_rate_pct } } }
+      - { name: month_no, type: INTEGER, gen: { choice: { values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21] } } }
+      - { name: amort_factor, type: DOUBLE, gen: { uniform: { min: 0.35, max: 1.0, decimals: 3 } } }
+      - { name: principal, type: DOUBLE, gen: { formula: "orig_amount * amort_factor", decimals: 2 } }
+      - { name: dpd_days, type: INTEGER, gen: { choice: { values: [0, 12, 40, 70, 110, 150], weights: [94.2, 2.6, 1.2, 0.6, 0.8, 0.6] } } }
+      - { name: non_accrual_flag, type: BOOLEAN, gen: { bernoulli: 0.004 } }
+      - { name: charge_off_flag, type: BOOLEAN, gen: { bernoulli: 0.0011 } }
+      - { name: recovery_flag, type: BOOLEAN, gen: { bernoulli: 0.0025 } }
+    plant:
+      - id: P-BNK-09
+        description: "Southeast commercial real estate (office) loans go non-performing in Q3 2026"
+        where: { region: Southeast, loan_segment: Commercial real estate, month_no: { in: [19, 20, 21] } }
+        adjust: { dpd_days: { set: 120, pct: 7 }, charge_off_flag: { set: true, pct: 1.2 } }
+      - id: P-BNK-10
+        description: "Most of the Plains held-for-sale mortgage pool is 90+ days past due in Q3 2026 (why it is being sold)"
+        where: { region: Plains, held_for_sale: true, month_no: { in: [19, 20, 21] } }
+        adjust: { dpd_days: { set: 150, pct: 75 } }
+      - id: P-BNK-11
+        description: "Auto loan early delinquency creeps up through 2026"
+        where: { loan_segment: Auto, month_no: { in: [13, 14, 15, 16, 17, 18, 19, 20, 21] } }
+        adjust: { dpd_days: { set: 40, pct: 2.5 } }
+
+  - name: CARD_ACCOUNT
+    system: Card processing
+    description: Credit card accounts with product tier and credit limit
+    key: card_id
+    rows: { S: 1800, M: 18000, L: 180000 }
+    loaded_at_from: open_date
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 3 }
+    columns:
+      - { name: card_id, type: VARCHAR, gen: { seq: { prefix: "CA", pad: 9 } } }
+      - { name: customer_id, type: VARCHAR, gen: { fk: { table: CORE_CUSTOMER, column: customer_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: customer_id, parent_column: region } } }
+      - { name: card_product, type: VARCHAR, gen: { choice: { values: [Classic, Rewards, Premium, Business], weights: [38, 36, 14, 12] } } }
+      - { name: credit_limit, type: DOUBLE, gen: { formula: "if(card_product == 'Classic', 4500, if(card_product == 'Rewards', 9000, if(card_product == 'Premium', 22000, 15000)))", decimals: 0 } }
+      - { name: open_date, type: DATE, gen: { date: { from: "2012-01-01", to: "2026-09-28" } } }
+      - { name: card_number, type: VARCHAR, gen: { template: "4000-0000-{card_id}" }, tags: [PCI], dirty: false }
+
+  - name: CARD_AUTHORIZATION
+    system: Card processing
+    description: Card authorisation requests with merchant category, channel, approval and confirmed fraud
+    key: auth_id
+    rows: { S: 20000, M: 200000, L: 2000000 }
+    loaded_at_from: auth_ts
+    cdc_noise: { duplicate_updates_pct: 2, deletes_pct: 0.2, dirty_strings_pct: 3, late_arrivals_pct: 1 }
+    columns:
+      - { name: auth_id, type: VARCHAR, gen: { seq: { prefix: "AU", pad: 10 } } }
+      - { name: card_id, type: VARCHAR, gen: { fk: { table: CARD_ACCOUNT, column: card_id } } }
+      - { name: customer_id, type: VARCHAR, gen: { derive_from: { fk_column: card_id, parent_column: customer_id } } }
+      - { name: card_product, type: VARCHAR, gen: { derive_from: { fk_column: card_id, parent_column: card_product } } }
+      - { name: auth_ts, type: TIMESTAMP, gen: { datetime: { from: "2025-10-01", to: asOf, seasonality: { month: [0.9, 0.85, 0.95, 1.0, 1.0, 1.05, 1.05, 1.05, 1.0, 1.0, 1.1, 1.35] } } } }
+      - { name: amount, type: DOUBLE, gen: { lognormal: { mu: 3.75, sigma: 1.0, min: 0.5, max: 15000, decimals: 2 } } }
+      - { name: merchant_category, type: VARCHAR, gen: { choice: { values: [Grocery, Fuel, Dining, Travel, Online retail, Digital goods, Healthcare, Utilities & telecom], weights: [22, 12, 16, 7, 18, 6, 9, 10] } } }
+      - { name: card_channel, type: VARCHAR, gen: { choice: { values: [Card present, Contactless, Card not present], weights: [42, 22, 36] } } }
+      - { name: approved, type: BOOLEAN, gen: { bernoulli: 0.956 } }
+      - { name: fraud_confirmed, type: BOOLEAN, gen: { bernoulli: 0.0009 } }
+    plant:
+      - id: P-BNK-12
+        description: "Travel tickets are four times the average purchase"
+        where: { merchant_category: Travel }
+        adjust: { amount: { multiply: 4 } }
+      - id: P-BNK-13
+        description: "Card-not-present fraud ring on digital-goods merchants in Q3 2026"
+        where: { merchant_category: Digital goods }
+        window: { column: auth_ts, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { card_channel: { set: Card not present, pct: 70 }, fraud_confirmed: { set: true, pct: 1.4 } }
+      - id: P-BNK-14
+        description: "Card-not-present authorisations are declined more often by fraud rules"
+        where: { card_channel: Card not present }
+        adjust: { approved: { set: false, pct: 4 } }
+
+  - name: AML_TM_ALERT
+    system: AML transaction monitoring
+    description: Transaction-monitoring alerts with disposition, escalation and SAR outcome
+    key: alert_id
+    rows: { S: 900, M: 9000, L: 90000 }
+    loaded_at_from: alert_date
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 4, late_arrivals_pct: 1 }
+    columns:
+      - { name: alert_id, type: VARCHAR, gen: { seq: { prefix: "AL-", pad: 8 } } }
+      - { name: customer_id, type: VARCHAR, gen: { fk: { table: CORE_CUSTOMER, column: customer_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: customer_id, parent_column: region } } }
+      - { name: alert_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: monitoring_scenario, type: VARCHAR, gen: { choice: { values: [Structuring, Rapid movement of funds, High-risk geography, Cash-intensive activity, Wire pattern anomaly], weights: [24, 22, 14, 20, 20] } } }
+      - { name: priority, type: VARCHAR, gen: { choice: { values: [High, Medium, Low], weights: [18, 47, 35] } } }
+      - { name: disposition, type: VARCHAR, gen: { choice: { values: [Closed - no suspicion, Escalated to case, Pending review], weights: [80, 14, 6] } } }
+      - { name: sar_flag, type: BOOLEAN, gen: { bernoulli: 0.34 } }
+      - { name: case_closed_flag, type: BOOLEAN, gen: { bernoulli: 0.82 } }
+      - { name: disposition_days, type: INTEGER, gen: { lognormal: { mu: 2.2, sigma: 0.55, min: 1, max: 120 } } }
+      - { name: investigator_notes, type: VARCHAR, gen: { template: "Alert {alert_id} on {customer_id}: {monitoring_scenario}" }, tags: [PII] }
+    plant:
+      - id: P-BNK-15
+        description: "Rapid movement of funds alerts in Great Lakes escalate far more often in Q3 2026 (mule network)"
+        where: { region: Great Lakes, monitoring_scenario: Rapid movement of funds }
+        window: { column: alert_date, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { disposition: { set: Escalated to case, pct: 30 } }
+      - id: P-BNK-16
+        description: "September 2026 alerts are still largely pending review"
+        window: { column: alert_date, from: "2026-09-01", to: "2026-09-30" }
+        adjust: { disposition: { set: Pending review, pct: 55 } }
+
+  - name: COLL_CASE
+    system: Collections platform
+    description: Delinquent loans worked by collections, from entry to outcome
+    key: case_id
+    rows: { S: 1200, M: 12000, L: 120000 }
+    loaded_at_from: entry_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.3, dirty_strings_pct: 3 }
+    columns:
+      - { name: case_id, type: VARCHAR, gen: { seq: { prefix: "COL-", pad: 8 } } }
+      - { name: loan_id, type: VARCHAR, gen: { fk: { table: LOS_LOAN, column: loan_id } } }
+      - { name: customer_id, type: VARCHAR, gen: { derive_from: { fk_column: loan_id, parent_column: customer_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: loan_id, parent_column: region } } }
+      - { name: loan_segment, type: VARCHAR, gen: { derive_from: { fk_column: loan_id, parent_column: loan_segment } } }
+      - { name: entry_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: entry_bucket, type: VARCHAR, gen: { choice: { values: [30-59 DPD, 60-89 DPD, 90+ DPD], weights: [62, 25, 13] } } }
+      - { name: strategy, type: VARCHAR, gen: { choice: { values: [Digital self-service, Contact centre, Field collections, Third-party agency], weights: [34, 40, 14, 12] } } }
+      - { name: ptp_made, type: BOOLEAN, gen: { bernoulli: 0.56 } }
+      - { name: ptp_kept_flag, type: BOOLEAN, gen: { bernoulli: 0.64 } }
+      - { name: outcome, type: VARCHAR, gen: { choice: { values: [Cured, Payment plan, Charged off, Open], weights: [58, 20, 8, 14] } } }
+      - { name: days_to_resolve, type: INTEGER, gen: { lognormal: { mu: 3.25, sigma: 0.55, min: 2, max: 365 } } }
+      - { name: recovered_amount, type: DOUBLE, gen: { lognormal: { mu: 6.9, sigma: 0.9, min: 0, decimals: 2 } } }
+      - { name: collector_name, type: VARCHAR, gen: { person: full }, tags: [PII] }
+    plant:
+      - id: P-BNK-17
+        description: "Digital self-service promises to pay are kept far more often"
+        where: { strategy: Digital self-service }
+        adjust: { ptp_kept_flag: { set: true, pct: 45 } }
+      - id: P-BNK-18
+        description: "Cases entering at 90+ days past due roll to charge-off much more often"
+        where: { entry_bucket: 90+ DPD }
+        adjust: { outcome: { set: Charged off, pct: 38 } }
+      - id: P-BNK-19
+        description: "Cases opened in the last six weeks are mostly still open"
+        window: { column: entry_date, from: "2026-08-15", to: "2026-09-30" }
+        adjust: { outcome: { set: Open, pct: 75 } }
+
+  - name: DIG_SESSION
+    system: Digital banking events
+    description: Mobile app and online banking sessions
+    key: session_id
+    rows: { S: 15000, M: 150000, L: 1500000 }
+    loaded_at_from: session_ts
+    cdc_noise: { duplicate_updates_pct: 2, late_arrivals_pct: 2, dirty_strings_pct: 2 }
+    columns:
+      - { name: session_id, type: VARCHAR, gen: { seq: { prefix: "SS", pad: 10 } } }
+      - { name: customer_id, type: VARCHAR, gen: { fk: { table: CORE_CUSTOMER, column: customer_id, dist: zipf, s: 0.4 } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: customer_id, parent_column: region } } }
+      - { name: session_ts, type: TIMESTAMP, gen: { datetime: { from: "2026-01-01", to: asOf } } }
+      - { name: digital_channel, type: VARCHAR, gen: { choice: { values: [Mobile app, Online banking], weights: [70, 30] } } }
+      - { name: feature, type: VARCHAR, gen: { choice: { values: [Balance check, Transfers, Bill pay, Mobile deposit, Card controls, Statements, P2P payments], weights: [34, 18, 12, 8, 6, 8, 14] } } }
+      - { name: login_success, type: BOOLEAN, gen: { bernoulli: 0.967 } }
+      - { name: duration_sec, type: INTEGER, gen: { lognormal: { mu: 5.1, sigma: 0.6, min: 10, max: 7200 } } }
+    plant:
+      - id: P-BNK-20
+        description: "Login failures spike for three days after the 2026-09-12 authentication release"
+        window: { column: session_ts, from: "2026-09-12", to: "2026-09-14" }
+        adjust: { login_success: { set: false, pct: 30 } }
+      - id: P-BNK-21
+        description: "Great Lakes customers bank mostly on the mobile app"
+        where: { region: Great Lakes }
+        adjust: { digital_channel: { set: Mobile app, pct: 40 } }
+
+  - name: CRM_COMPLAINT
+    system: CRM complaints
+    description: Customer complaints with product area, category and resolution time
+    key: complaint_id
+    rows: { S: 600, M: 6000, L: 60000 }
+    loaded_at_from: received_date
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 4 }
+    columns:
+      - { name: complaint_id, type: VARCHAR, gen: { seq: { prefix: "CMP-", pad: 7 } } }
+      - { name: customer_id, type: VARCHAR, gen: { fk: { table: CORE_CUSTOMER, column: customer_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: customer_id, parent_column: region } } }
+      - { name: received_date, type: DATE, gen: { date: { from: "2025-10-01", to: asOf } } }
+      - { name: product_area, type: VARCHAR, gen: { choice: { values: [Deposits, Cards, Mortgage, Consumer lending, Digital banking, Branch service], weights: [22, 24, 12, 10, 18, 14] } } }
+      - { name: category, type: VARCHAR, gen: { choice: { values: [Fees & charges, Service quality, Error or dispute, Fraud & security, Access & availability], weights: [26, 24, 22, 14, 14] } } }
+      - { name: resolution_days, type: INTEGER, gen: { lognormal: { mu: 2.4, sigma: 0.7, min: 1, max: 120 } } }
+      - { name: regulator_escalated, type: BOOLEAN, gen: { bernoulli: 0.025 } }
+      - { name: complaint_notes, type: VARCHAR, gen: { template: "Complaint from {customer_id} about {product_area}" }, tags: [PII] }

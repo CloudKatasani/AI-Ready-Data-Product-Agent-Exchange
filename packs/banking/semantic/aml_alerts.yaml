@@ -1,0 +1,65 @@
+name: AML_ALERTS
+description: Transaction-monitoring alerts — volumes, escalation, SAR conversion and disposition time
+tables:
+  - { alias: a, fqn: CONFORMED_GOLD.FCT_AML_ALERT, pk: alert_key }
+  - { alias: c, fqn: CONFORMED_GOLD.DIM_CUSTOMER, pk: customer_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: a.customer_key, to: c.customer_key }
+  - { from: a.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: c.region, label: Market, synonyms: [region, territory, footprint], term: GT-BNK-MARKET }
+  - { name: monitoring_scenario, expr: a.monitoring_scenario, label: Monitoring scenario, synonyms: [scenario, typology, detection rule], term: GT-BNK-AML-ALERT }
+  - { name: alert_priority, expr: a.priority, label: Priority, synonyms: [alert priority, severity] }
+  - { name: disposition, expr: a.disposition, label: Disposition, synonyms: [alert outcome, alert status] }
+  - { name: customer_risk, expr: c.kyc_risk_rating, label: Customer risk rating, synonyms: [kyc rating, customer risk], term: GT-BNK-KYC-RISK }
+  - { name: subject_name, expr: a.subject_name, label: Subject name, synonyms: [alerted customer, subject] }
+  - { name: subject_address, expr: a.subject_address, label: Subject address, synonyms: [subject location] }
+time_dimensions:
+  - { name: alert_date, expr: d.date, default: true }
+facts:
+  - { name: days_to_disposition, expr: a.days_to_disposition }
+metrics:
+  - name: alerts_raised
+    label: AML alerts raised
+    expr: COUNT(*)
+    unit: alerts
+    decimals: 0
+    synonyms: [alert volume, alerts, number of alerts, tm alerts]
+    term: GT-BNK-AML-ALERT
+    description: Transaction-monitoring alerts generated in the period
+  - name: alert_to_case_rate
+    label: Alert-to-case rate
+    expr: 100.0 * SUM(CASE WHEN a.escalated THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN a.dispositioned THEN 1 ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    synonyms: [escalation rate, alert conversion, case rate]
+    term: GT-BNK-ALERT-TO-CASE
+    description: Share of dispositioned alerts escalated to an investigation case
+  - name: sar_conversion_rate
+    label: SAR conversion rate
+    expr: 100.0 * SUM(CASE WHEN a.sar_filed THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN a.case_closed THEN 1 ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    synonyms: [sar rate, sar yield, filing rate]
+    term: GT-BNK-SAR
+    description: Share of closed investigation cases that resulted in a SAR filing
+  - name: avg_days_to_disposition
+    label: Alert disposition time
+    expr: AVG(a.days_to_disposition)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [disposition time, days to disposition, alert ageing, time to clear alerts]
+    term: GT-BNK-AML-ALERT
+    description: Mean days from alert to disposition, dispositioned alerts only
+  - name: false_positive_rate
+    label: Alert false-positive rate
+    expr: 100.0 * SUM(CASE WHEN a.disposition = 'Closed - no suspicion' THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN a.dispositioned THEN 1 ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [false positives, no suspicion rate]
+    term: GT-BNK-ALERT-TO-CASE
+    description: Share of dispositioned alerts closed with no suspicion
+products: [DP-BNK-006]

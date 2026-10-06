@@ -1,0 +1,148 @@
+# Sales, store and item DQ rules.
+- id: DQ-RTL-001
+  object: CONFORMED_GOLD.FCT_SALES_LINE
+  column: net_amount
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every sales line has a net amount (net sales, margin and basket value).
+- id: DQ-RTL-002
+  object: CONFORMED_GOLD.FCT_SALES_LINE
+  column: net_amount
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Net line amounts are not negative; returns are reported in the returns product.
+- id: DQ-RTL-003
+  object: CONFORMED_GOLD.FCT_SALES_LINE
+  column: quantity
+  dimension: validity
+  assertion: "min >= 1"
+  severity: high
+  alert_route: engineering
+  description: Every sales line sells at least one unit.
+- id: DQ-RTL-004
+  object: CONFORMED_GOLD.FCT_SALES_LINE
+  column: quantity
+  dimension: accuracy
+  assertion: "max <= 500"
+  severity: medium
+  alert_route: engineering
+  description: No single line sells more than 500 units; larger values indicate a scanning error.
+- id: DQ-RTL-005
+  object: CONFORMED_GOLD.FCT_SALES_LINE
+  column: cost_amount
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every sales line carries cost of goods sold (gross margin).
+- id: DQ-RTL-006
+  object: CONFORMED_GOLD.FCT_SALES_LINE
+  column: cost_amount
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Cost of goods sold is never negative.
+- id: DQ-RTL-007
+  object: CONFORMED_GOLD.FCT_SALES_LINE
+  column: line_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per sales line after CDC deduplication.
+- id: DQ-RTL-008
+  object: CONFORMED_GOLD.FCT_SALES_LINE
+  column: sale_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: Sales lines are no more than one day behind the reporting date.
+- id: DQ-RTL-009
+  object: CONFORMED_GOLD.FCT_SALES_LINE
+  column: channel
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [In-store, Online, Click & collect]
+  severity: medium
+  alert_route: steward
+  description: Channels conform to In-store, Online and Click & collect.
+- id: DQ-RTL-010
+  object: CONFORMED_GOLD.DIM_STORE
+  column: region
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Northeast, Southeast, Midwest, Southwest, Pacific]
+  severity: critical
+  alert_route: steward
+  description: Store region is one of the five regions (row access policy RAP_REGION depends on it).
+- id: DQ-RTL-011
+  object: CONFORMED_GOLD.DIM_STORE
+  column: comp_store
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every store carries a comparable-store flag so BR-RTL-012 can be applied.
+- id: DQ-RTL-012
+  object: CONFORMED_GOLD.DIM_STORE
+  column: store_id
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^ST-[0-9]{3}$"
+  severity: low
+  alert_route: engineering
+  description: Store ids follow the store master numbering convention.
+- id: DQ-RTL-013
+  object: CURATED_SILVER.SALES_LINE
+  dimension: timeliness
+  assertion: "freshness_min <= 1440"
+  severity: medium
+  alert_route: engineering
+  description: The curated sales lines have been refreshed within the last day.
+- id: DQ-RTL-014
+  object: CONFORMED_GOLD.DIM_ITEM
+  column: initial_margin_pct
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every item has an initial margin (ticket price and cost present).
+- id: DQ-RTL-015
+  object: CONFORMED_GOLD.DIM_ITEM
+  column: initial_margin_pct
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: No item is ticketed below cost.
+- id: DQ-RTL-016
+  object: CONFORMED_GOLD.DIM_ITEM
+  column: initial_margin_pct
+  dimension: validity
+  assertion: "max <= 100"
+  severity: high
+  alert_route: engineering
+  description: Initial margin is a percentage of ticket price (at most 100).
+- id: DQ-RTL-017
+  object: CONFORMED_GOLD.DIM_ITEM
+  column: item_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: medium
+  alert_route: engineering
+  description: One row per item.
+- id: DQ-RTL-018
+  object: CONFORMED_GOLD.DIM_ITEM
+  column: category
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Bedding, Bath, Kitchenware, Home decor, Womenswear, Menswear, Kidswear, Snacks, Beverages, Pantry staples, Personal care, Cosmetics, Garden & outdoor, Seasonal decor]
+  severity: medium
+  alert_route: steward
+  description: Categories conform to the merchandise hierarchy.

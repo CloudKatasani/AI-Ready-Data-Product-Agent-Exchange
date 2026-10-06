@@ -1,0 +1,82 @@
+# Seeded intake requests and demand-board items. REQ-BNK-001 deliberately near-duplicates DP-BNK-003
+# (Loan Portfolio Risk) so the intake duplicate detector fires (AC5.1).
+requests:
+  - id: REQ-BNK-001
+    title: Market credit quality scorecard
+    requester: banking:market-manager-mountain
+    decision: Which branches in my market need tighter underwriting or more workout capacity next quarter
+    decider: Market Banking Manager
+    cadence: Monthly
+    workaround: Core loan extracts filtered to my market and NPLs counted by hand
+    questions:
+      - What was the NPL ratio by market last quarter?
+      - Which loan segments have the highest 30+ days past due rate?
+      - How has the net charge-off ratio trended this year?
+      - Is allowance coverage within our risk appetite?
+    stakes: Problem loans in my market grow unnoticed until they show up in charge-offs
+    freshness: Monthly by business day 3
+    status: SUBMITTED
+  - id: REQ-BNK-002
+    title: Hardship programme effectiveness
+    requester: banking:cro
+    decision: Whether to widen hardship payment plans before borrowers roll to charge-off
+    decider: Head of Collections
+    cadence: Monthly
+    workaround: Collections team keeps a manual log of hardship plans and checks outcomes in the collections platform
+    questions:
+      - How many borrowers in collections are on a hardship plan by market?
+      - What share of hardship plans are kept for six months?
+      - How do charge-offs compare for borrowers with and without a plan?
+    stakes: Recoverable balances roll to charge-off while protected borrowers risk escalation in error
+    freshness: Weekly
+    status: IN_TRIAGE
+  - id: REQ-BNK-003
+    title: Liquidity stress dashboard
+    requester: banking:credit-risk-analyst
+    decision: How much contingent funding to hold against uninsured deposit outflows
+    decider: Treasurer
+    cadence: Weekly, daily under stress
+    workaround: Treasury runs stressed outflow scenarios in a separate model fed by month-end extracts
+    questions:
+      - What share of deposits is uninsured by segment?
+      - Which branches hold the most rate-sensitive balances?
+      - How much did money market balances move last quarter?
+    stakes: A deposit run in one market outpaces the contingency funding plan
+    freshness: Daily by 07:00
+    status: APPROVED
+  - id: REQ-BNK-004
+    title: Small business cash-flow insights
+    requester: banking:lending-dpo
+    decision: Which small-business clients to offer working-capital lines proactively
+    decider: Head of Business Banking
+    cadence: Quarterly
+    workaround: Relationship managers eyeball account statements
+    questions:
+      - Which small-business segments show seasonal deposit swings?
+      - How many small-business clients run low balances for more than 30 days?
+      - What is the take-up of working-capital lines by market?
+    stakes: Good clients borrow elsewhere because offers come too late
+    freshness: Weekly
+    status: SUBMITTED
+  - id: REQ-BNK-005
+    title: Mountain market NPL drill-down
+    requester: banking:market-manager-mountain
+    decision: Which Mountain branches to review in the next credit audit
+    decider: Market Banking Manager
+    cadence: Monthly
+    workaround: Monthly email from the credit risk analyst with a pivot table
+    questions:
+      - What was the NPL ratio in Mountain last quarter by branch?
+      - Which loan segments drive Mountain delinquency?
+      - How many Mountain loans entered collections last quarter?
+    stakes: Audit effort spent on branches that are not driving Mountain credit losses
+    freshness: Monthly
+    status: MERGED
+
+demand_items:
+  - { id: DM-BNK-001, title: Customer profitability product, kind: product, description: "Trailing 12-month net contribution per customer after funds transfer pricing, cost to serve and expected credit loss.", requested_by: banking:cro, votes: 15 }
+  - { id: DM-BNK-002, title: Liquidity stress agent, kind: agent, description: "Answers how uninsured and rate-sensitive deposits would behave under stress, from certified deposit data.", requested_by: banking:credit-risk-analyst, votes: 12 }
+  - { id: DM-BNK-003, title: Fair lending monitoring product, kind: product, description: "Approval, pricing and decline outcomes by protected-class proxy for fair lending reviews, aggregated only.", requested_by: banking:data-steward, votes: 9 }
+  - { id: DM-BNK-004, title: Hardship programme insights, kind: product, description: "Hardship plan uptake, adherence and charge-offs avoided by market and segment.", requested_by: banking:cro, votes: 7 }
+  - { id: DM-BNK-005, title: Complaints analyst agent, kind: agent, description: "Explains complaint drivers and resolution times by product area once complaints are certified.", requested_by: banking:data-steward, votes: 6 }
+  - { id: DM-BNK-006, title: Commercial real estate concentration product, kind: product, description: "CRE exposure by property type, market and maturity wall for concentration risk limits.", requested_by: banking:lending-dpo, votes: 5 }

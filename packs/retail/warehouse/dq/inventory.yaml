@@ -1,0 +1,56 @@
+# Store inventory DQ rules.
+- id: DQ-RTL-019
+  object: CONFORMED_GOLD.FCT_STORE_INVENTORY
+  column: on_hand_units
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: engineering
+  description: On-hand units are never negative (negative perpetual records are floored in Silver).
+- id: DQ-RTL-021
+  object: CONFORMED_GOLD.FCT_STORE_INVENTORY
+  column: on_hand_units
+  dimension: completeness
+  assertion: "null_rate <= 0.001"
+  severity: critical
+  alert_route: steward
+  description: On-hand units are populated for every store-item-day.
+- id: DQ-RTL-022
+  object: CONFORMED_GOLD.FCT_STORE_INVENTORY
+  column: days_of_supply
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: medium
+  alert_route: engineering
+  description: Days of supply is never negative.
+- id: DQ-RTL-023
+  object: CURATED_SILVER.STORE_INVENTORY
+  column: snapshot_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: Re-sent inventory files are removed; one row per snapshot id.
+- id: DQ-RTL-024
+  object: CONFORMED_GOLD.FCT_STORE_INVENTORY
+  column: snapshot_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: Inventory positions are no more than one day behind the reporting date.
+- id: DQ-RTL-025
+  object: CONFORMED_GOLD.FCT_STORE_INVENTORY
+  dimension: consistency
+  assertion: "row_count >= 1000"
+  severity: high
+  alert_route: engineering
+  description: Inventory positions hold a full history; a sharp drop indicates a missing file.
+- id: DQ-RTL-020
+  object: CONFORMED_GOLD.FCT_STORE_INVENTORY
+  column: on_order_units
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: low
+  alert_route: engineering
+  description: On-order units are never negative.

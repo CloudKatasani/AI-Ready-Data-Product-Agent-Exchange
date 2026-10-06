@@ -1,0 +1,69 @@
+# Domains, conformed backbone entities and links (ported from the ADPM banking pack, adapted to the
+# Ridgeline warehouse). Owners are persona refs; golden sources are Gold objects in RLB_AI_PLATFORM.
+domains:
+  - id: customer-kyc
+    name: Customer & KYC
+    description: Who the customer is, where they bank, which segment they belong to, how they engage and whether their know-your-customer review is current.
+    owner: banking:data-steward
+    entities: [Customer, KYC review, Complaint]
+  - id: deposits-treasury
+    name: Deposits & Treasury
+    description: Deposit accounts and month-end balances, funding cost, insured and uninsured balances and the liquidity view used by ALCO.
+    owner: banking:cro
+    entities: [Deposit account, Deposit balance]
+  - id: lending-credit
+    name: Lending & Credit Risk
+    description: Loan origination, month-end loan balances, delinquency, non-accrual, charge-offs and the allowance for credit losses.
+    owner: banking:lending-dpo
+    entities: [Loan, Loan balance]
+  - id: cards-payments
+    name: Cards & Payments
+    description: Card accounts, authorisations, merchant categories, approval rates and confirmed card fraud losses.
+    owner: banking:lending-dpo
+    entities: [Card, Card authorisation]
+  - id: financial-crime
+    name: Financial Crime
+    description: Transaction-monitoring alerts, dispositions, case escalation and suspicious activity report outcomes under the BSA/AML programme.
+    owner: banking:data-steward
+    entities: [AML alert]
+  - id: collections-recovery
+    name: Collections & Recovery
+    description: Delinquent loans entering collections, contact strategies, promises to pay, cures, charge-offs and recoveries.
+    owner: banking:lending-dpo
+    entities: [Collection case]
+  - id: channels
+    name: Branch & Digital Channels
+    description: The branch network, relationship managers and digital banking sessions on the mobile app and online banking.
+    owner: banking:cro
+    entities: [Branch, Relationship manager, Digital session]
+
+backbone:
+  entities:
+    - { name: Customer, description: "A person or business with at least one deposit, loan or card relationship at Ridgeline", key: customer_id, domain: customer-kyc, golden_source: CONFORMED_GOLD.DIM_CUSTOMER }
+    - { name: KYC review, description: "A periodic, event-driven or onboarding know-your-customer review", key: review_id, domain: customer-kyc, golden_source: CURATED_SILVER.KYC_REVIEW }
+    - { name: Complaint, description: "A customer complaint logged in CRM with product area, category and resolution time", key: complaint_id, domain: customer-kyc, golden_source: CONFORMED_GOLD.FCT_COMPLAINT }
+    - { name: Deposit account, description: "A checking, savings, money market or time deposit account", key: account_id, domain: deposits-treasury, golden_source: CURATED_SILVER.DEPOSIT_ACCOUNT }
+    - { name: Deposit balance, description: "One account-month of ledger balance and interest expense", key: "account_id, month_end", domain: deposits-treasury, golden_source: CONFORMED_GOLD.FCT_DEPOSIT_BALANCE }
+    - { name: Loan, description: "A funded loan with segment, origination terms, credit score and loan-to-value", key: loan_id, domain: lending-credit, golden_source: CONFORMED_GOLD.DIM_LOAN }
+    - { name: Loan balance, description: "One loan-month of principal, days past due, non-accrual status, charge-offs and allowance", key: "loan_id, month_end", domain: lending-credit, golden_source: CONFORMED_GOLD.FCT_LOAN_BALANCE }
+    - { name: Card, description: "A credit card account with product tier and credit limit", key: card_id, domain: cards-payments, golden_source: CONFORMED_GOLD.DIM_CARD }
+    - { name: Card authorisation, description: "One card authorisation request with merchant category, channel, approval and fraud outcome", key: auth_id, domain: cards-payments, golden_source: CONFORMED_GOLD.FCT_CARD_TXN }
+    - { name: AML alert, description: "A transaction-monitoring alert with disposition, escalation and SAR outcome", key: alert_id, domain: financial-crime, golden_source: CONFORMED_GOLD.FCT_AML_ALERT }
+    - { name: Collection case, description: "A delinquent loan worked by collections from entry to cure, plan, charge-off or recovery", key: case_id, domain: collections-recovery, golden_source: CONFORMED_GOLD.FCT_COLLECTION_CASE }
+    - { name: Branch, description: "A Ridgeline branch or commercial banking centre in one of the four markets", key: branch_id, domain: channels, golden_source: CONFORMED_GOLD.DIM_BRANCH }
+    - { name: Relationship manager, description: "A banker who owns a book of retail, private or commercial relationships", key: rm_id, domain: channels, golden_source: CURATED_SILVER.RELATIONSHIP_MANAGER }
+    - { name: Digital session, description: "One mobile app or online banking session with login outcome and feature used", key: session_id, domain: channels, golden_source: CONFORMED_GOLD.FCT_DIGITAL_SESSION }
+  links:
+    - { from: Branch, to: Customer, cardinality: 1:N, via: home_branch_id }
+    - { from: Branch, to: Relationship manager, cardinality: 1:N, via: branch_id }
+    - { from: Customer, to: KYC review, cardinality: 1:N, via: customer_id }
+    - { from: Customer, to: Complaint, cardinality: 1:N, via: customer_id }
+    - { from: Customer, to: Deposit account, cardinality: 1:N, via: customer_id }
+    - { from: Deposit account, to: Deposit balance, cardinality: 1:N, via: account_id }
+    - { from: Customer, to: Loan, cardinality: 1:N, via: customer_id }
+    - { from: Loan, to: Loan balance, cardinality: 1:N, via: loan_id }
+    - { from: Loan, to: Collection case, cardinality: 1:N, via: loan_id }
+    - { from: Customer, to: Card, cardinality: 1:N, via: customer_id }
+    - { from: Card, to: Card authorisation, cardinality: 1:N, via: card_id }
+    - { from: Customer, to: AML alert, cardinality: 1:N, via: customer_id }
+    - { from: Customer, to: Digital session, cardinality: 1:N, via: customer_id }

@@ -1,0 +1,33 @@
+id: AG-RTL-004
+name: Merchandise & Inventory Advisor
+domain: Merchandising & Pricing
+status: PRODUCTION
+owner: retail:commercial-dpo
+on_call: Merchandise Analytics
+avatar: { icon: boxes, hue: 150 }
+capability: "Answers questions on in-stock, days of supply, initial margin, private label mix, price change compliance and the overdue price change backlog."
+personas_served: [Chief Merchandising Officer, Inventory Planner, Commercial Data Product Owner]
+out_of_scope: ["creating or approving price changes", "placing replenishment orders", "markdown budget approval", "vendor cost negotiation"]
+products:
+  - { id: DP-RTL-003, columns: "*" }
+  - { id: DP-RTL-004, columns: "*" }
+  - { id: DP-RTL-002, columns: [store_id, region, category, net_amount] }
+tools:
+  - { tool: semantic_query, views: [INVENTORY_AVAILABILITY, ASSORTMENT, PRICE_EXECUTION, SALES_PERFORMANCE], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-RTL-INVENTORY-STANDARD, DOC-RTL-MERCH-PRICING] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-RTL-INSTOCK, grains: [day, week, month], slices: [region, store, department, category], depth: rank_drivers }
+  - { kpi: KPI-RTL-OOS, grains: [day, week, month], slices: [region, store, department, category], depth: rank_drivers }
+  - { kpi: KPI-RTL-DOS, grains: [week, month], slices: [region, department, category], depth: trend }
+  - { kpi: KPI-RTL-IMU, grains: [], slices: [department, category, brand_type, price_band, vendor], depth: rank_drivers }
+  - { kpi: KPI-RTL-LOW-MARGIN, grains: [], slices: [department, category, brand_type], depth: rank_drivers }
+  - { kpi: KPI-RTL-PRIVATE-LABEL, grains: [], slices: [department, category], depth: value }
+  - { kpi: KPI-RTL-PRICE-COMP, grains: [month, quarter], slices: [region, store, department, change_type], depth: explain }
+  - { kpi: KPI-RTL-PRICE-BACKLOG, grains: [], slices: [region, store, change_type, department], depth: rank_drivers }
+instructions: [INS-RTL-004-P, INS-RTL-004-R, INS-RTL-004-G, INS-RTL-004-O]
+guardrails: { citations_required: true, refuse_customer_level: false, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.05, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-RTL-008, SC-RTL-009, SC-RTL-010, SC-RTL-011, SC-RTL-024, SC-RTL-025]

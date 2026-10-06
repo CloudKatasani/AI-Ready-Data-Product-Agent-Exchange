@@ -1,0 +1,113 @@
+# Knockout (Why AI-Ready): four governed answers and how each degrades when a layer is switched off.
+# declared_delta_pct is computed against the warehouse in Phase 8 and left empty here.
+answers:
+  - id: KO-RTL-01
+    kpi: KPI-RTL-NET-SALES
+    question: "What were net sales last quarter, comparable stores only?"
+    query: { view: SALES_PERFORMANCE, metrics: [net_sales], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # CDC duplicates and tombstoned sales lines inflate net sales
+      gold: wrong          # no conformed comparable-store flag; pre-opening test lines included
+      semantic: wrong      # naive formula sums gross amount before discounts
+      glossary: ambiguous  # "comp sales" no longer resolves to net sales on comparable stores
+      context: wrong       # non-comparable stores (BR-RTL-012) are no longer excluded
+      governance: unsafe   # no certification, row access or lineage on the answer
+    declared_delta_pct: {}
+  - id: KO-RTL-02
+    kpi: KPI-RTL-RETURN-RATE
+    question: "What was the online return rate last quarter?"
+    query: { view: RETURNS_REFUNDS, metrics: [return_rate], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # duplicate order updates and deleted orders counted
+      gold: wrong          # no member join; orders from deleted members included
+      semantic: ambiguous  # unit-based and value-based return rate both plausible
+      glossary: ambiguous  # "returns rate" does not resolve to the governed metric
+      context: wrong       # orders still inside the 30-day return window (BR-RTL-021) included
+      governance: unsafe   # member emails reachable from the returns view unmasked
+    declared_delta_pct: {}
+  - id: KO-RTL-03
+    kpi: KPI-RTL-COST-COMP
+    question: "What share of purchase-order cost was at the agreed cost this year?"
+    query: { view: VENDOR_SUPPLY, metrics: [cost_compliance_pct], timeRange: { ytd: true } }
+    failure_by_layer:
+      silver: wrong        # duplicate PO line updates and dirty category strings
+      gold: unverified     # same number from Silver but no certified lineage
+      semantic: ambiguous  # "compliance" could mean lines, vendors or cost
+      glossary: ambiguous  # "on-agreement buying" no longer maps to the metric
+      context: unverified  # vendor compliance definition of off-agreement spend not cited
+      governance: unsafe   # vendor tax ids and buyer names unmasked
+    declared_delta_pct: {}
+  - id: KO-RTL-04
+    kpi: KPI-RTL-INSTOCK
+    question: "What was the in-stock rate last month?"
+    query: { view: INVENTORY_AVAILABILITY, metrics: [in_stock_rate], timeRange: { last: { n: 1, unit: month } } }
+    failure_by_layer:
+      silver: wrong        # same-day re-sends double count positions and negative on-hand is not floored
+      gold: unverified     # computed from Silver positions without the certified store conformance
+      semantic: ambiguous  # in-stock vs out-of-stock share not distinguished
+      glossary: ambiguous  # "on shelf availability" does not resolve
+      context: unverified  # replenishment release incident context not available
+      governance: unsafe   # store-item positions exposed without aggregation or row access
+    declared_delta_pct: {}
+
+# Silver equivalents the compiler uses when the Gold layer is off (05 §1 step 7). column_map maps a Gold column
+# name to the Silver column (or Silver expression) that replaces it. Gold surrogate keys map to natural keys on both
+# sides of a join so relationships still resolve; date_key maps to the same integer expression Gold uses.
+# DIM_DATE is a generated calendar with no Silver source and stays in place.
+gold_fallbacks:
+  - gold: CONFORMED_GOLD.FCT_SALES_LINE
+    silver: CURATED_SILVER.SALES_LINE
+    column_map:
+      sales_line_key: line_id
+      store_key: store_id
+      item_key: item_id
+      member_key: member_id
+      date_key: "CAST(strftime(sale_date, '%Y%m%d') AS INTEGER)"
+      member_identified: "member_id IS NOT NULL"
+  - gold: CONFORMED_GOLD.DIM_STORE
+    silver: CURATED_SILVER.STORE_LOCATION
+    column_map:
+      store_key: store_id
+      comp_store: "TRUE"
+      comp_status: "'Comparable'"
+  - gold: CONFORMED_GOLD.DIM_ITEM
+    silver: CURATED_SILVER.MERCH_ITEM
+    column_map:
+      item_key: item_id
+      vendor_key: vendor_id
+      initial_margin_pct: "round(100.0 * (unit_price - unit_cost) / unit_price, 2)"
+  - gold: CONFORMED_GOLD.FCT_ONLINE_ORDER
+    silver: CURATED_SILVER.ONLINE_ORDER
+    column_map:
+      order_key: order_id
+      member_key: member_id
+      date_key: "CAST(strftime(order_date, '%Y%m%d') AS INTEGER)"
+      mature: "TRUE"
+  - gold: CONFORMED_GOLD.DIM_MEMBER
+    silver: CURATED_SILVER.LOYALTY_MEMBER
+    column_map:
+      member_key: member_id
+      churn_risk_score: churn_score
+      full_name: "concat(first_name, ' ', last_name)"
+  - gold: CONFORMED_GOLD.FCT_PO_LINE
+    silver: CURATED_SILVER.PURCHASE_ORDER_LINE
+    column_map:
+      po_line_key: po_line_id
+      vendor_key: vendor_id
+      date_key: "CAST(strftime(po_date, '%Y%m%d') AS INTEGER)"
+      otif: on_time_in_full
+      received: "receipt_date IS NOT NULL"
+  - gold: CONFORMED_GOLD.DIM_VENDOR
+    silver: CURATED_SILVER.VENDOR_MASTER
+    column_map:
+      vendor_key: vendor_id
+      preferred: preferred_flag
+  - gold: CONFORMED_GOLD.FCT_STORE_INVENTORY
+    silver: CURATED_SILVER.STORE_INVENTORY
+    column_map:
+      snapshot_key: snapshot_id
+      store_key: store_id
+      item_key: item_id
+      date_key: "CAST(strftime(snapshot_date, '%Y%m%d') AS INTEGER)"
+      in_stock: "on_hand_units > 0"
+      inventory_value: "on_hand_units * unit_cost"

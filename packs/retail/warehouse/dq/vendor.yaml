@@ -1,0 +1,59 @@
+# Vendor and purchase-order DQ rules.
+- id: DQ-RTL-031
+  object: CONFORMED_GOLD.FCT_PO_LINE
+  column: po_line_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per PO line (duplicate ERP loads double cost).
+- id: DQ-RTL-035
+  object: CONFORMED_GOLD.FCT_PO_LINE
+  column: po_cost_usd
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every PO line carries cost.
+- id: DQ-RTL-036
+  object: CONFORMED_GOLD.FCT_PO_LINE
+  column: po_cost_usd
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: PO line cost is positive; returns to vendor are posted outside this fact.
+- id: DQ-RTL-037
+  object: CONFORMED_GOLD.FCT_PO_LINE
+  column: at_agreed_cost
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every PO line is flagged at or off the agreed cost.
+- id: DQ-RTL-038
+  object: CONFORMED_GOLD.FCT_PO_LINE
+  column: category
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Home textiles, Kitchen & dining, Apparel, Packaged food, Beverages, Beauty & personal care, Seasonal decor, Electronics accessories]
+  severity: medium
+  alert_route: steward
+  description: Vendor categories conform to the buying category list.
+- id: DQ-RTL-039
+  object: CURATED_SILVER.VENDOR_MASTER
+  column: tax_id
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^[0-9]{2}-.+$"
+  severity: medium
+  alert_route: steward
+  description: Vendor tax ids follow the registered identifier format checked at due diligence.
+- id: DQ-RTL-040
+  object: CONFORMED_GOLD.FCT_PO_LINE
+  column: po_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: medium
+  alert_route: engineering
+  description: Purchase orders from the ERP are no more than a day behind.

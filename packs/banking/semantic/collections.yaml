@@ -1,0 +1,78 @@
+name: COLLECTIONS
+description: Collection cases — cures, promises to pay, roll to charge-off and recoveries
+tables:
+  - { alias: k, fqn: CONFORMED_GOLD.FCT_COLLECTION_CASE, pk: case_key }
+  - { alias: c, fqn: CONFORMED_GOLD.DIM_CUSTOMER, pk: customer_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: k.customer_key, to: c.customer_key }
+  - { from: k.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: c.region, label: Market, synonyms: [region, territory, footprint], term: GT-BNK-MARKET }
+  - { name: loan_segment, expr: k.loan_segment, label: Loan segment, synonyms: [loan type, product line], term: GT-BNK-LOAN-SEGMENT }
+  - { name: entry_bucket, expr: k.entry_bucket, label: Entry bucket, synonyms: [delinquency bucket at entry, entry dpd, bucket], term: GT-BNK-DPD }
+  - { name: strategy, expr: k.strategy, label: Collection strategy, synonyms: [contact strategy, treatment, collection channel] }
+  - { name: outcome, expr: k.outcome, label: Outcome, synonyms: [resolution, case outcome] }
+  - { name: case_closed, expr: k.case_closed, label: Case closed, synonyms: [resolved case, closed case] }
+time_dimensions:
+  - { name: entry_date, expr: d.date, default: true }
+facts:
+  - { name: recovered_amount, expr: k.recovered_amount }
+  - { name: days_to_resolve, expr: k.days_to_resolve }
+metrics:
+  - name: cure_rate
+    label: Cure rate
+    expr: 100.0 * AVG(CASE WHEN k.cured THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [cures, self-cure rate, cured share, collections cure rate]
+    term: GT-BNK-CURE
+    description: Share of resolved collection cases that returned to current
+    default_filters: [ { rule: BR-BNK-018 } ]
+  - name: promise_kept_rate
+    label: Promise-to-pay kept rate
+    expr: 100.0 * SUM(CASE WHEN k.ptp_kept THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN k.ptp_made THEN 1 ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [ptp kept rate, promises kept, kept promise rate, ptp kept]
+    term: GT-BNK-PTP
+    description: Share of promises to pay that were honoured
+  - name: chargeoff_roll_rate
+    label: Roll rate to charge-off
+    expr: 100.0 * AVG(CASE WHEN k.charged_off THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [roll rate, roll to charge-off, charge-off roll rate, flow to loss]
+    term: GT-BNK-ROLL-RATE
+    description: Share of resolved collection cases that ended in charge-off
+    default_filters: [ { rule: BR-BNK-018 } ]
+  - name: avg_days_to_resolve
+    label: Days to resolve
+    expr: AVG(k.days_to_resolve)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [time to resolve, resolution time, days in collections]
+    term: GT-BNK-COLLECTION-CASE
+    description: Mean days from collections entry to resolution, resolved cases only
+  - name: collection_cases
+    label: Collection cases
+    expr: COUNT(*)
+    unit: cases
+    decimals: 0
+    synonyms: [cases, collections volume, accounts in collections, number of cases]
+    term: GT-BNK-COLLECTION-CASE
+    description: Collection cases opened in the period
+  - name: recoveries
+    label: Recoveries
+    expr: SUM(k.recovered_amount)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [amount recovered, collected amount, cash collected]
+    term: GT-BNK-RECOVERY
+    description: Amount recovered on resolved collection cases
+products: [DP-BNK-005]

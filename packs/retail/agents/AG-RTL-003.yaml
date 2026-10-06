@@ -1,0 +1,29 @@
+id: AG-RTL-003
+name: Supply Chain Copilot
+domain: Supply Chain & Vendors
+status: PRODUCTION
+owner: retail:commercial-dpo
+on_call: Supply Chain Analytics
+avatar: { icon: truck, hue: 32 }
+capability: "Answers questions on purchase-order cost, agreed-cost compliance, off-agreement spend, vendor OTIF, fill rate and lead time."
+personas_served: [VP Supply Chain, Category Director, Buyer]
+out_of_scope: ["raising or approving purchase orders", "vendor agreement negotiation", "invoice payment status", "vendor bank details"]
+products:
+  - { id: DP-RTL-006, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [VENDOR_SUPPLY], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-RTL-VENDOR-COMPLIANCE] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-RTL-PO-COST, grains: [month, quarter, year], slices: [vendor_category, vendor], depth: rank_drivers }
+  - { kpi: KPI-RTL-COST-COMP, grains: [month, quarter, year], slices: [vendor_category, vendor], depth: explain }
+  - { kpi: KPI-RTL-OFF-AGREEMENT, grains: [month, quarter, year], slices: [vendor_category, vendor], depth: rank_drivers }
+  - { kpi: KPI-RTL-OTIF, grains: [month, quarter], slices: [vendor, vendor_category], depth: rank_drivers }
+  - { kpi: KPI-RTL-FILL, grains: [month, quarter], slices: [vendor, vendor_category], depth: explain }
+  - { kpi: KPI-RTL-LEAD-TIME, grains: [month, quarter], slices: [vendor_category, vendor], depth: trend }
+instructions: [INS-RTL-003-P, INS-RTL-003-R, INS-RTL-003-G, INS-RTL-003-O]
+guardrails: { citations_required: true, refuse_customer_level: false, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.05, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-RTL-018, SC-RTL-019, SC-RTL-020, SC-RTL-021]

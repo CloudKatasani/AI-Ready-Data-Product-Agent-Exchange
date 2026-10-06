@@ -1,0 +1,29 @@
+# Silver/Gold object metadata for Explorer display and lineage (upstream edges).
+objects:
+  - { fqn: CURATED_SILVER.STORE_LOCATION, kind: DYNAMIC TABLE, description: "Conformed store master", target_lag: 1 day, upstream: [RAW_BRONZE.MDM_STORE], grain: one row per store }
+  - { fqn: CURATED_SILVER.VENDOR_MASTER, kind: DYNAMIC TABLE, description: "Vendor master", target_lag: 1 day, upstream: [RAW_BRONZE.ERP_VENDOR], grain: one row per vendor }
+  - { fqn: CURATED_SILVER.MERCH_ITEM, kind: DYNAMIC TABLE, description: "Item master with departments", target_lag: 1 hour, upstream: [RAW_BRONZE.MDM_ITEM], grain: one row per item }
+  - { fqn: CURATED_SILVER.LOYALTY_MEMBER, kind: DYNAMIC TABLE, description: "Loyalty member master, deduplicated and conformed", target_lag: 15 minutes, upstream: [RAW_BRONZE.LOY_MEMBER], grain: one row per member }
+  - { fqn: CURATED_SILVER.SALES_LINE, kind: DYNAMIC TABLE, description: "Deduplicated sales lines with discount and margin", target_lag: 5 minutes, upstream: [RAW_BRONZE.POS_SALES_LINE], grain: one row per sales line }
+  - { fqn: CURATED_SILVER.STORE_TRAFFIC, kind: DYNAMIC TABLE, description: "Daily store footfall and conversion", target_lag: 1 hour, upstream: [RAW_BRONZE.STR_TRAFFIC_DAILY], grain: one row per reading }
+  - { fqn: CURATED_SILVER.STORE_INVENTORY, kind: DYNAMIC TABLE, description: "One inventory position per store, item and day", target_lag: 15 minutes, upstream: [RAW_BRONZE.WMS_STORE_INVENTORY], grain: one row per store per item per day }
+  - { fqn: CURATED_SILVER.PRICE_CHANGE, kind: DYNAMIC TABLE, description: "Store price changes with execution status", target_lag: 1 hour, upstream: [RAW_BRONZE.PRC_PRICE_CHANGE], grain: one row per price change }
+  - { fqn: CURATED_SILVER.ONLINE_ORDER, kind: DYNAMIC TABLE, description: "Web-store orders with delivery, return and refund outcome", target_lag: 1 hour, upstream: [RAW_BRONZE.ECOM_ORDER], grain: one row per order }
+  - { fqn: CURATED_SILVER.ORDER_PAYMENT, kind: DYNAMIC TABLE, description: "Payments taken against web-store orders", target_lag: 1 hour, upstream: [RAW_BRONZE.ECOM_PAYMENT], grain: one row per payment }
+  - { fqn: CURATED_SILVER.CARE_CONTACT, kind: DYNAMIC TABLE, description: "Customer-care contacts", target_lag: 1 hour, upstream: [RAW_BRONZE.CRM_CARE_CONTACT], grain: one row per contact }
+  - { fqn: CURATED_SILVER.VENDOR_AGREEMENT, kind: DYNAMIC TABLE, description: "Vendor cost and terms agreements", target_lag: 1 day, upstream: [RAW_BRONZE.ERP_VENDOR_AGREEMENT], grain: one row per agreement }
+  - { fqn: CURATED_SILVER.PURCHASE_ORDER_LINE, kind: DYNAMIC TABLE, description: "PO lines with fill, receipt outcome and lead time", target_lag: 1 hour, upstream: [RAW_BRONZE.ERP_PO_LINE], grain: one row per PO line }
+  - { fqn: CURATED_SILVER.CYCLE_COUNT, kind: DYNAMIC TABLE, description: "Latest record per cycle count", target_lag: 1 day, upstream: [RAW_BRONZE.LP_CYCLE_COUNT], grain: one row per count }
+  - { fqn: CURATED_SILVER.PROMOTION_CALENDAR, kind: DYNAMIC TABLE, description: "Promotion calendar", target_lag: 1 day, upstream: [RAW_BRONZE.MKT_PROMOTION], grain: one row per promotion }
+  - { fqn: CONFORMED_GOLD.DIM_DATE, kind: TABLE, description: "Calendar 2019-2026", upstream: [CURATED_SILVER.SALES_LINE], grain: one row per day }
+  - { fqn: CONFORMED_GOLD.DIM_STORE, kind: TABLE, description: "Store dimension with comparable-store status", target_lag: 1 day, upstream: [CURATED_SILVER.STORE_LOCATION], grain: one row per store }
+  - { fqn: CONFORMED_GOLD.DIM_VENDOR, kind: TABLE, description: "Vendor dimension", target_lag: 1 day, upstream: [CURATED_SILVER.VENDOR_MASTER], grain: one row per vendor }
+  - { fqn: CONFORMED_GOLD.DIM_ITEM, kind: TABLE, description: "Item dimension with initial margin and price bands", target_lag: 1 hour, upstream: [CURATED_SILVER.MERCH_ITEM, CONFORMED_GOLD.DIM_VENDOR], grain: one row per item }
+  - { fqn: CONFORMED_GOLD.DIM_MEMBER, kind: TABLE, description: "Conformed loyalty member dimension", target_lag: 15 minutes, upstream: [CURATED_SILVER.LOYALTY_MEMBER], grain: one row per member }
+  - { fqn: CONFORMED_GOLD.FCT_SALES_LINE, kind: DYNAMIC TABLE, description: "Sales line fact (store and digital)", target_lag: 5 minutes, upstream: [CURATED_SILVER.SALES_LINE, CONFORMED_GOLD.DIM_STORE, CONFORMED_GOLD.DIM_ITEM, CONFORMED_GOLD.DIM_MEMBER], grain: one row per sales line }
+  - { fqn: CONFORMED_GOLD.FCT_STORE_INVENTORY, kind: DYNAMIC TABLE, description: "Daily store-item inventory position fact", target_lag: 15 minutes, upstream: [CURATED_SILVER.STORE_INVENTORY, CONFORMED_GOLD.DIM_STORE, CONFORMED_GOLD.DIM_ITEM], grain: one row per store per item per day }
+  - { fqn: CONFORMED_GOLD.FCT_PRICE_CHANGE, kind: DYNAMIC TABLE, description: "Price change fact with on-time and overdue flags", target_lag: 1 hour, upstream: [CURATED_SILVER.PRICE_CHANGE, CONFORMED_GOLD.DIM_ITEM, CONFORMED_GOLD.DIM_STORE], grain: one row per price change }
+  - { fqn: CONFORMED_GOLD.FCT_ONLINE_ORDER, kind: DYNAMIC TABLE, description: "Web-store order fact with returns and refunds", target_lag: 1 hour, upstream: [CURATED_SILVER.ONLINE_ORDER, CONFORMED_GOLD.DIM_MEMBER], grain: one row per order }
+  - { fqn: CONFORMED_GOLD.FCT_PO_LINE, kind: DYNAMIC TABLE, description: "Purchase order line fact", target_lag: 1 hour, upstream: [CURATED_SILVER.PURCHASE_ORDER_LINE, CONFORMED_GOLD.DIM_VENDOR], grain: one row per PO line }
+  - { fqn: CONFORMED_GOLD.FCT_CYCLE_COUNT, kind: DYNAMIC TABLE, description: "Cycle count fact with shrink and overdue flags", target_lag: 1 day, upstream: [CURATED_SILVER.CYCLE_COUNT, CONFORMED_GOLD.DIM_STORE], grain: one row per count }
+  - { fqn: CONFORMED_GOLD.FCT_CARE_CONTACT, kind: DYNAMIC TABLE, description: "Customer-care contact fact", target_lag: 1 hour, upstream: [CURATED_SILVER.CARE_CONTACT, CONFORMED_GOLD.DIM_MEMBER], grain: one row per contact }

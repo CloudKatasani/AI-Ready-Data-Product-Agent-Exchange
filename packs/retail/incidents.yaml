@@ -1,0 +1,67 @@
+# "Break something" templates (05 §2.4). Ported from AI-Ready ext/operate.ts INC-1..INC-5 and retargeted to the
+# Keystone Gold objects. Effects are applied as overlay views in the _INCIDENT schema while an incident is open.
+- id: INC-RTL-LATE-FEED
+  kind: late_feed
+  title: POS sales feed six hours late
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_SALES_LINE
+  params: { lag_hours: 6 }
+  affects: { products: [DP-RTL-002], agents: [AG-RTL-002, AG-RTL-004] }
+  narrative: >-
+    The CDC extract from the store till estate stalled and no sales lines have landed for six hours. The Store &
+    Digital Sales product is now behind its 60-minute freshness SLA, so today's net sales and basket value understate
+    trading and any agent answer about recent sales is stale.
+  detection: Freshness rule DQ-RTL-013 on the curated sales lines fails and the product moves to Degraded.
+  resolution: Restart the POS extract, backfill the six-hour gap and re-run the DQ rules; the product returns to Healthy.
+- id: INC-RTL-NULL-SPIKE
+  kind: null_spike
+  title: Null spike in on-hand units
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_STORE_INVENTORY
+  column: on_hand_units
+  params: { null_pct: 18 }
+  affects: { products: [DP-RTL-003], agents: [AG-RTL-004] }
+  narrative: >-
+    A change to the perpetual inventory export left 18% of the latest store-item positions without on-hand units, so a
+    critical data element arrives empty. In-stock and days-of-supply figures would be overstated or understated
+    depending on which stores are missing.
+  detection: Completeness rule DQ-RTL-021 on on_hand_units fails; the Inventory & Availability product is Degraded.
+  resolution: Revert the export mapping, reload the affected days and confirm the null rate is back under 0.1%.
+- id: INC-RTL-DUP-LOAD
+  kind: duplicate_load
+  title: Duplicate PO line load
+  severity: SEV3
+  object: CONFORMED_GOLD.FCT_PO_LINE
+  params: { duplicate_pct: 12 }
+  affects: { products: [DP-RTL-006], agents: [AG-RTL-003] }
+  narrative: >-
+    A replayed ERP batch loaded 12% of PO lines twice. Purchase-order cost and off-agreement spend are inflated while
+    the duplicates remain, and cost-compliance shares shift by vendor category.
+  detection: Uniqueness rule DQ-RTL-031 on po_line_id fails and the row count jumps against the trailing average.
+  resolution: Delete the replayed batch by load id, re-run deduplication and confirm dup_rate returns to zero.
+- id: INC-RTL-SCHEMA-DRIFT
+  kind: schema_drift
+  title: Order value column renamed upstream
+  severity: SEV1
+  object: CONFORMED_GOLD.FCT_ONLINE_ORDER
+  column: order_value
+  params: { rename_to: order_total_usd }
+  affects: { products: [DP-RTL-005], agents: [AG-RTL-001] }
+  narrative: >-
+    An order management release renamed the order value column to order_total_usd without a contract change. Every
+    returns metric that depends on order value (average order value, return rate, online order value) fails to
+    compile, so agents decline with an incident banner instead of answering.
+  detection: Metric compilation for RETURNS_REFUNDS fails and DQ-RTL-041 cannot find its column; the contract check flags a breaking change.
+  resolution: Map order_total_usd back to order_value in Silver, raise a contract major version with a 30-day notice, and re-run checks.
+- id: INC-RTL-VOLUME
+  kind: volume_anomaly
+  title: Missing days of inventory positions
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_STORE_INVENTORY
+  params: { missing_days: 2 }
+  affects: { products: [DP-RTL-003], agents: [AG-RTL-004] }
+  narrative: >-
+    Two daily files from the perpetual inventory system never arrived, so the most recent two days of store-item
+    positions are missing. In-stock and inventory value trends show a false drop at the end of the series.
+  detection: Timeliness rule DQ-RTL-024 on snapshot_date fails and daily position volume drops against the trailing average; the product is Degraded.
+  resolution: Request the missing files from the inventory system, load them and confirm daily volumes match the trailing average.

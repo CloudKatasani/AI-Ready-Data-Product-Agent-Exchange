@@ -1,0 +1,82 @@
+name: VENDOR_SUPPLY
+description: Purchase-order cost, agreed-cost compliance and vendor delivery performance
+tables:
+  - { alias: l, fqn: CONFORMED_GOLD.FCT_PO_LINE, pk: po_line_key }
+  - { alias: vd, fqn: CONFORMED_GOLD.DIM_VENDOR, pk: vendor_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: l.vendor_key, to: vd.vendor_key }
+  - { from: l.date_key, to: d.date_key }
+dimensions:
+  - { name: vendor, expr: vd.vendor_name, label: Vendor, synonyms: [supplier, vendors, suppliers], term: GT-RTL-VENDOR }
+  - { name: vendor_category, expr: l.category, label: Vendor category, synonyms: [buying category, commodity, purchase category] }
+  - { name: at_agreed_cost, expr: l.at_agreed_cost, label: At agreed cost, synonyms: [on agreement, compliant cost] }
+  - { name: preferred_vendor, expr: vd.preferred, label: Preferred vendor, synonyms: [preferred supplier] }
+time_dimensions:
+  - { name: po_date, expr: d.date, default: true }
+facts:
+  - { name: po_cost_usd, expr: l.po_cost_usd }
+  - { name: lead_time_days, expr: l.lead_time_days }
+metrics:
+  - name: total_po_cost
+    label: Purchase order cost
+    expr: SUM(l.po_cost_usd)
+    unit: USD
+    decimals: 0
+    synonyms: [po cost, purchases, buying spend, po spend]
+    term: GT-RTL-PO-COST
+    description: Total purchase-order line cost
+  - name: cost_compliance_pct
+    label: Cost compliance
+    expr: 100.0 * SUM(CASE WHEN l.at_agreed_cost THEN l.po_cost_usd ELSE 0 END) / SUM(l.po_cost_usd)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [agreed cost compliance, at the agreed cost, on-agreement spend, cost compliant]
+    term: GT-RTL-COST-COMPLIANCE
+    description: Share of purchase-order cost placed at the cost agreed in a vendor agreement
+  - name: off_agreement_spend
+    label: Off-agreement spend
+    expr: SUM(CASE WHEN NOT l.at_agreed_cost THEN l.po_cost_usd ELSE 0 END)
+    unit: USD
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [spot buys, off agreement spend, non-compliant cost, off-contract buying]
+    term: GT-RTL-OFF-AGREEMENT
+    description: Purchase-order cost placed outside an agreed vendor cost
+  - name: vendor_otif_pct
+    label: Vendor OTIF
+    expr: 100.0 * AVG(CASE WHEN l.received THEN CASE WHEN l.otif THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [otif, on time in full, delivery performance]
+    term: GT-RTL-OTIF
+    description: Share of received PO lines delivered on time and in full
+  - name: vendor_fill_rate_pct
+    label: Vendor fill rate
+    expr: 100.0 * SUM(CASE WHEN l.received THEN l.units_received ELSE 0 END) / SUM(CASE WHEN l.received THEN l.units_ordered ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [fill rate, unit fill rate, case fill]
+    term: GT-RTL-FILL-RATE
+    description: Units received as a share of units ordered on received PO lines
+  - name: po_lead_time_days
+    label: PO lead time
+    expr: AVG(l.lead_time_days)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [lead time, po to receipt, vendor lead time]
+    term: GT-RTL-LEAD-TIME
+    description: Mean days from PO creation to goods receipt
+  - name: po_lines
+    label: PO lines
+    expr: COUNT(*)
+    unit: lines
+    decimals: 0
+    synonyms: [purchase order lines, number of pos]
+    term: GT-RTL-PO-COST
+    description: Count of purchase-order lines
+products: [DP-RTL-006]

@@ -1,0 +1,454 @@
+# Verified queries — curated question -> MetricQuery pairs, ported from the AI-Ready retail context and the
+# Marketplace RTL demo exchanges. Every query compiles through compileMetricQuery() on the named view.
+# RETURNS_REFUNDS deliberately has only 7 active entries and no active refund-cycle query: the DP-RTL-005
+# certification story (gate 4) activates VQ-RTL-071..073 via FIX-1.
+
+
+# ---------------------------------------------------------------- SALES_PERFORMANCE (AG-RTL-002)
+- id: VQ-RTL-001
+  question: "What were net sales by region last quarter?"
+  query: { view: SALES_PERFORMANCE, metrics: [net_sales], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: net_sales, dir: desc }] }
+  agent: AG-RTL-002
+  verified_by: retail:merch-analyst
+  verified_at: 2026-07-02
+- id: VQ-RTL-002
+  question: "What is the gross margin rate year to date?"
+  query: { view: SALES_PERFORMANCE, metrics: [gross_margin_pct], timeRange: { ytd: true } }
+  agent: AG-RTL-002
+  verified_by: retail:merch-analyst
+  verified_at: 2026-07-05
+- id: VQ-RTL-003
+  question: "Gross margin rate by department this year"
+  query: { view: SALES_PERFORMANCE, metrics: [gross_margin_pct], dimensions: [department], timeRange: { ytd: true }, orderBy: [{ field: gross_margin_pct, dir: desc }] }
+  agent: AG-RTL-002
+  verified_by: retail:merch-analyst
+  verified_at: 2026-07-08
+- id: VQ-RTL-004
+  question: "Top 10 stores by net sales last quarter"
+  query: { view: SALES_PERFORMANCE, metrics: [net_sales], dimensions: [store], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: net_sales, dir: desc }], limit: 10, analysis: rank }
+  agent: AG-RTL-002
+  verified_by: retail:merch-analyst
+  verified_at: 2026-07-11
+- id: VQ-RTL-005
+  question: "Net sales by department last quarter"
+  query: { view: SALES_PERFORMANCE, metrics: [net_sales], dimensions: [department], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: net_sales, dir: desc }], analysis: contribution }
+  agent: AG-RTL-002
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-07-14
+- id: VQ-RTL-006
+  question: "Net sales by month this year"
+  query: { view: SALES_PERFORMANCE, metrics: [net_sales], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-RTL-002
+  verified_by: retail:merch-analyst
+  verified_at: 2026-07-17
+- id: VQ-RTL-007
+  question: "Average basket value by channel last quarter"
+  query: { view: SALES_PERFORMANCE, metrics: [avg_basket_value], dimensions: [channel], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-RTL-002
+  verified_by: retail:merch-analyst
+  verified_at: 2026-07-20
+- id: VQ-RTL-008
+  question: "Promotional sales share by category last quarter"
+  query: { view: SALES_PERFORMANCE, metrics: [promo_sales_share], dimensions: [category], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: promo_sales_share, dir: desc }] }
+  agent: AG-RTL-002
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-07-23
+- id: VQ-RTL-009
+  question: "Digital sales share by quarter for the last four quarters"
+  query: { view: SALES_PERFORMANCE, metrics: [digital_sales_share], timeGrain: quarter, timeRange: { last: { n: 4, unit: quarter } }, analysis: trend }
+  agent: AG-RTL-002
+  verified_by: retail:merch-analyst
+  verified_at: 2026-07-26
+- id: VQ-RTL-010
+  question: "Units sold by department last quarter"
+  query: { view: SALES_PERFORMANCE, metrics: [units_sold], dimensions: [department], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: units_sold, dir: desc }] }
+  agent: AG-RTL-002
+  verified_by: retail:merch-analyst
+  verified_at: 2026-07-29
+- id: VQ-RTL-011
+  question: "Loyalty-identified sales share by region this year"
+  query: { view: SALES_PERFORMANCE, metrics: [member_sales_share], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: member_sales_share, dir: desc }] }
+  agent: AG-RTL-002
+  verified_by: retail:customer-steward
+  verified_at: 2026-08-01
+- id: VQ-RTL-012
+  question: "How many sales transactions were there last quarter?"
+  query: { view: SALES_PERFORMANCE, metrics: [transactions], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-RTL-002
+  verified_by: retail:merch-analyst
+  verified_at: 2026-08-04
+
+# ---------------------------------------------------------------- LOYALTY_360 (AG-RTL-001)
+- id: VQ-RTL-013
+  question: "What is our app adoption rate by region?"
+  query: { view: LOYALTY_360, metrics: [app_adoption_rate], dimensions: [region], orderBy: [{ field: app_adoption_rate, dir: desc }] }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-08-07
+- id: VQ-RTL-014
+  question: "How many active members do we have?"
+  query: { view: LOYALTY_360, metrics: [active_members] }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-08-10
+- id: VQ-RTL-015
+  question: "Active members by tier"
+  query: { view: LOYALTY_360, metrics: [active_members], dimensions: [tier], orderBy: [{ field: active_members, dir: desc }] }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-08-13
+- id: VQ-RTL-016
+  question: "Average churn risk by tier"
+  query: { view: LOYALTY_360, metrics: [avg_churn_risk], dimensions: [tier], orderBy: [{ field: avg_churn_risk, dir: desc }] }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-08-16
+- id: VQ-RTL-017
+  question: "Share of high churn-risk members by region"
+  query: { view: LOYALTY_360, metrics: [high_churn_risk_pct], dimensions: [region], orderBy: [{ field: high_churn_risk_pct, dir: desc }] }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-08-19
+- id: VQ-RTL-018
+  question: "What is our points liability?"
+  query: { view: LOYALTY_360, metrics: [points_liability] }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-08-22
+- id: VQ-RTL-019
+  question: "Points liability by tier"
+  query: { view: LOYALTY_360, metrics: [points_liability], dimensions: [tier], orderBy: [{ field: points_liability, dir: desc }] }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-08-25
+- id: VQ-RTL-020
+  question: "App adoption by member tier"
+  query: { view: LOYALTY_360, metrics: [app_adoption_rate], dimensions: [tier], orderBy: [{ field: app_adoption_rate, dir: desc }] }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-08-28
+- id: VQ-RTL-021
+  question: "Members by churn risk band"
+  query: { view: LOYALTY_360, metrics: [active_members], dimensions: [churn_risk_band], analysis: distribution }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-08-31
+- id: VQ-RTL-022
+  question: "Active members who joined this year"
+  query: { view: LOYALTY_360, metrics: [active_members], timeRange: { ytd: true } }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-09-03
+- id: VQ-RTL-023
+  question: "Average churn risk score for active members"
+  query: { view: LOYALTY_360, metrics: [avg_churn_risk] }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-09-06
+
+# ---------------------------------------------------------------- INVENTORY_AVAILABILITY (AG-RTL-004)
+- id: VQ-RTL-024
+  question: "What was the in-stock rate last month?"
+  query: { view: INVENTORY_AVAILABILITY, metrics: [in_stock_rate], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-RTL-004
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-09-09
+- id: VQ-RTL-025
+  question: "In-stock rate by region last month"
+  query: { view: INVENTORY_AVAILABILITY, metrics: [in_stock_rate], dimensions: [region], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: in_stock_rate, dir: desc }] }
+  agent: AG-RTL-004
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-09-12
+- id: VQ-RTL-026
+  question: "Out-of-stock rate by department last month"
+  query: { view: INVENTORY_AVAILABILITY, metrics: [out_of_stock_rate], dimensions: [department], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: out_of_stock_rate, dir: desc }] }
+  agent: AG-RTL-004
+  verified_by: retail:merch-analyst
+  verified_at: 2026-09-15
+- id: VQ-RTL-027
+  question: "Daily in-stock rate last quarter"
+  query: { view: INVENTORY_AVAILABILITY, metrics: [in_stock_rate], timeGrain: day, timeRange: { last: { n: 1, unit: quarter } }, analysis: trend }
+  agent: AG-RTL-004
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-09-18
+- id: VQ-RTL-028
+  question: "Days of supply by department last month"
+  query: { view: INVENTORY_AVAILABILITY, metrics: [avg_days_of_supply], dimensions: [department], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-RTL-004
+  verified_by: retail:merch-analyst
+  verified_at: 2026-09-21
+- id: VQ-RTL-029
+  question: "Which 10 stores had the lowest in-stock rate last month?"
+  query: { view: INVENTORY_AVAILABILITY, metrics: [in_stock_rate], dimensions: [store], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: in_stock_rate, dir: asc }], limit: 10, analysis: rank }
+  agent: AG-RTL-004
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-09-24
+- id: VQ-RTL-030
+  question: "Inventory on hand value by region last month"
+  query: { view: INVENTORY_AVAILABILITY, metrics: [inventory_value], dimensions: [region], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: inventory_value, dir: desc }] }
+  agent: AG-RTL-004
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-06-29
+- id: VQ-RTL-031
+  question: "Weekly out-of-stock rate last quarter"
+  query: { view: INVENTORY_AVAILABILITY, metrics: [out_of_stock_rate], timeGrain: week, timeRange: { last: { n: 1, unit: quarter } }, analysis: trend }
+  agent: AG-RTL-004
+  verified_by: retail:merch-analyst
+  verified_at: 2026-07-02
+- id: VQ-RTL-032
+  question: "In-stock rate by category last month"
+  query: { view: INVENTORY_AVAILABILITY, metrics: [in_stock_rate], dimensions: [category], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: in_stock_rate, dir: asc }] }
+  agent: AG-RTL-004
+  verified_by: retail:merch-analyst
+  verified_at: 2026-07-05
+- id: VQ-RTL-033
+  question: "In-stock rate by store format last quarter"
+  query: { view: INVENTORY_AVAILABILITY, metrics: [in_stock_rate], dimensions: [store_format], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-RTL-004
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-07-08
+
+# ---------------------------------------------------------------- ASSORTMENT (AG-RTL-004)
+- id: VQ-RTL-034
+  question: "Initial margin by category"
+  query: { view: ASSORTMENT, metrics: [avg_initial_margin_pct], dimensions: [category], orderBy: [{ field: avg_initial_margin_pct, dir: asc }] }
+  agent: AG-RTL-004
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-07-11
+- id: VQ-RTL-035
+  question: "What share of items are low margin by department?"
+  query: { view: ASSORTMENT, metrics: [low_margin_items_pct], dimensions: [department], orderBy: [{ field: low_margin_items_pct, dir: desc }] }
+  agent: AG-RTL-004
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-07-14
+- id: VQ-RTL-036
+  question: "How many items are in each margin band?"
+  query: { view: ASSORTMENT, metrics: [item_count], dimensions: [margin_band], analysis: distribution }
+  agent: AG-RTL-004
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-07-17
+- id: VQ-RTL-037
+  question: "Which categories have the most low-margin items?"
+  query: { view: ASSORTMENT, metrics: [low_margin_item_count], dimensions: [category], orderBy: [{ field: low_margin_item_count, dir: desc }], limit: 10, analysis: rank }
+  agent: AG-RTL-004
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-07-20
+- id: VQ-RTL-038
+  question: "Initial margin by brand type"
+  query: { view: ASSORTMENT, metrics: [avg_initial_margin_pct], dimensions: [brand_type], orderBy: [{ field: avg_initial_margin_pct, dir: desc }] }
+  agent: AG-RTL-004
+  verified_by: retail:merch-analyst
+  verified_at: 2026-07-23
+- id: VQ-RTL-039
+  question: "Private label share by department"
+  query: { view: ASSORTMENT, metrics: [private_label_share], dimensions: [department], orderBy: [{ field: private_label_share, dir: desc }] }
+  agent: AG-RTL-004
+  verified_by: retail:merch-analyst
+  verified_at: 2026-07-26
+- id: VQ-RTL-040
+  question: "What is our overall initial margin?"
+  query: { view: ASSORTMENT, metrics: [avg_initial_margin_pct] }
+  agent: AG-RTL-004
+  verified_by: retail:merch-analyst
+  verified_at: 2026-07-29
+- id: VQ-RTL-041
+  question: "Items by price band"
+  query: { view: ASSORTMENT, metrics: [item_count], dimensions: [price_band] }
+  agent: AG-RTL-004
+  verified_by: retail:merch-analyst
+  verified_at: 2026-08-01
+- id: VQ-RTL-042
+  question: "Initial margin for active items by department"
+  query: { view: ASSORTMENT, metrics: [avg_initial_margin_pct], dimensions: [department], filters: [{ dimension: lifecycle_status, op: "=", value: Active }] }
+  agent: AG-RTL-004
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-08-04
+- id: VQ-RTL-043
+  question: "Which 10 vendors supply the lowest-margin items?"
+  query: { view: ASSORTMENT, metrics: [avg_initial_margin_pct], dimensions: [vendor], orderBy: [{ field: avg_initial_margin_pct, dir: asc }], limit: 10, analysis: rank }
+  agent: AG-RTL-004
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-08-07
+
+# ---------------------------------------------------------------- PRICE_EXECUTION (AG-RTL-004)
+- id: VQ-RTL-044
+  question: "Price change compliance this year by region"
+  query: { view: PRICE_EXECUTION, metrics: [price_change_compliance_pct], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: price_change_compliance_pct, dir: asc }] }
+  agent: AG-RTL-004
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-08-10
+- id: VQ-RTL-045
+  question: "How many price changes are overdue?"
+  query: { view: PRICE_EXECUTION, metrics: [overdue_price_changes] }
+  agent: AG-RTL-004
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-08-13
+- id: VQ-RTL-046
+  question: "Overdue price changes by change type"
+  query: { view: PRICE_EXECUTION, metrics: [overdue_price_changes], dimensions: [change_type], orderBy: [{ field: overdue_price_changes, dir: desc }] }
+  agent: AG-RTL-004
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-08-16
+- id: VQ-RTL-047
+  question: "Average markdown depth by department this year"
+  query: { view: PRICE_EXECUTION, metrics: [avg_markdown_depth], dimensions: [department], timeRange: { ytd: true } }
+  agent: AG-RTL-004
+  verified_by: retail:merch-analyst
+  verified_at: 2026-08-19
+- id: VQ-RTL-048
+  question: "Which 10 stores have the most overdue price changes?"
+  query: { view: PRICE_EXECUTION, metrics: [overdue_price_changes], dimensions: [store], orderBy: [{ field: overdue_price_changes, dir: desc }], limit: 10, analysis: rank }
+  agent: AG-RTL-004
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-08-22
+
+# ---------------------------------------------------------------- RETURNS_REFUNDS (AG-RTL-001) — 7 active; refund cycle time arrives with FIX-1
+- id: VQ-RTL-049
+  question: "What was the online return rate last quarter?"
+  query: { view: RETURNS_REFUNDS, metrics: [return_rate], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-08-25
+- id: VQ-RTL-050
+  question: "Online return rate by fulfilment method last quarter"
+  query: { view: RETURNS_REFUNDS, metrics: [return_rate], dimensions: [fulfilment_method], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: return_rate, dir: desc }] }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-08-28
+- id: VQ-RTL-051
+  question: "Average order value by month this year"
+  query: { view: RETURNS_REFUNDS, metrics: [avg_order_value], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-08-31
+- id: VQ-RTL-052
+  question: "How many online orders were placed last month?"
+  query: { view: RETURNS_REFUNDS, metrics: [online_orders], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-09-03
+- id: VQ-RTL-053
+  question: "Refund value by region last quarter"
+  query: { view: RETURNS_REFUNDS, metrics: [refund_value], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: refund_value, dir: desc }] }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-09-06
+- id: VQ-RTL-054
+  question: "On-time delivery by fulfilment method last quarter"
+  query: { view: RETURNS_REFUNDS, metrics: [on_time_delivery_pct], dimensions: [fulfilment_method], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-09-09
+- id: VQ-RTL-055
+  question: "Online order value by account type this year"
+  query: { view: RETURNS_REFUNDS, metrics: [online_revenue], dimensions: [account_type], timeRange: { ytd: true } }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-09-12
+
+# ---------------------------------------------------------------- VENDOR_SUPPLY (AG-RTL-003)
+- id: VQ-RTL-056
+  question: "What share of PO cost this year was at the agreed cost?"
+  query: { view: VENDOR_SUPPLY, metrics: [cost_compliance_pct], timeRange: { ytd: true } }
+  agent: AG-RTL-003
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-09-15
+- id: VQ-RTL-057
+  question: "Off-agreement spend by vendor category this year"
+  query: { view: VENDOR_SUPPLY, metrics: [off_agreement_spend], dimensions: [vendor_category], timeRange: { ytd: true }, orderBy: [{ field: off_agreement_spend, dir: desc }], analysis: contribution }
+  agent: AG-RTL-003
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-09-18
+- id: VQ-RTL-058
+  question: "Bottom 5 vendors by OTIF this year"
+  query: { view: VENDOR_SUPPLY, metrics: [vendor_otif_pct], dimensions: [vendor], timeRange: { ytd: true }, orderBy: [{ field: vendor_otif_pct, dir: asc }], limit: 5, analysis: rank }
+  agent: AG-RTL-003
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-09-21
+- id: VQ-RTL-059
+  question: "PO lead time by quarter this year"
+  query: { view: VENDOR_SUPPLY, metrics: [po_lead_time_days], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-RTL-003
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-09-24
+- id: VQ-RTL-060
+  question: "Total purchase-order cost by vendor category this year"
+  query: { view: VENDOR_SUPPLY, metrics: [total_po_cost], dimensions: [vendor_category], timeRange: { ytd: true }, orderBy: [{ field: total_po_cost, dir: desc }] }
+  agent: AG-RTL-003
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-06-29
+- id: VQ-RTL-061
+  question: "Vendor fill rate by vendor category this year"
+  query: { view: VENDOR_SUPPLY, metrics: [vendor_fill_rate_pct], dimensions: [vendor_category], timeRange: { ytd: true }, orderBy: [{ field: vendor_fill_rate_pct, dir: asc }] }
+  agent: AG-RTL-003
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-07-02
+- id: VQ-RTL-062
+  question: "Vendor OTIF by month this year"
+  query: { view: VENDOR_SUPPLY, metrics: [vendor_otif_pct], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-RTL-003
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-07-05
+- id: VQ-RTL-063
+  question: "Cost compliance for preferred versus other vendors this year"
+  query: { view: VENDOR_SUPPLY, metrics: [cost_compliance_pct], dimensions: [preferred_vendor], timeRange: { ytd: true } }
+  agent: AG-RTL-003
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-07-08
+- id: VQ-RTL-064
+  question: "Which 10 vendors had the most off-agreement spend this year?"
+  query: { view: VENDOR_SUPPLY, metrics: [off_agreement_spend], dimensions: [vendor], timeRange: { ytd: true }, orderBy: [{ field: off_agreement_spend, dir: desc }], limit: 10, analysis: rank }
+  agent: AG-RTL-003
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-07-11
+- id: VQ-RTL-065
+  question: "How many PO lines were raised last quarter?"
+  query: { view: VENDOR_SUPPLY, metrics: [po_lines], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-RTL-003
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-07-14
+
+# ---------------------------------------------------------------- SHRINK_AUDIT (lifecycle demo, no agent yet)
+- id: VQ-RTL-066
+  question: "What is the shrink rate by region?"
+  query: { view: SHRINK_AUDIT, metrics: [shrink_rate_pct], dimensions: [region], orderBy: [{ field: shrink_rate_pct, dir: desc }] }
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-07-17
+- id: VQ-RTL-067
+  question: "Which 10 stores have the highest shrink rate?"
+  query: { view: SHRINK_AUDIT, metrics: [shrink_rate_pct], dimensions: [store], orderBy: [{ field: shrink_rate_pct, dir: desc }], limit: 10, analysis: rank }
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-07-20
+- id: VQ-RTL-068
+  question: "What share of counts are overdue?"
+  query: { view: SHRINK_AUDIT, metrics: [counts_overdue_pct] }
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-07-23
+- id: VQ-RTL-069
+  question: "Shrink risk score by count category"
+  query: { view: SHRINK_AUDIT, metrics: [avg_shrink_risk], dimensions: [count_category], orderBy: [{ field: avg_shrink_risk, dir: desc }] }
+  verified_by: retail:commercial-dpo
+  verified_at: 2026-07-26
+
+# ---------------------------------------------------------------- Pending FIX-1 (DP-RTL-005 certification demo)
+- id: VQ-RTL-071
+  question: "What was the refund cycle time last quarter?"
+  query: { view: RETURNS_REFUNDS, metrics: [refund_cycle_days], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-09-21
+  status: pending_fix
+- id: VQ-RTL-072
+  question: "Refund cycle time by fulfilment method last quarter"
+  query: { view: RETURNS_REFUNDS, metrics: [refund_cycle_days], dimensions: [fulfilment_method], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: refund_cycle_days, dir: desc }] }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-09-21
+  status: pending_fix
+- id: VQ-RTL-073
+  question: "Refund cycle time by month this year"
+  query: { view: RETURNS_REFUNDS, metrics: [refund_cycle_days], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-RTL-001
+  verified_by: retail:customer-steward
+  verified_at: 2026-09-21
+  status: pending_fix

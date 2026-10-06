@@ -1,0 +1,38 @@
+id: AG-BNK-001
+name: Relationship Manager Assistant
+domain: Customer & KYC
+status: PRODUCTION
+owner: banking:lending-dpo
+on_call: Retail Data Ops
+avatar: { icon: users, hue: 210 }
+capability: "Answers questions on active customers, digital engagement, relationship depth and balances, KYC currency and card spend."
+personas_served: [Relationship Manager, Market Banking Manager, Head of Retail Banking]
+out_of_scope: ["individual customer account lookups", "credit decisions or credit limit changes", "account opening or closure", "marketing message drafting"]
+products:
+  - { id: DP-BNK-001, columns: "*" }
+  - { id: DP-BNK-004, columns: [card_product, merchant_category, approved_amount, amount, region] }
+tools:
+  - { tool: semantic_query, views: [CUSTOMER_360, CARD_PAYMENTS], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-BNK-DATA-GOVERNANCE, DOC-BNK-DIGITAL-STANDARDS, DOC-BNK-BSA-AML] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+  - { tool: request_access_link }
+kpi_coverage:
+  - { kpi: KPI-BNK-ACTIVE, grains: [], slices: [region, segment, tenure_band], depth: value }
+  - { kpi: KPI-BNK-DIGITAL, grains: [], slices: [region, segment, age_band], depth: rank_drivers }
+  - { kpi: KPI-BNK-PPC, grains: [], slices: [region, segment, tenure_band], depth: explain }
+  - { kpi: KPI-BNK-REL-BAL, grains: [], slices: [region, segment], depth: rank_drivers }
+  - { kpi: KPI-BNK-ATTRITION, grains: [], slices: [region, segment, tenure_band], depth: explain }
+  - { kpi: KPI-BNK-KYC-OVERDUE, grains: [], slices: [region, kyc_risk_rating, segment], depth: rank_drivers }
+  - { kpi: KPI-BNK-CARD-VOL, grains: [month, quarter], slices: [region, merchant_category, card_product], depth: trend }
+  - { kpi: KPI-BNK-TICKET, grains: [month, quarter], slices: [merchant_category, card_product], depth: trend }
+instructions: [INS-BNK-001-P, INS-BNK-001-R, INS-BNK-001-G, INS-BNK-001-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: masked, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-BNK-008, SC-BNK-009, SC-BNK-010, SC-BNK-011, SC-BNK-012, SC-BNK-013]
+quality_fix:
+  feedback_question: "What share of our customers are mobile-first?"
+  fix: { type: synonym, payload: { term: mobile-first, synonyms: [mobile first, app-first], maps_to: { kind: metric, ref: digital_active_rate } } }
+  eval_before_pct: 88
+  eval_after_pct: 94

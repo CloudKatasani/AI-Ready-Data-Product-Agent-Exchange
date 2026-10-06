@@ -1,0 +1,25 @@
+id: DP-RTL-002
+name: Store & Digital Sales
+domain: Sales & Channels
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 3.1.0
+owner: retail:commercial-dpo
+steward: retail:customer-steward
+description: Store and web-store sales at line grain with stores, items, channels, promotions and comparable-store status.
+purpose: Single governed source for net sales, gross margin and basket metrics by region, store, department and channel.
+decision: { persona: VP Store Operations, decision: "Which regions and stores get next quarter's labour and marketing investment", cadence: Quarterly, workaround: "Finance flash report rebuilt from POS exports every Monday", consequence: "Investment follows new-store openings instead of underlying like-for-like performance" }
+sample_questions: ["Net sales by region last quarter", "Top 10 stores by net sales", "Is gross margin rate on target this year?"]
+semantic_view: SALES_PERFORMANCE
+output_ports:
+  - { kind: semantic, ref: SALES_PERFORMANCE }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_RTL_002_STORE_DIGITAL_SALES }
+  - { kind: agent, ref: AG-RTL-002 }
+sla: { freshness_minutes: 60, availability_pct: 99.5, max_null_rate_pct: 0.5 }
+kpis: [KPI-RTL-NET-SALES, KPI-RTL-GM-PCT, KPI-RTL-GM, KPI-RTL-UNITS, KPI-RTL-TXN, KPI-RTL-BASKET, KPI-RTL-PROMO-SHARE, KPI-RTL-DIGITAL-SHARE, KPI-RTL-MEMBER-SHARE]
+upstream: [CONFORMED_GOLD.FCT_SALES_LINE, CONFORMED_GOLD.DIM_STORE, CONFORMED_GOLD.DIM_ITEM]
+consumers: [Finance, Store operations, Merchandising, Sales Performance Analyst agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-RTL-002

@@ -1,0 +1,90 @@
+# Loan portfolio DQ rules.
+- id: DQ-BNK-024
+  object: CONFORMED_GOLD.FCT_LOAN_BALANCE
+  column: principal
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every loan-month carries principal (total loans and every credit ratio depend on it).
+- id: DQ-BNK-025
+  object: CONFORMED_GOLD.FCT_LOAN_BALANCE
+  column: principal
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: Principal is positive for every funded loan in the snapshot.
+- id: DQ-BNK-026
+  object: CONFORMED_GOLD.FCT_LOAN_BALANCE
+  column: dpd_days
+  dimension: validity
+  assertion: "min >= 0"
+  severity: critical
+  alert_route: steward
+  description: Days past due are never negative.
+- id: DQ-BNK-027
+  object: CONFORMED_GOLD.FCT_LOAN_BALANCE
+  column: dpd_days
+  dimension: accuracy
+  assertion: "max <= 3650"
+  severity: medium
+  alert_route: engineering
+  description: No loan is more than ten years past due; larger values indicate a missing charge-off.
+- id: DQ-BNK-028
+  object: CONFORMED_GOLD.FCT_LOAN_BALANCE
+  column: non_performing
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every loan-month carries a non-performing flag for the NPL ratio.
+- id: DQ-BNK-029
+  object: CONFORMED_GOLD.FCT_LOAN_BALANCE
+  column: held_for_sale
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every loan-month carries a held-for-sale flag so the BR-BNK-012 exclusion can be applied.
+- id: DQ-BNK-030
+  object: CONFORMED_GOLD.FCT_LOAN_BALANCE
+  column: balance_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per loan-month after CDC deduplication.
+- id: DQ-BNK-031
+  object: CONFORMED_GOLD.FCT_LOAN_BALANCE
+  column: month_end
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: The latest month-end loan snapshot has landed.
+- id: DQ-BNK-032
+  object: CONFORMED_GOLD.DIM_LOAN
+  column: loan_segment
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Residential mortgage, Home equity, Auto, Personal, Commercial real estate, Commercial & industrial]
+  severity: medium
+  alert_route: steward
+  description: Loan segments conform to the credit policy segment list.
+- id: DQ-BNK-033
+  object: CONFORMED_GOLD.DIM_LOAN
+  column: fico_score
+  dimension: validity
+  assertion: "min >= 300"
+  severity: medium
+  alert_route: steward
+  description: Credit scores are on the 300–850 scale.
+- id: DQ-BNK-034
+  object: CONFORMED_GOLD.DIM_LOAN
+  column: loan_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per loan.

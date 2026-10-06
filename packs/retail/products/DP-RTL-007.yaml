@@ -1,0 +1,24 @@
+id: DP-RTL-007
+name: Shrink & Count Compliance
+domain: Inventory & Availability
+archetype: CONSUMER_ALIGNED
+initial_status: IN_DEVELOPMENT
+seed_stage: 6
+version: 0.4.0
+owner: retail:commercial-dpo
+steward: retail:customer-steward
+description: Store category cycle counts with shrink, inventory accuracy and count-cycle status, to prioritise loss-prevention work.
+purpose: Prioritise loss-prevention visits where overdue counts coincide with high shrink.
+decision: { persona: Director of Loss Prevention, decision: "Which stores get a loss-prevention visit and full recount next month", cadence: Monthly, workaround: "Count sheets and incident logs cross-checked by hand", consequence: "Visits rotate on a calendar while ST-017-style hot spots keep losing stock" }
+sample_questions: ["What is the shrink rate by store?", "How many counts are overdue?", "Count cycle compliance by region"]
+semantic_view: SHRINK_AUDIT
+output_ports:
+  - { kind: semantic, ref: SHRINK_AUDIT }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_RTL_007_SHRINK_COUNT_COMPLIANCE }
+sla: { freshness_minutes: 10080, availability_pct: 98.0, max_null_rate_pct: 2.0 }
+kpis: [KPI-RTL-SHRINK, KPI-RTL-COUNT-OVERDUE, KPI-RTL-SHRINK-RISK]
+upstream: [CONFORMED_GOLD.FCT_CYCLE_COUNT, CONFORMED_GOLD.DIM_STORE]
+consumers: [Loss prevention]
+lifecycle_seed: { artifacts: auto, open_proposals: true }
+certification_script: null
+value_case: VC-RTL-007

@@ -1,0 +1,68 @@
+name: INVENTORY_AVAILABILITY
+description: Daily store-item inventory positions, in-stock and days of supply
+tables:
+  - { alias: v, fqn: CONFORMED_GOLD.FCT_STORE_INVENTORY, pk: snapshot_key }
+  - { alias: st, fqn: CONFORMED_GOLD.DIM_STORE, pk: store_key }
+  - { alias: i, fqn: CONFORMED_GOLD.DIM_ITEM, pk: item_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: v.store_key, to: st.store_key }
+  - { from: v.item_key, to: i.item_key }
+  - { from: v.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: st.region, label: Region, synonyms: [territory, store region, area], term: GT-RTL-REGION }
+  - { name: store, expr: st.store_id, label: Store, synonyms: [shop, location, stores], term: GT-RTL-STORE }
+  - { name: store_format, expr: st.store_format, label: Store format, synonyms: [format, store type] }
+  - { name: department, expr: i.department, label: Department, synonyms: [dept, division], term: GT-RTL-DEPARTMENT }
+  - { name: category, expr: i.category, label: Category, synonyms: [merchandise category, product category], term: GT-RTL-CATEGORY }
+time_dimensions:
+  - { name: snapshot_date, expr: d.date, default: true }
+facts:
+  - { name: on_hand_units, expr: v.on_hand_units }
+  - { name: inventory_value_at_cost, expr: v.inventory_value }
+metrics:
+  - name: in_stock_rate
+    label: In-stock rate
+    expr: 100.0 * AVG(CASE WHEN v.in_stock THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 2
+    direction: higher_is_better
+    synonyms: [on-shelf availability, availability, osa, in stock]
+    term: GT-RTL-IN-STOCK
+    description: Share of store-item-days with stock on hand
+  - name: out_of_stock_rate
+    label: Out-of-stock rate
+    expr: 100.0 - 100.0 * AVG(CASE WHEN v.in_stock THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [out of stocks, oos rate, stockouts, empty shelves]
+    term: GT-RTL-IN-STOCK
+    description: Share of store-item-days with no stock on hand
+  - name: avg_days_of_supply
+    label: Days of supply
+    expr: AVG(v.days_of_supply)
+    unit: days
+    decimals: 1
+    direction: neutral
+    synonyms: [weeks of cover, days of cover, cover]
+    term: GT-RTL-DAYS-OF-SUPPLY
+    description: Mean days of supply on hand at the current rate of sale (in-stock positions only)
+  - name: inventory_value
+    label: Inventory on hand value
+    expr: SUM(v.inventory_value) / COUNT(DISTINCT v.snapshot_date)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [stock value, inventory at cost, on hand value]
+    term: GT-RTL-INVENTORY-POSITION
+    description: Average daily value at cost of the sampled on-hand inventory
+  - name: store_item_days
+    label: Store-item-days
+    expr: COUNT(*)
+    unit: positions
+    decimals: 0
+    synonyms: [inventory positions, positions sampled]
+    term: GT-RTL-INVENTORY-POSITION
+    description: Count of store-item-day inventory positions
+products: [DP-RTL-003]

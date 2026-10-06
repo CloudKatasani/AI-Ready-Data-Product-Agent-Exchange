@@ -1,0 +1,170 @@
+# Harbor & Pine business rules (synthetic). Rules with an `apply` block are applied by the metric
+# compiler as default filters; the rest are definitions, thresholds and policies cited in answers.
+
+# ── Sales ───────────────────────────────────────────────────────────────────────────────────────────
+- id: BR-RTL-001
+  domain: Sales
+  text: "Net sales are sales after line discounts and markdowns, excluding sales tax, gift card sales and services; returns are reported separately and are not netted from net sales in this product."
+  kind: definition
+  metric: net_sales
+  source_doc: DOC-RTL-SALES-REPORTING
+- id: BR-RTL-002
+  domain: Sales
+  text: "A comparable (comp) store has been open for at least 13 full months at the reporting date and is not closed or trading from a reduced footprint for remodel."
+  kind: definition
+  source_doc: DOC-RTL-SALES-REPORTING
+- id: BR-RTL-003
+  domain: Sales
+  text: "Gross margin is net sales less cost of goods sold at weighted average cost; gross margin rate divides by net sales and is never averaged across stores or categories."
+  kind: definition
+  metric: gross_margin_pct
+  source_doc: DOC-RTL-SALES-REPORTING
+- id: BR-RTL-004
+  domain: Sales
+  text: "Web-store and click & collect sales are attributed to the fulfilling store (or the member's nearest store for ship-to-home) so channel sales roll up to store regions."
+  kind: definition
+  metric: digital_sales_share
+  source_doc: DOC-RTL-SALES-REPORTING
+- id: BR-RTL-005
+  domain: Sales
+  text: "Sales lines dated before a store's opening date are pre-opening test transactions and are excluded from every sales metric."
+  kind: definition
+  metric: net_sales
+  source_doc: DOC-RTL-SALES-REPORTING
+- id: BR-RTL-012
+  domain: Sales
+  text: "Sales KPIs are reported on comparable stores only unless the question explicitly asks for all stores, including new stores."
+  kind: filter
+  metric: net_sales
+  source_doc: DOC-RTL-SALES-REPORTING
+  apply:
+    filter: { dimension: comp_store, op: "=", value: true }
+    unless_question_mentions: [all stores, including new stores, including non-comp, non-comparable stores, total company]
+
+# ── Merchandising & pricing ─────────────────────────────────────────────────────────────────────────
+- id: BR-RTL-006
+  domain: Merchandising
+  text: "Initial margin bands: below 35% is Low, 35% to 49% is Medium, 50% and above is High. Low-margin items in Active status are reviewed at the quarterly line review."
+  kind: threshold
+  metric: low_margin_items_pct
+  source_doc: DOC-RTL-MERCH-PRICING
+- id: BR-RTL-007
+  domain: Pricing
+  text: "A price change counts as compliant only when it is executed in store on or before its effective date; unexecuted changes past their effective date are overdue and count against compliance."
+  kind: definition
+  metric: price_change_compliance_pct
+  source_doc: DOC-RTL-MERCH-PRICING
+- id: BR-RTL-008
+  domain: Pricing
+  text: "Stores with more than 50 overdue price changes are escalated to the regional operations manager and audited for pricing accuracy within 7 days."
+  kind: threshold
+  metric: overdue_price_changes
+  source_doc: DOC-RTL-MERCH-PRICING
+- id: BR-RTL-009
+  domain: Merchandising
+  text: "Promotional sales are net sales on any line sold below ticket price through a promotion or markdown; promotional share above 30% of a category's sales triggers a promotion effectiveness review."
+  kind: threshold
+  metric: promo_sales_share
+  source_doc: DOC-RTL-MERCH-PRICING
+
+# ── Inventory ───────────────────────────────────────────────────────────────────────────────────────
+- id: BR-RTL-010
+  domain: Inventory
+  text: "An item is in stock in a store on a day when on-hand units are greater than zero in the perpetual inventory record at the end of the day; the in-stock target is 95% or better."
+  kind: definition
+  metric: in_stock_rate
+  source_doc: DOC-RTL-INVENTORY-STANDARD
+- id: BR-RTL-011
+  domain: Inventory
+  text: "Days of supply is measured only on in-stock positions as on-hand units divided by the trailing average daily rate of sale."
+  kind: definition
+  metric: avg_days_of_supply
+  source_doc: DOC-RTL-INVENTORY-STANDARD
+- id: BR-RTL-013
+  domain: Inventory
+  text: "Each store category is fully counted on a 6-, 12- or 18-month cycle set by its shrink risk; a category is overdue when its last full count plus its cycle is before the reporting date. Counts scoring 70 or more on risk are recounted within 30 days."
+  kind: threshold
+  metric: counts_overdue_pct
+  source_doc: DOC-RTL-INVENTORY-STANDARD
+
+# ── Loyalty ─────────────────────────────────────────────────────────────────────────────────────────
+- id: BR-RTL-014
+  domain: Loyalty
+  text: "An active member has made a purchase or redeemed points in the last 12 months; app adoption, churn risk and points liability are measured over active members only."
+  kind: definition
+  metric: active_members
+  source_doc: DOC-RTL-LOYALTY-PROGRAM
+- id: BR-RTL-015
+  domain: Loyalty
+  text: "One reward point is worth one cent on redemption; points liability is the value of unredeemed points held by active members."
+  kind: definition
+  metric: points_liability
+  source_doc: DOC-RTL-LOYALTY-PROGRAM
+
+# ── Returns & online orders ─────────────────────────────────────────────────────────────────────────
+- id: BR-RTL-016
+  domain: Returns
+  text: "A web-store order is on time when it is delivered, or ready for collection, within the number of days promised at checkout."
+  kind: definition
+  metric: on_time_delivery_pct
+  source_doc: DOC-RTL-RETURNS-POLICY
+- id: BR-RTL-020
+  domain: Returns
+  text: "Average order value is reported for consumer orders only unless the question asks for all accounts; trade (business) account orders are several times larger and distort it."
+  kind: filter
+  metric: avg_order_value
+  source_doc: DOC-RTL-RETURNS-POLICY
+  apply:
+    filter: { dimension: account_type, op: "=", value: Consumer }
+    unless_question_mentions: [all accounts, including trade]
+- id: BR-RTL-021
+  domain: Returns
+  text: "Return rate and refund cycle time only include orders more than 30 days old, so the return window is complete."
+  kind: filter
+  metric: return_rate
+  source_doc: DOC-RTL-RETURNS-POLICY
+  apply:
+    filter: { dimension: mature_order, op: "=", value: true }
+    unless_question_mentions: []
+- id: BR-RTL-022
+  domain: Returns
+  text: "Card refunds must be issued within 10 business days of the return being received; refund cycle time above 7 days on average triggers an operations review."
+  kind: threshold
+  metric: refund_cycle_days
+  source_doc: DOC-RTL-RETURNS-POLICY
+
+# ── Supply chain ────────────────────────────────────────────────────────────────────────────────────
+- id: BR-RTL-023
+  domain: Supply chain
+  text: "Off-agreement spend is any purchase-order cost not placed at the cost agreed in an active vendor agreement, including spot buys. Cost compliance is agreed-cost spend divided by total PO cost."
+  kind: definition
+  metric: off_agreement_spend
+  source_doc: DOC-RTL-VENDOR-COMPLIANCE
+- id: BR-RTL-024
+  domain: Supply chain
+  text: "OTIF is measured per received PO line: delivered on or before the promised date and in full quantity. Vendors below 90% OTIF for a quarter enter a vendor improvement plan and may be charged compliance fees."
+  kind: threshold
+  metric: vendor_otif_pct
+  source_doc: DOC-RTL-VENDOR-COMPLIANCE
+
+# ── Governance policies ─────────────────────────────────────────────────────────────────────────────
+- id: BR-RTL-017
+  domain: Governance
+  text: "Member names, emails, phone numbers, street addresses and care notes are PII and are masked for every persona without PII clearance, in every surface including agent answers."
+  kind: policy
+  source_doc: DOC-RTL-DATA-GOVERNANCE
+- id: BR-RTL-018
+  domain: Governance
+  text: "Regional personas see only rows for their own store region; other regions and company totals are not disclosed to them."
+  kind: policy
+  source_doc: DOC-RTL-DATA-GOVERNANCE
+- id: BR-RTL-019
+  domain: Governance
+  text: "Agents answer with aggregates only. Requests for an individual member's purchases, points, orders, contact details or history are declined and redirected to the customer care process."
+  kind: policy
+  source_doc: DOC-RTL-DATA-GOVERNANCE
+- id: BR-RTL-025
+  domain: Governance
+  text: "Vendor cost prices, allowances, agreement terms and bank details are commercially confidential; supply-chain answers report cost, compliance and delivery performance only."
+  kind: policy
+  source_doc: DOC-RTL-VENDOR-COMPLIANCE

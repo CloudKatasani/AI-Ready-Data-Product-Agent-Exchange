@@ -1,0 +1,47 @@
+id: retail
+name: Retail & CPG
+version: 1.0.0
+depth: deep
+code: RTL
+industry: Omnichannel retail & consumer goods
+company:
+  name: Harbor & Pine
+  short: HPR
+  hq: Port Calder
+  description: Omnichannel home, apparel and everyday-goods retailer with 60 stores, a web store and a 1.1M-member loyalty programme across five regions
+database: HPR_AI_PLATFORM
+locale: en-US
+currency: USD
+asOf: 2026-09-30
+seed: 20261006
+regions: [Northeast, Southeast, Midwest, Southwest, Pacific]
+overridable:
+  regions: true
+  companyName: true
+  terms: [store, loyalty member, department]
+home:
+  heroQuestion: "What were net sales by region last quarter, comparable stores only?"
+  heroAgent: AG-RTL-002
+  headlineKpis: [KPI-RTL-NET-SALES, KPI-RTL-GM-PCT, KPI-RTL-INSTOCK, KPI-RTL-RETURN-RATE]
+  theatreScenarios: [SC-RTL-001, SC-RTL-007, SC-RTL-012]
+icon: shopping-bag
+hook: Sales, inventory, loyalty and supplier data — governed for AI
+story_roles:
+  heroScenario: SC-RTL-001
+  certDemoProduct: DP-RTL-005
+  lifecycleDemoProduct: DP-RTL-007
+  incidentForStory: INC-RTL-LATE-FEED
+  knockoutKpi: KPI-RTL-NET-SALES
+  qualityFixAgent: AG-RTL-001
+lint_terms:
+  - Harbor & Pine
+  - Port Calder
+  - planogram
+  - SKU
+  - loyalty
+  - basket
+  - in-stock
+  - markdowns
+  - OTIF
+  - comp store
+  - click & collect

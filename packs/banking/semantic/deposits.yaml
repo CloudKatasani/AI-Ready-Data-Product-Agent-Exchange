@@ -1,0 +1,75 @@
+name: DEPOSITS
+description: Month-end deposit balances, funding cost and uninsured concentration (account-month grain)
+tables:
+  - { alias: b, fqn: CONFORMED_GOLD.FCT_DEPOSIT_BALANCE, pk: deposit_balance_key }
+  - { alias: br, fqn: CONFORMED_GOLD.DIM_BRANCH, pk: branch_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: b.branch_key, to: br.branch_key }
+  - { from: b.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: br.region, label: Market, synonyms: [region, territory, footprint], term: GT-BNK-MARKET }
+  - { name: branch, expr: br.branch_name, label: Branch, synonyms: [banking center, location], term: GT-BNK-BRANCH }
+  - { name: deposit_product, expr: b.deposit_product, label: Deposit product, synonyms: [account type, product type, deposit type] }
+  - { name: deposit_type, expr: b.deposit_type, label: Interest bearing, synonyms: [interest-bearing, dda] }
+  - { name: segment, expr: b.segment, label: Customer segment, synonyms: [customer type, tier], term: GT-BNK-SEGMENT }
+time_dimensions:
+  - { name: month_end, expr: d.date, default: true }
+facts:
+  - { name: ledger_balance, expr: b.ledger_balance }
+  - { name: interest_expense, expr: b.interest_expense }
+metrics:
+  - name: total_deposits
+    label: Total deposits
+    expr: SUM(b.ledger_balance) / COUNT(DISTINCT b.date_key)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [deposits, deposit balances, deposit base, funding]
+    term: GT-BNK-DEPOSITS
+    description: Average month-end ledger balance across the months in the period (governed account sample)
+    naive_expr: SUM(b.ledger_balance)
+  - name: cost_of_deposits
+    label: Cost of deposits
+    expr: 100.0 * 12 * SUM(b.interest_expense) / SUM(b.ledger_balance)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [deposit cost, funding cost, deposit rate paid, interest paid on deposits]
+    term: GT-BNK-COST-OF-DEPOSITS
+    description: Annualised interest expense as a share of deposit balances
+  - name: avg_deposit_balance
+    label: Average account balance
+    expr: AVG(b.ledger_balance)
+    unit: USD
+    decimals: 0
+    synonyms: [average deposit balance, balance per account, average account size]
+    term: GT-BNK-DEPOSITS
+    description: Mean month-end ledger balance per deposit account
+  - name: noninterest_bearing_share
+    label: Non-interest-bearing share
+    expr: 100.0 * SUM(CASE WHEN b.deposit_type = 'Non-interest-bearing' THEN b.ledger_balance ELSE 0 END) / SUM(b.ledger_balance)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [nib share, dda mix, free funding share, non interest bearing deposits]
+    term: GT-BNK-NIB
+    description: Share of deposit balances held in non-interest-bearing checking accounts
+  - name: uninsured_deposit_share
+    label: Uninsured deposit share
+    expr: 100.0 * SUM(b.uninsured_balance) / SUM(b.ledger_balance)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [uninsured deposits, deposits above insurance limit, uninsured share]
+    term: GT-BNK-UNINSURED
+    description: Share of balances above the $250,000 insured limit (account-level proxy)
+  - name: deposit_accounts
+    label: Deposit accounts
+    expr: COUNT(DISTINCT b.account_id)
+    unit: accounts
+    decimals: 0
+    synonyms: [number of deposit accounts, account count]
+    term: GT-BNK-DEPOSIT-ACCOUNT
+    description: Distinct deposit accounts with a month-end balance in the period
+products: [DP-BNK-002]

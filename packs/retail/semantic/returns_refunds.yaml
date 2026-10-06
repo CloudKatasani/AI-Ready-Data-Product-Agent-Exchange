@@ -1,0 +1,90 @@
+name: RETURNS_REFUNDS
+description: Web-store orders, returns and refunds with the ordering member
+tables:
+  - { alias: o, fqn: CONFORMED_GOLD.FCT_ONLINE_ORDER, pk: order_key }
+  - { alias: m, fqn: CONFORMED_GOLD.DIM_MEMBER, pk: member_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: o.member_key, to: m.member_key }
+  - { from: o.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: m.region, label: Region, synonyms: [territory, home region, area], term: GT-RTL-REGION }
+  - { name: tier, expr: m.tier, label: Member tier, synonyms: [loyalty tier, membership tier], term: GT-RTL-TIER }
+  - { name: account_type, expr: o.account_type, label: Account type, synonyms: [consumer or trade, trade accounts], term: GT-RTL-ACCOUNT-TYPE }
+  - { name: fulfilment_method, expr: o.fulfilment_method, label: Fulfilment method, synonyms: [delivery method, fulfillment] }
+  - { name: returned, expr: o.returned, label: Returned, synonyms: [return flag] }
+  - { name: mature_order, expr: o.mature, label: Order older than 30 days }
+  - { name: member_email, expr: m.email, label: Member email, synonyms: [email] }
+time_dimensions:
+  - { name: order_date, expr: d.date, default: true }
+facts:
+  - { name: order_value, expr: o.order_value }
+  - { name: returned_value, expr: o.returned_value }
+metrics:
+  - name: avg_order_value
+    label: Average order value
+    expr: AVG(o.order_value)
+    unit: USD
+    decimals: 2
+    direction: higher_is_better
+    synonyms: [aov, order size, average online order]
+    term: GT-RTL-AOV
+    description: Mean value of consumer web-store orders
+    default_filters: [ { rule: BR-RTL-020 } ]
+  - name: online_revenue
+    label: Online order value
+    expr: SUM(o.order_value)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [web sales, online sales, ecommerce revenue]
+    term: GT-RTL-ONLINE-ORDER
+    description: Total value of web-store orders placed in the period
+  - name: refund_value
+    label: Refund value
+    expr: SUM(o.returned_value)
+    unit: USD
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [refunds, refunded value, value refunded]
+    term: GT-RTL-REFUND
+    description: Value refunded on returned web-store orders placed in the period
+  - name: online_orders
+    label: Online orders
+    expr: COUNT(*)
+    unit: orders
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [web orders, number of orders, orders placed]
+    term: GT-RTL-ONLINE-ORDER
+    description: Web-store orders placed in the period
+  - name: return_rate
+    label: Online return rate
+    expr: 100.0 * SUM(o.returned_value) / SUM(o.order_value)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [returns rate, return percentage, rate of returns]
+    term: GT-RTL-RETURN-RATE
+    description: Value returned as a share of order value, on orders whose 30-day return window has closed
+    default_filters: [ { rule: BR-RTL-021 } ]
+  - name: refund_cycle_days
+    label: Refund cycle time
+    expr: AVG(CASE WHEN o.returned THEN o.days_to_refund END)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [days to refund, refund time, refund turnaround]
+    term: GT-RTL-REFUND-CYCLE
+    description: Mean days from return received to refund issued, on orders whose return window has closed
+    default_filters: [ { rule: BR-RTL-021 } ]
+  - name: on_time_delivery_pct
+    label: On-time delivery
+    expr: 100.0 * AVG(CASE WHEN o.delivered_on_time THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [delivery on time, otd, delivered on promise]
+    term: GT-RTL-ONLINE-ORDER
+    description: Share of web-store orders delivered or ready for collection within the promised days
+products: [DP-RTL-005]

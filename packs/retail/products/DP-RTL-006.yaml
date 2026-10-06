@@ -1,0 +1,25 @@
+id: DP-RTL-006
+name: Vendor Supply Performance
+domain: Supply Chain & Vendors
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 2.0.3
+owner: retail:commercial-dpo
+steward: retail:customer-steward
+description: Purchase-order lines with agreed-cost compliance, vendor OTIF, fill rate and lead time.
+purpose: Vendor scorecards, line reviews and agreed-cost compliance reporting.
+decision: { persona: VP Supply Chain, decision: "Which vendors enter improvement plans and which categories need new cost agreements", cadence: Quarterly, workaround: "ERP spend cube refreshed monthly by a contractor", consequence: "Spot buying persists in seasonal decor and electronics accessories" }
+sample_questions: ["What share of PO cost this year was at the agreed cost?", "Which vendors have OTIF below 90%?", "Off-agreement spend by vendor category"]
+semantic_view: VENDOR_SUPPLY
+output_ports:
+  - { kind: semantic, ref: VENDOR_SUPPLY }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_RTL_006_VENDOR_SUPPLY }
+  - { kind: agent, ref: AG-RTL-003 }
+sla: { freshness_minutes: 1440, availability_pct: 99.0, max_null_rate_pct: 1.0 }
+kpis: [KPI-RTL-PO-COST, KPI-RTL-COST-COMP, KPI-RTL-OFF-AGREEMENT, KPI-RTL-OTIF, KPI-RTL-FILL, KPI-RTL-LEAD-TIME]
+upstream: [CONFORMED_GOLD.FCT_PO_LINE, CONFORMED_GOLD.DIM_VENDOR]
+consumers: [Buying, Category directors, Finance, Supply Chain Copilot agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-RTL-006

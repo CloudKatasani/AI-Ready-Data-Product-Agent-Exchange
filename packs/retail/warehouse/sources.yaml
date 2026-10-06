@@ -1,0 +1,341 @@
+# Bronze source tables for Harbor & Pine (HPR_AI_PLATFORM).
+# Converted from the AI-Ready retail generators and the Marketplace RTL manifests. Store, vendor, agreement,
+# PO line and promotion tables are full populations at every scale so store rankings and vendor indices stay
+# calibrated; member, sales, inventory and order tables scale S/M/L.
+tables:
+  - name: MDM_STORE
+    system: Store master (MDM)
+    description: Store master with region, format, opening date and remodel status
+    key: store_id
+    rows: { S: 60, M: 60, L: 60 }
+    cdc_noise: { duplicate_updates_pct: 2 }
+    columns:
+      - { name: store_id, type: VARCHAR, gen: { seq: { prefix: "ST-", pad: 3 } } }
+      - { name: store_name, type: VARCHAR, gen: { template: "Store {store_id}" }, dirty: false }
+      - { name: region, type: VARCHAR, gen: { choice: { values: [Northeast, Southeast, Midwest, Southwest, Pacific], weights: [27, 21, 22, 13, 17] } }, dirty: false }
+      - { name: store_format, type: VARCHAR, gen: { choice: { values: [Standard, Neighborhood, Outlet], weights: [58, 27, 15] } } }
+      - { name: open_date, type: DATE, gen: { date: { from: "1996-01-01", to: "2023-06-30" } } }
+      - { name: under_remodel, type: BOOLEAN, gen: { bernoulli: 0.04 } }
+      - { name: selling_sq_ft, type: INTEGER, gen: { uniform: { min: 18000, max: 64000 } } }
+    plant:
+      - id: P-RTL-01
+        description: "Eight new Southwest stores (ST-053..ST-060) opened 2025-09-15 — not yet comparable"
+        where: { store_id: { in: [ST-053, ST-054, ST-055, ST-056, ST-057, ST-058, ST-059, ST-060] } }
+        adjust: { region: { set: Southwest }, open_date: { set: 20346 }, under_remodel: { set: false }, store_format: { set: Standard } }
+      - id: P-RTL-02
+        description: "ST-007 is the Northeast flagship store"
+        where: { store_id: ST-007 }
+        adjust: { region: { set: Northeast }, store_format: { set: Flagship }, under_remodel: { set: false }, selling_sq_ft: { set: 98000 } }
+      - id: P-RTL-03
+        description: "ST-017 is a Southeast store (anchors the shrink hot-spot pattern)"
+        where: { store_id: ST-017 }
+        adjust: { region: { set: Southeast }, under_remodel: { set: false } }
+
+  - name: ERP_VENDOR
+    system: ERP merchandising
+    description: Vendor master
+    key: vendor_id
+    rows: { S: 80, M: 80, L: 80 }
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 5 }
+    columns:
+      - { name: vendor_id, type: VARCHAR, gen: { seq: { prefix: "V-", pad: 4 } } }
+      - { name: vendor_name, type: VARCHAR, gen: { company: true } }
+      - { name: vendor_category, type: VARCHAR, gen: { choice: { values: [Home textiles, Kitchen & dining, Apparel, Packaged food, Beverages, Beauty & personal care, Seasonal decor, Electronics accessories], weights: [12, 12, 16, 14, 10, 12, 12, 12] } } }
+      - { name: preferred_flag, type: BOOLEAN, gen: { bernoulli: 0.4 } }
+      - { name: tax_id, type: VARCHAR, gen: { template: "91-{vendor_id}" }, tags: [GOV_ID], dirty: false }
+      - { name: contact_email, type: VARCHAR, gen: { template: "orders@{vendor_id}.example.com" }, tags: [PII], dirty: false }
+
+  - name: MDM_ITEM
+    system: Item master (PIM)
+    description: Sellable items (SKUs) with category, brand type, cost and ticket price
+    key: item_id
+    rows: { S: 2000, M: 6000, L: 20000 }
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 3 }
+    columns:
+      - { name: item_id, type: VARCHAR, gen: { seq: { prefix: "SKU-", pad: 6 } } }
+      - { name: category, type: VARCHAR, gen: { choice: { values: [Bedding, Bath, Kitchenware, Home decor, Womenswear, Menswear, Kidswear, Snacks, Beverages, Pantry staples, Personal care, Cosmetics, Garden & outdoor, Seasonal decor], weights: [8, 6, 8, 9, 10, 8, 6, 8, 7, 7, 7, 5, 6, 5] } } }
+      - { name: item_desc, type: VARCHAR, gen: { template: "{category} item {item_id}" }, dirty: false }
+      - { name: brand_type, type: VARCHAR, gen: { choice: { values: [Private label, National brand], weights: [34, 66] } } }
+      - { name: vendor_id, type: VARCHAR, gen: { fk: { table: ERP_VENDOR, column: vendor_id } } }
+      - { name: unit_cost, type: DOUBLE, gen: { lognormal: { mu: 2.55, sigma: 0.6, min: 0.8, max: 400, decimals: 2 } } }
+      - { name: markup, type: DOUBLE, gen: { normal: { mean: 1.85, sd: 0.3, min: 1.15, max: 3.5, decimals: 3 } } }
+      - { name: unit_price, type: DOUBLE, gen: { formula: "unit_cost * markup", decimals: 2 } }
+      - { name: lifecycle_status, type: VARCHAR, gen: { choice: { values: [Active, Seasonal, Discontinued], weights: [78, 12, 10] } } }
+      - { name: launch_date, type: DATE, gen: { date: { from: "2015-01-01", to: "2026-09-15" } } }
+    plant:
+      - id: P-RTL-04
+        description: "Private label items carry a higher ticket price over the same cost (margin advantage)"
+        where: { brand_type: Private label }
+        adjust: { unit_price: { multiply: 1.15 } }
+      - id: P-RTL-05
+        description: "Kidswear is priced aggressively — the lowest initial margin category"
+        where: { category: Kidswear }
+        adjust: { unit_price: { multiply: 0.88 } }
+
+  - name: LOY_MEMBER
+    system: Loyalty platform (CDP via CDC)
+    description: Loyalty programme member master
+    key: member_id
+    rows: { S: 2000, M: 20000, L: 200000 }
+    loaded_at_from: join_date
+    cdc_noise: { duplicate_updates_pct: 5, deletes_pct: 0.4, dirty_strings_pct: 6, late_arrivals_pct: 1 }
+    columns:
+      - { name: member_id, type: VARCHAR, gen: { seq: { prefix: "M", pad: 9 } } }
+      - { name: first_name, type: VARCHAR, gen: { person: first }, tags: [PII] }
+      - { name: last_name, type: VARCHAR, gen: { person: last }, tags: [PII] }
+      - { name: email, type: VARCHAR, gen: { email: { first: first_name, last: last_name, domain: examplemail.com } }, tags: [PII], null_pct: 8 }
+      - { name: phone, type: VARCHAR, gen: { phone: true }, tags: [PII], null_pct: 5 }
+      - { name: street_address, type: VARCHAR, gen: { address: true }, tags: [PII] }
+      - { name: region, type: VARCHAR, gen: { choice: { values: [Northeast, Southeast, Midwest, Southwest, Pacific], weights: [26, 20, 22, 14, 18] } } }
+      - { name: tier, type: VARCHAR, gen: { choice: { values: [Bronze, Silver, Gold], weights: [62, 28, 10] } } }
+      - { name: status_code, type: VARCHAR, gen: { choice: { values: [A, L], weights: [90, 10] } }, dirty: false }
+      - { name: app_flag, type: VARCHAR, gen: { choice: { values: [Y, N], weights: [42, 58] } }, dirty: false }
+      - { name: churn_score, type: DOUBLE, gen: { normal: { mean: 31, sd: 17, min: 0, max: 100, decimals: 1 } } }
+      - { name: points_balance, type: INTEGER, gen: { lognormal: { mu: 6.1, sigma: 0.9, min: 0, max: 50000 } } }
+      - { name: join_date, type: DATE, gen: { date: { from: "2012-01-01", to: asOf } } }
+    plant:
+      - id: P-RTL-06
+        description: "App adoption is markedly higher in Pacific"
+        where: { region: Pacific }
+        adjust: { app_flag: { set: Y, pct: 30 } }
+      - id: P-RTL-07
+        description: "Gold-tier members are far less likely to churn"
+        where: { tier: Gold }
+        adjust: { churn_score: { multiply: 0.65 } }
+
+  - name: POS_SALES_LINE
+    system: POS and web-store order capture
+    description: Item-level sales lines from store tills and the web store (store-attributed)
+    key: line_id
+    rows: { S: 18000, M: 180000, L: 1800000 }
+    loaded_at_from: sale_date
+    cdc_noise: { duplicate_updates_pct: 3, deletes_pct: 0.3, dirty_strings_pct: 3, late_arrivals_pct: 1 }
+    columns:
+      - { name: line_id, type: VARCHAR, gen: { seq: { prefix: "L", pad: 9 } } }
+      - { name: store_id, type: VARCHAR, gen: { fk: { table: MDM_STORE, column: store_id } } }
+      - { name: item_id, type: VARCHAR, gen: { fk: { table: MDM_ITEM, column: item_id, dist: zipf, s: 0.6 } } }
+      - { name: unit_price, type: DOUBLE, gen: { derive_from: { fk_column: item_id, parent_column: unit_price } } }
+      - { name: unit_cost, type: DOUBLE, gen: { derive_from: { fk_column: item_id, parent_column: unit_cost } } }
+      - { name: member_id, type: VARCHAR, gen: { fk: { table: LOY_MEMBER, column: member_id } }, null_pct: 42 }
+      - { name: sale_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf, seasonality: { month: [0.85, 0.8, 0.9, 0.95, 1.0, 1.0, 1.0, 1.05, 0.95, 1.0, 1.25, 1.6] } } } }
+      - { name: channel, type: VARCHAR, gen: { choice: { values: [In-store, Online, Click & collect], weights: [74, 18, 8] } } }
+      - { name: basket_no, type: INTEGER, gen: { uniform: { min: 1, max: 3 } } }
+      - { name: txn_id, type: VARCHAR, gen: { template: "{store_id}-{sale_date}-{basket_no}" }, dirty: false }
+      - { name: quantity, type: INTEGER, gen: { lognormal: { mu: 0.3, sigma: 0.55, min: 1, max: 24 } } }
+      - { name: discount_pct, type: INTEGER, gen: { choice: { values: [0, 10, 20, 30, 40], weights: [70, 10, 10, 7, 3] } } }
+      - { name: on_promo, type: BOOLEAN, gen: { formula: "discount_pct > 0" } }
+      - { name: gross_amount, type: DOUBLE, gen: { formula: "quantity * unit_price", decimals: 2 } }
+      - { name: net_amount, type: DOUBLE, gen: { formula: "gross_amount * (100 - discount_pct) / 100", decimals: 2 } }
+      - { name: cost_amount, type: DOUBLE, gen: { formula: "quantity * unit_cost", decimals: 2 } }
+    plant:
+      - id: P-RTL-08
+        description: "The Northeast flagship ST-007 trades at 2.5x a typical store"
+        where: { store_id: ST-007 }
+        adjust: { quantity: { multiply: 2.5 }, gross_amount: { multiply: 2.5 }, net_amount: { multiply: 2.5 }, cost_amount: { multiply: 2.5 } }
+      - id: P-RTL-09
+        description: "New Southwest stores trade strongly in Q3 2026 after their first-anniversary campaign — changes the hero answer when non-comparable stores are included"
+        where: { store_id: { in: [ST-053, ST-054, ST-055, ST-056, ST-057, ST-058, ST-059, ST-060] } }
+        window: { column: sale_date, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { quantity: { multiply: 3 }, gross_amount: { multiply: 3 }, net_amount: { multiply: 3 }, cost_amount: { multiply: 3 } }
+
+  - name: STR_TRAFFIC_DAILY
+    system: Door counters
+    description: Daily store footfall and till conversion from door counters
+    key: reading_id
+    rows: { S: 3800, M: 38000, L: 120000 }
+    loaded_at_from: traffic_date
+    cdc_noise: { duplicate_updates_pct: 2, late_arrivals_pct: 2 }
+    columns:
+      - { name: reading_id, type: VARCHAR, gen: { seq: { prefix: "TR-", pad: 8 } } }
+      - { name: store_id, type: VARCHAR, gen: { fk: { table: MDM_STORE, column: store_id } } }
+      - { name: traffic_date, type: DATE, gen: { date: { from: "2025-10-01", to: asOf, seasonality: { month: [0.9, 0.85, 0.9, 0.95, 1.0, 1.0, 1.05, 1.05, 0.95, 1.0, 1.2, 1.5] } } } }
+      - { name: footfall, type: INTEGER, gen: { lognormal: { mu: 6.3, sigma: 0.4, min: 40, max: 12000 } } }
+      - { name: conversion_pct, type: DOUBLE, gen: { normal: { mean: 34, sd: 6, min: 5, max: 80, decimals: 1 } } }
+
+  - name: WMS_STORE_INVENTORY
+    system: Store inventory (perpetual inventory system)
+    description: Daily store-item inventory positions sampled from the perpetual inventory system
+    key: snapshot_id
+    rows: { S: 12000, M: 120000, L: 600000 }
+    loaded_at_from: snapshot_date
+    cdc_noise: { duplicate_updates_pct: 2, late_arrivals_pct: 2 }
+    columns:
+      - { name: snapshot_id, type: VARCHAR, gen: { seq: { prefix: "INV-", pad: 9 } } }
+      - { name: store_id, type: VARCHAR, gen: { fk: { table: MDM_STORE, column: store_id } } }
+      - { name: item_id, type: VARCHAR, gen: { fk: { table: MDM_ITEM, column: item_id, dist: zipf, s: 0.6 } } }
+      - { name: unit_cost, type: DOUBLE, gen: { derive_from: { fk_column: item_id, parent_column: unit_cost } } }
+      - { name: snapshot_date, type: DATE, gen: { date: { from: "2026-04-01", to: asOf } } }
+      - { name: shelf_units_raw, type: INTEGER, gen: { lognormal: { mu: 2.2, sigma: 0.7, min: 1, max: 400 } } }
+      - { name: oos_draw, type: DOUBLE, gen: { uniform: { min: 0, max: 100, decimals: 2 } } }
+      - { name: on_hand_units, type: INTEGER, gen: { formula: "if(oos_draw < 5.5, 0, shelf_units_raw)" } }
+      - { name: avg_daily_units, type: DOUBLE, gen: { lognormal: { mu: -0.2, sigma: 0.6, min: 0.1, max: 50, decimals: 2 } } }
+      - { name: on_order_units, type: INTEGER, gen: { poisson: { lambda: 5 } } }
+    plant:
+      - id: P-RTL-10
+        description: "In-stock dips 20–27 August 2026 after a replenishment system release suppressed store orders"
+        window: { column: snapshot_date, from: "2026-08-20", to: "2026-08-27" }
+        adjust: { on_hand_units: { set: 0, pct: 14 } }
+
+  - name: PRC_PRICE_CHANGE
+    system: Pricing engine
+    description: Store price changes (markdown, promotion, permanent) with effective and execution dates
+    key: change_id
+    rows: { S: 8000, M: 40000, L: 200000 }
+    loaded_at_from: effective_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.3, dirty_strings_pct: 2 }
+    columns:
+      - { name: change_id, type: VARCHAR, gen: { seq: { prefix: "PC-", pad: 7 } } }
+      - { name: item_id, type: VARCHAR, gen: { fk: { table: MDM_ITEM, column: item_id } } }
+      - { name: store_id, type: VARCHAR, gen: { fk: { table: MDM_STORE, column: store_id } } }
+      - { name: change_type, type: VARCHAR, gen: { choice: { values: [Markdown, Promotion, Permanent], weights: [45, 35, 20] } } }
+      - { name: markdown_pct, type: INTEGER, gen: { choice: { values: [10, 20, 25, 30, 40, 50], weights: [20, 25, 15, 20, 12, 8] } } }
+      - { name: effective_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: executed_date, type: DATE, gen: { date_offset: { from_column: effective_date, days: { min: -6, max: 2 }, clamp_to_as_of: true } }, null_pct: 3 }
+      - { name: status, type: VARCHAR, gen: { choice: { values: [EXECUTED, EXECUTED, EXECUTED, PENDING], weights: [40, 30, 22, 8] } } }
+      - { name: labour_minutes, type: DOUBLE, gen: { lognormal: { mu: 2.3, sigma: 0.5, min: 2, max: 240, decimals: 1 } } }
+      - { name: executed_by, type: VARCHAR, gen: { person: full }, tags: [PII] }
+
+  - name: ECOM_ORDER
+    system: Web-store order management
+    description: Web-store orders with delivery promise, return and refund outcome
+    key: order_id
+    rows: { S: 5000, M: 50000, L: 500000 }
+    loaded_at_from: order_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.3, dirty_strings_pct: 2, late_arrivals_pct: 1 }
+    columns:
+      - { name: order_id, type: VARCHAR, gen: { seq: { prefix: "OL-", pad: 8 } } }
+      - { name: member_id, type: VARCHAR, gen: { fk: { table: LOY_MEMBER, column: member_id } } }
+      - { name: order_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf, seasonality: { month: [0.85, 0.8, 0.9, 0.95, 1.0, 1.0, 1.0, 1.05, 0.95, 1.0, 1.3, 1.7] } } } }
+      - { name: order_value, type: DOUBLE, gen: { lognormal: { mu: 4.15, sigma: 0.55, min: 8, max: 5000, decimals: 2 } } }
+      - { name: account_type, type: VARCHAR, gen: { choice: { values: [Consumer, Trade], weights: [93, 7] } } }
+      - { name: fulfilment_method, type: VARCHAR, gen: { choice: { values: [Ship to home, Click & collect, Ship from store], weights: [60, 26, 14] } } }
+      - { name: promised_days, type: INTEGER, gen: { uniform: { min: 2, max: 5 } } }
+      - { name: delay_days, type: INTEGER, gen: { choice: { values: [-1, 0, 1, 2, 3], weights: [14, 62, 13, 7, 4] } } }
+      - { name: delivered_days, type: INTEGER, gen: { formula: "promised_days + delay_days" } }
+      - { name: returned, type: BOOLEAN, gen: { bernoulli: 0.115 } }
+      - { name: return_share, type: DOUBLE, gen: { uniform: { min: 0.4, max: 1.0, decimals: 2 } } }
+      - { name: returned_value, type: DOUBLE, gen: { formula: "if(returned, order_value * return_share, 0)", decimals: 2 } }
+      - { name: refund_lag, type: INTEGER, gen: { uniform: { min: 2, max: 9 } } }
+      - { name: days_to_refund, type: INTEGER, gen: { formula: "if(returned, refund_lag, null)" } }
+    plant:
+      - id: P-RTL-11
+        description: "Trade (business) accounts place much larger orders — why average order value is consumer-only"
+        where: { account_type: Trade }
+        adjust: { order_value: { multiply: 4 }, returned_value: { multiply: 4 } }
+      - id: P-RTL-12
+        description: "Refunds slow down after the August 2026 returns-portal migration"
+        window: { column: order_date, from: "2026-07-15", to: "2026-09-30" }
+        adjust: { days_to_refund: { add: 6, pct: 70 } }
+
+  - name: ECOM_PAYMENT
+    system: Payment gateway
+    description: Tender taken against web-store orders (at most one payment per order)
+    key: payment_id
+    rows: { S: 4950, M: 49500, L: 495000 }
+    loaded_at_from: payment_date
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 3 }
+    columns:
+      - { name: payment_id, type: VARCHAR, gen: { seq: { prefix: "PAY-", pad: 9 } } }
+      - { name: order_id, type: VARCHAR, gen: { fk: { table: ECOM_ORDER, column: order_id, dist: sequential } } }
+      - { name: order_date, type: DATE, gen: { derive_from: { fk_column: order_id, parent_column: order_date } } }
+      - { name: order_value, type: DOUBLE, gen: { derive_from: { fk_column: order_id, parent_column: order_value } } }
+      - { name: payment_date, type: DATE, gen: { date_offset: { from_column: order_date, days: { min: 0, max: 0 } } } }
+      - { name: amount, type: DOUBLE, gen: { formula: "order_value", decimals: 2 } }
+      - { name: method, type: VARCHAR, gen: { choice: { values: [Card, Digital wallet, Gift card, Pay later], weights: [64, 22, 8, 6] } } }
+      - { name: card_number, type: VARCHAR, gen: { template: "4111-0000-{payment_id}" }, tags: [PCI], dirty: false }
+
+  - name: CRM_CARE_CONTACT
+    system: Customer care platform
+    description: Customer-care contacts with free-text agent notes
+    key: contact_id
+    rows: { S: 3000, M: 30000, L: 300000 }
+    loaded_at_from: contact_ts
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 5 }
+    columns:
+      - { name: contact_id, type: VARCHAR, gen: { seq: { prefix: "CT-", pad: 8 } } }
+      - { name: member_id, type: VARCHAR, gen: { fk: { table: LOY_MEMBER, column: member_id } } }
+      - { name: contact_ts, type: TIMESTAMP, gen: { datetime: { from: "2025-10-01", to: asOf, business_hours: true } } }
+      - { name: channel, type: VARCHAR, gen: { choice: { values: [Phone, Chat, Email, Social], weights: [44, 33, 15, 8] } } }
+      - { name: reason, type: VARCHAR, gen: { choice: { values: [Where is my order, Return or refund, Product question, Loyalty points, Store experience, Other], weights: [27, 24, 14, 13, 10, 12] } } }
+      - { name: handle_seconds, type: INTEGER, gen: { lognormal: { mu: 5.8, sigma: 0.5, min: 30, max: 5400 } } }
+      - { name: csat, type: INTEGER, gen: { choice: { values: [1, 2, 3, 4, 5], weights: [5, 8, 15, 35, 37] } } }
+      - { name: agent_notes, type: VARCHAR, gen: { template: "Member {member_id} contacted about {reason}" }, tags: [PII] }
+
+  - name: ERP_VENDOR_AGREEMENT
+    system: ERP merchandising
+    description: Vendor cost and terms agreements
+    key: agreement_id
+    rows: { S: 110, M: 110, L: 110 }
+    columns:
+      - { name: agreement_id, type: VARCHAR, gen: { seq: { prefix: "VA-", pad: 4 } } }
+      - { name: vendor_id, type: VARCHAR, gen: { fk: { table: ERP_VENDOR, column: vendor_id } } }
+      - { name: start_date, type: DATE, gen: { date: { from: "2023-01-01", to: "2025-12-31" } } }
+      - { name: end_date, type: DATE, gen: { date_offset: { from_column: start_date, days: { min: 365, max: 1460 } } } }
+      - { name: annual_commitment_usd, type: DOUBLE, gen: { lognormal: { mu: 13.2, sigma: 0.8, min: 50000, decimals: 0 } } }
+
+  - name: ERP_PO_LINE
+    system: ERP merchandising
+    description: Purchase order lines with agreed-cost flag, fill and goods-receipt outcome
+    key: po_line_id
+    rows: { S: 30000, M: 30000, L: 30000 }
+    loaded_at_from: po_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.5, dirty_strings_pct: 4, late_arrivals_pct: 1 }
+    columns:
+      - { name: po_line_id, type: VARCHAR, gen: { seq: { prefix: "PO-", pad: 8 } } }
+      - { name: vendor_id, type: VARCHAR, gen: { fk: { table: ERP_VENDOR, column: vendor_id, dist: zipf, s: 0.8 } } }
+      - { name: category, type: VARCHAR, gen: { derive_from: { fk_column: vendor_id, parent_column: vendor_category } } }
+      - { name: po_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: units_ordered, type: INTEGER, gen: { lognormal: { mu: 4.5, sigma: 0.8, min: 6, max: 20000 } } }
+      - { name: po_cost_usd, type: DOUBLE, gen: { lognormal: { mu: 7.6, sigma: 1.0, min: 20, max: 900000, decimals: 2 } } }
+      - { name: at_agreed_cost, type: BOOLEAN, gen: { bernoulli: 0.9 } }
+      - { name: fill_pct, type: INTEGER, gen: { choice: { values: [100, 95, 90, 80], weights: [84, 8, 5, 3] } } }
+      - { name: units_received, type: INTEGER, gen: { formula: "round(units_ordered * fill_pct / 100)" } }
+      - { name: receipt_date, type: DATE, gen: { date_offset: { from_column: po_date, days: { min: 4, max: 30 }, clamp_to_as_of: true } } }
+      - { name: on_time, type: BOOLEAN, gen: { bernoulli: 0.93 } }
+      - { name: buyer, type: VARCHAR, gen: { person: full }, tags: [PII] }
+    plant:
+      - id: P-RTL-13
+        description: "Seasonal decor and electronics accessories are often bought off-agreement (spot buys) — the off-agreement spend driver"
+        where: { category: { in: [Seasonal decor, Electronics accessories] } }
+        adjust: { at_agreed_cost: { set: false, pct: 45 } }
+
+  - name: LP_CYCLE_COUNT
+    system: Loss prevention
+    description: Store category cycle counts with system value, shrink and risk score
+    key: count_id
+    rows: { S: 3000, M: 9000, L: 30000 }
+    loaded_at_from: count_date
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 5 }
+    columns:
+      - { name: count_id, type: VARCHAR, gen: { seq: { prefix: "CC-", pad: 6 } } }
+      - { name: store_id, type: VARCHAR, gen: { fk: { table: MDM_STORE, column: store_id } } }
+      - { name: count_category, type: VARCHAR, gen: { choice: { values: [Health & beauty, Electronics accessories, Apparel, Home, Grocery, Seasonal], weights: [18, 14, 20, 20, 16, 12] } } }
+      - { name: count_date, type: DATE, gen: { date: { from: "2025-10-01", to: asOf } } }
+      - { name: last_full_count_date, type: DATE, gen: { date: { from: "2025-06-01", to: asOf } } }
+      - { name: cycle_months, type: INTEGER, gen: { choice: { values: [6, 12, 18], weights: [15, 55, 30] } } }
+      - { name: system_value, type: DOUBLE, gen: { lognormal: { mu: 7.5, sigma: 0.6, min: 50, decimals: 2 } } }
+      - { name: shrink_pct_raw, type: DOUBLE, gen: { normal: { mean: 1.6, sd: 0.9, min: 0, max: 15, decimals: 2 } } }
+      - { name: shrink_value, type: DOUBLE, gen: { formula: "system_value * shrink_pct_raw / 100", decimals: 2 } }
+      - { name: risk_score, type: DOUBLE, gen: { normal: { mean: 38, sd: 16, min: 0, max: 100, decimals: 1 } } }
+      - { name: auditor_notes, type: VARCHAR, gen: { template: "{count_category} count at {store_id}" } }
+    plant:
+      - id: P-RTL-14
+        description: "ST-017 has high shrink, overdue counts and high risk"
+        where: { store_id: ST-017 }
+        adjust: { shrink_value: { multiply: 3.2 }, risk_score: { add: 32 }, last_full_count_date: { set: 19783 } }
+
+  - name: MKT_PROMOTION
+    system: Promotions planning
+    description: Promotion calendar by category with mechanic and vendor funding
+    key: promo_id
+    rows: { S: 400, M: 400, L: 400 }
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 3 }
+    columns:
+      - { name: promo_id, type: VARCHAR, gen: { seq: { prefix: "PR-", pad: 4 } } }
+      - { name: promo_type, type: VARCHAR, gen: { choice: { values: [Percent off, Buy one get one, Bundle, Clearance], weights: [45, 20, 15, 20] } } }
+      - { name: category, type: VARCHAR, gen: { choice: { values: [Bedding, Bath, Kitchenware, Home decor, Womenswear, Menswear, Kidswear, Snacks, Beverages, Pantry staples, Personal care, Cosmetics, Garden & outdoor, Seasonal decor] } } }
+      - { name: promo_name, type: VARCHAR, gen: { template: "{promo_type} on {category}" }, dirty: false }
+      - { name: start_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: end_date, type: DATE, gen: { date_offset: { from_column: start_date, days: { min: 7, max: 28 } } } }
+      - { name: discount_pct, type: INTEGER, gen: { choice: { values: [10, 15, 20, 25, 30, 40, 50] } } }
+      - { name: vendor_funded, type: BOOLEAN, gen: { bernoulli: 0.35 } }

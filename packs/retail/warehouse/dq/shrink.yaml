@@ -1,0 +1,34 @@
+# Cycle count and shrink DQ rules.
+- id: DQ-RTL-053
+  object: CONFORMED_GOLD.FCT_CYCLE_COUNT
+  column: last_full_count_date
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every count has a last full count date; overdue status depends on it.
+- id: DQ-RTL-054
+  object: CONFORMED_GOLD.FCT_CYCLE_COUNT
+  column: cycle_months
+  dimension: validity
+  assertion: "invalid_rate == 0"
+  allowed: [6, 12, 18]
+  severity: medium
+  alert_route: steward
+  description: Count cycles are 6, 12 or 18 months per the inventory standard.
+- id: DQ-RTL-055
+  object: CONFORMED_GOLD.FCT_CYCLE_COUNT
+  column: count_date
+  dimension: timeliness
+  assertion: "freshness_min <= 20160"
+  severity: low
+  alert_route: owner
+  description: Cycle counts are being recorded (latest count within the last two weeks).
+- id: DQ-RTL-056
+  object: CONFORMED_GOLD.FCT_CYCLE_COUNT
+  column: shrink_value
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: medium
+  alert_route: steward
+  description: Shrink value is never negative.

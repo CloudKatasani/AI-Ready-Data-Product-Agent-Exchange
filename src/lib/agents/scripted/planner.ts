@@ -73,7 +73,10 @@ export function metricMentioned(pack: Pack, metricName: string, question: string
   const term = pack.glossary.find((t) => t.id === metric?.term);
   const qt = new Set(tokens(question));
   return [metric?.label ?? '', ...(metric?.synonyms ?? []), kpi?.name ?? '', ...(term ? [term.name, ...term.synonyms] : [])].some((p) => {
+    if (mentions(question, p)) return true;
     const pt = tokens(p);
+    // A phrase that relies on a stop word ("in …") must appear verbatim — dropping it changes meaning.
+    if (pt.length !== normalise(p).split(' ').filter(Boolean).length) return false;
     return pt.length > 0 && pt.every((t) => qt.has(t));
   });
 }

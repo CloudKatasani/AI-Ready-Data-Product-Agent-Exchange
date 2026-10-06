@@ -1,0 +1,23 @@
+id: DP-BNK-008
+name: Customer Profitability
+domain: Customer & KYC
+archetype: CONSUMER_ALIGNED
+initial_status: DRAFT
+seed_stage: 2
+version: 0.1.0
+owner: banking:lending-dpo
+steward: null
+description: Trailing 12-month net contribution per customer after funds transfer pricing, cost to serve and expected credit loss.
+purpose: Segment pricing and relationship strategy based on customer-level profitability.
+decision: { persona: Chief Financial Officer, decision: "Which segments to reprice or deepen", cadence: Quarterly, workaround: "Finance allocation model run once a year in spreadsheets", consequence: "Unprofitable relationships are subsidised for years without anyone noticing" }
+sample_questions: ["Which customer segments are most profitable after expected credit losses?", "Share of unprofitable customers by market"]
+semantic_view: null
+output_ports:
+  - { kind: sql, ref: DATA_PRODUCTS.DP_BNK_008_CUSTOMER_PROFITABILITY }
+sla: { freshness_minutes: 43200, availability_pct: 98.0, max_null_rate_pct: 2.0 }
+kpis: []
+upstream: [CONFORMED_GOLD.FCT_DEPOSIT_BALANCE, CONFORMED_GOLD.FCT_LOAN_BALANCE, CONFORMED_GOLD.FCT_CARD_TXN, CONFORMED_GOLD.DIM_CUSTOMER]
+consumers: [Finance, Segment strategy]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: null

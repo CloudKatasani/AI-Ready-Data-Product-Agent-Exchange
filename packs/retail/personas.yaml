@@ -1,0 +1,48 @@
+# Five demo identities, one per archetype (01-functional-spec §2.2). People are generated, not real.
+- id: retail:store-ops-northeast
+  archetype: A
+  name: Olivia Brennan
+  title: Regional Store Operations Manager, Northeast
+  domain: Store operations
+  roles: [DATA_CONSUMER]
+  row_filter: { dimension: region, allowed: [Northeast] }
+  unmasked: []
+  cares: Sales, availability and loyalty sign-ups in the Northeast stores; wants plain answers she can act on this week.
+  sees: Northeast region only; member PII masked.
+- id: retail:merch-analyst
+  archetype: B
+  name: Rahul Desai
+  title: Merchandise Planning Analyst
+  domain: Merchandising
+  roles: [DATA_CONSUMER, ANALYST]
+  unmasked: []
+  cares: Net sales, gross margin, promotions, in-stock and price execution by department, category and store.
+  sees: All regions; member PII masked.
+- id: retail:commercial-dpo
+  archetype: C
+  name: Sofia Marchetti
+  title: Commercial Data Product Owner
+  domain: Merchandising
+  roles: [DOMAIN_PRODUCT_OWNER, DATA_ENGINEER]
+  unmasked: []
+  cares: Shipping certified sales, inventory and merchandising products that agents can trust.
+  sees: All regions; PII masked; can build and submit products for review.
+- id: retail:customer-steward
+  archetype: D
+  name: Grace Okonkwo
+  title: Loyalty Data Steward
+  domain: Governance
+  roles: [DATA_STEWARD, GOVERNANCE_COUNCIL, PRIVACY_OFFICER]
+  unmasked: [PII, PCI, GOV_ID]
+  cares: Glossary health, CDE ownership, masking coverage and certification decisions.
+  sees: Everything, unmasked; approves access requests and certification gates.
+- id: retail:coo
+  archetype: E
+  name: Marcus Whitfield
+  title: Chief Commercial Officer
+  domain: Executive
+  roles: [EXECUTIVE, PORTFOLIO_LEAD, GOVERNANCE_COUNCIL]
+  unmasked: []
+  aggregates_only: true
+  cares: Comparable sales, margin and availability against plan, and where to invest next.
+  sees: Aggregates only; portfolio, value and readiness.

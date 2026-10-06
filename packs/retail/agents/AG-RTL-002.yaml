@@ -1,0 +1,33 @@
+id: AG-RTL-002
+name: Sales Performance Analyst
+domain: Sales & Channels
+status: PRODUCTION
+owner: retail:commercial-dpo
+on_call: Commercial Data Ops
+avatar: { icon: trending-up, hue: 210 }
+capability: "Answers questions on net sales, gross margin, units, transactions, basket value and channel and promotional mix."
+personas_served: [VP Store Operations, Regional Store Operations Manager, Merchandise Planning Analyst]
+out_of_scope: ["price changes or markdown approvals", "sales forecasts and investor guidance", "staff scheduling", "sales history for an individual member"]
+products:
+  - { id: DP-RTL-002, columns: "*" }
+  - { id: DP-RTL-004, columns: [category, department, brand_type, initial_margin_pct] }
+tools:
+  - { tool: semantic_query, views: [SALES_PERFORMANCE, ASSORTMENT], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-RTL-SALES-REPORTING, DOC-RTL-MERCH-PRICING] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-RTL-NET-SALES, grains: [month, quarter, year], slices: [region, store, department, category, channel], depth: rank_drivers }
+  - { kpi: KPI-RTL-GM-PCT, grains: [month, quarter, year], slices: [region, department, category, brand_type], depth: explain }
+  - { kpi: KPI-RTL-GM, grains: [month, quarter], slices: [region, department, category], depth: rank_drivers }
+  - { kpi: KPI-RTL-UNITS, grains: [month, quarter], slices: [region, department, category], depth: value }
+  - { kpi: KPI-RTL-TXN, grains: [month, quarter], slices: [region, store, channel], depth: value }
+  - { kpi: KPI-RTL-BASKET, grains: [month, quarter], slices: [region, store, channel], depth: explain }
+  - { kpi: KPI-RTL-PROMO-SHARE, grains: [month, quarter], slices: [region, department, category], depth: explain }
+  - { kpi: KPI-RTL-DIGITAL-SHARE, grains: [month, quarter], slices: [region, department], depth: trend }
+  - { kpi: KPI-RTL-MEMBER-SHARE, grains: [month, quarter], slices: [region, channel], depth: trend }
+instructions: [INS-RTL-002-P, INS-RTL-002-R, INS-RTL-002-G, INS-RTL-002-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-RTL-001, SC-RTL-002, SC-RTL-003, SC-RTL-004, SC-RTL-005, SC-RTL-006, SC-RTL-007]

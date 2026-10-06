@@ -1,0 +1,133 @@
+# Control library for Ridgeline Bank (fictional). Regulators and jurisdictions are invented; frameworks are
+# named for the public standards they are modelled on. Illustrative, not legal or regulatory advice.
+jurisdictions:
+  - { id: JUR-RLB-FED, name: "Federal banking supervision", regulator: "Office of Prudential Banking Supervision (fictional)" }
+  - { id: JUR-RLB-FINCRIME, name: "Financial crimes enforcement", regulator: "Financial Intelligence Bureau (fictional)" }
+  - { id: JUR-RLB-CONSUMER, name: "Consumer financial protection", regulator: "Consumer Banking Standards Board (fictional)" }
+  - { id: JUR-RLB-CORP, name: "Corporate policy", regulator: "Ridgeline Board Risk & Audit Committee" }
+
+controls:
+  - id: CTL-BNK-001
+    name: Credit quality reporting
+    framework: Call Report-style regulatory reporting
+    description: >-
+      Non-performing loans, delinquency and net charge-offs are calculated from month-end loan snapshots using one
+      definition (90+ days past due or non-accrual), excluding loans held for sale. Every reported ratio must trace to
+      a certified product version and metric definition.
+    jurisdiction: JUR-RLB-FED
+    applies_to: { domains: [lending-credit] }
+    evidence: Certified product version, metric definition and lineage from the core loan snapshot to the reported ratio.
+    stage: 11
+  - id: CTL-BNK-002
+    name: Allowance for credit losses
+    framework: CECL (ASC 326-style)
+    description: >-
+      The allowance for credit losses is estimated for the life of each loan by segment, reconciled to the general ledger
+      monthly, and approved by the allowance committee. Allowance coverage of non-performing loans is monitored against
+      risk appetite.
+    jurisdiction: JUR-RLB-CORP
+    applies_to: { domains: [lending-credit] }
+    evidence: Monthly allowance reconciliation and committee minutes referencing the certified loan product version.
+    stage: 11
+  - id: CTL-BNK-003
+    name: Customer financial privacy
+    framework: GLBA-style privacy rule
+    description: >-
+      Customer names, addresses, emails, phone numbers and dates of birth are nonpublic personal information. They are
+      masked for every persona without PII clearance and never released to agents or analytical outputs.
+    jurisdiction: JUR-RLB-CONSUMER
+    applies_to: { classes: [PII], domains: [customer-kyc, deposits-treasury, lending-credit, collections-recovery] }
+    evidence: Masking policy attachment report for every PII-tagged column and a sample of masked query logs.
+    stage: 6
+  - id: CTL-BNK-004
+    name: Payment card data protection
+    framework: PCI DSS v4.0
+    description: >-
+      Primary account numbers are stored only in the card account Silver table, shown last-four only via MASK_PCI, and
+      never land in Gold facts, data products or agent answers.
+    jurisdiction: JUR-RLB-CORP
+    applies_to: { classes: [PCI], domains: [cards-payments] }
+    evidence: Column classification scan showing PCI only in CURATED_SILVER.CARD_ACCOUNT and masking attached.
+    stage: 6
+  - id: CTL-BNK-005
+    name: Government identifier handling
+    framework: Enterprise information security standard
+    description: >-
+      Taxpayer identification numbers are classified GOV_ID, masked to the last four characters outside KYC operations
+      and never used as a join key in analytical products.
+    jurisdiction: JUR-RLB-CORP
+    applies_to: { classes: [GOV_ID], domains: [customer-kyc] }
+    evidence: Masking on DIM_CUSTOMER.ssn and CURATED_SILVER.CUSTOMER.ssn; access review of KYC operations roles.
+    stage: 6
+  - id: CTL-BNK-006
+    name: BSA/AML transaction monitoring
+    framework: Bank Secrecy Act / AML programme
+    description: >-
+      Transaction-monitoring alerts are dispositioned by a named investigator, escalated cases are documented, and SAR
+      decisions are made by the BSA officer. The existence of a SAR is confidential and is never disclosed to the subject
+      or outside the financial crimes function.
+    jurisdiction: JUR-RLB-FINCRIME
+    applies_to: { domains: [financial-crime] }
+    evidence: Alert disposition audit trail, case files and BSA officer sign-off per SAR; agent refusal tests for SAR disclosure.
+    stage: 10
+  - id: CTL-BNK-007
+    name: Liquidity risk management
+    framework: Basel III LCR-style liquidity standard
+    description: >-
+      Deposit balances, funding cost and uninsured deposit concentration are reported to ALCO monthly from one certified
+      product; definitions changes require a versioned contract and Treasury approval.
+    jurisdiction: JUR-RLB-FED
+    applies_to: { domains: [deposits-treasury] }
+    evidence: ALCO pack reconciliation to the certified deposits product and approved contract version history.
+    stage: 11
+  - id: CTL-BNK-008
+    name: Fair lending and adverse action
+    framework: ECOA / Reg B-style fair lending rules
+    description: >-
+      Credit decisions are made by people under the credit policy; models are explainable and monitored for disparate
+      impact. Agents never approve, decline or price an individual credit application.
+    jurisdiction: JUR-RLB-CONSUMER
+    applies_to: { domains: [lending-credit, cards-payments] }
+    evidence: Agent out-of-scope lists, refusal test results and fair lending model monitoring reports.
+    stage: 10
+  - id: CTL-BNK-009
+    name: Fair collections practices
+    framework: FDCPA / UDAAP-style collections standard
+    description: >-
+      Collections contact, hardship programmes and charge-off decisions are made by named collections staff; customers in
+      hardship or with protected status are never escalated automatically. Analytical products report collections in
+      aggregate only.
+    jurisdiction: JUR-RLB-CONSUMER
+    applies_to: { domains: [collections-recovery] }
+    evidence: Collections decision log, hardship programme register and aggregate-only output ports.
+    stage: 10
+  - id: CTL-BNK-010
+    name: Critical data element ownership
+    framework: BCBS 239-style risk data aggregation principles
+    description: >-
+      Every critical data element used in risk reporting has a named owner and steward, at least one executable data
+      quality rule and a glossary term before the product that exposes it can be certified.
+    jurisdiction: JUR-RLB-CORP
+    applies_to: { domains: [customer-kyc, deposits-treasury, lending-credit, cards-payments, financial-crime, collections-recovery, channels] }
+    evidence: CDE register with owners, linked DQ rules and their latest results.
+    stage: 8
+  - id: CTL-BNK-011
+    name: Records retention
+    framework: Records retention schedule
+    description: >-
+      Account, transaction and KYC records are retained for five years after account closure; SAR supporting documentation
+      for five years from filing. Platform history is append-only so retained records cannot be silently altered.
+    jurisdiction: JUR-RLB-FINCRIME
+    applies_to: { domains: [customer-kyc, financial-crime, deposits-treasury] }
+    evidence: Retention configuration per object and the most recent purge certificate.
+    stage: 9
+  - id: CTL-BNK-012
+    name: Customer due diligence refresh
+    framework: CDD rule-style KYC standard
+    description: >-
+      Customer due diligence is refreshed every year for high-risk customers, every two years for medium-risk and every
+      three years for low-risk customers; overdue reviews are reported to the BSA officer monthly.
+    jurisdiction: JUR-RLB-FINCRIME
+    applies_to: { domains: [customer-kyc] }
+    evidence: KYC review register with due dates and the monthly overdue-review report from the Customer 360 product.
+    stage: 11

@@ -84,8 +84,9 @@ export async function respondScripted(agentId: string, question: string, deps: R
   const scenarioFits = (q: MetricQuery | null) => !namedKpi || !q || q.metrics.includes(namedKpi.metric) || q.metrics.some((m) => metricMentioned(pack, m, question));
   const curated = mine && mine.score >= RUN && scenarioFits(mine.scenario.query) ? mine.scenario : undefined;
 
-  // A curated decline keeps its own wording; nothing else curated overrides an injection hit.
-  if (guard && !(curated && (guard.kind !== 'injection' || curated.kind === 'decline'))) {
+  // A curated decline keeps its own wording; only an out-of-scope hit yields to other curated scenarios —
+  // injection and record-level guards always win over a matched non-decline scenario.
+  if (guard && !(curated && (guard.kind === 'out_of_scope' || curated.kind === 'decline'))) {
     if (guard.kind === 'out_of_scope' && other && other.score >= RUN) {
       const to = pack.agents.find((a) => a.id === other.scenario.agent);
       if (to) return finish(textAnswer(agent, question, 'redirect', `${to.name} is the right agent for this.`, `${guard.reason} ${to.name} covers it: ${to.capability}`, trace, { redirectTo: { agentId: to.id, name: to.name } }));

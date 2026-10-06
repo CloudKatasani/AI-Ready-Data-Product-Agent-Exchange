@@ -1,0 +1,49 @@
+id: banking
+name: Banking
+version: 1.0.0
+depth: deep
+code: BNK
+industry: Retail & commercial bank
+company:
+  name: Ridgeline Bank
+  short: RLB
+  hq: Cedar Ridge
+  description: Regional retail and commercial bank with $84B in assets serving 3.2M customers across four markets
+database: RLB_AI_PLATFORM
+locale: en-US
+currency: USD
+asOf: 2026-09-30
+seed: 20261004
+regions: [Mountain, Plains, Great Lakes, Southeast]
+overridable:
+  regions: true
+  companyName: true
+  terms: [market, branch, relationship manager]
+home:
+  heroQuestion: "What was the NPL ratio by region last quarter, excluding loans held for sale?"
+  heroAgent: AG-BNK-002
+  headlineKpis: [KPI-BNK-NPL, KPI-BNK-DEPOSITS, KPI-BNK-FRAUD-BPS, KPI-BNK-DIGITAL]
+  theatreScenarios: [SC-BNK-001, SC-BNK-008, SC-BNK-014]
+icon: landmark
+hook: Deposits, credit risk, cards and financial-crime data — governed for AI
+story_roles:
+  heroScenario: SC-BNK-001
+  certDemoProduct: DP-BNK-006
+  lifecycleDemoProduct: DP-BNK-007
+  incidentForStory: INC-BNK-LATE-FEED
+  knockoutKpi: KPI-BNK-NPL
+  qualityFixAgent: AG-BNK-001
+lint_terms:
+  - Ridgeline
+  - Cedar Ridge
+  - NPL
+  - non-performing
+  - non-accrual
+  - charge-off
+  - delinquency
+  - deposits
+  - KYC
+  - AML
+  - SAR
+  - BSA
+  - CECL

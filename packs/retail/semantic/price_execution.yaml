@@ -1,0 +1,66 @@
+name: PRICE_EXECUTION
+description: Store price changes (markdown, promotion, permanent) by effective date with execution status
+tables:
+  - { alias: p, fqn: CONFORMED_GOLD.FCT_PRICE_CHANGE, pk: change_key }
+  - { alias: st, fqn: CONFORMED_GOLD.DIM_STORE, pk: store_key }
+  - { alias: i, fqn: CONFORMED_GOLD.DIM_ITEM, pk: item_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: p.store_key, to: st.store_key }
+  - { from: p.item_key, to: i.item_key }
+  - { from: p.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: st.region, label: Region, synonyms: [territory, store region, area], term: GT-RTL-REGION }
+  - { name: store, expr: st.store_id, label: Store, synonyms: [shop, location, stores], term: GT-RTL-STORE }
+  - { name: department, expr: i.department, label: Department, synonyms: [dept, division], term: GT-RTL-DEPARTMENT }
+  - { name: change_type, expr: p.change_type, label: Price change type, synonyms: [markdown or promotion, type of price change] }
+  - { name: change_status, expr: p.status, label: Status, synonyms: [executed or pending] }
+time_dimensions:
+  - { name: effective_date, expr: d.date, default: true }
+facts:
+  - { name: labour_minutes, expr: p.labour_minutes }
+metrics:
+  - name: price_change_compliance_pct
+    label: Price change compliance
+    expr: 100.0 * AVG(CASE WHEN p.executed_on_time THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [price execution, pricing compliance, price changes on time, ticketing compliance]
+    term: GT-RTL-PRICE-COMPLIANCE
+    description: Share of price changes executed in store on or before their effective date
+  - name: overdue_price_changes
+    label: Overdue price changes
+    expr: COUNT_IF(p.overdue)
+    unit: price changes
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [price change backlog, pricing backlog, overdue markdowns, ticketing backlog]
+    term: GT-RTL-PRICE-CHANGE
+    description: Price changes not yet executed and past their effective date as of the reporting date
+  - name: price_changes
+    label: Price changes
+    expr: COUNT(*)
+    unit: price changes
+    decimals: 0
+    synonyms: [number of price changes, repricing events]
+    term: GT-RTL-PRICE-CHANGE
+    description: Price changes effective in the period
+  - name: avg_markdown_depth
+    label: Average markdown depth
+    expr: AVG(CASE WHEN p.change_type = 'Markdown' THEN p.markdown_pct END)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [markdown depth, markdown percent, average markdown]
+    term: GT-RTL-MARKDOWN
+    description: Mean percentage reduction on markdown price changes
+  - name: execution_labour_hours
+    label: Price execution labour hours
+    expr: SUM(p.labour_minutes) / 60.0
+    unit: hours
+    decimals: 0
+    synonyms: [ticketing hours, labour hours]
+    term: GT-RTL-PRICE-CHANGE
+    description: Store labour hours booked to executing price changes
+products: [DP-RTL-004]

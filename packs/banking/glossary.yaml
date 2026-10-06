@@ -1,0 +1,612 @@
+# Ridgeline Bank business glossary (synthetic). Ported from the AI-Ready banking glossary and the ADPM
+# banking pack; ids, owners and mappings adapted to this pack's personas, warehouse and semantic views.
+
+# ── Credit risk ────────────────────────────────────────────────────────────────────────────────
+- id: GT-BNK-NPL
+  name: "Non-Performing Loan"
+  definition: "A loan 90 or more days past due on principal or interest, or placed on non-accrual status. The NPL ratio is non-performing principal as a share of total principal, excluding loans held for sale."
+  formula: "Σ principal where 90+ DPD or non-accrual ÷ Σ principal (held-for-sale excluded)"
+  domain: Credit risk
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [non-performing loans, nonperforming loans, bad loans]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAN_BALANCE.non_performing, CONFORMED_GOLD.FCT_LOAN_BALANCE.principal, CURATED_SILVER.LOAN_BALANCE.non_performing]
+    metrics: [npl_ratio]
+
+- id: GT-BNK-NON-ACCRUAL
+  name: "Non-Accrual Loan"
+  definition: "A loan on which interest income is no longer recognised because full collection of principal and interest is doubtful, regardless of days past due."
+  formula: "non_accrual = true"
+  domain: Credit risk
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [nonaccrual, non accrual]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAN_BALANCE.non_accrual]
+    metrics: []
+
+- id: GT-BNK-DPD
+  name: "Days Past Due"
+  definition: "The number of days a contractual loan payment is overdue at the month-end snapshot, grouped into Current, 30-59, 60-89 and 90+ buckets."
+  formula: "Snapshot date − oldest unpaid due date"
+  domain: Credit risk
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [dpd, delinquency bucket, aging bucket]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAN_BALANCE.dpd_days, CONFORMED_GOLD.FCT_LOAN_BALANCE.dpd_bucket]
+    metrics: []
+
+- id: GT-BNK-DELINQUENCY
+  name: "30+ Days Past Due Rate"
+  definition: "Loan principal 30 or more days past due as a share of total principal, excluding loans held for sale."
+  formula: "Σ principal where DPD ≥ 30 ÷ Σ principal"
+  domain: Credit risk
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [delinquency rate, past due rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAN_BALANCE.dpd_days]
+    metrics: [delinquency_30_plus_rate]
+
+- id: GT-BNK-NCO
+  name: "Net Charge-Off"
+  definition: "Loan principal written off as uncollectible, net of recoveries on previously charged-off loans. The NCO ratio annualises monthly net charge-offs over average loans."
+  formula: "12 × Σ (charge-offs − recoveries) ÷ Σ month-end principal"
+  domain: Credit risk
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [net charge-offs, nco, net losses]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAN_BALANCE.net_charge_off, CONFORMED_GOLD.FCT_LOAN_BALANCE.charge_off_amount, CONFORMED_GOLD.FCT_LOAN_BALANCE.recovery_amount]
+    metrics: [net_charge_off_ratio]
+
+- id: GT-BNK-ACL
+  name: "Allowance for Credit Losses"
+  definition: "The reserve held against expected lifetime credit losses on the loan portfolio under CECL; coverage compares it with non-performing loans."
+  formula: "Σ allowance ÷ Σ non-performing principal"
+  domain: Credit risk
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [allowance, reserve, cecl allowance, alll]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAN_BALANCE.allowance_amount]
+    metrics: [allowance_coverage]
+
+- id: GT-BNK-LOANS
+  name: "Loans Outstanding"
+  definition: "Unpaid principal on funded loans at month-end, averaged over the months in the reporting period; held-for-sale loans are excluded unless requested."
+  formula: "Σ month-end principal ÷ months in period"
+  domain: Credit risk
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [gross loans, loan book, loan balances]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAN_BALANCE.principal, CURATED_SILVER.LOAN_BALANCE.principal]
+    metrics: [total_loans]
+
+- id: GT-BNK-HFS
+  name: "Held for Sale"
+  definition: "A loan the bank intends to sell rather than hold to maturity. Held-for-sale loans are carried at the lower of cost or fair value and are excluded from credit quality ratios."
+  formula: "held_for_sale = true"
+  domain: Credit risk
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [held-for-sale, hfs, loans for sale]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAN_BALANCE.held_for_sale, CONFORMED_GOLD.DIM_LOAN.held_for_sale]
+    metrics: []
+
+- id: GT-BNK-LOAN-SEGMENT
+  name: "Loan Segment"
+  definition: "The credit policy portfolio a loan belongs to: residential mortgage, home equity, auto, personal, commercial real estate or commercial & industrial."
+  formula: "Decoded from the origination product code"
+  domain: Credit risk
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [portfolio segment, loan type]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_LOAN.loan_segment]
+    metrics: []
+
+- id: GT-BNK-LOAN-YIELD
+  name: "Loan Yield"
+  definition: "The balance-weighted note rate on loans outstanding."
+  formula: "Σ principal × note rate ÷ Σ principal"
+  domain: Credit risk
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [portfolio yield, yield on loans]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAN_BALANCE.rate_weighted_principal, CONFORMED_GOLD.DIM_LOAN.note_rate_pct]
+    metrics: [loan_yield]
+
+# ── Deposits & treasury ────────────────────────────────────────────────────────────────────────────────
+- id: GT-BNK-DEPOSITS
+  name: "Total Deposits"
+  definition: "Ledger balances held in checking, savings, money market and time deposit accounts at month-end, averaged over the months in the reporting period."
+  formula: "Σ month-end ledger balance ÷ months in period"
+  domain: Treasury
+  owner: banking:cro
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [deposit balances, deposit base]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_DEPOSIT_BALANCE.ledger_balance, CURATED_SILVER.DEPOSIT_BALANCE.ledger_balance]
+    metrics: [total_deposits, avg_deposit_balance]
+
+- id: GT-BNK-COST-OF-DEPOSITS
+  name: "Cost of Deposits"
+  definition: "Annualised interest paid on deposits as a share of deposit balances."
+  formula: "12 × Σ monthly interest expense ÷ Σ ledger balance"
+  domain: Treasury
+  owner: banking:cro
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [deposit cost, funding cost]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_DEPOSIT_BALANCE.interest_expense]
+    metrics: [cost_of_deposits]
+
+- id: GT-BNK-NIB
+  name: "Non-Interest-Bearing Deposits"
+  definition: "Checking (demand deposit) balances on which the bank pays no interest; a high share lowers funding cost."
+  formula: "Σ checking balance ÷ Σ deposit balance"
+  domain: Treasury
+  owner: banking:cro
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [nib deposits, dda balances, free funds]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_DEPOSIT_BALANCE.deposit_type]
+    metrics: [noninterest_bearing_share]
+
+- id: GT-BNK-UNINSURED
+  name: "Uninsured Deposits"
+  definition: "Deposit balances above the $250,000 deposit insurance limit; concentration is monitored as a liquidity risk."
+  formula: "Σ max(balance − 250,000, 0) ÷ Σ balance (account-level proxy)"
+  domain: Treasury
+  owner: banking:cro
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [uninsured balances, deposits above insurance limit]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_DEPOSIT_BALANCE.uninsured_balance]
+    metrics: [uninsured_deposit_share]
+
+- id: GT-BNK-DEPOSIT-ACCOUNT
+  name: "Deposit Account"
+  definition: "A checking, savings, money market or time deposit account held by a customer at a branch."
+  formula: "One row per account_id"
+  domain: Treasury
+  owner: banking:cro
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [account, deposit product]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_DEPOSIT_BALANCE.account_id, CURATED_SILVER.DEPOSIT_ACCOUNT.account_id]
+    metrics: [deposit_accounts]
+
+# ── Customer & KYC ────────────────────────────────────────────────────────────────────────────────
+- id: GT-BNK-CUSTOMER
+  name: "Customer"
+  definition: "A person or business with at least one deposit, loan or card relationship with Ridgeline, identified by one customer id in the core CIF."
+  formula: "One row per customer_id"
+  domain: Customer
+  owner: banking:data-steward
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [client, relationship]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.customer_id, CURATED_SILVER.CUSTOMER.customer_id]
+    metrics: []
+
+- id: GT-BNK-ACTIVE-CUSTOMER
+  name: "Active Customer"
+  definition: "A customer whose CIF status is Active; digital, product and balance metrics are measured over active customers only."
+  formula: "status = Active"
+  domain: Customer
+  owner: banking:data-steward
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [active relationship, active client]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.status]
+    metrics: [active_customers]
+
+- id: GT-BNK-SEGMENT
+  name: "Customer Segment"
+  definition: "The relationship tier a customer is managed in: mass market, mass affluent, private client or small business."
+  formula: "Assigned from relationship balance and business flag"
+  domain: Customer
+  owner: banking:data-steward
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [tier, customer tier]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.segment]
+    metrics: []
+
+- id: GT-BNK-DIGITAL-ACTIVE
+  name: "Digitally Active Customer"
+  definition: "An active customer who logged in to the mobile app or online banking in the last 30 days."
+  formula: "Active customers with a digital login in 30 days ÷ active customers"
+  domain: Channels
+  owner: banking:cro
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [digital adoption, digital engagement]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.digital_active]
+    metrics: [digital_active_rate, mobile_share]
+
+- id: GT-BNK-PRODUCTS-PER-CUSTOMER
+  name: "Products per Customer"
+  definition: "The average number of open deposit accounts, loans and cards held by an active customer; a measure of relationship depth."
+  formula: "Σ products held ÷ active customers"
+  domain: Customer
+  owner: banking:data-steward
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [cross-sell ratio, product holding]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.products_held]
+    metrics: [products_per_customer]
+
+- id: GT-BNK-RELATIONSHIP-BALANCE
+  name: "Relationship Balance"
+  definition: "The combined deposit and investment balance a customer holds across all accounts."
+  formula: "Σ balances across a customer’s accounts"
+  domain: Customer
+  owner: banking:data-steward
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [total relationship balance, balance per customer]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.relationship_balance]
+    metrics: [avg_relationship_balance]
+
+- id: GT-BNK-ATTRITION
+  name: "Customer Attrition"
+  definition: "A customer relationship closed in the trailing 12 months; closed customers stay in the CIF for 12 months after closure."
+  formula: "Customers closed in 12 months ÷ customers"
+  domain: Customer
+  owner: banking:data-steward
+  steward: banking:data-steward
+  status: IN_REVIEW
+  cde: false
+  synonyms: [churn, attrition]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.closed_12m]
+    metrics: [attrition_rate]
+
+- id: GT-BNK-KYC-RISK
+  name: "KYC Risk Rating"
+  definition: "The customer due diligence risk rating (Low, Medium or High) that sets the KYC refresh cycle and monitoring intensity."
+  formula: "Assigned at onboarding and each review"
+  domain: Financial crime
+  owner: banking:data-steward
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [cdd rating, aml risk rating, customer risk rating]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.kyc_risk_rating, CURATED_SILVER.KYC_REVIEW.risk_rating]
+    metrics: []
+
+- id: GT-BNK-KYC-REFRESH
+  name: "KYC Refresh"
+  definition: "The periodic re-review of customer due diligence: every year for high-risk, two years for medium-risk and three years for low-risk customers. A review is overdue when its due date has passed."
+  formula: "last review + cycle(risk rating) < reporting date"
+  domain: Financial crime
+  owner: banking:data-steward
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [cdd refresh, kyc review, periodic review]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.kyc_overdue, CONFORMED_GOLD.DIM_CUSTOMER.kyc_review_due, CURATED_SILVER.KYC_REVIEW.review_date]
+    metrics: [kyc_overdue_pct]
+
+- id: GT-BNK-MARKET
+  name: "Market"
+  definition: "One of Ridgeline’s four operating markets — Mountain, Plains, Great Lakes and Southeast — assigned from the customer’s home branch or the booking branch."
+  formula: "Branch region"
+  domain: Enterprise
+  owner: banking:cro
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [region, footprint, territory]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.region, CONFORMED_GOLD.DIM_BRANCH.region]
+    metrics: []
+
+- id: GT-BNK-BRANCH
+  name: "Branch"
+  definition: "A Ridgeline branch, in-store branch, drive-up or commercial banking centre."
+  formula: "One row per branch_id"
+  domain: Channels
+  owner: banking:cro
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [banking center, financial center]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_BRANCH.branch_id, CONFORMED_GOLD.DIM_BRANCH.branch_name]
+    metrics: []
+
+# ── Cards & payments ────────────────────────────────────────────────────────────────────────────────
+- id: GT-BNK-PURCHASE-VOLUME
+  name: "Card Purchase Volume"
+  definition: "The dollar value of approved card purchase authorisations."
+  formula: "Σ approved amount"
+  domain: Cards
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [card spend, purchase volume]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CARD_TXN.approved_amount]
+    metrics: [purchase_volume, avg_ticket]
+
+- id: GT-BNK-FRAUD-LOSS
+  name: "Card Fraud Loss"
+  definition: "Approved card purchases later confirmed as fraud and not recovered; the fraud loss rate expresses losses in basis points of approved volume."
+  formula: "10,000 × Σ fraud loss ÷ Σ approved amount"
+  domain: Cards
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [fraud losses, fraud bps, confirmed fraud]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CARD_TXN.fraud_loss, CONFORMED_GOLD.FCT_CARD_TXN.fraud_confirmed]
+    metrics: [fraud_loss_bps, fraud_losses]
+
+- id: GT-BNK-APPROVAL-RATE
+  name: "Authorization Approval Rate"
+  definition: "The share of card authorisation requests approved by the issuer."
+  formula: "approved authorisations ÷ all authorisations"
+  domain: Cards
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [approval rate, auth rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CARD_TXN.approved]
+    metrics: [auth_approval_rate]
+
+- id: GT-BNK-AUTHORIZATION
+  name: "Card Authorization"
+  definition: "A request from a merchant to approve a card purchase, recorded with merchant category, channel and outcome."
+  formula: "One row per auth_id"
+  domain: Cards
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [card transaction, swipe]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CARD_TXN.auth_id]
+    metrics: [card_authorizations]
+
+- id: GT-BNK-MCC
+  name: "Merchant Category"
+  definition: "The grouping of merchant category codes used in card reporting (grocery, fuel, dining, travel, online retail, digital goods, healthcare, utilities & telecom)."
+  formula: "Grouped from the four-digit MCC"
+  domain: Cards
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [mcc, merchant type]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CARD_TXN.merchant_category]
+    metrics: []
+
+- id: GT-BNK-CNP
+  name: "Card Not Present"
+  definition: "A card transaction where the card is not physically presented to the merchant, such as online or phone orders; the highest-fraud channel."
+  formula: "card_channel = Card not present"
+  domain: Cards
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [cnp, online card transaction, e-commerce]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CARD_TXN.card_channel]
+    metrics: []
+
+# ── Collections ────────────────────────────────────────────────────────────────────────────────
+- id: GT-BNK-COLLECTION-CASE
+  name: "Collection Case"
+  definition: "A delinquent loan worked by the collections team from entry (30, 60 or 90+ days past due) until it cures, moves to a payment plan, is charged off, or remains open."
+  formula: "One row per case_id"
+  domain: Collections
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [collections account, case]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_COLLECTION_CASE.case_id, CONFORMED_GOLD.FCT_COLLECTION_CASE.outcome]
+    metrics: [collection_cases, avg_days_to_resolve]
+
+- id: GT-BNK-CURE
+  name: "Cure"
+  definition: "A collection case resolved by the borrower bringing the loan back to current. The cure rate is measured over resolved cases."
+  formula: "cured cases ÷ resolved cases"
+  domain: Collections
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [cure rate, self-cure, cured]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_COLLECTION_CASE.cured, CONFORMED_GOLD.FCT_COLLECTION_CASE.outcome]
+    metrics: [cure_rate]
+
+- id: GT-BNK-PTP
+  name: "Promise to Pay"
+  definition: "A borrower’s commitment to pay a stated amount by a stated date, recorded by collections; kept when the payment arrives on time."
+  formula: "kept promises ÷ promises made"
+  domain: Collections
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [ptp, promise-to-pay]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_COLLECTION_CASE.ptp_made, CONFORMED_GOLD.FCT_COLLECTION_CASE.ptp_kept]
+    metrics: [promise_kept_rate]
+
+- id: GT-BNK-ROLL-RATE
+  name: "Roll Rate to Charge-Off"
+  definition: "The share of resolved collection cases that roll through delinquency to charge-off."
+  formula: "charged-off cases ÷ resolved cases"
+  domain: Collections
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [roll rate, flow rate, flow to loss]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_COLLECTION_CASE.charged_off]
+    metrics: [chargeoff_roll_rate]
+
+- id: GT-BNK-RECOVERY
+  name: "Recovery"
+  definition: "Cash collected on a delinquent or charged-off balance through collections, payment plans or agencies."
+  formula: "Σ recovered amount"
+  domain: Collections
+  owner: banking:lending-dpo
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [recoveries, amount recovered]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_COLLECTION_CASE.recovered_amount]
+    metrics: [recoveries]
+
+# ── Financial crime ────────────────────────────────────────────────────────────────────────────────
+- id: GT-BNK-AML-ALERT
+  name: "AML Alert"
+  definition: "A transaction-monitoring alert generated when customer activity matches a monitoring scenario such as structuring or rapid movement of funds."
+  formula: "One row per alert_id"
+  domain: Financial crime
+  owner: banking:data-steward
+  steward: banking:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [tm alert, transaction monitoring alert, alert]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_AML_ALERT.alert_id, CONFORMED_GOLD.FCT_AML_ALERT.disposition]
+    metrics: [alerts_raised, avg_days_to_disposition]
+
+- id: GT-BNK-ALERT-TO-CASE
+  name: "Alert-to-Case Rate"
+  definition: "The share of dispositioned alerts escalated to an investigation case; a measure of monitoring precision."
+  formula: "escalated alerts ÷ dispositioned alerts"
+  domain: Financial crime
+  owner: banking:data-steward
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [escalation rate, alert conversion]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_AML_ALERT.escalated, CONFORMED_GOLD.FCT_AML_ALERT.dispositioned]
+    metrics: [alert_to_case_rate, false_positive_rate]
+
+- id: GT-BNK-SAR
+  name: "Suspicious Activity Report"
+  definition: "A confidential report filed with the financial intelligence unit when an investigation concludes activity is suspicious. SAR existence is never disclosed outside the financial crimes function."
+  formula: "SARs filed ÷ closed cases"
+  domain: Financial crime
+  owner: banking:data-steward
+  steward: banking:data-steward
+  status: IN_REVIEW
+  cde: true
+  synonyms: [suspicious activity report, sar filing]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_AML_ALERT.sar_filed]
+    metrics: [sar_conversion_rate]
+
+# ── Channels ────────────────────────────────────────────────────────────────────────────────
+- id: GT-BNK-DIGITAL-SESSION
+  name: "Digital Session"
+  definition: "One mobile app or online banking session, from login attempt to logout or timeout."
+  formula: "One row per session_id"
+  domain: Channels
+  owner: banking:cro
+  steward: banking:data-steward
+  status: DRAFT
+  cde: false
+  synonyms: [login, digital visit]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_DIGITAL_SESSION.session_id, CONFORMED_GOLD.FCT_DIGITAL_SESSION.login_success]
+    metrics: [digital_sessions, login_success_rate, avg_session_minutes]
+
+# ── Governance ────────────────────────────────────────────────────────────────────────────────
+- id: GT-BNK-PII
+  name: "Nonpublic Personal Information"
+  definition: "Information that identifies a customer — name, address, email, phone, date of birth — protected under the bank’s privacy policy and masked for personas without PII clearance."
+  formula: "Columns tagged PII in GOVERNANCE.TAGS"
+  domain: Governance
+  owner: banking:data-steward
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [npi, personal data, personal information]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.full_name, CONFORMED_GOLD.DIM_CUSTOMER.email, CONFORMED_GOLD.DIM_CUSTOMER.phone]
+    metrics: []
+
+- id: GT-BNK-CDE
+  name: "Critical Data Element"
+  definition: "A data element whose quality materially affects regulatory, risk or financial reporting; it has a named owner, steward, glossary term and executable DQ rules."
+  formula: "Columns tagged CDE in GOVERNANCE.TAGS"
+  domain: Governance
+  owner: banking:data-steward
+  steward: banking:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [critical data element, key data element]
+  mappings:
+    columns: []
+    metrics: []

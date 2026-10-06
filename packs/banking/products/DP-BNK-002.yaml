@@ -1,0 +1,25 @@
+id: DP-BNK-002
+name: Deposits & Liquidity
+domain: Deposits & Treasury
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 2.2.1
+owner: banking:lending-dpo
+steward: banking:data-steward
+description: Month-end deposit balances by market, branch, product and segment with funding cost and uninsured concentration.
+purpose: ALCO reporting, liquidity monitoring and deposit pricing decisions from one certified deposit base.
+decision: { persona: Treasurer, decision: "Where to price deposit promotions and how much uninsured funding to tolerate", cadence: Monthly (ALCO), workaround: "Core balance extracts pasted into the ALCO workbook", consequence: "Promotions pay up for balances that would have stayed, while rate-sensitive outflows go unnoticed" }
+sample_questions: ["What were total deposits last quarter?", "Cost of deposits by product last quarter", "Uninsured deposit share by segment"]
+semantic_view: DEPOSITS
+output_ports:
+  - { kind: semantic, ref: DEPOSITS }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_BNK_002_DEPOSITS_LIQUIDITY }
+  - { kind: agent, ref: AG-BNK-002 }
+sla: { freshness_minutes: 1440, availability_pct: 99.5, max_null_rate_pct: 0.5 }
+kpis: [KPI-BNK-DEPOSITS, KPI-BNK-COST-DEP, KPI-BNK-NIB, KPI-BNK-UNINSURED]
+upstream: [CONFORMED_GOLD.FCT_DEPOSIT_BALANCE, CONFORMED_GOLD.DIM_BRANCH]
+consumers: [ALCO, Treasury, Risk & Liquidity Analyst agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-BNK-002

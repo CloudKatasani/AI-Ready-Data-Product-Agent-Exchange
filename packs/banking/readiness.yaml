@@ -1,0 +1,6 @@
+# Readiness preset labels for Ridgeline Bank (preset ids from the ported readiness engine: early, mid, advanced).
+preset_labels:
+  early: Spreadsheet-driven
+  mid: Mid-migration
+  advanced: Governed lakehouse
+question_overrides: []

@@ -1,0 +1,63 @@
+name: LOYALTY_360
+description: Loyalty member metrics — status, tier, app enrolment, points liability and churn risk
+tables:
+  - { alias: m, fqn: CONFORMED_GOLD.DIM_MEMBER, pk: member_key }
+dimensions:
+  - { name: region, expr: m.region, label: Region, synonyms: [territory, home region, area], term: GT-RTL-REGION }
+  - { name: tier, expr: m.tier, label: Member tier, synonyms: [loyalty tier, membership tier, member tier], term: GT-RTL-TIER }
+  - { name: member_status, expr: m.status, label: Status, synonyms: [member status, active or lapsed] }
+  - { name: app_enrolled, expr: m.app_enrolled, label: App enrolled, synonyms: [on the app, app user] }
+  - { name: churn_risk_band, expr: m.churn_risk_band, label: Churn risk band, synonyms: [risk band] }
+  - { name: member_name, expr: m.full_name, label: Member name, synonyms: [name, member] }
+time_dimensions:
+  - { name: member_since, expr: m.join_date, default: true }
+facts:
+  - { name: churn_risk_score, expr: m.churn_risk_score }
+  - { name: points_balance, expr: m.points_balance }
+metrics:
+  - name: active_members
+    label: Active members
+    expr: COUNT_IF(m.status = 'Active')
+    unit: members
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [active loyalty members, member count, number of members, loyalty members]
+    term: GT-RTL-ACTIVE-MEMBER
+    description: Members with Active status in the governed member sample
+  - name: app_adoption_rate
+    label: App adoption rate
+    expr: 100.0 * AVG(CASE WHEN m.status = 'Active' THEN CASE WHEN m.app_enrolled THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [app adoption, app enrolment, digital engagement, app penetration]
+    term: GT-RTL-APP-ADOPTION
+    description: Share of active members enrolled in the mobile app
+  - name: avg_churn_risk
+    label: Member churn risk score
+    expr: AVG(CASE WHEN m.status = 'Active' THEN m.churn_risk_score END)
+    unit: score
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [churn risk, attrition risk, lapse risk]
+    term: GT-RTL-CHURN-RISK
+    description: Mean model churn risk (0-100) across active members
+  - name: high_churn_risk_pct
+    label: High churn-risk members
+    expr: 100.0 * AVG(CASE WHEN m.status = 'Active' THEN CASE WHEN m.churn_risk_band = 'High' THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [at-risk members, high risk members]
+    term: GT-RTL-CHURN-RISK
+    description: Share of active members with a churn risk score of 60 or more
+  - name: points_liability
+    label: Points liability
+    expr: SUM(CASE WHEN m.status = 'Active' THEN m.points_balance ELSE 0 END) * 0.01
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [outstanding points, points balance value, unredeemed points]
+    term: GT-RTL-POINTS
+    description: Dollar value of unredeemed points held by active members (1 point = 1 cent)
+products: [DP-RTL-001]

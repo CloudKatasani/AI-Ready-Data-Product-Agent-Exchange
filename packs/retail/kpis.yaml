@@ -1,0 +1,398 @@
+# KPIs with target bands, calibrated against the scale-M warehouse (AI-Ready retail kpis + Marketplace RTL KPI manifests).
+# `window` is evaluated relative to pack asOf; `last n unit` = the n most recent complete units (ADR-0011).
+- id: KPI-RTL-NET-SALES
+  name: Net sales
+  definition: "Net sales after discounts on comparable stores, year to date"
+  formula: "sum of net line amount, comparable stores only"
+  unit: "USD"
+  direction: higher_is_better
+  target: { min: 2600000, max: 3300000 }
+  window: { ytd: true }
+  term: GT-RTL-NET-SALES
+  metric: net_sales
+  products: [DP-RTL-002]
+- id: KPI-RTL-GM-PCT
+  name: Gross margin rate
+  definition: "Gross margin as a share of net sales on comparable stores"
+  formula: "(net sales − cost of goods sold) ÷ net sales"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 42, max: 48 }
+  window: { ytd: true }
+  term: GT-RTL-GROSS-MARGIN
+  metric: gross_margin_pct
+  products: [DP-RTL-002]
+- id: KPI-RTL-GM
+  name: Gross margin
+  definition: "Gross margin dollars on comparable stores in the quarter"
+  formula: "net sales − cost of goods sold"
+  unit: "USD"
+  direction: higher_is_better
+  target: { min: 400000, max: 560000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-RTL-GROSS-MARGIN
+  metric: gross_margin
+  products: [DP-RTL-002]
+- id: KPI-RTL-UNITS
+  name: Units sold
+  definition: "Units sold on comparable stores in the quarter"
+  formula: "sum of quantity on sales lines"
+  unit: "units"
+  direction: higher_is_better
+  target: { min: 33000, max: 44000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-RTL-UNITS
+  metric: units_sold
+  products: [DP-RTL-002]
+- id: KPI-RTL-TXN
+  name: Sales transactions
+  definition: "Distinct till and web-store transactions on comparable stores in the quarter"
+  formula: "count of distinct transactions"
+  unit: "transactions"
+  direction: higher_is_better
+  target: { min: 9500, max: 12500 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-RTL-TRANSACTION
+  metric: transactions
+  products: [DP-RTL-002]
+- id: KPI-RTL-BASKET
+  name: Average basket value
+  definition: "Net sales per transaction on comparable stores"
+  formula: "net sales ÷ distinct transactions"
+  unit: "USD"
+  direction: higher_is_better
+  target: { min: 85, max: 105 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-RTL-BASKET
+  metric: avg_basket_value
+  products: [DP-RTL-002]
+- id: KPI-RTL-PROMO-SHARE
+  name: Promotional sales share
+  definition: "Share of net sales sold at a promotional or markdown price"
+  formula: "net sales on promotion ÷ net sales"
+  unit: "%"
+  direction: target_band
+  target: { min: 20, max: 30 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-RTL-PROMO-SALES
+  metric: promo_sales_share
+  products: [DP-RTL-002]
+- id: KPI-RTL-DIGITAL-SHARE
+  name: Digital sales share
+  definition: "Share of net sales placed online, including click & collect"
+  formula: "online and click & collect net sales ÷ net sales"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 22, max: 32 }
+  window: { ytd: true }
+  term: GT-RTL-CHANNEL
+  metric: digital_sales_share
+  products: [DP-RTL-002]
+- id: KPI-RTL-MEMBER-SHARE
+  name: Loyalty-identified sales share
+  definition: "Share of net sales where a loyalty member was identified"
+  formula: "member-identified net sales ÷ net sales"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 55, max: 70 }
+  window: { ytd: true }
+  term: GT-RTL-MEMBER-SALES
+  metric: member_sales_share
+  products: [DP-RTL-002]
+- id: KPI-RTL-APP
+  name: App adoption rate
+  definition: "Share of active members enrolled in the mobile app"
+  formula: "app-enrolled active members ÷ active members"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 45, max: 60 }
+  window: {}
+  term: GT-RTL-APP-ADOPTION
+  metric: app_adoption_rate
+  products: [DP-RTL-001]
+- id: KPI-RTL-CHURN
+  name: Member churn risk score
+  definition: "Average model churn risk across active members"
+  formula: "mean churn risk score (0-100) of active members"
+  unit: "score"
+  direction: lower_is_better
+  target: { min: 25, max: 35 }
+  window: {}
+  term: GT-RTL-CHURN-RISK
+  metric: avg_churn_risk
+  products: [DP-RTL-001]
+- id: KPI-RTL-HIGH-CHURN
+  name: High churn-risk members
+  definition: "Share of active members with a churn risk score of 60 or more"
+  formula: "active members with churn score ≥ 60 ÷ active members"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 2, max: 8 }
+  window: {}
+  term: GT-RTL-CHURN-RISK
+  metric: high_churn_risk_pct
+  products: [DP-RTL-001]
+- id: KPI-RTL-POINTS
+  name: Points liability
+  definition: "Dollar value of unredeemed points held by active members (governed member sample)"
+  formula: "sum of active members' points balance × $0.01"
+  unit: "USD"
+  direction: target_band
+  target: { min: 100000, max: 140000 }
+  window: {}
+  term: GT-RTL-POINTS
+  metric: points_liability
+  products: [DP-RTL-001]
+- id: KPI-RTL-INSTOCK
+  name: In-stock rate
+  definition: "Share of store-item-days with stock on hand"
+  formula: "in-stock store-item-days ÷ store-item-days"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 95, max: 98.5 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-RTL-IN-STOCK
+  metric: in_stock_rate
+  products: [DP-RTL-003]
+- id: KPI-RTL-OOS
+  name: Out-of-stock rate
+  definition: "Share of store-item-days with no stock on hand"
+  formula: "100 − in-stock rate"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 1.5, max: 5 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-RTL-IN-STOCK
+  metric: out_of_stock_rate
+  products: [DP-RTL-003]
+- id: KPI-RTL-DOS
+  name: Days of supply
+  definition: "Average days of supply on hand at the current rate of sale"
+  formula: "on-hand units ÷ average daily units sold, in-stock positions"
+  unit: "days"
+  direction: target_band
+  target: { min: 10, max: 20 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-RTL-DAYS-OF-SUPPLY
+  metric: avg_days_of_supply
+  products: [DP-RTL-003]
+- id: KPI-RTL-IMU
+  name: Initial margin
+  definition: "Mean initial margin across the item assortment"
+  formula: "(ticket price − cost) ÷ ticket price"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 44, max: 52 }
+  window: {}
+  term: GT-RTL-IMU
+  metric: avg_initial_margin_pct
+  products: [DP-RTL-004]
+- id: KPI-RTL-LOW-MARGIN
+  name: Low-margin items
+  definition: "Share of items with an initial margin below 35%"
+  formula: "items with initial margin < 35% ÷ all items"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 5, max: 12 }
+  window: {}
+  term: GT-RTL-IMU
+  metric: low_margin_items_pct
+  products: [DP-RTL-004]
+- id: KPI-RTL-PRIVATE-LABEL
+  name: Private label share
+  definition: "Share of the assortment that is private label"
+  formula: "private label items ÷ all items"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 30, max: 40 }
+  window: {}
+  term: GT-RTL-PRIVATE-LABEL
+  metric: private_label_share
+  products: [DP-RTL-004]
+- id: KPI-RTL-PRICE-COMP
+  name: Price change compliance
+  definition: "Share of price changes executed in store by their effective date"
+  formula: "price changes executed on or before effective date ÷ price changes due"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 75, max: 92 }
+  window: { ytd: true }
+  term: GT-RTL-PRICE-COMPLIANCE
+  metric: price_change_compliance_pct
+  products: [DP-RTL-004]
+- id: KPI-RTL-PRICE-BACKLOG
+  name: Overdue price changes
+  definition: "Price changes not executed and past their effective date"
+  formula: "count of unexecuted price changes with effective date before the reporting date"
+  unit: "price changes"
+  direction: lower_is_better
+  target: { min: 2500, max: 5000 }
+  window: {}
+  term: GT-RTL-PRICE-CHANGE
+  metric: overdue_price_changes
+  products: [DP-RTL-004]
+- id: KPI-RTL-AOV
+  name: Average order value
+  definition: "Average value of consumer web-store orders"
+  formula: "sum of consumer order value ÷ consumer orders"
+  unit: "USD"
+  direction: higher_is_better
+  target: { min: 65, max: 85 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-RTL-AOV
+  metric: avg_order_value
+  products: [DP-RTL-005]
+- id: KPI-RTL-ONLINE-ORDERS
+  name: Online orders
+  definition: "Web-store orders placed in the month (governed member sample)"
+  formula: "count of orders"
+  unit: "orders"
+  direction: target_band
+  target: { min: 1800, max: 2800 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-RTL-ONLINE-ORDER
+  metric: online_orders
+  products: [DP-RTL-005]
+- id: KPI-RTL-RETURN-RATE
+  name: Online return rate
+  definition: "Value returned as a share of order value, return window closed"
+  formula: "returned value ÷ order value, orders older than 30 days"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 6, max: 10 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-RTL-RETURN-RATE
+  metric: return_rate
+  products: [DP-RTL-005]
+- id: KPI-RTL-REFUND-DAYS
+  name: Refund cycle time
+  definition: "Average days from return received to refund issued"
+  formula: "mean days to refund on returned orders older than 30 days"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 4, max: 7 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-RTL-REFUND-CYCLE
+  metric: refund_cycle_days
+  products: [DP-RTL-005]
+- id: KPI-RTL-REFUNDS
+  name: Refund value
+  definition: "Value refunded on web-store orders placed in the quarter (governed member sample)"
+  formula: "sum of returned value"
+  unit: "USD"
+  direction: lower_is_better
+  target: { min: 40000, max: 60000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-RTL-REFUND
+  metric: refund_value
+  products: [DP-RTL-005]
+- id: KPI-RTL-OTD
+  name: On-time delivery
+  definition: "Share of web-store orders delivered within the promised days"
+  formula: "orders delivered within promise ÷ orders"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 80, max: 95 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-RTL-ONLINE-ORDER
+  metric: on_time_delivery_pct
+  products: [DP-RTL-005]
+- id: KPI-RTL-PO-COST
+  name: Purchase order cost
+  definition: "All purchase-order cost in the fiscal year to date"
+  formula: "sum of PO line cost"
+  unit: "USD"
+  direction: target_band
+  target: { min: 35000000, max: 50000000 }
+  window: { ytd: true }
+  term: GT-RTL-PO-COST
+  metric: total_po_cost
+  products: [DP-RTL-006]
+- id: KPI-RTL-COST-COMP
+  name: Cost compliance
+  definition: "Share of purchase-order cost placed at the agreed vendor cost"
+  formula: "PO cost at agreed cost ÷ total PO cost"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 85, max: 95 }
+  window: { ytd: true }
+  term: GT-RTL-COST-COMPLIANCE
+  metric: cost_compliance_pct
+  products: [DP-RTL-006]
+- id: KPI-RTL-OFF-AGREEMENT
+  name: Off-agreement spend
+  definition: "Purchase-order cost placed outside an agreed vendor cost"
+  formula: "sum of PO cost where not at agreed cost"
+  unit: "USD"
+  direction: lower_is_better
+  target: { min: 4000000, max: 8000000 }
+  window: { ytd: true }
+  term: GT-RTL-OFF-AGREEMENT
+  metric: off_agreement_spend
+  products: [DP-RTL-006]
+- id: KPI-RTL-OTIF
+  name: Vendor OTIF
+  definition: "Share of received PO lines delivered on time and in full"
+  formula: "OTIF lines ÷ received lines"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 85, max: 95 }
+  window: { ytd: true }
+  term: GT-RTL-OTIF
+  metric: vendor_otif_pct
+  products: [DP-RTL-006]
+- id: KPI-RTL-FILL
+  name: Vendor fill rate
+  definition: "Units received as a share of units ordered"
+  formula: "units received ÷ units ordered, received lines"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 95, max: 99.5 }
+  window: { ytd: true }
+  term: GT-RTL-FILL-RATE
+  metric: vendor_fill_rate_pct
+  products: [DP-RTL-006]
+- id: KPI-RTL-LEAD-TIME
+  name: PO lead time
+  definition: "Average days from PO creation to goods receipt"
+  formula: "mean of receipt date − PO date"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 12, max: 20 }
+  window: { ytd: true }
+  term: GT-RTL-LEAD-TIME
+  metric: po_lead_time_days
+  products: [DP-RTL-006]
+- id: KPI-RTL-SHRINK
+  name: Shrink rate
+  definition: "Shrink found by cycle counts as a share of counted system value"
+  formula: "shrink value ÷ system value counted"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 1.2, max: 2.2 }
+  window: {}
+  term: GT-RTL-SHRINK
+  metric: shrink_rate_pct
+  products: [DP-RTL-007]
+- id: KPI-RTL-COUNT-OVERDUE
+  name: Counts overdue
+  definition: "Share of counted store categories past their full-count cycle"
+  formula: "overdue counts ÷ counts"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 15, max: 30 }
+  window: {}
+  term: GT-RTL-COUNT-CYCLE
+  metric: counts_overdue_pct
+  products: [DP-RTL-007]
+- id: KPI-RTL-SHRINK-RISK
+  name: Shrink risk score
+  definition: "Mean loss-prevention risk score across counts"
+  formula: "mean count risk score (0-100)"
+  unit: "score"
+  direction: lower_is_better
+  target: { min: 30, max: 45 }
+  window: {}
+  term: GT-RTL-SHRINK-RISK
+  metric: avg_shrink_risk
+  products: [DP-RTL-007]

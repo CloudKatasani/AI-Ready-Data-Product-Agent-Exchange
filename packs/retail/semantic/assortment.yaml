@@ -1,0 +1,64 @@
+name: ASSORTMENT
+description: Item master assortment snapshot — initial margin, price bands and private label mix (one row per item)
+tables:
+  - { alias: i, fqn: CONFORMED_GOLD.DIM_ITEM, pk: item_key }
+  - { alias: vd, fqn: CONFORMED_GOLD.DIM_VENDOR, pk: vendor_key }
+relationships:
+  - { from: i.vendor_key, to: vd.vendor_key }
+dimensions:
+  - { name: department, expr: i.department, label: Department, synonyms: [dept, division], term: GT-RTL-DEPARTMENT }
+  - { name: category, expr: i.category, label: Category, synonyms: [merchandise category, product category, categories], term: GT-RTL-CATEGORY }
+  - { name: brand_type, expr: i.brand_type, label: Brand type, synonyms: [own brand, private label or national, national brands] , term: GT-RTL-PRIVATE-LABEL }
+  - { name: lifecycle_status, expr: i.lifecycle_status, label: Lifecycle status, synonyms: [item status, discontinued] }
+  - { name: price_band, expr: i.price_band, label: Price band, synonyms: [price point, price tier] }
+  - { name: margin_band, expr: i.margin_band, label: Margin band, synonyms: [margin tier] }
+  - { name: vendor, expr: vd.vendor_name, label: Vendor, synonyms: [supplier, brand owner], term: GT-RTL-VENDOR }
+time_dimensions: []
+facts:
+  - { name: initial_margin_pct, expr: i.initial_margin_pct }
+metrics:
+  - name: avg_initial_margin_pct
+    label: Initial margin
+    expr: AVG(i.initial_margin_pct)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [imu, initial markup, ticket margin, intake margin]
+    term: GT-RTL-IMU
+    description: Mean initial margin (ticket price less cost, as a share of ticket price) across items
+  - name: low_margin_items_pct
+    label: Low-margin items
+    expr: 100.0 * COUNT_IF(i.margin_band = 'Low') / COUNT(*)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [share of low margin items, low margin share]
+    term: GT-RTL-IMU
+    description: Share of items with an initial margin below 35%
+  - name: low_margin_item_count
+    label: Low-margin item count
+    expr: COUNT_IF(i.margin_band = 'Low')
+    unit: items
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [number of low margin items]
+    term: GT-RTL-IMU
+    description: Count of items with an initial margin below 35%
+  - name: item_count
+    label: Items
+    expr: COUNT(*)
+    unit: items
+    decimals: 0
+    synonyms: [number of items, sku count, assortment size]
+    term: GT-RTL-ITEM
+    description: Count of items in the assortment
+  - name: private_label_share
+    label: Private label share
+    expr: 100.0 * AVG(CASE WHEN i.brand_type = 'Private label' THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [private label mix, own brand share, private label penetration]
+    term: GT-RTL-PRIVATE-LABEL
+    description: Share of items that are Harbor & Pine private label
+products: [DP-RTL-004]

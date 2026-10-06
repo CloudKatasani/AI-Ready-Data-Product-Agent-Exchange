@@ -1,0 +1,30 @@
+id: AG-BNK-003
+name: Financial Crimes Copilot
+domain: Financial Crime
+status: PRODUCTION
+owner: banking:lending-dpo
+on_call: Financial Crimes Analytics
+avatar: { icon: shield-alert, hue: 0 }
+capability: "Answers questions on card fraud losses, authorisation approval, AML alert volumes, escalation and SAR conversion."
+personas_served: [BSA Officer, Head of Card Fraud Strategy, AML Investigator]
+out_of_scope: ["blocking or reissuing cards", "filing suspicious activity reports", "closing customer accounts", "tuning monitoring thresholds"]
+products:
+  - { id: DP-BNK-004, columns: "*" }
+  - { id: DP-BNK-006, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [CARD_PAYMENTS, AML_ALERTS], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-BNK-CARD-FRAUD, DOC-BNK-BSA-AML] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-BNK-FRAUD-BPS, grains: [month, quarter], slices: [merchant_category, card_channel, card_product, region], depth: rank_drivers }
+  - { kpi: KPI-BNK-APPROVAL, grains: [month, quarter], slices: [card_channel, card_product, merchant_category], depth: explain }
+  - { kpi: KPI-BNK-ALERTS, grains: [month, quarter], slices: [monitoring_scenario, region, customer_risk], depth: trend }
+  - { kpi: KPI-BNK-ALERT-CASE, grains: [month, quarter], slices: [monitoring_scenario, region], depth: explain }
+  - { kpi: KPI-BNK-SAR-CONV, grains: [quarter], slices: [monitoring_scenario], depth: value }
+  - { kpi: KPI-BNK-AML-DAYS, grains: [month, quarter], slices: [alert_priority, monitoring_scenario], depth: trend }
+instructions: [INS-BNK-003-P, INS-BNK-003-R, INS-BNK-003-G, INS-BNK-003-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-BNK-014, SC-BNK-015, SC-BNK-016, SC-BNK-017, SC-BNK-018]

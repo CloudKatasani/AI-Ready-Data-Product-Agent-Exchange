@@ -1,0 +1,81 @@
+sensitivity_classes:
+  - { class: PII, description: "Personal information about loyalty members, employees or vendor contacts" }
+  - { class: PCI, description: "Payment card data" }
+  - { class: GOV_ID, description: "Government or tax identifiers" }
+
+masking_policies:
+  - { id: MASK_PII, class: PII, macro: mask_pii, description: "Replace personal data with ••• unless the persona is cleared for PII" }
+  - { id: MASK_EMAIL, class: PII, macro: mask_email, description: "Hash the local part of email addresses" }
+  - { id: MASK_PHONE, class: PII, macro: mask_phone, description: "Show only the last four digits of phone numbers" }
+  - { id: MASK_PCI, class: PCI, macro: mask_pci, description: "Show only the last four digits of card numbers" }
+  - { id: MASK_GOV_ID, class: GOV_ID, macro: mask_gov_id, description: "Show only the last four characters of tax identifiers" }
+
+row_access_policies:
+  - id: RAP_REGION
+    dimension: region
+    description: "Regional personas see only rows for their own store region"
+    bindings:
+      - { object: CONFORMED_GOLD.DIM_STORE, column: region }
+      - { object: CONFORMED_GOLD.DIM_MEMBER, column: region }
+      - { object: CURATED_SILVER.STORE_LOCATION, column: region }
+      - { object: CURATED_SILVER.LOYALTY_MEMBER, column: region }
+
+column_tags:
+  # Loyalty member PII — masked for every persona without PII clearance.
+  - { column: CONFORMED_GOLD.DIM_MEMBER.first_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_MEMBER.last_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_MEMBER.full_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_MEMBER.street_address, classes: [PII], masking: MASK_PII }
+  # Certification demo (DP-RTL-005 gate 6): email and phone masking is not attached until FIX-2.
+  - { column: CONFORMED_GOLD.DIM_MEMBER.email, classes: [PII], masking: MASK_EMAIL, mask_pending_fix: FIX-2 }
+  - { column: CONFORMED_GOLD.DIM_MEMBER.phone, classes: [PII], masking: MASK_PHONE, mask_pending_fix: FIX-2 }
+  - { column: CONFORMED_GOLD.FCT_PRICE_CHANGE.executed_by, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.FCT_CARE_CONTACT.agent_notes, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_VENDOR.tax_id, classes: [GOV_ID], masking: MASK_GOV_ID }
+  - { column: CONFORMED_GOLD.DIM_VENDOR.contact_email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.LOYALTY_MEMBER.first_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.LOYALTY_MEMBER.last_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.LOYALTY_MEMBER.email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.LOYALTY_MEMBER.phone, classes: [PII], masking: MASK_PHONE }
+  - { column: CURATED_SILVER.LOYALTY_MEMBER.street_address, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.ORDER_PAYMENT.card_number, classes: [PCI], masking: MASK_PCI }
+  - { column: CURATED_SILVER.PURCHASE_ORDER_LINE.buyer, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.PRICE_CHANGE.executed_by, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.CARE_CONTACT.agent_notes, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.VENDOR_MASTER.tax_id, classes: [GOV_ID], masking: MASK_GOV_ID }
+  - { column: CURATED_SILVER.VENDOR_MASTER.contact_email, classes: [PII], masking: MASK_EMAIL }
+  # Critical data elements (each has DQ rules in warehouse/dq).
+  - { column: CONFORMED_GOLD.FCT_SALES_LINE.net_amount, cde: true }
+  - { column: CONFORMED_GOLD.FCT_SALES_LINE.quantity, cde: true }
+  - { column: CONFORMED_GOLD.FCT_SALES_LINE.cost_amount, cde: true }
+  - { column: CONFORMED_GOLD.DIM_STORE.region, cde: true }
+  - { column: CONFORMED_GOLD.DIM_STORE.comp_store, cde: true }
+  - { column: CONFORMED_GOLD.DIM_MEMBER.member_id, cde: true }
+  - { column: CONFORMED_GOLD.FCT_STORE_INVENTORY.on_hand_units, cde: true }
+  - { column: CONFORMED_GOLD.DIM_ITEM.initial_margin_pct, cde: true }
+  - { column: CONFORMED_GOLD.FCT_PRICE_CHANGE.executed_date, cde: true }
+  - { column: CONFORMED_GOLD.FCT_ONLINE_ORDER.order_value, cde: true }
+  - { column: CONFORMED_GOLD.FCT_ONLINE_ORDER.returned_value, cde: true }
+  - { column: CONFORMED_GOLD.FCT_PO_LINE.po_cost_usd, cde: true }
+  - { column: CONFORMED_GOLD.FCT_PO_LINE.at_agreed_cost, cde: true }
+  - { column: CONFORMED_GOLD.FCT_CYCLE_COUNT.last_full_count_date, cde: true }
+
+grants:
+  - persona: retail:store-ops-northeast
+    products: [DP-RTL-001, DP-RTL-002, DP-RTL-003]
+    agents: [AG-RTL-001, AG-RTL-002, AG-RTL-004]
+  - persona: retail:merch-analyst
+    products: [DP-RTL-002, DP-RTL-003, DP-RTL-004, DP-RTL-007]
+    agents: [AG-RTL-002, AG-RTL-004]
+  - persona: retail:commercial-dpo
+    products: [DP-RTL-002, DP-RTL-003, DP-RTL-004, DP-RTL-006, DP-RTL-007]
+    agents: [AG-RTL-002, AG-RTL-003, AG-RTL-004]
+  - persona: retail:customer-steward
+    products: [DP-RTL-001, DP-RTL-002, DP-RTL-003, DP-RTL-004, DP-RTL-005, DP-RTL-006, DP-RTL-007, DP-RTL-008]
+    agents: [AG-RTL-001, AG-RTL-002, AG-RTL-003, AG-RTL-004, AG-RTL-005]
+  - persona: retail:coo
+    # Aggregates only (archetype E): sees every headline KPI tile, never row-level data.
+    products: [DP-RTL-001, DP-RTL-002, DP-RTL-003, DP-RTL-004, DP-RTL-005, DP-RTL-006]
+    agents: [AG-RTL-001, AG-RTL-002, AG-RTL-003, AG-RTL-004]
+
+public_products: []

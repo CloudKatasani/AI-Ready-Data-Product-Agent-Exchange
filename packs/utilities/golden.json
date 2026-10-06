@@ -249,7 +249,7 @@
     "SC-UTL-007": {
       "agent": "AG-UTL-002",
       "kind": "answer",
-      "headline": "System SAIDI is 87.2 minutes year to date — better than target.",
+      "headline": "System SAIDI is 87.2 minutes year to date — within target.",
       "rowFiltered": false,
       "masked": [],
       "narrative": "Monthly SAIDI over 9 months, excluding major event days (BR-UTL-012).",

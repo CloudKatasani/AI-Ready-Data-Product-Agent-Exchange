@@ -1,0 +1,113 @@
+# Knockout (Why AI-Ready): four governed answers and how each degrades when a layer is switched off.
+# declared_delta_pct is computed against the warehouse in Phase 8 and left empty here.
+answers:
+  - id: KO-BNK-01
+    kpi: KPI-BNK-NPL
+    question: "What was the NPL ratio last quarter, excluding loans held for sale?"
+    query: { view: LOAN_PORTFOLIO, metrics: [npl_ratio], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # CDC duplicate snapshots and tombstoned loans inflate principal and NPLs
+      gold: wrong          # no conformed non-performing flag; non-accrual loans below 90 DPD missed
+      semantic: wrong      # naive formula counts any past-due loan, unweighted by principal
+      glossary: ambiguous  # "bad loan ratio" no longer resolves to the NPL ratio
+      context: wrong       # held-for-sale loans (BR-BNK-012) are no longer excluded
+      governance: unsafe   # no certification, row access or lineage on the answer
+    declared_delta_pct: {}
+  - id: KO-BNK-02
+    kpi: KPI-BNK-DEPOSITS
+    question: "What were total deposits last quarter?"
+    query: { view: DEPOSITS, metrics: [total_deposits], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # duplicate balance updates and closed accounts counted
+      gold: unverified     # same balances from Silver but no certified branch conformance
+      semantic: wrong      # naive formula sums three month-ends instead of averaging them
+      glossary: ambiguous  # "deposit base" does not resolve to total deposits
+      context: unverified  # ALCO averaging rule (BR-BNK-009) not cited
+      governance: unsafe   # depositor-level balances reachable without row access
+    declared_delta_pct: {}
+  - id: KO-BNK-03
+    kpi: KPI-BNK-FRAUD-BPS
+    question: "What was the card fraud loss rate last quarter?"
+    query: { view: CARD_PAYMENTS, metrics: [fraud_loss_bps], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # replayed processor files double-count authorisations
+      gold: unverified     # fraud loss computed without the conformed card dimension
+      semantic: ambiguous  # basis points of volume vs share of transactions not distinguished
+      glossary: ambiguous  # "fraud bps" does not resolve
+      context: wrong       # suspected (unconfirmed) fraud included, contrary to BR-BNK-014
+      governance: unsafe   # card numbers reachable in the raw layer
+    declared_delta_pct: {}
+  - id: KO-BNK-04
+    kpi: KPI-BNK-CURE
+    question: "What is the collections cure rate this year?"
+    query: { view: COLLECTIONS, metrics: [cure_rate], timeRange: { ytd: true } }
+    failure_by_layer:
+      silver: wrong        # duplicate case updates and dirty outcome codes
+      gold: unverified     # outcome flags not conformed; cured cases counted from raw codes
+      semantic: ambiguous  # cure rate over all cases vs resolved cases
+      glossary: ambiguous  # "back to current" does not resolve to cure rate
+      context: wrong       # open cases (BR-BNK-018) included, understating the cure rate
+      governance: unsafe   # collector names and borrower details unmasked
+    declared_delta_pct: {}
+
+# Silver equivalents the compiler uses when the Gold layer is off (05 §1 step 7). column_map maps a Gold column
+# name to the Silver column (or Silver expression) that replaces it. DIM_DATE has no Silver source and stays.
+gold_fallbacks:
+  - gold: CONFORMED_GOLD.FCT_LOAN_BALANCE
+    silver: CURATED_SILVER.LOAN_BALANCE
+    column_map:
+      loan_balance_key: balance_id
+      loan_key: loan_id
+      branch_key: branch_id
+      date_key: "CAST(strftime(month_end, '%Y%m%d') AS INTEGER)"
+      dpd_bucket: "CASE WHEN dpd_days >= 90 THEN '90+ DPD' WHEN dpd_days >= 60 THEN '60-89 DPD' WHEN dpd_days >= 30 THEN '30-59 DPD' ELSE 'Current' END"
+      net_charge_off: "charge_off_amount - recovery_amount"
+      rate_weighted_principal: "principal * note_rate_pct"
+  - gold: CONFORMED_GOLD.DIM_LOAN
+    silver: CURATED_SILVER.LOAN
+    column_map:
+      loan_key: loan_id
+      segment_group: "CASE WHEN loan_segment IN ('Commercial real estate', 'Commercial & industrial') THEN 'Commercial' ELSE 'Consumer' END"
+      vintage_year: "year(orig_date)"
+      fico_band: "CASE WHEN fico_score < 620 THEN 'Subprime (<620)' WHEN fico_score < 680 THEN 'Near prime (620-679)' WHEN fico_score < 740 THEN 'Prime (680-739)' ELSE 'Super prime (740+)' END"
+  - gold: CONFORMED_GOLD.DIM_BRANCH
+    silver: CURATED_SILVER.BRANCH
+    column_map:
+      branch_key: branch_id
+  - gold: CONFORMED_GOLD.FCT_DEPOSIT_BALANCE
+    silver: CURATED_SILVER.DEPOSIT_BALANCE
+    column_map:
+      deposit_balance_key: balance_id
+      branch_key: branch_id
+      date_key: "CAST(strftime(month_end, '%Y%m%d') AS INTEGER)"
+      deposit_type: "CASE WHEN deposit_product = 'Checking' THEN 'Non-interest-bearing' ELSE 'Interest-bearing' END"
+      uninsured_balance: "greatest(ledger_balance - 250000, 0)"
+  - gold: CONFORMED_GOLD.FCT_CARD_TXN
+    silver: CURATED_SILVER.CARD_AUTHORIZATION
+    column_map:
+      txn_key: auth_id
+      card_key: card_id
+      customer_key: customer_id
+      date_key: "CAST(strftime(auth_date, '%Y%m%d') AS INTEGER)"
+      approved_amount: "CASE WHEN approved THEN amount ELSE 0 END"
+  - gold: CONFORMED_GOLD.DIM_CARD
+    silver: CURATED_SILVER.CARD_ACCOUNT
+    column_map:
+      card_key: card_id
+  - gold: CONFORMED_GOLD.DIM_CUSTOMER
+    silver: CURATED_SILVER.CUSTOMER
+    column_map:
+      customer_key: customer_id
+      full_name: "concat(first_name, ' ', last_name)"
+      closed_12m: "status = 'Closed'"
+      kyc_overdue: "kyc_last_review + CASE kyc_risk_rating WHEN 'High' THEN INTERVAL 1 YEAR WHEN 'Medium' THEN INTERVAL 2 YEAR ELSE INTERVAL 3 YEAR END < GOVERNANCE.as_of()"
+      tenure_band: "CASE WHEN date_diff('year', open_date, GOVERNANCE.as_of()) < 2 THEN 'Under 2 years' WHEN date_diff('year', open_date, GOVERNANCE.as_of()) < 5 THEN '2-4 years' WHEN date_diff('year', open_date, GOVERNANCE.as_of()) < 10 THEN '5-9 years' ELSE '10+ years' END"
+      age_band: "CASE WHEN date_diff('year', date_of_birth, GOVERNANCE.as_of()) < 30 THEN 'Under 30' WHEN date_diff('year', date_of_birth, GOVERNANCE.as_of()) < 45 THEN '30-44' WHEN date_diff('year', date_of_birth, GOVERNANCE.as_of()) < 60 THEN '45-59' ELSE '60+' END"
+  - gold: CONFORMED_GOLD.FCT_COLLECTION_CASE
+    silver: CURATED_SILVER.COLLECTION_CASE
+    column_map:
+      case_key: case_id
+      customer_key: customer_id
+      date_key: "CAST(strftime(entry_date, '%Y%m%d') AS INTEGER)"
+      cured: "outcome = 'Cured'"
+      charged_off: "outcome = 'Charged off'"
