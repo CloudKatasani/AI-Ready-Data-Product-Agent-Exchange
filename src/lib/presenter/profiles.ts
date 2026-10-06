@@ -4,11 +4,11 @@
  * secrets. Brand colours failing WCAG AA are rejected with a suggested alternative (AC1.2).
  */
 import { z } from 'zod';
-import { db } from '@/lib/db';
+import { controlDb, createProfileDb, dropProfileDb, profileDbCurrent, withProfileDb } from '@/lib/db';
 import { appendAudit } from '@/lib/db/audit';
 import { getPack, getStories, hasPack } from '@/lib/packs/registry';
 import { type Brand, checkBrand, DEFAULT_BRAND } from './branding';
-import { deleteSnapshot, takeSnapshot } from './reset';
+import { deleteSnapshot, deleteSnapshots, takeSnapshot } from './reset';
 
 export const AGENT_MODES = ['scripted', 'auto', 'live'] as const;
 const HEX = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Use a #rrggbb colour');
@@ -22,7 +22,7 @@ export const ProfileInput = z
   .object({
     name: z.string().trim().min(1).max(80),
     packId: z.string().refine(hasPack, 'Unknown pack'),
-    brand: z.object({ productName: z.string().trim().min(1).max(40), companyName: z.string().trim().min(1).max(80), logoDataUrl: LOGO.optional(), primary: HEX, accent: HEX }).strict(),
+    brand: z.object({ productName: z.string().trim().min(1).max(80), companyName: z.string().trim().min(1).max(80), logoDataUrl: LOGO.optional(), primary: HEX, accent: HEX }).strict(),
     terms: z.record(z.string().min(1).max(60), z.string().trim().min(1).max(60)).default({}),
     storyId: z.string().nullable().default(null),
     agentMode: z.enum(AGENT_MODES).default('scripted'),
@@ -47,7 +47,7 @@ export class ProfileError extends Error {
   }
 }
 
-type Row = Awaited<ReturnType<ReturnType<typeof db>['demoProfile']['findFirstOrThrow']>>;
+type Row = Awaited<ReturnType<ReturnType<typeof controlDb>['demoProfile']['findFirstOrThrow']>>;
 
 function toProfile(r: Row): Profile {
   const brand = JSON.parse(r.brandJson) as ProfileInput['brand'];
@@ -79,25 +79,46 @@ export function defaultProfileInput(packId: string): ProfileInput {
   return { name: pack.manifest.company.name, packId, brand: { productName: DEFAULT_BRAND.productName, companyName: pack.manifest.company.name, primary: DEFAULT_BRAND.primary, accent: DEFAULT_BRAND.accent }, terms: {}, storyId: null, agentMode: 'scripted', locked: false };
 }
 
-/** Saves a profile and snapshots the current app state as its starting point. */
+/**
+ * Gives a profile its own app DB (a copy of the control DB, ADR-0024) and snapshots it as the profile's
+ * starting point; its story checkpoints are dropped. On a non-SQLite control DB the profile shares it.
+ */
+async function startProfileState(id: string): Promise<void> {
+  const own = await createProfileDb(id);
+  await withProfileDb(own ? id : null, () => takeSnapshot(id));
+  deleteSnapshots(`${id}__`);
+}
+
+/** Saves a profile (control DB) and gives it its own app DB with a starting snapshot. */
 export async function createProfile(raw: unknown, actorId = 'presenter'): Promise<Profile> {
   const input = validateProfile(raw);
-  const prisma = db();
+  const prisma = controlDb();
   const row = await prisma.demoProfile.create({ data: { name: input.name, packId: input.packId, brandJson: JSON.stringify(input.brand), termsJson: JSON.stringify(input.terms), storyId: input.storyId, agentMode: input.agentMode, locked: input.locked } });
   await appendAudit(prisma, { packId: input.packId, actorType: 'HUMAN', actorId, action: 'PROFILE_CREATED', subjectType: 'DEMO_PROFILE', subjectId: row.id, detail: { name: input.name, storyId: input.storyId } });
-  await takeSnapshot(row.id);
+  await startProfileState(row.id);
   return toProfile(await prisma.demoProfile.update({ where: { id: row.id }, data: { snapshotAt: new Date() } }));
+}
+
+/**
+ * Before a launch: a profile whose DB is missing, or older than the control DB's migrations (after an
+ * upgrade), gets a fresh copy and starting snapshot. Returns true when it was (re)created.
+ */
+export async function ensureProfileState(id: string): Promise<boolean> {
+  if (await profileDbCurrent(id)) return false;
+  await startProfileState(id);
+  await controlDb().demoProfile.update({ where: { id }, data: { snapshotAt: new Date() } });
+  return true;
 }
 
 export async function updateProfile(id: string, raw: unknown): Promise<Profile> {
   const input = validateProfile(raw);
-  const row = await db().demoProfile.update({ where: { id }, data: { name: input.name, brandJson: JSON.stringify(input.brand), termsJson: JSON.stringify(input.terms), storyId: input.storyId, agentMode: input.agentMode, locked: input.locked } });
+  const row = await controlDb().demoProfile.update({ where: { id }, data: { name: input.name, brandJson: JSON.stringify(input.brand), termsJson: JSON.stringify(input.terms), storyId: input.storyId, agentMode: input.agentMode, locked: input.locked } });
   return toProfile(row);
 }
 
 export async function listProfiles(opts: { includeArchived?: boolean } = {}): Promise<Profile[]> {
   try {
-    const rows = await db().demoProfile.findMany({ where: opts.includeArchived ? {} : { archivedAt: null }, orderBy: [{ lastUsedAt: 'desc' }, { createdAt: 'desc' }, { id: 'asc' }] });
+    const rows = await controlDb().demoProfile.findMany({ where: opts.includeArchived ? {} : { archivedAt: null }, orderBy: [{ lastUsedAt: 'desc' }, { createdAt: 'desc' }, { id: 'asc' }] });
     return rows.map(toProfile);
   } catch {
     return [];
@@ -106,18 +127,20 @@ export async function listProfiles(opts: { includeArchived?: boolean } = {}): Pr
 
 export async function getProfile(id: string | null | undefined): Promise<Profile | null> {
   if (!id) return null;
-  const row = await db().demoProfile.findUnique({ where: { id } }).catch(() => null);
+  const row = await controlDb().demoProfile.findUnique({ where: { id } }).catch(() => null);
   return row ? toProfile(row) : null;
 }
 
 export async function markUsed(id: string): Promise<void> {
-  await db().demoProfile.update({ where: { id }, data: { lastUsedAt: new Date() } });
+  await controlDb().demoProfile.update({ where: { id }, data: { lastUsedAt: new Date() } });
 }
 
-/** Archive (profiles are never hard-deleted); its snapshot file is removed. */
+/** Archive (profiles are never hard-deleted); its app DB, snapshot and checkpoints are removed. */
 export async function archiveProfile(id: string): Promise<void> {
-  await db().demoProfile.update({ where: { id }, data: { archivedAt: new Date() } });
+  await controlDb().demoProfile.update({ where: { id }, data: { archivedAt: new Date() } });
+  await dropProfileDb(id);
   deleteSnapshot(id);
+  deleteSnapshots(`${id}__`);
 }
 
 export async function duplicateProfile(id: string): Promise<Profile> {
@@ -140,7 +163,7 @@ export async function importProfile(json: string): Promise<Profile> {
     throw new ProfileError('Not a JSON file');
   }
   const env = z.object({ format: z.literal('keystone-profile'), version: z.literal(1), profile: z.unknown() }).safeParse(data);
-  if (!env.success) throw new ProfileError('Not a Keystone profile file');
+  if (!env.success) throw new ProfileError('Not a Demo Profile file');
   return createProfile(env.data.profile);
 }
 

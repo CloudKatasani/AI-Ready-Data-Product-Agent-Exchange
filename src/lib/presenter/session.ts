@@ -1,25 +1,12 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
 import type { Pack, Persona } from '@/lib/packs/schema';
+import { PROFILE_COOKIE, signValue, verifyValue } from '@/lib/utils/signed';
 
 /** Signed persona cookie (ADR-0006): `<personaId>.<base64url HMAC-SHA256>`, httpOnly, sameSite=lax. */
 export const PERSONA_COOKIE = 'ks_persona';
 
-const mac = (value: string, secret: string) => createHmac('sha256', secret).update(value).digest('base64url');
-
-export function signPersona(personaId: string, secret: string): string {
-  return `${personaId}.${mac(personaId, secret)}`;
-}
-
+export const signPersona = signValue;
 /** Returns the persona id if the signature is valid, else null (tampered or foreign cookies are ignored). */
-export function verifyPersona(cookie: string | undefined, secret: string): string | null {
-  if (!cookie) return null;
-  const i = cookie.lastIndexOf('.');
-  if (i <= 0) return null;
-  const id = cookie.slice(0, i);
-  const sig = Buffer.from(cookie.slice(i + 1));
-  const expected = Buffer.from(mac(id, secret));
-  return sig.length === expected.length && timingSafeEqual(sig, expected) ? id : null;
-}
+export const verifyPersona = verifyValue;
 
 /** The persona a pack starts with when no (valid) cookie is present: the analyst (archetype B). */
 export function defaultPersona(pack: Pack): Persona {
@@ -31,6 +18,6 @@ export function resolvePersona(pack: Pack, personaId: string | null): Persona {
 }
 
 /** Signed active-profile cookie (same HMAC scheme as the persona cookie). */
-export const PROFILE_COOKIE = 'ks_profile';
-export const signProfile = signPersona;
-export const verifyProfile = verifyPersona;
+export { PROFILE_COOKIE };
+export const signProfile = signValue;
+export const verifyProfile = verifyValue;

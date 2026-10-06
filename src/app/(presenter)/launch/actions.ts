@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { getEnv } from '@/lib/config/env';
 import { getPack, hasPack } from '@/lib/packs/registry';
-import { archiveProfile, createProfile, duplicateProfile, getProfile, importProfile, markUsed, ProfileError } from '@/lib/presenter/profiles';
+import { archiveProfile, createProfile, duplicateProfile, ensureProfileState, getProfile, importProfile, markUsed, ProfileError } from '@/lib/presenter/profiles';
 import { defaultPersona, PERSONA_COOKIE, PROFILE_COOKIE, signPersona, signProfile } from '@/lib/presenter/session';
 import { resolveStory } from '@/lib/presenter/stories';
 
@@ -54,6 +54,8 @@ export async function saveProfileAction(_prev: SaveResult | null, form: FormData
 export async function launchAction(profileId: string): Promise<void> {
   const p = await getProfile(profileId);
   if (!p || p.archived || !hasPack(p.packId)) redirect('/launch');
+  // The profile's own app DB (ADR-0024): recreated if missing or older than the control DB's migrations.
+  await ensureProfileState(p.id);
   const pack = getPack(p.packId);
   const first = p.storyId ? resolveStory(pack, p.storyId)?.steps[0] : undefined;
   const persona = first?.personaId ?? defaultPersona(pack).id;

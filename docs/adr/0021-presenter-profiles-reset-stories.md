@@ -41,7 +41,7 @@ and a readiness "maturity tab" (maturity lives on Portfolio here).
    - The coverage heatmap with "Simulate +4 weeks" is ported to Roadmap (per Bronze source, levels 0–6).
 6. **Story PDF**: a printable cue-card page (`/[pack]/story/<id>`; print to PDF). Screenshot-per-step
    PDF generation is not built.
-7. **Profile scoping of runtime models** (shared server, several presenters at once) is deferred.
+7. **Profile scoping of runtime models** (shared server, several presenters at once): done later, as one app DB per profile (ADR-0024).
    v1 runs one presenter per server.
 
 ## Consequences

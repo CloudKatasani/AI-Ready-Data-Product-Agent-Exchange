@@ -3,11 +3,12 @@
  * place — every table except Demo Profiles and migrations is replaced from the snapshot inside one
  * transaction — so a reset is a copy, not a re-seed, and the profile and its branding survive it. The
  * warehouse is read-only at runtime (incidents and knockout are query-time overlays), so it needs no
- * restore. SQLite only in v1; Postgres falls back to re-seeding (ADR-0021).
+ * restore. SQLite only in v1; Postgres falls back to re-seeding (ADR-0021). Each profile has its own app DB
+ * (ADR-0024), so a reset touches only that presenter's state.
  */
 import { existsSync, mkdirSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { db } from '@/lib/db';
+import { db, profileDb, withProfileDb } from '@/lib/db';
 
 const KEEP = ['_prisma_migrations', 'DemoProfile'];
 const KEY = /^[A-Za-z0-9_-]{1,120}$/;
@@ -90,7 +91,7 @@ export const checkpointKey = (profileId: string, storyId: string, stepId: string
  * first time each checkpoint step is reached after a reset).
  */
 export async function resetDemo(profileId: string): Promise<{ ms: number; tables: number }> {
-  const r = await restoreSnapshot(profileId);
+  const r = await onProfile(profileId, () => restoreSnapshot(profileId));
   deleteSnapshots(`${profileId}__`);
   return r;
 }
@@ -98,12 +99,19 @@ export async function resetDemo(profileId: string): Promise<{ ms: number; tables
 /** Go to a checkpoint step: restore its snapshot if it exists, else take it now. */
 export async function checkpoint(profileId: string, storyId: string, stepId: string): Promise<'restored' | 'taken'> {
   const key = checkpointKey(profileId, storyId, stepId);
-  if (hasSnapshot(key)) {
-    await restoreSnapshot(key);
-    return 'restored';
-  }
-  await takeSnapshot(key);
-  return 'taken';
+  return onProfile(profileId, async () => {
+    if (hasSnapshot(key)) {
+      await restoreSnapshot(key);
+      return 'restored';
+    }
+    await takeSnapshot(key);
+    return 'taken';
+  });
+}
+
+/** Runs on the profile's own DB (ADR-0024), or the control DB when the profile has none (non-SQLite). */
+function onProfile<T>(profileId: string, fn: () => Promise<T>): Promise<T> {
+  return withProfileDb(profileDb(profileId) ? profileId : null, fn);
 }
 
 /** Snapshot files on disk (Admin → snapshot management). */
