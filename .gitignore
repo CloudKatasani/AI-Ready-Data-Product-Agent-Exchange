@@ -19,3 +19,7 @@ data/
 .DS_Store
 *.log
 prisma/postgres/
+
+# Throwaway authoring scripts (excluded from tsconfig too)
+scripts/_*
+scripts/tmp*
