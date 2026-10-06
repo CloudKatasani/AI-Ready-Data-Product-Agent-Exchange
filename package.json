@@ -2,7 +2,7 @@
   "name": "keystone",
   "version": "0.0.0",
   "private": true,
-  "description": "AI-Ready Data Product & Agent Exchange \u2014 cross-industry customer-demo prototype",
+  "description": "AI-Ready Data Product & Agent Exchange — cross-industry customer-demo prototype",
   "type": "module",
   "packageManager": "pnpm@10.28.0",
   "engines": {
@@ -41,6 +41,7 @@
     ]
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
     "@duckdb/node-api": "1.5.6-r.1",
     "@prisma/client": "^6.19.3",
     "@radix-ui/react-popover": "^1.1.23",

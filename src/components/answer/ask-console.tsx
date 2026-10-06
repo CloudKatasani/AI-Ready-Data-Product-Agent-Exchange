@@ -35,10 +35,13 @@ export interface AskConsoleProps {
   agentId?: string;
   suggestions: string[];
   initialQuestion?: string;
+  defaultMode?: 'scripted' | 'live' | 'auto';
+  liveAvailable?: boolean;
 }
 
 /** Ask an Agent (01 §M4): picker + suggestions | conversation | inspector. Streams `/api/ask` events. */
-export function AskConsole({ packId, locale, agents, agentId, suggestions, initialQuestion }: AskConsoleProps) {
+export function AskConsole({ packId, locale, agents, agentId, suggestions, initialQuestion, defaultMode = 'scripted', liveAvailable = false }: AskConsoleProps) {
+  const [mode, setMode] = useState<'scripted' | 'live' | 'auto'>(defaultMode);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [text, setText] = useState('');
@@ -58,7 +61,7 @@ export function AskConsole({ packId, locale, agents, agentId, suggestions, initi
       setBusy(true);
       setText('');
       try {
-        for await (const e of askStream({ pack: packId, question: q, agentId: target ?? agentId })) {
+        for await (const e of askStream({ pack: packId, question: q, agentId: target ?? agentId, mode })) {
           if (e.event === 'routed') update((t) => ({ ...t, agentId: e.data.agentId }));
           else if (e.event === 'step') update((t) => ({ ...t, steps: [...t.steps, e.data] }));
           else if (e.event === 'answer') update((t) => ({ ...t, answer: e.data.answer, answerId: e.data.answerId }));
@@ -70,7 +73,7 @@ export function AskConsole({ packId, locale, agents, agentId, suggestions, initi
         setBusy(false);
       }
     },
-    [agentId, packId],
+    [agentId, packId, mode],
   );
 
   useEffect(() => {
@@ -177,6 +180,16 @@ export function AskConsole({ packId, locale, agents, agentId, suggestions, initi
             maxLength={500}
             className="h-10 min-w-0 flex-1 rounded-md border border-border bg-surface px-3 text-sm"
           />
+          <label className="sr-only" htmlFor="ask-mode">
+            {copy.shell.modeLabel}
+          </label>
+          <select id="ask-mode" value={mode} onChange={(e) => setMode(e.target.value as typeof mode)} className="h-10 rounded-md border border-border bg-surface px-2 text-sm" data-testid="ask-mode" title={liveAvailable ? undefined : copy.ask.liveUnavailable}>
+            {(['scripted', 'auto', 'live'] as const).map((m) => (
+              <option key={m} value={m}>
+                {copy.shell.modes[m]}
+              </option>
+            ))}
+          </select>
           <button type="submit" disabled={busy || !text.trim()} className="inline-flex h-10 items-center gap-1 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-60">
             <Send aria-hidden className="size-4" />
             {copy.ask.send}

@@ -66,4 +66,9 @@ export interface AgentAnswer {
   suggestions?: string[];
   requestProductId?: string;
   latencyMs: number;
+  /** Live mode: tool calls made, tokens and illustrative cost. */
+  toolCalls?: { name: string; ok: boolean; detail: string }[];
+  tokensIn?: number;
+  tokensOut?: number;
+  costUsd?: number;
 }

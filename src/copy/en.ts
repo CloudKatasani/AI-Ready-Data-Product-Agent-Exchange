@@ -227,6 +227,9 @@ export const copy = {
     rows: 'rows',
     viewTable: 'Result table',
     error: 'The agent could not answer right now.',
+    liveUnavailable: 'No API key configured: live and auto answer in scripted mode with a fallback badge.',
+    toolCalls: 'Tool calls',
+    tokens: 'tokens',
     status: { ok: 'Done', skipped: 'Skipped', blocked: 'Blocked' },
   },
   home: {

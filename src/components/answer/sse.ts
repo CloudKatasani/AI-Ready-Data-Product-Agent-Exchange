@@ -8,7 +8,7 @@ export type AskEvent =
   | { event: 'done'; data: Record<string, never> };
 
 /** Posts to /api/ask and yields parsed server-sent events. */
-export async function* askStream(body: { pack: string; question: string; agentId?: string; pace?: number }, signal?: AbortSignal): AsyncGenerator<AskEvent> {
+export async function* askStream(body: { pack: string; question: string; agentId?: string; pace?: number; mode?: 'scripted' | 'live' | 'auto' }, signal?: AbortSignal): AsyncGenerator<AskEvent> {
   const res = await fetch('/api/ask', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), signal });
   if (!res.ok || !res.body) {
     yield { event: 'error', data: { message: `Request failed (${res.status})` } };

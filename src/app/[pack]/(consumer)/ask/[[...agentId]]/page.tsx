@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { AskConsole } from '@/components/answer/ask-console';
 import { optionalSegments } from '@/components/shell/route-params';
 import { copy } from '@/copy/en';
+import { getEnv, hasApiKey } from '@/lib/config/env';
 import { getPack } from '@/lib/packs/registry';
 
 export default async function AskPage({ params, searchParams }: { params: Promise<{ pack: string; agentId?: string[] }>; searchParams: Promise<{ q?: string }> }) {
@@ -31,6 +32,8 @@ export default async function AskPage({ params, searchParams }: { params: Promis
         agentId={agent?.id}
         suggestions={[...new Set(suggestions)]}
         initialQuestion={q?.slice(0, 500)}
+        defaultMode={getEnv().AGENT_MODE_DEFAULT}
+        liveAvailable={hasApiKey()}
       />
     </div>
   );

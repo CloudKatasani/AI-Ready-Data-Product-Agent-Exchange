@@ -55,6 +55,12 @@ export class QueryService {
 
   constructor(private readonly deps: QueryServiceDeps) {}
 
+  /** Live status/version of a product (lifecycle state when known, else the pack's initial values). */
+  productState(productId: string): { status: string; version: string } {
+    const p = this.deps.pack.products.find((x) => x.id === productId);
+    return this.state.products?.[productId] ?? { status: p?.initial_status ?? 'DRAFT', version: p?.version ?? '0.0.0' };
+  }
+
   private get state(): PolicyState {
     return this.deps.state ?? EMPTY_STATE;
   }

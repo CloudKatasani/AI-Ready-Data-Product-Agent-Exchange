@@ -65,7 +65,25 @@ export function Inspector({ answer, pendingSteps }: { answer: AgentAnswer | null
         ) : !answer ? (
           <p className="text-sm text-muted-foreground">{copy.ask.inspectorEmpty}</p>
         ) : tab === 'trace' ? (
-          <TraceList steps={answer.trace} />
+          <div className="flex flex-col gap-3">
+            <TraceList steps={answer.trace} />
+            {answer.toolCalls?.length ? (
+              <section aria-label={copy.ask.toolCalls} className="text-xs" data-testid="tool-calls">
+                <p className="font-semibold">{copy.ask.toolCalls}</p>
+                <ol className="list-decimal pl-5">
+                  {answer.toolCalls.map((t, i) => (
+                    <li key={i}>
+                      <span className="font-mono">{t.name}</span> {t.ok ? '✓' : '✕'} {t.detail}
+                    </li>
+                  ))}
+                </ol>
+                <p className="text-muted-foreground">
+                  {answer.tokensIn} / {answer.tokensOut} {copy.ask.tokens} · ${answer.costUsd}
+                </p>
+              </section>
+            ) : null}
+            {answer.fallbackReason && <p className="text-xs text-muted-foreground">{answer.fallbackReason}</p>}
+          </div>
         ) : tab === 'sql' ? (
           answer.result ? (
             <div className="flex flex-col gap-2">

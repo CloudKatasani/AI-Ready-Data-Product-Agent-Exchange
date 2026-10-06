@@ -6,8 +6,10 @@
 import type { AgentMode } from '@/lib/config/env';
 import { db } from '@/lib/db';
 import { getPack, getRubrics } from '@/lib/packs/registry';
-import { respondScripted } from '@/lib/agents/scripted/respond';
+import { anthropicClient, type LlmClient } from '@/lib/agents/live/client';
+import { answerQuestion } from '@/lib/agents/runtime';
 import { routeQuestion } from '@/lib/agents/scripted/router';
+import { getEnv } from '@/lib/config/env';
 import type { AgentAnswer } from '@/lib/agents/types';
 import { governedService, principalForPersona } from './governed';
 
@@ -27,6 +29,16 @@ export interface AskOutput {
 
 export const MAX_QUESTION_LENGTH = 500;
 
+let client: LlmClient | null | undefined;
+/** One SDK client per process; null when no key is configured (the key never leaves the server). */
+function liveClient(): LlmClient | null {
+  if (client === undefined) {
+    const key = getEnv().ANTHROPIC_API_KEY;
+    client = key ? anthropicClient(key) : null;
+  }
+  return client;
+}
+
 export async function ask(input: AskInput): Promise<AskOutput> {
   const pack = getPack(input.packId);
   const rubrics = getRubrics();
@@ -35,10 +47,14 @@ export async function ask(input: AskInput): Promise<AskOutput> {
   const routed = chosen ? { agentId: chosen, via: 'chosen' as const } : routeQuestion(pack, rubrics, question);
   const who = await principalForPersona(pack.manifest.id, input.personaId);
   const qs = await governedService(pack.manifest.id);
-  let answer = await respondScripted(routed.agentId, question, { pack, rubrics, qs, who });
-  if (input.mode && input.mode !== 'scripted') {
-    answer = { ...answer, mode: 'live_fallback', fallbackReason: 'Live mode is not enabled in this build; answered in scripted mode.' };
-  }
+  const env = getEnv();
+  const answer = await answerQuestion(routed.agentId, question, input.mode ?? 'scripted', {
+    pack,
+    rubrics,
+    qs,
+    who,
+    live: { client: liveClient(), model: env.KEYSTONE_MODEL_ANSWER, timeoutMs: env.LLM_TIMEOUT_MS, maxRounds: env.LLM_MAX_TOOL_ROUNDS, budgetUsd: env.LLM_BUDGET_USD_PER_SESSION },
+  });
   let answerId: string | null = null;
   try {
     const row = await db().answerRecord.create({
@@ -57,6 +73,9 @@ export async function ask(input: AskInput): Promise<AskOutput> {
         traceJson: JSON.stringify(answer.trace),
         confidence: answer.confidence,
         latencyMs: answer.latencyMs,
+        tokensIn: answer.tokensIn ?? 0,
+        tokensOut: answer.tokensOut ?? 0,
+        costUsd: answer.costUsd ?? 0,
       },
       select: { id: true },
     });
