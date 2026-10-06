@@ -41,13 +41,13 @@
     },
     "owner": {
       "type": "string",
-      "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
+      "pattern": "^_?[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
     },
     "steward": {
       "anyOf": [
         {
           "type": "string",
-          "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
+          "pattern": "^_?[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
         },
         {
           "type": "null"

@@ -58,7 +58,7 @@ export const DemandId = id('DM', '\\d{3}', 'DM-ABC-001');
 export const KnockoutId = id('KO', '\\d{2}', 'KO-ABC-01');
 
 /** Persona references are `<packId>:<slug>`, e.g. `acme:product-owner`. */
-export const PersonaRef = z.string().regex(/^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$/, 'persona ref like acme:product-owner');
+export const PersonaRef = z.string().regex(/^_?[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$/, 'persona ref like acme:product-owner');
 
 /** Warehouse identifiers (Snowflake conventions): upper-case schema and object names. */
 export const ObjectName = z.string().regex(/^[A-Z][A-Z0-9_]*$/, 'UPPER_SNAKE object name');

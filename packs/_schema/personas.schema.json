@@ -8,7 +8,7 @@
     "properties": {
       "id": {
         "type": "string",
-        "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
+        "pattern": "^_?[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
       },
       "archetype": {
         "type": "string",

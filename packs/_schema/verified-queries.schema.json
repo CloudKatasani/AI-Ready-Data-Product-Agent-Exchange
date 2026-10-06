@@ -190,7 +190,7 @@
       },
       "verified_by": {
         "type": "string",
-        "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
+        "pattern": "^_?[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
       },
       "verified_at": {
         "type": "string",

@@ -16,7 +16,7 @@
           },
           "requester": {
             "type": "string",
-            "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
+            "pattern": "^_?[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
           },
           "decision": {
             "type": "string"
@@ -94,7 +94,7 @@
           },
           "requested_by": {
             "type": "string",
-            "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
+            "pattern": "^_?[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
           },
           "votes": {
             "type": "integer",
