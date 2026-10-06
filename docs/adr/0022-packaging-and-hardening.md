@@ -14,7 +14,8 @@ Two things make packaging awkward:
 
 ## Decision
 1. **Docker image**:
-   - Multi-stage (`deps → build → runtime`), Next `output: 'standalone'`, `node:22-slim`.
+   - Multi-stage (`deps → build → runtime`), Next `output: 'standalone'`. The build stages use `node:22-slim`.
+   - **Amended after the first CI run:** on `node:22-slim` the runtime image measured 371 MB, over the 300 MB budget. The runtime is now `gcr.io/distroless/nodejs22-debian12:nonroot`. It has no shell, so the entrypoint is `docker/entrypoint.mjs`. The seeded template DB ships gzipped (34 MB → 9 MB), and the duplicate `packs/` copy is gone (the standalone output already traces it). The entrypoint sets `PRISMA_QUERY_ENGINE_LIBRARY` so Prisma never shells out to detect OpenSSL. CI fails the build if the image exceeds 300 MB. This deviates from `12-deployment.md` §2, which names `node:22-slim` for the runtime.
    - Runs as a non-root user; `HEALTHCHECK` on `/api/health`.
    - `/app/data` is a volume. On first start it is initialised from a seeded template that ships in the image.
 2. **Warehouses are optional in the image** (`ARG PREBUILD=none|deep`):
