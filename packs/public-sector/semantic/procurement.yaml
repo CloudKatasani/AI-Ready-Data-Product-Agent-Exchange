@@ -1,0 +1,69 @@
+name: PROCUREMENT
+description: County purchasing — requisition-to-PO cycle time, spend, contract coverage and procurement method
+tables:
+  - { alias: l, fqn: CONFORMED_GOLD.FCT_PO_SPEND, pk: po_line_key }
+  - { alias: v, fqn: CONFORMED_GOLD.DIM_VENDOR, pk: vendor_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: l.vendor_key, to: v.vendor_key }
+  - { from: l.date_key, to: d.date_key }
+dimensions:
+  - { name: category, expr: l.category, label: Spend category, synonyms: [commodity, purchasing category, category], term: GT-PUB-SPEND-CATEGORY }
+  - { name: vendor, expr: v.vendor_name, label: Vendor, synonyms: [supplier, vendor name, contractor], term: GT-PUB-VENDOR }
+  - { name: procurement_method, expr: l.procurement_method, label: Procurement method, synonyms: [purchasing method, solicitation type, how it was bought], term: GT-PUB-PROC-METHOD }
+  - { name: department, expr: l.department, label: Department, synonyms: [dept, county department, requesting department], term: GT-PUB-DEPARTMENT }
+  - { name: local_small_business, expr: v.local_small_business, label: Local small business, synonyms: [local vendor, small business] }
+time_dimensions:
+  - { name: po_date, expr: d.date, default: true }
+facts:
+  - { name: spend_usd, expr: l.spend_usd, description: Requisition line spend }
+  - { name: cycle_days, expr: l.cycle_days, description: Calendar days from requisition to purchase order }
+metrics:
+  - name: procurement_cycle_days
+    label: Procurement cycle time
+    expr: AVG(l.cycle_days)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [requisition to po time, purchasing cycle time, procurement lead time, days to raise a po]
+    term: GT-PUB-PROC-CYCLE
+    description: Mean calendar days from requisition to purchase order, excluding emergency purchases
+    default_filters: [ { rule: BR-PUB-018 } ]
+    naive_expr: AVG(coalesce(l.cycle_days, 0))
+  - name: total_spend
+    label: Purchasing spend
+    expr: SUM(l.spend_usd)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [po spend, purchases, money spent with vendors, vendor spend]
+    term: GT-PUB-SPEND
+    description: Spend on purchase orders raised in the period
+  - name: on_contract_spend_pct
+    label: Spend on contract
+    expr: 100.0 * SUM(CASE WHEN l.on_contract THEN l.spend_usd ELSE 0 END) / SUM(l.spend_usd)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [on-contract spend, contract coverage, contracted spend]
+    term: GT-PUB-ON-CONTRACT
+    description: Share of spend placed against an active county or cooperative contract
+  - name: competitive_spend_pct
+    label: Competitively procured spend
+    expr: 100.0 * SUM(CASE WHEN l.procurement_method IN ('Competitive bid', 'Cooperative contract') THEN l.spend_usd ELSE 0 END) / SUM(l.spend_usd)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [competitive spend, competitively bid spend]
+    term: GT-PUB-PROC-METHOD
+    description: Share of spend procured by formal competitive bid or a competitively awarded cooperative contract
+  - name: po_lines
+    label: Purchase order lines
+    expr: COUNT(*)
+    unit: lines
+    decimals: 0
+    direction: neutral
+    synonyms: [po lines, number of purchase orders]
+    term: GT-PUB-PO-LINE
+    description: Requisition lines converted to purchase orders in the period
+products: [DP-PUB-005]

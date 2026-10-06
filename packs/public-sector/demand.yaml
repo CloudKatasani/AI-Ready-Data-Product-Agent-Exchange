@@ -1,0 +1,84 @@
+# Seeded intake requests and demand-board items. REQ-PUB-001 deliberately near-duplicates DP-PUB-002
+# (Benefits Case Processing) so the intake duplicate detector fires (AC5.1). Seed products from the ADPM
+# public-sector pack that are not yet built (statutory case risk, open data currency, contact history,
+# estates condition) appear as requests or demand items.
+requests:
+  - id: REQ-PUB-001
+    title: District benefit timeliness scorecard
+    requester: public-sector:caseworker-analyst
+    decision: Which offices in my districts need extra eligibility workers or overtime next month
+    decider: Caseworker Analyst, North and Central Districts
+    cadence: Weekly, with a monthly check-in
+    workaround: Case management exports pasted into a spreadsheet with business days counted by hand
+    questions:
+      - What was average benefit processing time by district last quarter?
+      - Which offices have the largest case backlog?
+      - How many applications were over the 30-day standard this year?
+      - How long have backlog items been waiting?
+    stakes: Applications breach the federal 30-day standard and the county faces a corrective action plan
+    freshness: Daily by 07:00
+    status: SUBMITTED
+  - id: REQ-PUB-002
+    title: Statutory case risk
+    requester: public-sector:program-ops
+    decision: Which open cases to escalate before they breach a statutory time limit
+    decider: Program Operations Manager
+    cadence: Daily
+    workaround: A weekly report reviewed manually against case notes
+    questions:
+      - Which open cases are within five days of a statutory limit?
+      - Which offices hold the most at-risk cases?
+      - How many breached last month, and in which programs?
+    stakes: Statutory limits are breached and reported to the state after the fact
+    freshness: Daily by 06:00
+    status: IN_TRIAGE
+  - id: REQ-PUB-003
+    title: Open data publication currency
+    requester: public-sector:steward
+    decision: Which published datasets need refreshing before the next transparency deadline
+    decider: County Data Steward
+    cadence: Monthly
+    workaround: A manually maintained publication tracker
+    questions:
+      - Which published datasets are past their refresh commitment?
+      - Which have no catalogue record or licence?
+      - Which published figures cannot be reproduced from a certified product?
+    stakes: Published data goes stale and public records requests find figures nobody can reproduce
+    freshness: Weekly
+    status: APPROVED
+  - id: REQ-PUB-004
+    title: Constituent contact history
+    requester: public-sector:program-ops
+    decision: Which repeat-contact residents to route to a named caseworker
+    decider: Constituent Services Manager
+    cadence: Weekly
+    workaround: Each service line keeps its own contact log and none of them join up
+    questions:
+      - Which residents contacted more than three service lines in 90 days?
+      - Which contacts were about an issue already open elsewhere?
+      - What share of contacts are repeat contacts about the same issue?
+    stakes: A resident tells the same story to six departments and still gets no resolution
+    freshness: Daily by 07:00
+    status: SUBMITTED
+  - id: REQ-PUB-005
+    title: 311 service levels for the Central district
+    requester: public-sector:caseworker-analyst
+    decision: Which request types to raise with the new trash hauler and Public Works in Central
+    decider: Caseworker Analyst, North and Central Districts
+    cadence: Monthly
+    workaround: Monthly email from the 311 analyst with a pivot table
+    questions:
+      - What was 311 SLA attainment in Central last quarter by request type?
+      - How long do missed trash pickups take to resolve in Central?
+      - How has Central's 311 resolution time trended this year?
+    stakes: SLA misses persist after the hauler change and residents stop reporting issues
+    freshness: Daily
+    status: MERGED
+
+demand_items:
+  - { id: DM-PUB-001, title: Statutory case risk product, kind: product, description: "Open cases ranked by proximity to a statutory time limit, by office and program, for daily escalation.", requested_by: public-sector:program-ops, votes: 15 }
+  - { id: DM-PUB-002, title: Renewal outreach agent, kind: agent, description: "Answers how many renewals fall due by office and program in the next 30 days and which districts are behind on renewals, aggregated only.", requested_by: public-sector:caseworker-analyst, votes: 12 }
+  - { id: DM-PUB-003, title: Estates and facility condition product, kind: product, description: "County buildings with condition survey results, statutory compliance checks and running cost.", requested_by: public-sector:county-administrator, votes: 8 }
+  - { id: DM-PUB-004, title: Open data currency product, kind: product, description: "Published dataset inventory with refresh currency, licence and catalogue completeness.", requested_by: public-sector:steward, votes: 7 }
+  - { id: DM-PUB-005, title: Street maintenance advisor agent, kind: agent, description: "Answers repair timeliness, backlog and road condition questions once Street Maintenance is certified.", requested_by: public-sector:hs-dpo, votes: 6 }
+  - { id: DM-PUB-006, title: Fair hearing outcomes product, kind: product, description: "Appeal volumes, outcomes and overturn rates by program, aggregated only.", requested_by: public-sector:program-ops, votes: 4 }

@@ -1,0 +1,149 @@
+# Westland County Services synonyms (synthetic): county and human-services jargon → governed metric, dimension,
+# value or glossary term.
+
+# ── Human services ──────────────────────────────────────────────────────────────────────────────────
+- term: Benefit processing time
+  synonyms: [eligibility timeliness, days to determination, how long applications take, application turnaround]
+  maps_to: { kind: metric, ref: avg_processing_days }
+- term: Timely processing rate
+  synonyms: [timeliness, within standard, met the 30-day standard, federal timeliness]
+  maps_to: { kind: metric, ref: timely_processing_rate }
+- term: Applications over standard
+  synonyms: [over 30 days, past the 30-day standard, overdue applications]
+  maps_to: { kind: metric, ref: applications_over_standard }
+- term: Case backlog
+  synonyms: [pending work, renewals waiting, work queue, cases pending decision]
+  maps_to: { kind: metric, ref: case_backlog }
+- term: Backlog age
+  synonyms: [oldest backlog, waiting time in backlog, aged backlog]
+  maps_to: { kind: metric, ref: backlog_age_days }
+- term: Average caseload
+  synonyms: [cases per worker, worker caseload, caseworker workload]
+  maps_to: { kind: metric, ref: avg_caseload }
+- term: Approval rate
+  synonyms: [approved share, how many get approved, approval ratio]
+  maps_to: { kind: metric, ref: approval_rate }
+- term: Document hold
+  synonyms: [waiting on documents, missing verifications, pending documents]
+  maps_to: { kind: dimension, ref: on_document_hold }
+- term: Food Assistance
+  synonyms: [snap, food stamps, ebt food]
+  maps_to: { kind: value, ref: program=Food Assistance }
+- term: Medical Assistance
+  synonyms: [medicaid, health coverage]
+  maps_to: { kind: value, ref: program=Medical Assistance }
+- term: Cash Assistance
+  synonyms: [tanf, cash aid]
+  maps_to: { kind: value, ref: program=Cash Assistance }
+- term: Service office
+  synonyms: [service centre, field office, office location]
+  maps_to: { kind: dimension, ref: office }
+- term: Service district
+  synonyms: [county district, supervisorial area]
+  maps_to: { kind: dimension, ref: region }
+- term: Riverside
+  synonyms: [riverside district]
+  maps_to: { kind: value, ref: region=Riverside }
+- term: North
+  synonyms: [north district, northern district]
+  maps_to: { kind: value, ref: region=North }
+
+# ── Benefit payments & integrity ────────────────────────────────────────────────────────────────────
+- term: Improper payment rate
+  synonyms: [improper payments rate, error rate on payments, qc error rate]
+  maps_to: { kind: metric, ref: improper_payment_rate }
+- term: Payment accuracy
+  synonyms: [qc accuracy, accuracy of payments, correct payments]
+  maps_to: { kind: metric, ref: payment_accuracy_rate }
+- term: Benefits paid
+  synonyms: [benefit spending, issuance, benefits disbursed]
+  maps_to: { kind: metric, ref: benefits_paid }
+- term: Cases flagged for review
+  synonyms: [fraud reviews, integrity cases, cases being investigated]
+  maps_to: { kind: metric, ref: cases_flagged }
+- term: Overpayment recovery rate
+  synonyms: [collections on overpayments, clawback rate]
+  maps_to: { kind: metric, ref: overpayment_recovery_rate }
+- term: Income verification
+  synonyms: [income errors, wage match errors, unreported income]
+  maps_to: { kind: value, ref: error_type=Income verification }
+
+# ── 311 ─────────────────────────────────────────────────────────────────────────────────────────────
+- term: 311 resolution time
+  synonyms: [how fast we close requests, request turnaround, time to resolve tickets]
+  maps_to: { kind: metric, ref: avg_resolution_days }
+- term: 311 SLA attainment
+  synonyms: [sla performance, met sla, requests closed on time]
+  maps_to: { kind: metric, ref: sla_attainment_pct }
+- term: 311 service requests
+  synonyms: [tickets, cases logged with 311, resident requests]
+  maps_to: { kind: metric, ref: service_requests }
+- term: Pothole repair time
+  synonyms: [fix a pothole, pothole fix time, how long potholes take]
+  maps_to: { kind: metric, ref: pothole_repair_days }
+- term: Pothole
+  synonyms: [potholes, road hole, pot hole]
+  maps_to: { kind: value, ref: request_type=Pothole }
+- term: Missed trash pickup
+  synonyms: [missed collection, missed garbage, trash not collected]
+  maps_to: { kind: value, ref: request_type=Missed trash pickup }
+- term: Mobile app
+  synonyms: [app, 311 app, smartphone]
+  maps_to: { kind: value, ref: channel=Mobile app }
+
+# ── Permits ─────────────────────────────────────────────────────────────────────────────────────────
+- term: Permit turnaround
+  synonyms: [permit wait, how long permits take, review turnaround]
+  maps_to: { kind: metric, ref: avg_permit_turnaround_days }
+- term: Permits issued
+  synonyms: [permits pulled, permit approvals]
+  maps_to: { kind: metric, ref: permits_issued }
+- term: Commercial building
+  synonyms: [commercial permits, commercial construction]
+  maps_to: { kind: value, ref: permit_type=Commercial building }
+- term: Over the counter
+  synonyms: [same-day permits, otc permits, walk-through permits]
+  maps_to: { kind: value, ref: review_track=Over the counter }
+
+# ── Public works ────────────────────────────────────────────────────────────────────────────────────
+- term: Open work orders
+  synonyms: [repair backlog, outstanding repairs, jobs not done]
+  maps_to: { kind: metric, ref: open_work_orders }
+- term: On-time repair rate
+  synonyms: [repair timeliness, fixed within target]
+  maps_to: { kind: metric, ref: on_time_repair_pct }
+- term: Pavement condition index
+  synonyms: [pavement score, street condition]
+  maps_to: { kind: term, ref: GT-PUB-PCI }
+
+# ── Finance, procurement & grants ───────────────────────────────────────────────────────────────────
+- term: Budget variance
+  synonyms: [overspend, underspend, budget gap, are we over budget]
+  maps_to: { kind: metric, ref: budget_variance_pct }
+- term: Budget execution
+  synonyms: [budget burn, spend rate against budget]
+  maps_to: { kind: metric, ref: budget_execution_pct }
+- term: Workforce vacancy rate
+  synonyms: [open positions rate, vacancies, hiring gap]
+  maps_to: { kind: metric, ref: vacancy_rate }
+- term: FY2026
+  synonyms: [last fiscal year, prior fiscal year, previous fiscal year, fy2026]
+  maps_to: { kind: value, ref: fiscal_year=FY2026 }
+- term: Public Works
+  synonyms: [roads department, streets department]
+  maps_to: { kind: value, ref: department=Public Works }
+- term: Procurement cycle time
+  synonyms: [purchasing turnaround, time to buy, po turnaround]
+  maps_to: { kind: metric, ref: procurement_cycle_days }
+- term: Spend on contract
+  synonyms: [contract compliance, contract utilisation]
+  maps_to: { kind: metric, ref: on_contract_spend_pct }
+- term: Competitive bid
+  synonyms: [formal bid, rfp, invitation to bid]
+  maps_to: { kind: value, ref: procurement_method=Competitive bid }
+- term: Grant drawdown rate
+  synonyms: [grant burn rate, grant spending pace, unspent grant funds]
+  maps_to: { kind: metric, ref: grant_drawdown_rate }
+- term: Transportation
+  synonyms: [transportation grants, road grants]
+  maps_to: { kind: value, ref: program_area=Transportation }

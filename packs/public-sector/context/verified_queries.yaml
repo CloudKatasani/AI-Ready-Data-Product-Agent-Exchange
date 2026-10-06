@@ -1,0 +1,534 @@
+# Verified queries — curated question -> MetricQuery pairs, ported from the AI-Ready public-sector context (VQ-001..)
+# and extended to every Keystone view. Every query compiles through compileMetricQuery() on the named view.
+# PROGRAM_INTEGRITY deliberately has only 7 active entries and no active cases-flagged query: the DP-PUB-006
+# certification story (gate 4) activates VQ-PUB-083..085 via FIX-1.
+
+# ---------------------------------------------------------------- SERVICE_REQUESTS (AG-PUB-001)
+- id: VQ-PUB-001
+  question: "How many 311 service requests did we receive last month?"
+  query: { view: SERVICE_REQUESTS, metrics: [service_requests], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-PUB-001
+  verified_by: public-sector:program-ops
+  verified_at: 2026-07-09
+- id: VQ-PUB-002
+  question: "What was the average 311 resolution time by district last quarter?"
+  query: { view: SERVICE_REQUESTS, metrics: [avg_resolution_days], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_resolution_days, dir: desc }] }
+  agent: AG-PUB-001
+  verified_by: public-sector:program-ops
+  verified_at: 2026-07-12
+- id: VQ-PUB-003
+  question: "311 SLA attainment by request type this year"
+  query: { view: SERVICE_REQUESTS, metrics: [sla_attainment_pct], dimensions: [request_type], timeRange: { ytd: true }, orderBy: [{ field: sla_attainment_pct, dir: asc }] }
+  agent: AG-PUB-001
+  verified_by: public-sector:program-ops
+  verified_at: 2026-07-15
+- id: VQ-PUB-004
+  question: "311 SLA attainment by month this year"
+  query: { view: SERVICE_REQUESTS, metrics: [sla_attainment_pct], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-PUB-001
+  verified_by: public-sector:program-ops
+  verified_at: 2026-07-18
+- id: VQ-PUB-005
+  question: "Which departments have the slowest 311 resolution time this year?"
+  query: { view: SERVICE_REQUESTS, metrics: [avg_resolution_days], dimensions: [department], timeRange: { ytd: true }, orderBy: [{ field: avg_resolution_days, dir: desc }], limit: 5, analysis: rank }
+  agent: AG-PUB-001
+  verified_by: public-sector:steward
+  verified_at: 2026-07-21
+- id: VQ-PUB-006
+  question: "311 service requests by channel this year"
+  query: { view: SERVICE_REQUESTS, metrics: [service_requests], dimensions: [channel], timeRange: { ytd: true }, orderBy: [{ field: service_requests, dir: desc }], analysis: contribution }
+  agent: AG-PUB-001
+  verified_by: public-sector:program-ops
+  verified_at: 2026-07-24
+- id: VQ-PUB-007
+  question: "What is the 311 reopen rate by district this year?"
+  query: { view: SERVICE_REQUESTS, metrics: [reopen_rate], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: reopen_rate, dir: desc }] }
+  agent: AG-PUB-001
+  verified_by: public-sector:program-ops
+  verified_at: 2026-07-27
+- id: VQ-PUB-008
+  question: "Citizen satisfaction by district this year"
+  query: { view: SERVICE_REQUESTS, metrics: [citizen_satisfaction_pct], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: citizen_satisfaction_pct, dir: desc }] }
+  agent: AG-PUB-001
+  verified_by: public-sector:steward
+  verified_at: 2026-07-30
+- id: VQ-PUB-009
+  question: "Pothole repair time by month this year"
+  query: { view: SERVICE_REQUESTS, metrics: [pothole_repair_days], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-PUB-001
+  verified_by: public-sector:program-ops
+  verified_at: 2026-08-02
+- id: VQ-PUB-010
+  question: "311 resolution time by request type last quarter"
+  query: { view: SERVICE_REQUESTS, metrics: [avg_resolution_days], dimensions: [request_type], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_resolution_days, dir: desc }] }
+  agent: AG-PUB-001
+  verified_by: public-sector:program-ops
+  verified_at: 2026-08-05
+- id: VQ-PUB-011
+  question: "How many 311 service requests were logged by district last quarter?"
+  query: { view: SERVICE_REQUESTS, metrics: [service_requests], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: service_requests, dir: desc }] }
+  agent: AG-PUB-001
+  verified_by: public-sector:steward
+  verified_at: 2026-08-08
+- id: VQ-PUB-012
+  question: "Citizen satisfaction by quarter this year"
+  query: { view: SERVICE_REQUESTS, metrics: [citizen_satisfaction_pct], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-PUB-001
+  verified_by: public-sector:steward
+  verified_at: 2026-08-11
+
+# ---------------------------------------------------------------- CASE_PROCESSING (AG-PUB-002)
+- id: VQ-PUB-013
+  question: "Average processing time by district last quarter"
+  query: { view: CASE_PROCESSING, metrics: [avg_processing_days], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_processing_days, dir: desc }] }
+  agent: AG-PUB-002
+  verified_by: public-sector:program-ops
+  verified_at: 2026-08-14
+- id: VQ-PUB-014
+  question: "Timely processing rate by program this year"
+  query: { view: CASE_PROCESSING, metrics: [timely_processing_rate], dimensions: [program], timeRange: { ytd: true }, orderBy: [{ field: timely_processing_rate, dir: asc }] }
+  agent: AG-PUB-002
+  verified_by: public-sector:program-ops
+  verified_at: 2026-08-17
+- id: VQ-PUB-015
+  question: "How many applications were over the 30-day standard this year by district?"
+  query: { view: CASE_PROCESSING, metrics: [applications_over_standard], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: applications_over_standard, dir: desc }] }
+  agent: AG-PUB-002
+  verified_by: public-sector:program-ops
+  verified_at: 2026-08-20
+- id: VQ-PUB-016
+  question: "Approval rate by program this year"
+  query: { view: CASE_PROCESSING, metrics: [approval_rate], dimensions: [program], timeRange: { ytd: true }, orderBy: [{ field: approval_rate, dir: desc }] }
+  agent: AG-PUB-002
+  verified_by: public-sector:hs-dpo
+  verified_at: 2026-08-23
+- id: VQ-PUB-017
+  question: "Applications decided by month this year"
+  query: { view: CASE_PROCESSING, metrics: [applications_decided], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-PUB-002
+  verified_by: public-sector:program-ops
+  verified_at: 2026-08-26
+- id: VQ-PUB-018
+  question: "Average processing time by office last quarter"
+  query: { view: CASE_PROCESSING, metrics: [avg_processing_days], dimensions: [office], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_processing_days, dir: desc }] }
+  agent: AG-PUB-002
+  verified_by: public-sector:program-ops
+  verified_at: 2026-08-29
+- id: VQ-PUB-019
+  question: "Online application share by district this year"
+  query: { view: CASE_PROCESSING, metrics: [online_application_share], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: online_application_share, dir: desc }] }
+  agent: AG-PUB-002
+  verified_by: public-sector:hs-dpo
+  verified_at: 2026-09-01
+- id: VQ-PUB-020
+  question: "Average processing time by month this year"
+  query: { view: CASE_PROCESSING, metrics: [avg_processing_days], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-PUB-002
+  verified_by: public-sector:program-ops
+  verified_at: 2026-09-04
+- id: VQ-PUB-021
+  question: "Timely processing rate by district last quarter"
+  query: { view: CASE_PROCESSING, metrics: [timely_processing_rate], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: timely_processing_rate, dir: asc }] }
+  agent: AG-PUB-002
+  verified_by: public-sector:program-ops
+  verified_at: 2026-09-07
+- id: VQ-PUB-022
+  question: "Approval rate by application channel this year"
+  query: { view: CASE_PROCESSING, metrics: [approval_rate], dimensions: [channel], timeRange: { ytd: true }, orderBy: [{ field: approval_rate, dir: desc }] }
+  agent: AG-PUB-002
+  verified_by: public-sector:hs-dpo
+  verified_at: 2026-09-10
+- id: VQ-PUB-023
+  question: "Average processing time for expedited applications this year"
+  query: { view: CASE_PROCESSING, metrics: [avg_processing_days], timeRange: { ytd: true }, filters: [{ dimension: expedited, op: "=", value: true }] }
+  agent: AG-PUB-002
+  verified_by: public-sector:program-ops
+  verified_at: 2026-09-13
+
+# ---------------------------------------------------------------- CASELOAD (AG-PUB-002)
+- id: VQ-PUB-024
+  question: "Case backlog by district"
+  query: { view: CASELOAD, metrics: [case_backlog], dimensions: [region], orderBy: [{ field: case_backlog, dir: desc }] }
+  agent: AG-PUB-002
+  verified_by: public-sector:program-ops
+  verified_at: 2026-09-16
+- id: VQ-PUB-025
+  question: "Case backlog by pending action"
+  query: { view: CASELOAD, metrics: [case_backlog], dimensions: [pending_action], orderBy: [{ field: case_backlog, dir: desc }] }
+  agent: AG-PUB-002
+  verified_by: public-sector:program-ops
+  verified_at: 2026-09-19
+- id: VQ-PUB-026
+  question: "Backlog age by district"
+  query: { view: CASELOAD, metrics: [backlog_age_days], dimensions: [region], orderBy: [{ field: backlog_age_days, dir: desc }] }
+  agent: AG-PUB-002
+  verified_by: public-sector:program-ops
+  verified_at: 2026-09-22
+- id: VQ-PUB-027
+  question: "Average caseload by office"
+  query: { view: CASELOAD, metrics: [avg_caseload], dimensions: [office], orderBy: [{ field: avg_caseload, dir: desc }] }
+  agent: AG-PUB-002
+  verified_by: public-sector:hs-dpo
+  verified_at: 2026-09-25
+- id: VQ-PUB-028
+  question: "Average caseload by district"
+  query: { view: CASELOAD, metrics: [avg_caseload], dimensions: [region], orderBy: [{ field: avg_caseload, dir: desc }] }
+  agent: AG-PUB-002
+  verified_by: public-sector:hs-dpo
+  verified_at: 2026-07-06
+- id: VQ-PUB-029
+  question: "Case backlog by program"
+  query: { view: CASELOAD, metrics: [case_backlog], dimensions: [program], orderBy: [{ field: case_backlog, dir: desc }] }
+  agent: AG-PUB-002
+  verified_by: public-sector:program-ops
+  verified_at: 2026-07-09
+
+# ---------------------------------------------------------------- BENEFIT_PAYMENTS (AG-PUB-003)
+- id: VQ-PUB-030
+  question: "Improper payment rate by program this year"
+  query: { view: BENEFIT_PAYMENTS, metrics: [improper_payment_rate], dimensions: [program], timeRange: { ytd: true }, orderBy: [{ field: improper_payment_rate, dir: desc }] }
+  agent: AG-PUB-003
+  verified_by: public-sector:steward
+  verified_at: 2026-07-12
+- id: VQ-PUB-031
+  question: "Payment accuracy by district this year"
+  query: { view: BENEFIT_PAYMENTS, metrics: [payment_accuracy_rate], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: payment_accuracy_rate, dir: asc }] }
+  agent: AG-PUB-003
+  verified_by: public-sector:steward
+  verified_at: 2026-07-15
+- id: VQ-PUB-032
+  question: "Improper payment dollars by error type this year"
+  query: { view: BENEFIT_PAYMENTS, metrics: [improper_payment_amount], dimensions: [error_type], timeRange: { ytd: true }, filters: [{ dimension: error_type, op: in, value: [Income verification, Household composition, Administrative error, Duplicate issuance] }], orderBy: [{ field: improper_payment_amount, dir: desc }], analysis: contribution }
+  agent: AG-PUB-003
+  verified_by: public-sector:steward
+  verified_at: 2026-07-18
+- id: VQ-PUB-033
+  question: "Benefits paid by program this year"
+  query: { view: BENEFIT_PAYMENTS, metrics: [benefits_paid], dimensions: [program], timeRange: { ytd: true }, orderBy: [{ field: benefits_paid, dir: desc }] }
+  agent: AG-PUB-003
+  verified_by: public-sector:program-ops
+  verified_at: 2026-07-21
+- id: VQ-PUB-034
+  question: "Benefits paid by month this year"
+  query: { view: BENEFIT_PAYMENTS, metrics: [benefits_paid], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-PUB-003
+  verified_by: public-sector:program-ops
+  verified_at: 2026-07-24
+- id: VQ-PUB-035
+  question: "On-time payment rate by program this year"
+  query: { view: BENEFIT_PAYMENTS, metrics: [on_time_payment_rate], dimensions: [program], timeRange: { ytd: true }, orderBy: [{ field: on_time_payment_rate, dir: asc }] }
+  agent: AG-PUB-003
+  verified_by: public-sector:program-ops
+  verified_at: 2026-07-27
+- id: VQ-PUB-036
+  question: "Improper payment rate by quarter this year"
+  query: { view: BENEFIT_PAYMENTS, metrics: [improper_payment_rate], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-PUB-003
+  verified_by: public-sector:steward
+  verified_at: 2026-07-30
+- id: VQ-PUB-037
+  question: "Payment accuracy by month this year"
+  query: { view: BENEFIT_PAYMENTS, metrics: [payment_accuracy_rate], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-PUB-003
+  verified_by: public-sector:steward
+  verified_at: 2026-08-02
+- id: VQ-PUB-038
+  question: "Improper payment dollars by district last quarter"
+  query: { view: BENEFIT_PAYMENTS, metrics: [improper_payment_amount], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: improper_payment_amount, dir: desc }] }
+  agent: AG-PUB-003
+  verified_by: public-sector:steward
+  verified_at: 2026-08-05
+- id: VQ-PUB-039
+  question: "Benefits paid by district last quarter"
+  query: { view: BENEFIT_PAYMENTS, metrics: [benefits_paid], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: benefits_paid, dir: desc }] }
+  agent: AG-PUB-003
+  verified_by: public-sector:program-ops
+  verified_at: 2026-08-08
+
+# ---------------------------------------------------------------- PROGRAM_INTEGRITY (AG-PUB-003) — 7 active; cases-flagged queries pending certification FIX-1 (DP-PUB-006)
+- id: VQ-PUB-040
+  question: "Integrity flag rate by district this year"
+  query: { view: PROGRAM_INTEGRITY, metrics: [integrity_flag_rate], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: integrity_flag_rate, dir: desc }] }
+  agent: AG-PUB-003
+  verified_by: public-sector:steward
+  verified_at: 2026-08-11
+- id: VQ-PUB-041
+  question: "Integrity flag rate by program this year"
+  query: { view: PROGRAM_INTEGRITY, metrics: [integrity_flag_rate], dimensions: [program], timeRange: { ytd: true }, orderBy: [{ field: integrity_flag_rate, dir: desc }] }
+  agent: AG-PUB-003
+  verified_by: public-sector:steward
+  verified_at: 2026-08-14
+- id: VQ-PUB-042
+  question: "Overpayments established by program this year"
+  query: { view: PROGRAM_INTEGRITY, metrics: [overpayments_established], dimensions: [program], timeRange: { ytd: true }, orderBy: [{ field: overpayments_established, dir: desc }] }
+  agent: AG-PUB-003
+  verified_by: public-sector:steward
+  verified_at: 2026-08-17
+- id: VQ-PUB-043
+  question: "Overpayment recovery rate by district this year"
+  query: { view: PROGRAM_INTEGRITY, metrics: [overpayment_recovery_rate], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: overpayment_recovery_rate, dir: asc }] }
+  agent: AG-PUB-003
+  verified_by: public-sector:steward
+  verified_at: 2026-08-20
+- id: VQ-PUB-044
+  question: "Overpayment recovery rate by quarter this year"
+  query: { view: PROGRAM_INTEGRITY, metrics: [overpayment_recovery_rate], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-PUB-003
+  verified_by: public-sector:steward
+  verified_at: 2026-08-23
+- id: VQ-PUB-045
+  question: "Overpayments established by flag reason this year"
+  query: { view: PROGRAM_INTEGRITY, metrics: [overpayments_established], dimensions: [flag_reason], timeRange: { ytd: true }, orderBy: [{ field: overpayments_established, dir: desc }] }
+  agent: AG-PUB-003
+  verified_by: public-sector:steward
+  verified_at: 2026-08-26
+- id: VQ-PUB-046
+  question: "Overpayment recovery rate by program this year"
+  query: { view: PROGRAM_INTEGRITY, metrics: [overpayment_recovery_rate], dimensions: [program], timeRange: { ytd: true }, orderBy: [{ field: overpayment_recovery_rate, dir: asc }] }
+  agent: AG-PUB-003
+  verified_by: public-sector:steward
+  verified_at: 2026-08-29
+
+# ---------------------------------------------------------------- PERMITTING (AG-PUB-001)
+- id: VQ-PUB-047
+  question: "Permit turnaround by district last quarter"
+  query: { view: PERMITTING, metrics: [avg_permit_turnaround_days], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_permit_turnaround_days, dir: desc }] }
+  agent: AG-PUB-001
+  verified_by: public-sector:program-ops
+  verified_at: 2026-09-01
+- id: VQ-PUB-048
+  question: "Permits issued by permit type last month"
+  query: { view: PERMITTING, metrics: [permits_issued], dimensions: [permit_type], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: permits_issued, dir: desc }] }
+  agent: AG-PUB-001
+  verified_by: public-sector:program-ops
+  verified_at: 2026-09-04
+- id: VQ-PUB-049
+  question: "Permits decided within target by review track this year"
+  query: { view: PERMITTING, metrics: [permits_within_target_pct], dimensions: [review_track], timeRange: { ytd: true }, orderBy: [{ field: permits_within_target_pct, dir: asc }] }
+  agent: AG-PUB-001
+  verified_by: public-sector:hs-dpo
+  verified_at: 2026-09-07
+- id: VQ-PUB-050
+  question: "First inspection pass rate by permit type this year"
+  query: { view: PERMITTING, metrics: [first_inspection_pass_rate], dimensions: [permit_type], timeRange: { ytd: true }, orderBy: [{ field: first_inspection_pass_rate, dir: asc }] }
+  agent: AG-PUB-001
+  verified_by: public-sector:hs-dpo
+  verified_at: 2026-09-10
+- id: VQ-PUB-051
+  question: "Permit turnaround by month this year"
+  query: { view: PERMITTING, metrics: [avg_permit_turnaround_days], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-PUB-001
+  verified_by: public-sector:program-ops
+  verified_at: 2026-09-13
+- id: VQ-PUB-052
+  question: "Permits issued by district this year"
+  query: { view: PERMITTING, metrics: [permits_issued], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: permits_issued, dir: desc }] }
+  agent: AG-PUB-001
+  verified_by: public-sector:program-ops
+  verified_at: 2026-09-16
+- id: VQ-PUB-053
+  question: "Permits decided within target by district this year"
+  query: { view: PERMITTING, metrics: [permits_within_target_pct], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: permits_within_target_pct, dir: asc }] }
+  agent: AG-PUB-001
+  verified_by: public-sector:hs-dpo
+  verified_at: 2026-09-19
+- id: VQ-PUB-054
+  question: "First inspection pass rate by district this year"
+  query: { view: PERMITTING, metrics: [first_inspection_pass_rate], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: first_inspection_pass_rate, dir: asc }] }
+  agent: AG-PUB-001
+  verified_by: public-sector:hs-dpo
+  verified_at: 2026-09-22
+- id: VQ-PUB-055
+  question: "Permit turnaround by review track this year"
+  query: { view: PERMITTING, metrics: [avg_permit_turnaround_days], dimensions: [review_track], timeRange: { ytd: true }, orderBy: [{ field: avg_permit_turnaround_days, dir: desc }] }
+  agent: AG-PUB-001
+  verified_by: public-sector:program-ops
+  verified_at: 2026-09-25
+- id: VQ-PUB-056
+  question: "Permits issued by month this year"
+  query: { view: PERMITTING, metrics: [permits_issued], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-PUB-001
+  verified_by: public-sector:program-ops
+  verified_at: 2026-07-06
+
+# ---------------------------------------------------------------- BUDGET_FINANCE (AG-PUB-004) — current fiscal year by default (BR-PUB-015)
+- id: VQ-PUB-057
+  question: "Budget variance by department"
+  query: { view: BUDGET_FINANCE, metrics: [budget_variance_pct], dimensions: [department], orderBy: [{ field: budget_variance_pct, dir: desc }] }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-07-09
+- id: VQ-PUB-058
+  question: "Budget execution by department"
+  query: { view: BUDGET_FINANCE, metrics: [budget_execution_pct], dimensions: [department], orderBy: [{ field: budget_execution_pct, dir: desc }] }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-07-12
+- id: VQ-PUB-059
+  question: "Workforce vacancy rate by department"
+  query: { view: BUDGET_FINANCE, metrics: [vacancy_rate], dimensions: [department], orderBy: [{ field: vacancy_rate, dir: desc }] }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-07-15
+- id: VQ-PUB-060
+  question: "Budget variance by month this fiscal year"
+  query: { view: BUDGET_FINANCE, metrics: [budget_variance_pct], timeGrain: month, analysis: trend }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-07-18
+- id: VQ-PUB-061
+  question: "Budget execution for administrative versus program departments"
+  query: { view: BUDGET_FINANCE, metrics: [budget_execution_pct], dimensions: [administrative] }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-07-21
+- id: VQ-PUB-062
+  question: "Budget variance by department for FY2026"
+  query: { view: BUDGET_FINANCE, metrics: [budget_variance_pct], dimensions: [department], filters: [{ dimension: fiscal_year, op: "=", value: FY2026 }], orderBy: [{ field: budget_variance_pct, dir: desc }] }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-07-24
+- id: VQ-PUB-063
+  question: "Workforce vacancy rate by month this fiscal year"
+  query: { view: BUDGET_FINANCE, metrics: [vacancy_rate], timeGrain: month, analysis: trend }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-07-27
+- id: VQ-PUB-064
+  question: "Budget execution by month this fiscal year"
+  query: { view: BUDGET_FINANCE, metrics: [budget_execution_pct], timeGrain: month, analysis: trend }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-07-30
+- id: VQ-PUB-065
+  question: "Which departments have the highest workforce vacancy rate?"
+  query: { view: BUDGET_FINANCE, metrics: [vacancy_rate], dimensions: [department], orderBy: [{ field: vacancy_rate, dir: desc }], limit: 5, analysis: rank }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-08-02
+- id: VQ-PUB-066
+  question: "Budget variance for Public Works by month"
+  query: { view: BUDGET_FINANCE, metrics: [budget_variance_pct], timeGrain: month, filters: [{ dimension: department, op: "=", value: Public Works }], analysis: trend }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-08-05
+
+# ---------------------------------------------------------------- PROCUREMENT (AG-PUB-004)
+- id: VQ-PUB-067
+  question: "Procurement cycle time by procurement method this year"
+  query: { view: PROCUREMENT, metrics: [procurement_cycle_days], dimensions: [procurement_method], timeRange: { ytd: true }, orderBy: [{ field: procurement_cycle_days, dir: desc }] }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-08-08
+- id: VQ-PUB-068
+  question: "Procurement cycle time by quarter this year"
+  query: { view: PROCUREMENT, metrics: [procurement_cycle_days], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-08-11
+- id: VQ-PUB-069
+  question: "Purchasing spend by spend category this year"
+  query: { view: PROCUREMENT, metrics: [total_spend], dimensions: [category], timeRange: { ytd: true }, orderBy: [{ field: total_spend, dir: desc }], analysis: contribution }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-08-14
+- id: VQ-PUB-070
+  question: "Spend on contract by department this year"
+  query: { view: PROCUREMENT, metrics: [on_contract_spend_pct], dimensions: [department], timeRange: { ytd: true }, orderBy: [{ field: on_contract_spend_pct, dir: asc }] }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-08-17
+- id: VQ-PUB-071
+  question: "Procurement cycle time by spend category this year"
+  query: { view: PROCUREMENT, metrics: [procurement_cycle_days], dimensions: [category], timeRange: { ytd: true }, orderBy: [{ field: procurement_cycle_days, dir: desc }] }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-08-20
+- id: VQ-PUB-072
+  question: "Top 10 vendors by purchasing spend this year"
+  query: { view: PROCUREMENT, metrics: [total_spend], dimensions: [vendor], timeRange: { ytd: true }, orderBy: [{ field: total_spend, dir: desc }], limit: 10, analysis: rank }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-08-23
+
+# ---------------------------------------------------------------- GRANT_FUNDING (AG-PUB-004) — active grants by default (BR-PUB-021)
+- id: VQ-PUB-073
+  question: "Grant drawdown rate by funder"
+  query: { view: GRANT_FUNDING, metrics: [grant_drawdown_rate], dimensions: [funder], orderBy: [{ field: grant_drawdown_rate, dir: asc }] }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-08-26
+- id: VQ-PUB-074
+  question: "Grant drawdown rate by department"
+  query: { view: GRANT_FUNDING, metrics: [grant_drawdown_rate], dimensions: [department], orderBy: [{ field: grant_drawdown_rate, dir: asc }] }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-08-29
+- id: VQ-PUB-075
+  question: "Grants at risk by program area"
+  query: { view: GRANT_FUNDING, metrics: [grants_at_risk], dimensions: [program_area], orderBy: [{ field: grants_at_risk, dir: desc }] }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-09-01
+- id: VQ-PUB-076
+  question: "Grants at risk by department"
+  query: { view: GRANT_FUNDING, metrics: [grants_at_risk], dimensions: [department], orderBy: [{ field: grants_at_risk, dir: desc }] }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-09-04
+- id: VQ-PUB-077
+  question: "Grant drawdown rate including closed grants by funder"
+  query: { view: GRANT_FUNDING, metrics: [grant_drawdown_rate], dimensions: [funder], orderBy: [{ field: grant_drawdown_rate, dir: asc }] }
+  agent: AG-PUB-004
+  verified_by: public-sector:county-administrator
+  verified_at: 2026-09-07
+
+# ---------------------------------------------------------------- PUBLIC_WORKS (no agent yet — DP-PUB-007 in development)
+- id: VQ-PUB-078
+  question: "On-time repair rate by work type this year"
+  query: { view: PUBLIC_WORKS, metrics: [on_time_repair_pct], dimensions: [work_type], timeRange: { ytd: true }, orderBy: [{ field: on_time_repair_pct, dir: asc }] }
+  verified_by: public-sector:hs-dpo
+  verified_at: 2026-09-10
+- id: VQ-PUB-079
+  question: "Open work orders by district"
+  query: { view: PUBLIC_WORKS, metrics: [open_work_orders], dimensions: [region], orderBy: [{ field: open_work_orders, dir: desc }] }
+  verified_by: public-sector:hs-dpo
+  verified_at: 2026-09-13
+- id: VQ-PUB-080
+  question: "Average repair time by work type this year"
+  query: { view: PUBLIC_WORKS, metrics: [avg_repair_days], dimensions: [work_type], timeRange: { ytd: true }, orderBy: [{ field: avg_repair_days, dir: desc }] }
+  verified_by: public-sector:hs-dpo
+  verified_at: 2026-09-16
+- id: VQ-PUB-081
+  question: "On-time repair rate by district this year"
+  query: { view: PUBLIC_WORKS, metrics: [on_time_repair_pct], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: on_time_repair_pct, dir: asc }] }
+  verified_by: public-sector:hs-dpo
+  verified_at: 2026-09-19
+- id: VQ-PUB-082
+  question: "Work orders completed by month this year"
+  query: { view: PUBLIC_WORKS, metrics: [work_orders_completed], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  verified_by: public-sector:hs-dpo
+  verified_at: 2026-09-22
+
+# ---------------------------------------------------------------- PROGRAM_INTEGRITY cases flagged — pending certification FIX-1 (DP-PUB-006)
+- id: VQ-PUB-083
+  question: "How many cases are flagged for integrity review this year?"
+  query: { view: PROGRAM_INTEGRITY, metrics: [cases_flagged], timeRange: { ytd: true } }
+  agent: AG-PUB-003
+  verified_by: public-sector:steward
+  verified_at: 2026-09-25
+  status: pending_fix
+- id: VQ-PUB-084
+  question: "Cases flagged for review by district this year"
+  query: { view: PROGRAM_INTEGRITY, metrics: [cases_flagged], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: cases_flagged, dir: desc }] }
+  agent: AG-PUB-003
+  verified_by: public-sector:steward
+  verified_at: 2026-07-06
+  status: pending_fix
+- id: VQ-PUB-085
+  question: "Cases flagged for review by flag reason this year"
+  query: { view: PROGRAM_INTEGRITY, metrics: [cases_flagged], dimensions: [flag_reason], timeRange: { ytd: true }, orderBy: [{ field: cases_flagged, dir: desc }] }
+  agent: AG-PUB-003
+  verified_by: public-sector:steward
+  verified_at: 2026-07-09
+  status: pending_fix

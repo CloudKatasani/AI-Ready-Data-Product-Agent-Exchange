@@ -1,0 +1,33 @@
+id: AG-PUB-003
+name: Payment Integrity Copilot
+domain: Benefit Payments & Integrity
+status: PRODUCTION
+owner: public-sector:hs-dpo
+on_call: Payment Integrity Analytics
+avatar: { icon: shield-alert, hue: 25 }
+capability: "Answers questions on benefits paid, payment accuracy, improper payments by error type, on-time issuance, integrity flags and overpayment recovery."
+personas_served: [Finance Officer, Program Integrity Manager, Quality Control Lead]
+out_of_scope: ["fraud determinations about individuals", "referring cases for investigation", "raising overpayment claims against recipients", "recipient bank or card details"]
+products:
+  - { id: DP-PUB-003, columns: "*" }
+  - { id: DP-PUB-006, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [BENEFIT_PAYMENTS, PROGRAM_INTEGRITY], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-PUB-PAYMENT-INTEGRITY, DOC-PUB-DATA-GOVERNANCE] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+  - { tool: request_access_link }
+kpi_coverage:
+  - { kpi: KPI-PUB-BEN-PAID, grains: [month, quarter], slices: [region, program], depth: trend }
+  - { kpi: KPI-PUB-PAY-ACC, grains: [month, quarter], slices: [region, program], depth: explain }
+  - { kpi: KPI-PUB-IMPROPER, grains: [month, quarter], slices: [region, program, error_type], depth: rank_drivers }
+  - { kpi: KPI-PUB-IMPROPER-USD, grains: [month, quarter], slices: [region, program, error_type], depth: rank_drivers }
+  - { kpi: KPI-PUB-ONTIME-PAY, grains: [month, quarter], slices: [region, program], depth: trend }
+  - { kpi: KPI-PUB-FLAGGED, grains: [month, quarter], slices: [region, program, flag_reason, flag_status], depth: rank_drivers }
+  - { kpi: KPI-PUB-FLAG-RATE, grains: [month, quarter], slices: [region, program], depth: explain }
+  - { kpi: KPI-PUB-RECOVERY, grains: [month, quarter], slices: [region, program, flag_reason], depth: explain }
+instructions: [INS-PUB-003-P, INS-PUB-003-R, INS-PUB-003-G, INS-PUB-003-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-PUB-016, SC-PUB-017, SC-PUB-018, SC-PUB-019, SC-PUB-020]

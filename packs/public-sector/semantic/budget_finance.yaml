@@ -1,0 +1,69 @@
+name: BUDGET_FINANCE
+description: Adopted budget, actual expenditure, variance, execution and position vacancy by department and fiscal period (fiscal year July-June)
+tables:
+  - { alias: b, fqn: CONFORMED_GOLD.FCT_BUDGET, pk: budget_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: b.date_key, to: d.date_key }
+dimensions:
+  - { name: department, expr: b.department, label: Department, synonyms: [dept, county department, agency], term: GT-PUB-DEPARTMENT }
+  - { name: fiscal_year, expr: d.fiscal_year, label: Fiscal year, synonyms: [fy, budget year], term: GT-PUB-FISCAL-YEAR }
+  - { name: fiscal_quarter, expr: d.fiscal_quarter, label: Fiscal quarter, synonyms: [fiscal period] }
+  - { name: administrative, expr: b.is_administrative, label: Administrative cost, synonyms: [overhead, admin cost] }
+time_dimensions:
+  - { name: period_month, expr: d.date, default: true }
+facts:
+  - { name: budget_amount, expr: b.budget_amount, description: Adopted monthly budget }
+  - { name: actual_amount, expr: b.actual_amount, description: Actual monthly expenditure }
+metrics:
+  - name: adopted_budget
+    label: Adopted budget
+    expr: SUM(b.budget_amount)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [budgeted amount, appropriation, budget amount]
+    term: GT-PUB-ADOPTED-BUDGET
+    description: Adopted budget for the months in scope (current fiscal year to date by default)
+    default_filters: [ { rule: BR-PUB-015 } ]
+  - name: actual_expenditure
+    label: Actual expenditure
+    expr: SUM(b.actual_amount)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [actual spend, expenditure, actuals, amount spent]
+    term: GT-PUB-ACTUAL-EXP
+    description: Actual expenditure posted for the months in scope (current fiscal year to date by default)
+    default_filters: [ { rule: BR-PUB-015 } ]
+  - name: budget_variance_pct
+    label: Budget variance
+    expr: 100.0 * (SUM(b.actual_amount) - SUM(b.budget_amount)) / SUM(b.budget_amount)
+    unit: '%'
+    decimals: 1
+    direction: neutral
+    synonyms: [variance to budget, budget vs actual, over budget, under budget]
+    term: GT-PUB-BUDGET-VARIANCE
+    description: Actual minus adopted budget as a share of adopted budget (positive = overspend)
+    default_filters: [ { rule: BR-PUB-015 } ]
+  - name: budget_execution_pct
+    label: Budget execution
+    expr: 100.0 * SUM(b.actual_amount) / SUM(b.budget_amount)
+    unit: '%'
+    decimals: 1
+    direction: neutral
+    synonyms: [budget execution rate, budget used, spend against budget]
+    term: GT-PUB-BUDGET-EXEC
+    description: Actual expenditure as a share of adopted budget
+    default_filters: [ { rule: BR-PUB-015 } ]
+  - name: vacancy_rate
+    label: Workforce vacancy rate
+    expr: 100.0 * (SUM(b.fte_authorized) - SUM(b.fte_filled)) / SUM(b.fte_authorized)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [vacancy rate, staff vacancy rate, unfilled positions, staffing gap]
+    term: GT-PUB-VACANCY
+    description: Unfilled authorised positions as a share of authorised positions, averaged over the months in scope
+    default_filters: [ { rule: BR-PUB-015 } ]
+products: [DP-PUB-005]

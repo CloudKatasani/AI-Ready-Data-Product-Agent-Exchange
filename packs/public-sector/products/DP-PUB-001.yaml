@@ -1,0 +1,25 @@
+id: DP-PUB-001
+name: Service Requests (311)
+domain: Constituent Services
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 2.0.1
+owner: public-sector:hs-dpo
+steward: public-sector:steward
+description: 311 requests by type, department, channel and district, with resolution time, SLA attainment, reopens and survey satisfaction.
+purpose: Service-level management, open-data publication and resident satisfaction tracking from one certified 311 source.
+decision: { persona: 311 Operations Manager, decision: "Which request types and districts get extra crews or contractor support next month", cadence: Monthly, workaround: "CRM exports pivoted in a spreadsheet and e-mailed to departments", consequence: "SLA misses persist in the same districts and residents stop reporting issues" }
+sample_questions: ["What was the average 311 resolution time last quarter by district?", "How has 311 SLA attainment changed this year?", "How long does it take to fix a pothole in each district?"]
+semantic_view: SERVICE_REQUESTS
+output_ports:
+  - { kind: semantic, ref: SERVICE_REQUESTS }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_PUB_001_SERVICE_REQUESTS }
+  - { kind: agent, ref: AG-PUB-001 }
+sla: { freshness_minutes: 30, availability_pct: 99.5, max_null_rate_pct: 1.0 }
+kpis: [KPI-PUB-311-VOLUME, KPI-PUB-311-RES, KPI-PUB-311-SLA, KPI-PUB-311-REOPEN, KPI-PUB-CSAT, KPI-PUB-POTHOLE]
+upstream: [CONFORMED_GOLD.FCT_SERVICE_REQUEST]
+consumers: [311 operations, Open-data portal, Constituent Services Assistant agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-PUB-001

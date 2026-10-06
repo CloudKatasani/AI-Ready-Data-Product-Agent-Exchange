@@ -1,0 +1,96 @@
+# Knockout (Why AI-Ready): four governed answers and how each degrades when a layer is switched off.
+# declared_delta_pct is computed through the real knockout query path at scale M (pnpm knockout:deltas --update).
+answers:
+  - id: KO-PUB-01
+    kpi: KPI-PUB-PROC-DAYS
+    question: "What was average benefit processing time last quarter, excluding applications on hold for documents?"
+    query: { view: CASE_PROCESSING, metrics: [avg_processing_days], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # CDC duplicate updates and withdrawn-then-deleted applications counted
+      gold: wrong          # no county business-day calendar; calendar days are counted instead of business days
+      semantic: wrong      # naive formula counts calendar days from receipt, not business days from a complete application
+      glossary: ambiguous  # "case processing time" no longer resolves to the governed metric
+      context: wrong       # applications on hold for documents (BR-PUB-002) are no longer excluded
+      governance: unsafe   # no certification, district row access or lineage on the answer
+    declared_delta_pct: { silver: 45.7, gold: 45.3, semantic: 97.3, glossary: 0, context: 19.6, governance: 0 }
+  - id: KO-PUB-02
+    kpi: KPI-PUB-311-RES
+    question: "What was the average 311 resolution time last quarter?"
+    query: { view: SERVICE_REQUESTS, metrics: [avg_resolution_days], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # duplicate CDC updates and dirty request types double count
+      gold: unverified     # same number from Silver but no certified SLA mapping or lineage
+      semantic: wrong      # naive formula counts open requests as zero days
+      glossary: ambiguous  # "time to close" does not resolve
+      context: wrong       # duplicates closed at merge (BR-PUB-005) pull the average down
+      governance: unsafe   # caller names reachable from the request view unmasked
+    declared_delta_pct: { silver: 6.3, gold: 0, semantic: -8.6, glossary: 0, context: -6.2, governance: 0 }
+  - id: KO-PUB-03
+    kpi: KPI-PUB-IMPROPER
+    question: "What is the improper payment rate this year?"
+    query: { view: BENEFIT_PAYMENTS, metrics: [improper_payment_rate], timeRange: { ytd: true } }
+    failure_by_layer:
+      silver: wrong        # duplicate payment updates and reversed payments counted
+      gold: unverified     # computed from Silver payments without the certified case conformance
+      semantic: wrong      # naive formula is count-based, not dollar-based (BR-PUB-009)
+      glossary: ambiguous  # "payment error rate" could mean accuracy or improper dollars
+      context: wrong       # voided duplicate issuances (BR-PUB-008) are included
+      governance: unsafe   # case head government identifiers unmasked on the payment fact
+    declared_delta_pct: { silver: -1, gold: -0.2, semantic: 79.6, glossary: 0, context: 29.2, governance: 0 }
+  - id: KO-PUB-04
+    kpi: KPI-PUB-BUDGET-VAR
+    question: "What is budget variance this fiscal year?"
+    query: { view: BUDGET_FINANCE, metrics: [budget_variance_pct] }
+    failure_by_layer:
+      silver: unverified   # duplicate GL line updates double both budget and actuals: the ratio survives, dollar totals do not
+      gold: unverified     # same figures from Silver but no conformed fiscal calendar lineage
+      semantic: ambiguous  # variance in dollars or percent, against adopted or amended budget
+      glossary: ambiguous  # "budget vs actual" does not resolve to the governed metric
+      context: wrong       # the fiscal-year default (BR-PUB-015) is lost, so all months since January 2025 are mixed
+      governance: unsafe   # no certification or lineage on a figure that goes to the Board
+    declared_delta_pct: { silver: 0, gold: 0, semantic: -127, glossary: 0, context: -127, governance: 0 }
+
+# Silver equivalents the compiler uses when the Gold layer is off (05 §1 step 7). column_map maps a Gold column
+# name to the Silver column (or Silver expression) that replaces it. Gold surrogate keys map to natural keys on both
+# sides of a join so relationships still resolve; date_key maps to the same integer expression Gold uses.
+# DIM_DATE is a generated calendar with no Silver source and stays in place.
+gold_fallbacks:
+  # Expressions use columns present in both the Silver table and its Bronze source, so "Silver off" can run the
+  # same query over raw CDC rows (duplicates, tombstones and dirty strings included).
+  - gold: CONFORMED_GOLD.FCT_APPLICATION
+    silver: CURATED_SILVER.BENEFIT_APPLICATION
+    column_map:
+      application_key: application_id
+      office_key: office_id
+      date_key: "CAST(strftime(CAST(complete_date + to_days(decision_cal_days) AS DATE), '%Y%m%d') AS INTEGER)"
+      processing_days: decision_cal_days
+      decided: "complete_date + to_days(decision_cal_days) <= GOVERNANCE.as_of()"
+      within_standard: "decision_cal_days <= 30"
+      program_name: program_code
+  - gold: CONFORMED_GOLD.DIM_OFFICE
+    silver: CURATED_SILVER.SERVICE_OFFICE
+    column_map:
+      office_key: office_id
+      region_caseworkers: caseworkers
+      county_caseworkers: caseworkers
+  - gold: CONFORMED_GOLD.FCT_SERVICE_REQUEST
+    silver: CURATED_SILVER.SERVICE_REQUEST
+    column_map:
+      sr_key: sr_id
+      date_key: "CAST(strftime(CAST(created_ts AS DATE), '%Y%m%d') AS INTEGER)"
+      closed: "resolution_days IS NOT NULL"
+  - gold: CONFORMED_GOLD.FCT_PAYMENT
+    silver: CURATED_SILVER.BENEFIT_PAYMENT
+    column_map:
+      payment_key: payment_id
+      case_key: case_id
+      date_key: "CAST(strftime(issue_date, '%Y%m%d') AS INTEGER)"
+      payment_amount: amount
+      improper_amount: "CASE WHEN is_improper THEN round(amount * improper_ratio, 2) ELSE 0 END"
+      program_name: program_code
+      flagged_for_review: "coalesce(flag_status IN ('Open review', 'Referred'), false)"
+  - gold: CONFORMED_GOLD.FCT_BUDGET
+    silver: CURATED_SILVER.GL_BUDGET_LINE
+    column_map:
+      budget_key: line_no
+      date_key: "CAST(strftime(CAST(DATE '2025-01-01' + to_months(period_idx) AS DATE), '%Y%m%d') AS INTEGER)"

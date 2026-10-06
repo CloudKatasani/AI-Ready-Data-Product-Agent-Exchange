@@ -1,0 +1,65 @@
+name: PUBLIC_WORKS
+description: Street maintenance work orders — repairs completed, repair time against target, backlog and cost, with road condition
+tables:
+  - { alias: w, fqn: CONFORMED_GOLD.FCT_WORK_ORDER, pk: work_order_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: w.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: w.region, label: District, synonyms: [district, service district, area], term: GT-PUB-DISTRICT }
+  - { name: work_type, expr: w.work_type, label: Work type, synonyms: [job type, type of repair, repair type] }
+  - { name: crew_type, expr: w.crew_type, label: Crew type, synonyms: [county or contractor] }
+  - { name: pci_band, expr: w.pci_band, label: Road condition band, synonyms: [pavement condition, pci band, road condition], term: GT-PUB-PCI }
+  - { name: functional_class, expr: w.functional_class, label: Road class, synonyms: [functional class, street class] }
+time_dimensions:
+  - { name: reported_date, expr: d.date, default: true }
+facts:
+  - { name: repair_days, expr: w.repair_days, description: Days from report to repair completion }
+  - { name: cost_usd, expr: w.cost_usd, description: "Labour, material and contractor cost" }
+metrics:
+  - name: work_orders_completed
+    label: Work orders completed
+    expr: COUNT_IF(w.completed)
+    unit: work orders
+    decimals: 0
+    direction: neutral
+    synonyms: [repairs completed, completed jobs, completed work orders]
+    term: GT-PUB-WORK-ORDER
+    description: Street maintenance work orders completed (by report date)
+  - name: avg_repair_days
+    label: Average repair time
+    expr: AVG(w.repair_days)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [repair time, days to repair, time to complete a repair]
+    term: GT-PUB-REPAIR-TIME
+    description: Mean days from report to completion of completed work orders
+  - name: on_time_repair_pct
+    label: On-time repair rate
+    expr: 100.0 * AVG(CASE WHEN w.completed THEN CASE WHEN w.on_time THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [repairs on time, on-time completion, repairs within target]
+    term: GT-PUB-ON-TIME-REPAIR
+    description: Share of completed work orders finished within the target for their work type
+  - name: open_work_orders
+    label: Open work orders
+    expr: COUNT_IF(NOT w.completed)
+    unit: work orders
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [work order backlog, open jobs, street maintenance backlog]
+    term: GT-PUB-WO-BACKLOG
+    description: Work orders reported but not completed at the reporting date
+  - name: avg_cost_per_order
+    label: Average cost per work order
+    expr: AVG(w.cost_usd)
+    unit: USD
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [cost per work order, average job cost]
+    term: GT-PUB-WO-COST
+    description: Mean labour, material and contractor cost per work order
+products: [DP-PUB-007]

@@ -1,0 +1,33 @@
+# Public works DQ rules (FCT_WORK_ORDER).
+- id: DQ-PUB-036
+  object: CONFORMED_GOLD.FCT_WORK_ORDER
+  column: repair_days
+  dimension: validity
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Repair days are never negative.
+- id: DQ-PUB-037
+  object: CONFORMED_GOLD.FCT_WORK_ORDER
+  column: work_order_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per work order.
+- id: DQ-PUB-038
+  object: CONFORMED_GOLD.FCT_WORK_ORDER
+  column: reported_date
+  dimension: timeliness
+  assertion: "freshness_min <= 4320"
+  severity: medium
+  alert_route: engineering
+  description: Work orders reported in the last three days have arrived from the maintenance system.
+- id: DQ-PUB-039
+  object: CONFORMED_GOLD.FCT_WORK_ORDER
+  column: pci
+  dimension: validity
+  assertion: "max <= 100"
+  severity: low
+  alert_route: steward
+  description: Pavement condition index is on the 0-100 scale.

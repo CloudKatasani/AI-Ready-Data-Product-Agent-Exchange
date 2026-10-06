@@ -1,0 +1,120 @@
+# Finance, procurement and grants DQ rules (FCT_BUDGET, FCT_PO_SPEND, DIM_VENDOR, FCT_GRANT).
+- id: DQ-PUB-040
+  object: CONFORMED_GOLD.FCT_BUDGET
+  column: budget_amount
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every department-month carries its adopted budget (variance denominator).
+- id: DQ-PUB-041
+  object: CONFORMED_GOLD.FCT_BUDGET
+  column: budget_amount
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: Adopted monthly budgets are positive.
+- id: DQ-PUB-042
+  object: CONFORMED_GOLD.FCT_BUDGET
+  column: actual_amount
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Actual expenditure is posted for every department-month.
+- id: DQ-PUB-043
+  object: CONFORMED_GOLD.FCT_BUDGET
+  column: actual_amount
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Actual expenditure is not negative at the department-month level.
+- id: DQ-PUB-044
+  object: CONFORMED_GOLD.FCT_BUDGET
+  column: period_month
+  dimension: timeliness
+  assertion: "freshness_min <= 46080"
+  severity: medium
+  alert_route: engineering
+  description: The latest closed fiscal month has posted (no more than one month behind).
+- id: DQ-PUB-045
+  object: CONFORMED_GOLD.FCT_PO_SPEND
+  column: spend_usd
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every requisition line carries its spend.
+- id: DQ-PUB-046
+  object: CONFORMED_GOLD.FCT_PO_SPEND
+  column: spend_usd
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: Spend is positive; credits are posted as separate adjustments.
+- id: DQ-PUB-047
+  object: CONFORMED_GOLD.FCT_PO_SPEND
+  column: cycle_days
+  dimension: validity
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: A purchase order is never raised before its requisition.
+- id: DQ-PUB-048
+  object: CONFORMED_GOLD.FCT_PO_SPEND
+  column: po_line_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per requisition line after CDC deduplication.
+- id: DQ-PUB-049
+  object: CONFORMED_GOLD.FCT_PO_SPEND
+  column: requisition_date
+  dimension: timeliness
+  assertion: "freshness_min <= 4320"
+  severity: medium
+  alert_route: engineering
+  description: Requisitions from the last three days have arrived from purchasing.
+- id: DQ-PUB-050
+  object: CONFORMED_GOLD.DIM_VENDOR
+  column: tax_id
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^TIN-VND-[0-9]{4}$"
+  severity: medium
+  alert_route: steward
+  description: Vendor tax identifiers are in the synthetic format expected by MASK_GOV_ID.
+- id: DQ-PUB-051
+  object: CONFORMED_GOLD.FCT_GRANT
+  column: drawn_amount
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Drawn amount is populated for every grant (zero before the first drawdown).
+- id: DQ-PUB-052
+  object: CONFORMED_GOLD.FCT_GRANT
+  column: drawn_amount
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Drawdowns are never negative and never exceed the award (capped in Gold).
+- id: DQ-PUB-053
+  object: CURATED_SILVER.GRANT_AWARD
+  dimension: timeliness
+  assertion: "freshness_min <= 46080"
+  severity: medium
+  alert_route: engineering
+  description: The grants register has been refreshed within the last month.
+- id: DQ-PUB-054
+  object: CURATED_SILVER.GL_BUDGET_LINE
+  dimension: timeliness
+  assertion: "freshness_min <= 46080"
+  severity: low
+  alert_route: engineering
+  description: The curated budget lines have been refreshed within the last month.

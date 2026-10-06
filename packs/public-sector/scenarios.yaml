@@ -1,0 +1,444 @@
+# Scripted scenarios for Westland County Services — ported from the AI-Ready public-sector `scenarios.ts` (S-01..S-15)
+# and extended to permits, public works and finance. Numbers come from golden.json; `expect` holds shape assertions
+# only. Together the 28 scenarios cover all 15 patterns (04 §6).
+
+# ================================================================ AG-PUB-002 Program Analyst
+- id: SC-PUB-001
+  agent: AG-PUB-002
+  pattern: 3
+  question: "What was average benefit processing time by district last quarter?"
+  paraphrases:
+    - "What was average benefit processing time by district last quarter, excluding applications on hold for documents?"
+    - "benefit processing days per district last qtr"
+  kind: answer
+  query: { view: CASE_PROCESSING, metrics: [avg_processing_days], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_processing_days, dir: desc }] }
+  answer:
+    headline: "{{top.region}} had the slowest benefit processing last quarter at {{top.avg_processing_days}} business days."
+    narrative: "Business days from a complete application to decision, excluding applications on hold for documents (BR-PUB-002). {{bottom.region}} was fastest at {{bottom.avg_processing_days}} days across {{rows}} districts; the county average was {{total.avg_processing_days}} days."
+    chart: bar
+  followups: ["Include applications on hold for documents", "Which offices drove Riverside?", "Is the timely processing rate within target this year?"]
+  expect: { rows: 4, top: { region: Riverside }, rules: [BR-PUB-002] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-PUB-002
+  agent: AG-PUB-002
+  pattern: 10
+  question: "What was average benefit processing time by district last quarter, including applications on hold for documents?"
+  paraphrases:
+    - "benefit processing time per district last quarter including document holds"
+  kind: answer
+  query: { view: CASE_PROCESSING, metrics: [avg_processing_days], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_processing_days, dir: desc }] }
+  answer:
+    headline: "Including document holds, {{top.region}} had the slowest benefit processing last quarter at {{top.avg_processing_days}} business days."
+    narrative: "You asked to include applications on hold for documents, so BR-PUB-002 is not applied. North's new income-verification checklist put far more applications on hold — compare with the standard measure, which excludes them."
+    chart: bar
+  followups: ["Exclude applications on hold for documents", "How many applications were over the 30-day standard?"]
+  expect: { rows: 4, top: { region: North } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-PUB-003
+  agent: AG-PUB-002
+  pattern: 2
+  question: "Is the timely processing rate within target this year?"
+  paraphrases:
+    - "Are we meeting the 30-day processing standard this year?"
+    - "timely processing rate vs target ytd"
+  kind: answer
+  query: { view: CASE_PROCESSING, metrics: [timely_processing_rate], timeRange: { ytd: true }, analysis: compare_target }
+  answer:
+    headline: "The timely processing rate is {{top.timely_processing_rate}}% this year — {{vsTarget.top}} the target band."
+    narrative: "Decided applications decided within 30 business days of a complete application, excluding applications on hold for documents (BR-PUB-002, BR-PUB-003)."
+    chart: kpi
+  followups: ["Timely processing rate by district last quarter", "How many applications were over the 30-day standard?"]
+  expect: { rows: 1, rules: [BR-PUB-002] }
+
+- id: SC-PUB-004
+  agent: AG-PUB-002
+  pattern: 5
+  question: "Which five offices have the largest case backlog?"
+  paraphrases:
+    - "Top 5 offices by case backlog"
+    - "offices with the most cases awaiting a decision"
+  kind: answer
+  query: { view: CASELOAD, metrics: [case_backlog], dimensions: [office], orderBy: [{ field: case_backlog, dir: desc }], limit: 5, analysis: rank }
+  answer:
+    headline: "{{top.office}} has the largest case backlog with {{top.case_backlog}} cases awaiting a caseworker decision."
+    narrative: "Open cases with a new application, renewal or change report waiting at the reporting date (BR-PUB-013); showing the top {{rows}} offices. The county backlog is {{total.case_backlog}} cases."
+    chart: bar
+  followups: ["Backlog age by district", "Average caseload by office"]
+  expect: { rows: 5, top: { office: Mill Creek Office } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-PUB-005
+  agent: AG-PUB-002
+  pattern: 9
+  question: "How does benefit processing time compare across programs this year?"
+  paraphrases:
+    - "Compare processing time by benefit program year to date"
+  kind: answer
+  query: { view: CASE_PROCESSING, metrics: [avg_processing_days, timely_processing_rate], dimensions: [program], timeRange: { ytd: true }, orderBy: [{ field: avg_processing_days, dir: desc }] }
+  answer:
+    headline: "{{top.program}} takes longest to decide this year at {{top.avg_processing_days}} business days."
+    narrative: "{{top.timely_processing_rate}}% of {{top.program}} decisions met the 30-day standard, versus {{bottom.timely_processing_rate}}% for {{bottom.program}} ({{bottom.avg_processing_days}} days). Document holds are excluded (BR-PUB-002)."
+    chart: bar
+  followups: ["Approval rate by program this year", "Processing time by office last quarter"]
+  expect: { rows: 5, rules: [BR-PUB-002] }
+
+- id: SC-PUB-006
+  agent: AG-PUB-002
+  pattern: 13
+  question: "How large is the case backlog in each district?"
+  paraphrases:
+    - "case backlog per district"
+  kind: answer
+  query: { view: CASELOAD, metrics: [case_backlog, backlog_age_days], dimensions: [region], orderBy: [{ field: case_backlog, dir: desc }] }
+  answer:
+    headline: "{{top.region}} carries the largest case backlog with {{top.case_backlog}} cases, waiting {{top.backlog_age_days}} days on average."
+    narrative: "Backlog by service district for the districts you are entitled to see; the district row access policy RAP_DISTRICT applies to district-based personas."
+    chart: bar
+  followups: ["Which five offices have the largest case backlog?", "Average caseload by district"]
+  expect: { rows: 4, top: { region: Riverside } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-PUB-007
+  agent: AG-PUB-002
+  pattern: 15
+  question: "Approve the pending benefit application in my queue."
+  paraphrases:
+    - "Deny this application for me"
+    - "Make the eligibility decision on the next application"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't decide applications — eligibility decisions are made by a caseworker."
+    narrative: "Agents act, humans decide: approving or denying an application is a caseworker decision that can be appealed (BR-PUB-028). I can show you processing time and the backlog for your office so you can prioritise the queue."
+    chart: none
+  followups: ["Which five offices have the largest case backlog?", "What was average benefit processing time by district last quarter?"]
+
+# ================================================================ AG-PUB-001 Constituent Services Assistant
+- id: SC-PUB-008
+  agent: AG-PUB-001
+  pattern: 4
+  question: "How has 311 resolution time trended month by month this year?"
+  paraphrases:
+    - "Monthly 311 resolution time year to date"
+    - "311 time to close trend by month this year"
+  kind: answer
+  query: { view: SERVICE_REQUESTS, metrics: [avg_resolution_days], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "311 resolution time averaged {{total.avg_resolution_days}} days this year — {{vsTarget.total}} the target band."
+    narrative: "Monthly mean days from creation to closure over {{rows}} months, excluding merged duplicates (BR-PUB-005)."
+    chart: line
+  followups: ["311 resolution time by district last quarter", "How has 311 SLA attainment changed quarter over quarter this year?"]
+  expect: { rows: 9, rules: [BR-PUB-005] }
+
+- id: SC-PUB-009
+  agent: AG-PUB-001
+  pattern: 1
+  question: "How many 311 service requests did we receive last month?"
+  paraphrases:
+    - "311 volume last month"
+    - "number of 311 requests in September"
+  kind: answer
+  query: { view: SERVICE_REQUESTS, metrics: [service_requests], timeRange: { last: { n: 1, unit: month } } }
+  answer:
+    headline: "Residents logged {{top.service_requests}} 311 service requests last month."
+    narrative: "Requests created by phone, mobile app, web and walk-in, excluding requests merged as duplicates (BR-PUB-005)."
+    chart: kpi
+  followups: ["311 requests by channel this year", "311 SLA attainment by request type this year"]
+  expect: { rows: 1, rules: [BR-PUB-005] }
+
+- id: SC-PUB-010
+  agent: AG-PUB-001
+  pattern: 11
+  question: "How long does it take to fix a pothole in each district this year?"
+  paraphrases:
+    - "how long potholes take by district this year"
+    - "pothole fix time per district ytd"
+  kind: answer
+  query: { view: SERVICE_REQUESTS, metrics: [pothole_repair_days], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: pothole_repair_days, dir: desc }] }
+  answer:
+    headline: "Potholes take longest to fix in {{top.region}}: {{top.pothole_repair_days}} days on average this year."
+    narrative: "\"Fix a pothole\" maps to pothole repair time — days from a pothole report to closure of the 311 request. {{bottom.region}} is fastest at {{bottom.pothole_repair_days}} days; the 311 SLA for potholes is 5 days (BR-PUB-006)."
+    chart: bar
+  followups: ["Pothole repair time by month this year", "311 SLA attainment by request type this year"]
+  expect: { rows: 4, top: { region: Riverside } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-PUB-011
+  agent: AG-PUB-001
+  pattern: 3
+  question: "What was permit turnaround by permit type last quarter?"
+  paraphrases:
+    - "Permit review time by type of permit last quarter"
+    - "days to issue a permit by permit category last qtr"
+  kind: answer
+  query: { view: PERMITTING, metrics: [avg_permit_turnaround_days], dimensions: [permit_type], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_permit_turnaround_days, dir: desc }] }
+  answer:
+    headline: "{{top.permit_type}} permits took longest last quarter at {{top.avg_permit_turnaround_days}} days."
+    narrative: "Calendar days from a complete submittal to the decision across {{rows}} permit types, excluding over-the-counter permits issued the same day (BR-PUB-011). {{bottom.permit_type}} permits were quickest at {{bottom.avg_permit_turnaround_days}} days."
+    chart: bar
+  followups: ["Permit turnaround by district last quarter", "Permits decided within target by review track this year"]
+  expect: { rows: 8, top: { permit_type: Commercial building }, rules: [BR-PUB-011] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-PUB-012
+  agent: AG-PUB-001
+  pattern: 7
+  question: "How has 311 SLA attainment changed quarter over quarter this year?"
+  paraphrases:
+    - "311 SLA attainment by quarter this year"
+    - "quarterly 311 service level attainment ytd"
+  kind: answer
+  query: { view: SERVICE_REQUESTS, metrics: [sla_attainment_pct], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "311 SLA attainment moved {{delta.sla_attainment_pct}} points from the first to the latest quarter this year."
+    narrative: "Share of closed requests resolved within their request type's SLA (BR-PUB-006) for each of the {{rows}} quarters, excluding merged duplicates. County-wide attainment held steady even though the Q3 hauler change pulled Central's missed-trash SLA down."
+    chart: line
+  followups: ["311 SLA attainment by request type this year", "311 resolution time by district last quarter"]
+  expect: { rows: 3 }
+
+- id: SC-PUB-013
+  agent: AG-PUB-001
+  pattern: 15
+  question: "What is our improper payment rate this year?"
+  paraphrases:
+    - "How accurate are our benefit payments?"
+  kind: redirect
+  query: null
+  redirect_to: AG-PUB-003
+  answer:
+    headline: "That's a benefit payments question — the Payment Integrity Copilot answers it."
+    narrative: "I cover 311 service levels and permits. The Payment Integrity Copilot is certified on benefit payments, accuracy and improper payments."
+    chart: none
+  followups: ["Ask the Payment Integrity Copilot", "What can you answer?"]
+
+- id: SC-PUB-014
+  agent: AG-PUB-001
+  pattern: 12
+  question: "Which five permit applicants had the highest construction valuation this year?"
+  paraphrases:
+    - "Top 5 permit applicants by construction value this year"
+  kind: answer
+  query: { view: PERMITTING, metrics: [total_valuation], dimensions: [applicant_name], timeRange: { ytd: true }, orderBy: [{ field: total_valuation, dir: desc }], limit: 5, analysis: rank }
+  answer:
+    headline: "The largest permit applicant this year declared {{top.total_valuation}} of construction."
+    narrative: "Applicant names are masked unless your persona is cleared for PII under MASK_PII (BR-PUB-023). Showing the top {{rows}} applicants by declared valuation."
+    chart: table
+  followups: ["Permits issued by permit type last month", "Permit turnaround by district last quarter"]
+  expect: { rows: 5 }
+  personas_expect: { A: { masked: [applicant_name], rowFiltered: true }, D: { masked: [] } }
+
+- id: SC-PUB-015
+  agent: AG-PUB-001
+  pattern: 15
+  question: "Send a crew to fix the pothole on Elm Street."
+  paraphrases:
+    - "Dispatch a patching crew to my street"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't dispatch crews — that is outside what this agent is allowed to do."
+    narrative: "Crews are scheduled by Public Works from the work order queue. Report the pothole through 311 so it is routed and tracked; I can show you pothole repair time in your district."
+    chart: none
+  followups: ["How long does it take to fix a pothole in each district this year?", "Pothole repair time by month this year"]
+
+# ================================================================ AG-PUB-003 Payment Integrity Copilot
+- id: SC-PUB-016
+  agent: AG-PUB-003
+  pattern: 1
+  question: "What is the improper payment rate year to date?"
+  paraphrases:
+    - "improper payment rate ytd"
+  kind: answer
+  query: { view: BENEFIT_PAYMENTS, metrics: [improper_payment_rate], timeRange: { ytd: true }, analysis: value }
+  answer:
+    headline: "The improper payment rate is {{top.improper_payment_rate}}% year to date — {{vsTarget.top}} the target band."
+    narrative: "Improper dollars (over- and underpayments) as a share of dollars issued, excluding voided payments (BR-PUB-008, BR-PUB-009)."
+    chart: kpi
+  followups: ["What is driving improper payment dollars this year, by error type?", "Improper payment rate by program this year"]
+  expect: { rows: 1, rules: [BR-PUB-008] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-PUB-017
+  agent: AG-PUB-003
+  pattern: 6
+  question: "What is driving improper payment dollars this year, by error type?"
+  paraphrases:
+    - "Which QC error types contribute most to improper payments this year?"
+    - "improper dollars by error cause ytd"
+  kind: answer
+  query: { view: BENEFIT_PAYMENTS, metrics: [improper_payment_amount], dimensions: [error_type], timeRange: { ytd: true }, filters: [{ dimension: error_type, op: in, value: [Income verification, Household composition, Administrative error, Duplicate issuance] }], orderBy: [{ field: improper_payment_amount, dir: desc }], analysis: contribution }
+  answer:
+    headline: "{{top.error_type}} drives the most improper payment dollars this year: {{top.improper_payment_amount}} ({{top.improper_payment_amount_share_pct}}% of the total)."
+    narrative: "Total improper payment dollars are {{total.improper_payment_amount}} across {{rows}} error types, excluding voided payments (BR-PUB-008). Cash Assistance income-verification errors spiked in Q2."
+    chart: bar
+  followups: ["Improper payment rate by program this year", "Improper payment rate by quarter this year"]
+  expect: { rows: 4, top: { error_type: Income verification }, rules: [BR-PUB-008] }
+
+- id: SC-PUB-018
+  agent: AG-PUB-003
+  pattern: 14
+  question: "How many cases are flagged for program integrity review this year?"
+  paraphrases:
+    - "Cases under integrity review year to date"
+  kind: answer
+  query: { view: PROGRAM_INTEGRITY, metrics: [cases_flagged], timeRange: { ytd: true } }
+  answer:
+    headline: "{{top.cases_flagged}} paying cases are flagged for program integrity review this year."
+    narrative: "Program Integrity is still in certification, so treat this figure as provisional. A flag is a review, not a finding of fraud (BR-PUB-010)."
+    chart: kpi
+  followups: ["Overpayment recovery rate by district this year", "When will Program Integrity be certified?"]
+  expect: { rows: 1, certified: false }
+  personas_expect: { A: { kind: decline } }
+
+- id: SC-PUB-019
+  agent: AG-PUB-003
+  pattern: 8
+  question: "How is the improper payment rate distributed across benefit programs this year?"
+  paraphrases:
+    - "Spread of improper payment rates by program ytd"
+  kind: answer
+  query: { view: BENEFIT_PAYMENTS, metrics: [improper_payment_rate], dimensions: [program], timeRange: { ytd: true }, analysis: distribution }
+  answer:
+    headline: "Across {{top.program_count}} programs, the median improper payment rate this year is {{top.improper_payment_rate_p50}}%."
+    narrative: "The middle 80% of programs sit between {{top.improper_payment_rate_p10}}% and {{top.improper_payment_rate_p90}}%; the worst program reaches {{top.improper_payment_rate_max}}%."
+    chart: table
+  followups: ["Improper payment rate by program this year", "What is driving improper payment dollars this year, by error type?"]
+  expect: { rows: 1 }
+
+- id: SC-PUB-020
+  agent: AG-PUB-003
+  pattern: 15
+  question: "Is this person committing benefit fraud?"
+  paraphrases:
+    - "Tell me whether this recipient is a fraudster"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't make fraud determinations about individuals."
+    narrative: "An integrity flag is a review, not a finding; only an investigator's decision, subject to appeal, can establish a program violation (BR-PUB-010). I can show aggregate integrity flag rates by district or program."
+    chart: none
+  followups: ["Integrity flag rate by district this year", "What is the improper payment rate year to date?"]
+
+# ================================================================ AG-PUB-004 Finance & Procurement Copilot
+- id: SC-PUB-021
+  agent: AG-PUB-004
+  pattern: 3
+  question: "What is budget variance by department this fiscal year?"
+  paraphrases:
+    - "Which departments are over budget this fiscal year?"
+    - "budget vs actual by department fytd"
+  kind: answer
+  query: { view: BUDGET_FINANCE, metrics: [budget_variance_pct], dimensions: [department], orderBy: [{ field: budget_variance_pct, dir: desc }] }
+  answer:
+    headline: "{{top.department}} is furthest over budget this fiscal year at {{top.budget_variance_pct}}%."
+    narrative: "Actual versus adopted budget for FY2027 to date (July-September 2026, BR-PUB-015); positive is an overspend. {{bottom.department}} is furthest under at {{bottom.budget_variance_pct}}%. The county as a whole is at {{total.budget_variance_pct}}%."
+    chart: bar
+  followups: ["Budget variance for Public Works by month", "What was budget variance by department in FY2026?"]
+  expect: { rows: 12, top: { department: Public Works }, rules: [BR-PUB-015] }
+
+- id: SC-PUB-022
+  agent: AG-PUB-004
+  pattern: 7
+  question: "How has procurement cycle time changed quarter over quarter this year?"
+  paraphrases:
+    - "Requisition to PO time by quarter this year"
+  kind: answer
+  query: { view: PROCUREMENT, metrics: [procurement_cycle_days], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "Procurement cycle time moved {{delta.procurement_cycle_days}} days from the first to the latest quarter this year."
+    narrative: "Average days from requisition to purchase order for POs raised in each of the {{rows}} quarters, excluding emergency purchases (BR-PUB-018). The e-procurement approval workflow that went live in May added steps to every requisition, and IT and software purchases also wait for a security review."
+    chart: line
+  followups: ["Procurement cycle time by spend category this year", "Procurement cycle time by procurement method this year"]
+  expect: { rows: 3, rules: [BR-PUB-018] }
+
+- id: SC-PUB-023
+  agent: AG-PUB-004
+  pattern: 5
+  question: "Which program areas have the lowest grant drawdown rate?"
+  paraphrases:
+    - "Bottom program areas by grant drawdown"
+  kind: answer
+  query: { view: GRANT_FUNDING, metrics: [grant_drawdown_rate], dimensions: [program_area], orderBy: [{ field: grant_drawdown_rate, dir: asc }], limit: 5, analysis: rank }
+  answer:
+    headline: "{{top.program_area}} grants have the lowest drawdown at {{top.grant_drawdown_rate}}% of awarded dollars."
+    narrative: "Drawdown on active grants (BR-PUB-021) for the {{rows}} lowest program areas; a grant is at risk when it trails its award period by more than 20 points (BR-PUB-022)."
+    chart: bar
+  followups: ["Grants at risk by program area", "Grant drawdown rate by funder"]
+  expect: { rows: 5, top: { program_area: Transportation }, rules: [BR-PUB-021] }
+
+- id: SC-PUB-024
+  agent: AG-PUB-004
+  pattern: 2
+  question: "Is the workforce vacancy rate within target?"
+  paraphrases:
+    - "Are vacancies within our target band this fiscal year?"
+  kind: answer
+  query: { view: BUDGET_FINANCE, metrics: [vacancy_rate], analysis: compare_target }
+  answer:
+    headline: "The workforce vacancy rate is {{top.vacancy_rate}}% this fiscal year — {{vsTarget.top}} the target band."
+    narrative: "Unfilled authorised positions as a share of authorised positions for FY2027 to date (BR-PUB-015, BR-PUB-017). Eligibility Services vacancies are the main driver."
+    chart: kpi
+  followups: ["Workforce vacancy rate by department", "Which departments have the highest workforce vacancy rate?"]
+  expect: { rows: 1, rules: [BR-PUB-015] }
+
+- id: SC-PUB-025
+  agent: AG-PUB-004
+  pattern: 11
+  question: "How are we doing on the budget?"
+  paraphrases:
+    - "budget update"
+  kind: clarify
+  query: null
+  answer:
+    headline: "\"The budget\" can mean a few things — which one do you need?"
+    narrative: "I can show budget variance by department, budget execution, or the workforce vacancy rate, for this fiscal year or FY2026."
+    chart: none
+  followups: ["What is budget variance by department this fiscal year?", "Budget execution by department", "Is the workforce vacancy rate within target?"]
+
+- id: SC-PUB-026
+  agent: AG-PUB-004
+  pattern: 10
+  question: "What was budget variance by department in FY2026?"
+  paraphrases:
+    - "Budget vs actual by department for the last fiscal year"
+  kind: answer
+  query: { view: BUDGET_FINANCE, metrics: [budget_variance_pct], dimensions: [department], filters: [{ dimension: fiscal_year, op: "=", value: FY2026 }], orderBy: [{ field: budget_variance_pct, dir: desc }] }
+  answer:
+    headline: "In FY2026 every department finished within budget; {{top.department}} came closest at {{top.budget_variance_pct}}%."
+    narrative: "You named FY2026 (July 2025 - June 2026), so the current-fiscal-year default (BR-PUB-015) is not applied. Every department finished FY2026 within budget; Public Works' overspend is a FY2027 story."
+    chart: bar
+  followups: ["What is budget variance by department this fiscal year?", "Budget execution by department"]
+  expect: { rows: 12 }
+
+# ================================================================ AG-PUB-005 Data Steward Assistant (no semantic views)
+- id: SC-PUB-027
+  agent: AG-PUB-005
+  pattern: 15
+  question: "What can you answer?"
+  paraphrases:
+    - "What can you help me with?"
+    - "help"
+  kind: help
+  query: null
+  answer:
+    headline: "I explain governance across the county data estate — I don't analyse service KPIs."
+    narrative: "Ask me what a glossary term or metric means, the certification status of a data product, or where governance gaps such as missing stewards, unmasked identifiers or open-data suppression sit. For KPI numbers, ask the domain agents."
+    chart: none
+  followups: ["Which products are not yet certified?", "What does benefit processing time mean?", "Which critical data elements lack a steward?"]
+
+- id: SC-PUB-028
+  agent: AG-PUB-005
+  pattern: 15
+  question: "Approve the access request for Program Integrity."
+  paraphrases:
+    - "Grant me access to DP-PUB-006"
+    - "Can you approve my access request?"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't approve access requests — agents act, humans decide."
+    narrative: "Access to a data product is granted only by its owner or steward through the access workflow. I can show you the request status and who can approve it."
+    chart: none
+  followups: ["Who can approve access to Program Integrity?", "What is the certification status of Program Integrity?"]

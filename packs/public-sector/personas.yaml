@@ -1,0 +1,50 @@
+# Five demo identities, one per archetype (01-functional-spec §2.2). People are generated, not real.
+# Ported from the AI-Ready public-sector personas (caseworker analyst, program operations manager, data steward)
+# with a product owner (C) and an executive (E) added for Keystone.
+- id: public-sector:caseworker-analyst
+  archetype: A
+  name: Rosa Alvarado
+  title: Caseworker Analyst, North and Central Districts
+  domain: Human services
+  roles: [DATA_CONSUMER]
+  row_filter: { dimension: region, allowed: [North, Central] }
+  unmasked: []
+  cares: Renewals, backlog and 311 follow-up for the North and Central district offices; wants plain answers she can act on this week.
+  sees: North and Central districts only; constituent names and government identifiers masked.
+- id: public-sector:program-ops
+  archetype: B
+  name: Daniel Whitaker
+  title: Program Operations Manager
+  domain: Program operations
+  roles: [DATA_CONSUMER, ANALYST]
+  unmasked: []
+  cares: Processing timeliness against the 30-day standard, case backlog, caseload, 311 service levels and budget.
+  sees: All districts; personal data and government identifiers masked.
+- id: public-sector:hs-dpo
+  archetype: C
+  name: Nadia Bergstrom
+  title: Human Services Data Product Owner
+  domain: Human services
+  roles: [DOMAIN_PRODUCT_OWNER, DATA_ENGINEER]
+  unmasked: []
+  cares: Shipping certified case, payment, permit and public works products that agents and state reporting can trust.
+  sees: All districts; personal data masked; can build and submit products for review.
+- id: public-sector:steward
+  archetype: D
+  name: Owen Fitzgerald
+  title: County Data Steward
+  domain: Governance
+  roles: [DATA_STEWARD, GOVERNANCE_COUNCIL, PRIVACY_OFFICER]
+  unmasked: [PII, GOV_ID]
+  cares: Glossary health, CDE ownership, masking of government identifiers, open-data suppression and certification decisions.
+  sees: Everything, unmasked; approves access requests and certification gates.
+- id: public-sector:county-administrator
+  archetype: E
+  name: Marcus Hale
+  title: Deputy County Administrator
+  domain: Executive
+  roles: [EXECUTIVE, PORTFOLIO_LEAD, GOVERNANCE_COUNCIL]
+  unmasked: []
+  aggregates_only: true
+  cares: Service levels residents feel, benefit timeliness and accuracy, budget execution and where to invest next.
+  sees: Aggregates only; portfolio, value and readiness.

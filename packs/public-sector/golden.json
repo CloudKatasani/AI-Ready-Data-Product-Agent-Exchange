@@ -1,0 +1,996 @@
+{
+  "pack": "public-sector",
+  "version": "1.0.0",
+  "scale": "M",
+  "scenarios": {
+    "SC-PUB-001": {
+      "agent": "AG-PUB-002",
+      "kind": "answer",
+      "headline": "Riverside had the slowest benefit processing last quarter at 26.3 business days.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Business days from a complete application to decision, excluding applications on hold for documents (BR-PUB-002). South was fastest at 19.2 days across 4 districts; the county average was 21.4 days.",
+      "sqlHash": "46543b4c1dc4e5dd",
+      "columns": [
+        "region",
+        "avg_processing_days"
+      ],
+      "rows": [
+        [
+          "Riverside",
+          26.3489
+        ],
+        [
+          "North",
+          19.8161
+        ],
+        [
+          "Central",
+          19.3648
+        ],
+        [
+          "South",
+          19.2422
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-002@1.6.0",
+        "metric:CASE_PROCESSING.avg_processing_days",
+        "rule:BR-PUB-002",
+        "verified_query:VQ-PUB-013",
+        "document:DOC-PUB-ELIGIBILITY-MANUAL#7"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "North had the slowest benefit processing last quarter at 19.8 business days.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-PUB-002": {
+      "agent": "AG-PUB-002",
+      "kind": "answer",
+      "headline": "Including document holds, North had the slowest benefit processing last quarter at 31.0 business days.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "You asked to include applications on hold for documents, so BR-PUB-002 is not applied. North's new income-verification checklist put far more applications on hold — compare with the standard measure, which excludes them.",
+      "sqlHash": "58af7861bea1d7b4",
+      "columns": [
+        "region",
+        "avg_processing_days"
+      ],
+      "rows": [
+        [
+          "North",
+          31.0312
+        ],
+        [
+          "Riverside",
+          28.5364
+        ],
+        [
+          "South",
+          21.8296
+        ],
+        [
+          "Central",
+          21.5087
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-002@1.6.0",
+        "metric:CASE_PROCESSING.avg_processing_days",
+        "verified_query:VQ-PUB-013",
+        "document:DOC-PUB-ELIGIBILITY-MANUAL#5"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Including document holds, North had the slowest benefit processing last quarter at 31.0 business days.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-PUB-003": {
+      "agent": "AG-PUB-002",
+      "kind": "answer",
+      "headline": "The timely processing rate is 89.2% this year — within the target band.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Decided applications decided within 30 business days of a complete application, excluding applications on hold for documents (BR-PUB-002, BR-PUB-003).",
+      "sqlHash": "f1cc94a789fe4c89",
+      "columns": [
+        "timely_processing_rate",
+        "timely_processing_rate_target_min",
+        "timely_processing_rate_target_max"
+      ],
+      "rows": [
+        [
+          89.1825,
+          85,
+          95
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-002@1.6.0",
+        "metric:CASE_PROCESSING.timely_processing_rate",
+        "rule:BR-PUB-002",
+        "document:DOC-PUB-ELIGIBILITY-MANUAL#7"
+      ],
+      "personas": {}
+    },
+    "SC-PUB-004": {
+      "agent": "AG-PUB-002",
+      "kind": "answer",
+      "headline": "Mill Creek Office has the largest case backlog with 354 cases awaiting a caseworker decision.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Open cases with a new application, renewal or change report waiting at the reporting date (BR-PUB-013); showing the top 5 offices. The county backlog is 1,904 cases.",
+      "sqlHash": "fb1603c7d93caa31",
+      "columns": [
+        "office",
+        "case_backlog"
+      ],
+      "rows": [
+        [
+          "Mill Creek Office",
+          354
+        ],
+        [
+          "Riverside Service Center",
+          304
+        ],
+        [
+          "Pine Hollow Office",
+          218
+        ],
+        [
+          "Market Street Office",
+          212
+        ],
+        [
+          "Northgate Service Center",
+          212
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-002@1.6.0",
+        "metric:CASELOAD.case_backlog",
+        "document:DOC-PUB-ELIGIBILITY-MANUAL#8"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Pine Hollow Office has the largest case backlog with 218 cases awaiting a caseworker decision.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-PUB-005": {
+      "agent": "AG-PUB-002",
+      "kind": "answer",
+      "headline": "Child Care Subsidy takes longest to decide this year at 20.6 business days.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "89.0% of Child Care Subsidy decisions met the 30-day standard, versus 90.2% for Energy Assistance (19.8 days). Document holds are excluded (BR-PUB-002).",
+      "sqlHash": "46000bbc60cd006d",
+      "columns": [
+        "program",
+        "avg_processing_days",
+        "timely_processing_rate"
+      ],
+      "rows": [
+        [
+          "Child Care Subsidy",
+          20.5572,
+          89.0499
+        ],
+        [
+          "Medical Assistance",
+          20.0915,
+          89.1759
+        ],
+        [
+          "Food Assistance",
+          19.9826,
+          88.9904
+        ],
+        [
+          "Cash Assistance",
+          19.895,
+          89.2086
+        ],
+        [
+          "Energy Assistance",
+          19.7796,
+          90.1804
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-002@1.6.0",
+        "metric:CASE_PROCESSING.avg_processing_days",
+        "metric:CASE_PROCESSING.timely_processing_rate",
+        "rule:BR-PUB-002",
+        "document:DOC-PUB-ELIGIBILITY-MANUAL#1"
+      ],
+      "personas": {}
+    },
+    "SC-PUB-006": {
+      "agent": "AG-PUB-002",
+      "kind": "answer",
+      "headline": "Riverside carries the largest case backlog with 658 cases, waiting 43.1 days on average.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Backlog by service district for the districts you are entitled to see; the district row access policy RAP_DISTRICT applies to district-based personas.",
+      "sqlHash": "e696d55c8a46abec",
+      "columns": [
+        "region",
+        "case_backlog",
+        "backlog_age_days"
+      ],
+      "rows": [
+        [
+          "Riverside",
+          658,
+          43.1033
+        ],
+        [
+          "North",
+          430,
+          24.8
+        ],
+        [
+          "Central",
+          411,
+          25.1922
+        ],
+        [
+          "South",
+          405,
+          22.6667
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-002@1.6.0",
+        "metric:CASELOAD.case_backlog",
+        "metric:CASELOAD.backlog_age_days",
+        "document:DOC-PUB-ELIGIBILITY-MANUAL#9"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "North carries the largest case backlog with 430 cases, waiting 24.8 days on average.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-PUB-007": {
+      "agent": "AG-PUB-002",
+      "kind": "decline",
+      "headline": "I can't decide applications — eligibility decisions are made by a caseworker.",
+      "narrative": "Agents act, humans decide: approving or denying an application is a caseworker decision that can be appealed (BR-PUB-028). I can show you processing time and the backlog for your office so you can prioritise the queue.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-PUB-008": {
+      "agent": "AG-PUB-001",
+      "kind": "answer",
+      "headline": "311 resolution time averaged 2.78 days this year — within the target band.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Monthly mean days from creation to closure over 9 months, excluding merged duplicates (BR-PUB-005).",
+      "sqlHash": "fb2f3f94ad7ae0c1",
+      "columns": [
+        "period",
+        "avg_resolution_days"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          2.86469
+        ],
+        [
+          "2026-02-01",
+          2.84699
+        ],
+        [
+          "2026-03-01",
+          2.70731
+        ],
+        [
+          "2026-04-01",
+          2.79569
+        ],
+        [
+          "2026-05-01",
+          2.94466
+        ],
+        [
+          "2026-06-01",
+          2.69465
+        ],
+        [
+          "2026-07-01",
+          2.98804
+        ],
+        [
+          "2026-08-01",
+          2.79312
+        ],
+        [
+          "2026-09-01",
+          2.33801
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-001@2.0.1",
+        "metric:SERVICE_REQUESTS.avg_resolution_days",
+        "rule:BR-PUB-005",
+        "document:DOC-PUB-311-STANDARD#6"
+      ],
+      "personas": {}
+    },
+    "SC-PUB-009": {
+      "agent": "AG-PUB-001",
+      "kind": "answer",
+      "headline": "Residents logged 1,988 311 service requests last month.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Requests created by phone, mobile app, web and walk-in, excluding requests merged as duplicates (BR-PUB-005).",
+      "sqlHash": "b293ef90629c5825",
+      "columns": [
+        "service_requests"
+      ],
+      "rows": [
+        [
+          1988
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-001@2.0.1",
+        "metric:SERVICE_REQUESTS.service_requests",
+        "rule:BR-PUB-005",
+        "verified_query:VQ-PUB-001",
+        "document:DOC-PUB-311-STANDARD#1"
+      ],
+      "personas": {}
+    },
+    "SC-PUB-010": {
+      "agent": "AG-PUB-001",
+      "kind": "answer",
+      "headline": "Potholes take longest to fix in Riverside: 5.10 days on average this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "\"Fix a pothole\" maps to pothole repair time — days from a pothole report to closure of the 311 request. North is fastest at 2.33 days; the 311 SLA for potholes is 5 days (BR-PUB-006).",
+      "sqlHash": "e9607b75cd4cf4b8",
+      "columns": [
+        "region",
+        "pothole_repair_days"
+      ],
+      "rows": [
+        [
+          "Riverside",
+          5.10056
+        ],
+        [
+          "South",
+          2.52571
+        ],
+        [
+          "Central",
+          2.35776
+        ],
+        [
+          "North",
+          2.33019
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-001@2.0.1",
+        "metric:SERVICE_REQUESTS.pothole_repair_days",
+        "rule:BR-PUB-005",
+        "document:DOC-PUB-311-STANDARD#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Potholes take longest to fix in Central: 2.36 days on average this year.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-PUB-011": {
+      "agent": "AG-PUB-001",
+      "kind": "answer",
+      "headline": "Commercial building permits took longest last quarter at 32.4 days.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Calendar days from a complete submittal to the decision across 8 permit types, excluding over-the-counter permits issued the same day (BR-PUB-011). Sign permits were quickest at 16.4 days.",
+      "sqlHash": "b130244101450875",
+      "columns": [
+        "permit_type",
+        "avg_permit_turnaround_days"
+      ],
+      "rows": [
+        [
+          "Commercial building",
+          32.3738
+        ],
+        [
+          "Residential building",
+          20.0909
+        ],
+        [
+          "Plumbing",
+          19.5772
+        ],
+        [
+          "Right-of-way",
+          19.1849
+        ],
+        [
+          "Electrical",
+          18.433
+        ],
+        [
+          "Mechanical",
+          18.2975
+        ],
+        [
+          "Demolition",
+          17.9524
+        ],
+        [
+          "Sign",
+          16.4107
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-004@1.2.0",
+        "metric:PERMITTING.avg_permit_turnaround_days",
+        "rule:BR-PUB-011",
+        "document:DOC-PUB-PERMIT-STANDARDS#3"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Commercial building permits took longest last quarter at 36.1 days.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-PUB-012": {
+      "agent": "AG-PUB-001",
+      "kind": "answer",
+      "headline": "311 SLA attainment moved +0.4 points from the first to the latest quarter this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Share of closed requests resolved within their request type's SLA (BR-PUB-006) for each of the 3 quarters, excluding merged duplicates. County-wide attainment held steady even though the Q3 hauler change pulled Central's missed-trash SLA down.",
+      "sqlHash": "1d3c73a000a11eec",
+      "columns": [
+        "period",
+        "sla_attainment_pct"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          85.8632
+        ],
+        [
+          "2026-04-01",
+          87.4059
+        ],
+        [
+          "2026-07-01",
+          86.252
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-001@2.0.1",
+        "metric:SERVICE_REQUESTS.sla_attainment_pct",
+        "rule:BR-PUB-005",
+        "verified_query:VQ-PUB-004",
+        "document:DOC-PUB-311-STANDARD#5"
+      ],
+      "personas": {}
+    },
+    "SC-PUB-013": {
+      "agent": "AG-PUB-001",
+      "kind": "redirect",
+      "headline": "That's a benefit payments question — the Payment Integrity Copilot answers it.",
+      "narrative": "I cover 311 service levels and permits. The Payment Integrity Copilot is certified on benefit payments, accuracy and improper payments.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-PUB-014": {
+      "agent": "AG-PUB-001",
+      "kind": "answer",
+      "headline": "The largest permit applicant this year declared $1,178,728 of construction.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Applicant names are masked unless your persona is cleared for PII under MASK_PII (BR-PUB-023). Showing the top 5 applicants by declared valuation.",
+      "sqlHash": "77df2df27c4fc7c0",
+      "columns": [
+        "applicant_name",
+        "total_valuation"
+      ],
+      "rows": [
+        [
+          "Sarah Brown",
+          1178730
+        ],
+        [
+          "Betty Harris",
+          1053810
+        ],
+        [
+          "Aisha Nguyen",
+          1052220
+        ],
+        [
+          "Charles Hernandez",
+          1023940
+        ],
+        [
+          "Thomas Davis",
+          988384
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-004@1.2.0",
+        "metric:PERMITTING.total_valuation",
+        "document:DOC-PUB-PERMIT-STANDARDS#4"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "The largest permit applicant this year declared $1,053,808 of construction.",
+          "rowFiltered": true,
+          "masked": [
+            "applicant_name"
+          ]
+        },
+        "D": {
+          "kind": "answer",
+          "headline": "The largest permit applicant this year declared $1,178,728 of construction.",
+          "rowFiltered": false,
+          "masked": []
+        }
+      }
+    },
+    "SC-PUB-015": {
+      "agent": "AG-PUB-001",
+      "kind": "decline",
+      "headline": "I can't dispatch crews — that is outside what this agent is allowed to do.",
+      "narrative": "Crews are scheduled by Public Works from the work order queue. Report the pothole through 311 so it is routed and tracked; I can show you pothole repair time in your district.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-PUB-016": {
+      "agent": "AG-PUB-003",
+      "kind": "answer",
+      "headline": "The improper payment rate is 2.56% year to date — within the target band.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Improper dollars (over- and underpayments) as a share of dollars issued, excluding voided payments (BR-PUB-008, BR-PUB-009).",
+      "sqlHash": "a52112854e3f9ad5",
+      "columns": [
+        "improper_payment_rate"
+      ],
+      "rows": [
+        [
+          2.55992
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-003@1.3.2",
+        "metric:BENEFIT_PAYMENTS.improper_payment_rate",
+        "rule:BR-PUB-008",
+        "verified_query:VQ-PUB-036",
+        "document:DOC-PUB-PAYMENT-INTEGRITY#3"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "The improper payment rate is 2.65% year to date — within the target band.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-PUB-017": {
+      "agent": "AG-PUB-003",
+      "kind": "answer",
+      "headline": "Income verification drives the most improper payment dollars this year: $81,225 (42.2% of the total).",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Total improper payment dollars are $192,344 across 4 error types, excluding voided payments (BR-PUB-008). Cash Assistance income-verification errors spiked in Q2.",
+      "sqlHash": "81a2a0babbad9ab1",
+      "columns": [
+        "error_type",
+        "improper_payment_amount",
+        "improper_payment_amount_share_pct"
+      ],
+      "rows": [
+        [
+          "Income verification",
+          81225.2,
+          42.2292
+        ],
+        [
+          "Household composition",
+          49157.7,
+          25.5572
+        ],
+        [
+          "Administrative error",
+          43104,
+          22.4099
+        ],
+        [
+          "Duplicate issuance",
+          18857,
+          9.80378
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-003@1.3.2",
+        "metric:BENEFIT_PAYMENTS.improper_payment_amount",
+        "rule:BR-PUB-008",
+        "verified_query:VQ-PUB-032",
+        "document:DOC-PUB-PAYMENT-INTEGRITY#3"
+      ],
+      "personas": {}
+    },
+    "SC-PUB-018": {
+      "agent": "AG-PUB-003",
+      "kind": "answer",
+      "headline": "375 paying cases are flagged for program integrity review this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Program Integrity is still in certification, so treat this figure as provisional. A flag is a review, not a finding of fraud (BR-PUB-010).",
+      "sqlHash": "3363e4682ede93ae",
+      "columns": [
+        "cases_flagged"
+      ],
+      "rows": [
+        [
+          375
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-006@1.0.0-rc.1",
+        "metric:PROGRAM_INTEGRITY.cases_flagged",
+        "rule:BR-PUB-008",
+        "document:DOC-PUB-PAYMENT-INTEGRITY#4"
+      ],
+      "personas": {
+        "A": {
+          "kind": "decline",
+          "headline": "You don’t have access to Program Integrity yet."
+        }
+      }
+    },
+    "SC-PUB-019": {
+      "agent": "AG-PUB-003",
+      "kind": "answer",
+      "headline": "Across 5 programs, the median improper payment rate this year is 2.58%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "The middle 80% of programs sit between 1.78% and 4.56%; the worst program reaches 5.85%.",
+      "sqlHash": "02ad2ed7c11c46c7",
+      "columns": [
+        "program_count",
+        "improper_payment_rate_p10",
+        "improper_payment_rate_p50",
+        "improper_payment_rate_p90",
+        "improper_payment_rate_min",
+        "improper_payment_rate_max"
+      ],
+      "rows": [
+        [
+          5,
+          1.78048,
+          2.5751,
+          4.56413,
+          1.43519,
+          5.84752
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-003@1.3.2",
+        "metric:BENEFIT_PAYMENTS.improper_payment_rate",
+        "rule:BR-PUB-008",
+        "verified_query:VQ-PUB-030",
+        "document:DOC-PUB-PAYMENT-INTEGRITY#1"
+      ],
+      "personas": {}
+    },
+    "SC-PUB-020": {
+      "agent": "AG-PUB-003",
+      "kind": "decline",
+      "headline": "I can't make fraud determinations about individuals.",
+      "narrative": "An integrity flag is a review, not a finding; only an investigator's decision, subject to appeal, can establish a program violation (BR-PUB-010). I can show aggregate integrity flag rates by district or program.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-PUB-021": {
+      "agent": "AG-PUB-004",
+      "kind": "answer",
+      "headline": "Public Works is furthest over budget this fiscal year at 17.0%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Actual versus adopted budget for FY2027 to date (July-September 2026, BR-PUB-015); positive is an overspend. Community Development is furthest under at -18.2%. The county as a whole is at -1.9%.",
+      "sqlHash": "f0d81bee30b44cc6",
+      "columns": [
+        "department",
+        "budget_variance_pct"
+      ],
+      "rows": [
+        [
+          "Public Works",
+          17.0396
+        ],
+        [
+          "Information Technology",
+          -3.04584
+        ],
+        [
+          "Water Utility",
+          -3.55897
+        ],
+        [
+          "County Administration",
+          -3.81585
+        ],
+        [
+          "Case Management",
+          -4.52685
+        ],
+        [
+          "311 Contact Center",
+          -5.02117
+        ],
+        [
+          "Code Enforcement",
+          -5.06644
+        ],
+        [
+          "Finance Office",
+          -5.42831
+        ],
+        [
+          "Solid Waste",
+          -6.39224
+        ],
+        [
+          "Parks & Facilities",
+          -7.13996
+        ],
+        [
+          "Eligibility Services",
+          -7.50112
+        ],
+        [
+          "Community Development",
+          -18.2112
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-005@3.1.0",
+        "metric:BUDGET_FINANCE.budget_variance_pct",
+        "rule:BR-PUB-015",
+        "verified_query:VQ-PUB-057",
+        "document:DOC-PUB-BUDGET-MANUAL#2"
+      ],
+      "personas": {}
+    },
+    "SC-PUB-022": {
+      "agent": "AG-PUB-004",
+      "kind": "answer",
+      "headline": "Procurement cycle time moved +5.5 days from the first to the latest quarter this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Average days from requisition to purchase order for POs raised in each of the 3 quarters, excluding emergency purchases (BR-PUB-018). The e-procurement approval workflow that went live in May added steps to every requisition, and IT and software purchases also wait for a security review.",
+      "sqlHash": "bffef71f7588756b",
+      "columns": [
+        "period",
+        "procurement_cycle_days"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          19.8982
+        ],
+        [
+          "2026-04-01",
+          21.9638
+        ],
+        [
+          "2026-07-01",
+          25.4398
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-005@3.1.0",
+        "metric:PROCUREMENT.procurement_cycle_days",
+        "rule:BR-PUB-018",
+        "verified_query:VQ-PUB-068",
+        "document:DOC-PUB-PROCUREMENT-POLICY#3"
+      ],
+      "personas": {}
+    },
+    "SC-PUB-023": {
+      "agent": "AG-PUB-004",
+      "kind": "answer",
+      "headline": "Transportation grants have the lowest drawdown at 24.1% of awarded dollars.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Drawdown on active grants (BR-PUB-021) for the 5 lowest program areas; a grant is at risk when it trails its award period by more than 20 points (BR-PUB-022).",
+      "sqlHash": "34f5cf5d3cf1e898",
+      "columns": [
+        "program_area",
+        "grant_drawdown_rate"
+      ],
+      "rows": [
+        [
+          "Transportation",
+          24.0639
+        ],
+        [
+          "Parks & environment",
+          42.1408
+        ],
+        [
+          "Human services",
+          45.5608
+        ],
+        [
+          "Public safety",
+          50.1096
+        ],
+        [
+          "Housing",
+          56.7557
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-005@3.1.0",
+        "metric:GRANT_FUNDING.grant_drawdown_rate",
+        "rule:BR-PUB-021",
+        "document:DOC-PUB-BUDGET-MANUAL#5"
+      ],
+      "personas": {}
+    },
+    "SC-PUB-024": {
+      "agent": "AG-PUB-004",
+      "kind": "answer",
+      "headline": "The workforce vacancy rate is 11.0% this fiscal year — within the target band.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Unfilled authorised positions as a share of authorised positions for FY2027 to date (BR-PUB-015, BR-PUB-017). Eligibility Services vacancies are the main driver.",
+      "sqlHash": "0a3474a1f4563aec",
+      "columns": [
+        "vacancy_rate",
+        "vacancy_rate_target_min",
+        "vacancy_rate_target_max"
+      ],
+      "rows": [
+        [
+          11.0258,
+          6,
+          12
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-005@3.1.0",
+        "metric:BUDGET_FINANCE.vacancy_rate",
+        "rule:BR-PUB-015",
+        "verified_query:VQ-PUB-063",
+        "document:DOC-PUB-BUDGET-MANUAL#4"
+      ],
+      "personas": {}
+    },
+    "SC-PUB-025": {
+      "agent": "AG-PUB-004",
+      "kind": "clarify",
+      "headline": "\"The budget\" can mean a few things — which one do you need?",
+      "narrative": "I can show budget variance by department, budget execution, or the workforce vacancy rate, for this fiscal year or FY2026.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-PUB-026": {
+      "agent": "AG-PUB-004",
+      "kind": "answer",
+      "headline": "In FY2026 every department finished within budget; Water Utility came closest at -2.8%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "You named FY2026 (July 2025 - June 2026), so the current-fiscal-year default (BR-PUB-015) is not applied. Every department finished FY2026 within budget; Public Works' overspend is a FY2027 story.",
+      "sqlHash": "1eae5417882811dc",
+      "columns": [
+        "department",
+        "budget_variance_pct"
+      ],
+      "rows": [
+        [
+          "Water Utility",
+          -2.82891
+        ],
+        [
+          "Community Development",
+          -3.59929
+        ],
+        [
+          "Code Enforcement",
+          -3.73105
+        ],
+        [
+          "Case Management",
+          -4.11701
+        ],
+        [
+          "Eligibility Services",
+          -4.32986
+        ],
+        [
+          "Information Technology",
+          -4.57681
+        ],
+        [
+          "Solid Waste",
+          -4.63131
+        ],
+        [
+          "Finance Office",
+          -5.01654
+        ],
+        [
+          "311 Contact Center",
+          -5.07127
+        ],
+        [
+          "County Administration",
+          -5.14227
+        ],
+        [
+          "Public Works",
+          -5.15486
+        ],
+        [
+          "Parks & Facilities",
+          -5.5196
+        ]
+      ],
+      "citations": [
+        "product:DP-PUB-005@3.1.0",
+        "metric:BUDGET_FINANCE.budget_variance_pct",
+        "verified_query:VQ-PUB-057",
+        "document:DOC-PUB-BUDGET-MANUAL#3"
+      ],
+      "personas": {}
+    },
+    "SC-PUB-027": {
+      "agent": "AG-PUB-005",
+      "kind": "help",
+      "headline": "I explain governance across the county data estate — I don't analyse service KPIs.",
+      "narrative": "Ask me what a glossary term or metric means, the certification status of a data product, or where governance gaps such as missing stewards, unmasked identifiers or open-data suppression sit. For KPI numbers, ask the domain agents.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-PUB-028": {
+      "agent": "AG-PUB-005",
+      "kind": "decline",
+      "headline": "I can't approve access requests — agents act, humans decide.",
+      "narrative": "Access to a data product is granted only by its owner or steward through the access workflow. I can show you the request status and who can approve it.",
+      "citations": [],
+      "personas": {}
+    }
+  }
+}

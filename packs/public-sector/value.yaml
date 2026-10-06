@@ -1,0 +1,87 @@
+# Value cases per product (marketplace value model). All figures are illustrative and synthetic.
+- id: VC-PUB-001
+  product: DP-PUB-001
+  hypothesis: One certified 311 source lets operations rebalance crews toward the request types and districts missing SLA, cutting repeat contacts and manual reporting.
+  baseline: "CRM exports pivoted by hand each month; about 50 analyst hours a month; repeat contacts make up 18% of 311 volume."
+  benefit_model: "avoided_repeat_contacts * cost_per_contact + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Repeat 311 contacts avoided per year", value: 42000, unit: contacts, source: "311 operations repeat-contact study, 2026" }
+    - { text: "Cost per 311 contact handled", value: 4.6, unit: usd, source: "Contact center cost model FY27 (synthetic)" }
+    - { text: "Analyst hours saved per year", value: 600, unit: hours, source: "311 analytics time study" }
+    - { text: "Fully loaded analyst rate", value: 82, unit: usd_per_hour, source: "County planning rates FY27" }
+  annual_value_usd: 242400
+  measured: { value_usd: 198000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-PUB-002
+  product: DP-PUB-002
+  hypothesis: Seeing processing time and backlog by office every week lets eligibility operations move work before applications breach the 30-day standard, avoiding federal penalties and emergency overtime.
+  baseline: "Case management exports rebuilt in a spreadsheet every Monday; timeliness found at quarter-end; about 80 analyst hours a month."
+  benefit_model: "avoided_late_decisions * cost_per_late_decision + overtime_hours_avoided * overtime_rate + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Decisions moved inside the 30-day standard per year", value: 3800, unit: applications, source: "Eligibility operations pilot, Riverside offices" }
+    - { text: "Cost per late decision (rework, notices, penalty exposure)", value: 95, unit: usd, source: "State timeliness corrective action model (synthetic)" }
+    - { text: "Emergency overtime hours avoided per year", value: 5200, unit: hours, source: "Payroll overtime analysis FY26" }
+    - { text: "Overtime rate", value: 61, unit: usd_per_hour, source: "County planning rates FY27" }
+    - { text: "Analyst hours saved per year", value: 960, unit: hours, source: "Human services analytics time study" }
+    - { text: "Fully loaded analyst rate", value: 82, unit: usd_per_hour, source: "County planning rates FY27" }
+  annual_value_usd: 757920
+  measured: { value_usd: 611000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-PUB-003
+  product: DP-PUB-003
+  hypothesis: Improper payment dollars by program and error type, monthly instead of after the state review, target corrective action at the errors that cost most.
+  baseline: "Quality-control results in a separate workbook matched to issuance totals by hand; error trends seen twice a year."
+  benefit_model: "reduction_in_improper_rate * annual_benefits_issued + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Reduction in improper payment rate", value: 0.3, unit: percent_points, source: "Corrective action plan target FY27" }
+    - { text: "Annual benefit dollars issued (synthetic)", value: 410000000, unit: usd, source: "Synthetic finance summary" }
+    - { text: "Analyst hours saved per year", value: 480, unit: hours, source: "Quality control time study" }
+    - { text: "Fully loaded analyst rate", value: 82, unit: usd_per_hour, source: "County planning rates FY27" }
+  annual_value_usd: 1269360
+  measured: { value_usd: 940000, period: "2026-Q1..2026-Q3 annualised", confidence: low }
+- id: VC-PUB-004
+  product: DP-PUB-004
+  hypothesis: Turnaround by permit type and district, excluding same-day permits, shows where plan-review capacity is short so contract reviewers are added before commercial projects stall.
+  baseline: "Permitting reports filtered by hand to drop same-day permits; commercial delays found through developer complaints."
+  benefit_model: "review_days_avoided * value_per_review_day + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Commercial review days avoided per year", value: 2600, unit: days, source: "Community development backlog review 2026" }
+    - { text: "Economic value of a review day avoided (carrying cost)", value: 210, unit: usd, source: "Economic development office model (synthetic)" }
+    - { text: "Analyst hours saved per year", value: 360, unit: hours, source: "Permit center time study" }
+    - { text: "Fully loaded analyst rate", value: 82, unit: usd_per_hour, source: "County planning rates FY27" }
+  annual_value_usd: 575520
+  measured: { value_usd: 402000, period: "2026-Q1..2026-Q3 annualised", confidence: low }
+- id: VC-PUB-005
+  product: DP-PUB-005
+  hypothesis: Monthly budget variance by fiscal year, procurement cycle time and grant drawdown in one certified product surfaces overspends early and stops grant funds being returned unspent.
+  baseline: "General ledger extracts reconciled at month-end in a budget workbook; grant drawdown tracked by each department."
+  benefit_model: "grant_funds_retained + overspend_avoided + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Grant funds retained that would otherwise be returned unspent", value: 650000, unit: usd, source: "Grants office review of FY26 closeouts" }
+    - { text: "Overspend avoided through earlier corrective action", value: 400000, unit: usd, source: "Budget office estimate FY27" }
+    - { text: "Analyst hours saved per year", value: 900, unit: hours, source: "Budget office time study" }
+    - { text: "Fully loaded analyst rate", value: 82, unit: usd_per_hour, source: "County planning rates FY27" }
+  annual_value_usd: 1123800
+  measured: { value_usd: 870000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-PUB-006
+  product: DP-PUB-006
+  hypothesis: Prioritising integrity reviews by data-match type and district recovers more established overpayments before they age past the point of recovery.
+  baseline: "Data-match hit lists worked from a shared drive; recovery rate below half of established overpayments."
+  benefit_model: "additional_recovery_rate * annual_overpayments_established + reviewer_hours_saved * loaded_reviewer_rate"
+  assumptions:
+    - { text: "Additional share of established overpayments recovered", value: 8, unit: percent, source: "Program integrity unit target FY27" }
+    - { text: "Annual overpayments established (synthetic)", value: 6200000, unit: usd, source: "Synthetic integrity summary" }
+    - { text: "Reviewer hours saved per year", value: 1400, unit: hours, source: "Program integrity time study" }
+    - { text: "Fully loaded reviewer rate", value: 74, unit: usd_per_hour, source: "County planning rates FY27" }
+  annual_value_usd: 599600
+  measured: null
+- id: VC-PUB-007
+  product: DP-PUB-007
+  hypothesis: Directing patching crews where poor pavement meets slow repairs cuts repeat pothole reports and vehicle damage claims.
+  baseline: "Maintenance system reports reconciled with the pavement survey spreadsheet; crews follow complaint volume."
+  benefit_model: "avoided_repeat_repairs * cost_per_repair + avoided_damage_claims * cost_per_claim"
+  assumptions:
+    - { text: "Repeat pothole repairs avoided per year", value: 2100, unit: work_orders, source: "Public works pilot on Riverside arterials" }
+    - { text: "Cost per pothole repair", value: 310, unit: usd, source: "Street maintenance cost model FY27 (synthetic)" }
+    - { text: "Vehicle damage claims avoided per year", value: 120, unit: claims, source: "Risk management claims log" }
+    - { text: "Average cost per damage claim", value: 1450, unit: usd, source: "Risk management claims log (synthetic)" }
+  annual_value_usd: 825000
+  measured: null

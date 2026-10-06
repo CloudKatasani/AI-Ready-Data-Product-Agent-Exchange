@@ -1,0 +1,494 @@
+# Bronze source tables for Westland County Services (WCS_AI_PLATFORM).
+# Converted from the AI-Ready public-sector generators (generators.config.ts / catalog.ts: districts, offices,
+# programs, 311 request types, departments) and extended with permits, public works, procurement and grants.
+# Reference tables (offices, road segments, GL lines, vendors, grants, positions) are full populations at every
+# scale so ratios stay calibrated; transactional tables scale S/M/L.
+tables:
+  # ── Human services ────────────────────────────────────────────────────────────────────────────────
+  - name: CM_OFFICE
+    system: Case management
+    description: Human services offices (two per service district) with filled caseworker positions
+    key: office_id
+    rows: { S: 8, M: 8, L: 8 }
+    columns:
+      - { name: office_id, type: VARCHAR, gen: { seq: { prefix: "OFC-", pad: 2 } } }
+      - { name: office_name, type: VARCHAR, gen: { template: "Office {office_id}" }, dirty: false }
+      - { name: city, type: VARCHAR, gen: { choice: { values: [Northgate, Pine Hollow, Westland City, Southfield, Bayview, Riverside, Mill Creek] } }, dirty: false }
+      - { name: region, type: VARCHAR, gen: { choice: { values: [North, Central, South, Riverside] } }, dirty: false }
+      - { name: caseworkers, type: INTEGER, gen: { uniform: { min: 22, max: 30 } } }
+      - { name: residents_served, type: INTEGER, gen: { uniform: { min: 110000, max: 180000 } } }
+    plant:
+      - id: P-PUB-01
+        description: "OFC-01 Northgate Service Center (North)"
+        where: { office_id: OFC-01 }
+        adjust: { office_name: { set: Northgate Service Center }, city: { set: Northgate }, region: { set: North } }
+      - id: P-PUB-02
+        description: "OFC-02 Pine Hollow Office (North)"
+        where: { office_id: OFC-02 }
+        adjust: { office_name: { set: Pine Hollow Office }, city: { set: Pine Hollow }, region: { set: North } }
+      - id: P-PUB-03
+        description: "OFC-03 Civic Plaza Service Center (Central)"
+        where: { office_id: OFC-03 }
+        adjust: { office_name: { set: Civic Plaza Service Center }, city: { set: Westland City }, region: { set: Central } }
+      - id: P-PUB-04
+        description: "OFC-04 Market Street Office (Central)"
+        where: { office_id: OFC-04 }
+        adjust: { office_name: { set: Market Street Office }, city: { set: Westland City }, region: { set: Central } }
+      - id: P-PUB-05
+        description: "OFC-05 Southfield Service Center (South)"
+        where: { office_id: OFC-05 }
+        adjust: { office_name: { set: Southfield Service Center }, city: { set: Southfield }, region: { set: South } }
+      - id: P-PUB-06
+        description: "OFC-06 Bayview Office (South)"
+        where: { office_id: OFC-06 }
+        adjust: { office_name: { set: Bayview Office }, city: { set: Bayview }, region: { set: South } }
+      - id: P-PUB-07
+        description: "OFC-07 Riverside Service Center (Riverside) — short of caseworkers after 2026 vacancies"
+        where: { office_id: OFC-07 }
+        adjust: { office_name: { set: Riverside Service Center }, city: { set: Riverside }, region: { set: Riverside }, caseworkers: { set: 17 } }
+      - id: P-PUB-08
+        description: "OFC-08 Mill Creek Office (Riverside) — short of caseworkers after 2026 vacancies"
+        where: { office_id: OFC-08 }
+        adjust: { office_name: { set: Mill Creek Office }, city: { set: Mill Creek }, region: { set: Riverside }, caseworkers: { set: 15 } }
+
+  - name: CM_PERSON
+    system: Case management (CDC)
+    description: Constituent (person) master from the case management system
+    key: person_id
+    rows: { S: 2000, M: 20000, L: 100000 }
+    loaded_at_from: registered_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.3, dirty_strings_pct: 5, late_arrivals_pct: 1 }
+    columns:
+      - { name: person_id, type: VARCHAR, gen: { seq: { prefix: "WC-", pad: 7 } } }
+      - { name: first_name, type: VARCHAR, gen: { person: first }, tags: [PII] }
+      - { name: last_name, type: VARCHAR, gen: { person: last }, tags: [PII] }
+      - { name: gov_id, type: VARCHAR, description: Government identifier captured at intake (synthetic format), gen: { template: "SID-{person_id}" }, tags: [GOV_ID], dirty: false }
+      - { name: email, type: VARCHAR, gen: { email: { first: first_name, last: last_name, domain: example.net } }, tags: [PII], null_pct: 25 }
+      - { name: phone, type: VARCHAR, gen: { phone: true }, tags: [PII], null_pct: 10 }
+      - { name: street_address, type: VARCHAR, gen: { address: true }, tags: [PII] }
+      - { name: city, type: VARCHAR, gen: { choice: { values: [Northgate, Pine Hollow, Westland City, Southfield, Bayview, Riverside, Mill Creek, Cedar Bend] } } }
+      - { name: region, type: VARCHAR, gen: { choice: { values: [North, Central, South, Riverside], weights: [27, 31, 22, 20] } } }
+      - { name: age_band, type: VARCHAR, gen: { choice: { values: [Under 18, 18-34, 35-49, 50-64, 65+], weights: [24, 26, 21, 16, 13] } } }
+      - { name: household_size, type: INTEGER, gen: { poisson: { lambda: 2.4, min: 1, max: 9 } } }
+      - { name: preferred_language, type: VARCHAR, gen: { choice: { values: [English, Spanish, Vietnamese, Somali, Tagalog], weights: [71, 19, 4, 3, 3] } } }
+      - { name: status_code, type: VARCHAR, gen: { choice: { values: [A, I], weights: [92, 8] } }, dirty: false }
+      - { name: registered_date, type: DATE, gen: { date: { from: "2012-01-01", to: "2026-09-15" } } }
+
+  - name: CM_CASE
+    system: Case management (CDC)
+    description: Program cases with office, assigned caseworker and the action awaiting a caseworker decision
+    key: case_id
+    rows: { S: 3000, M: 30000, L: 150000 }
+    loaded_at_from: opened_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.3, dirty_strings_pct: 3, late_arrivals_pct: 1 }
+    columns:
+      - { name: case_id, type: VARCHAR, gen: { seq: { prefix: "CS-", pad: 8 } } }
+      - { name: person_id, type: VARCHAR, gen: { fk: { table: CM_PERSON, column: person_id } } }
+      - { name: office_id, type: VARCHAR, gen: { fk: { table: CM_OFFICE, column: office_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: office_id, parent_column: region } }, dirty: false }
+      - { name: program_code, type: VARCHAR, gen: { choice: { values: [FA, CA, MA, CCS, EA], weights: [32, 5, 52, 4, 7] } } }
+      - { name: caseworker_name, type: VARCHAR, gen: { person: full }, tags: [PII] }
+      - { name: opened_date, type: DATE, gen: { date: { from: "2018-01-01", to: asOf } } }
+      - { name: status_code, type: VARCHAR, gen: { choice: { values: [OP, CL], weights: [72, 28] } }, dirty: false }
+      - { name: pending_action, type: VARCHAR, gen: { choice: { values: [NONE, APP, REN, CHG], weights: [92.5, 2, 4, 1.5] } } }
+      - { name: pending_days, type: INTEGER, description: Days the pending action has waited for a caseworker decision, gen: { lognormal: { mu: 2.9, sigma: 0.75, min: 1, max: 240 } } }
+    plant:
+      - id: P-PUB-09
+        description: "Riverside renewals pile up after 2026 caseworker vacancies"
+        where: { region: Riverside, pending_action: NONE }
+        adjust: { pending_action: { set: REN, pct: 5 } }
+      - id: P-PUB-10
+        description: "Riverside backlog items have waited about 1.8x longer"
+        where: { region: Riverside }
+        adjust: { pending_days: { multiply: 1.8 } }
+
+  - name: ELIG_APPLICATION
+    system: Eligibility (CDC)
+    description: Benefit applications with completeness, document holds and eligibility decisions
+    key: application_id
+    rows: { S: 4000, M: 40000, L: 200000 }
+    loaded_at_from: received_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.4, dirty_strings_pct: 4, late_arrivals_pct: 1 }
+    columns:
+      - { name: application_id, type: VARCHAR, gen: { seq: { prefix: "APP-", pad: 8 } } }
+      - { name: person_id, type: VARCHAR, gen: { fk: { table: CM_PERSON, column: person_id } } }
+      - { name: office_id, type: VARCHAR, gen: { fk: { table: CM_OFFICE, column: office_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: office_id, parent_column: region } }, dirty: false }
+      - { name: program_code, type: VARCHAR, gen: { choice: { values: [FA, CA, MA, CCS, EA], weights: [32, 5, 52, 4, 7] } } }
+      - { name: channel, type: VARCHAR, gen: { choice: { values: [Online, In person, Phone, Mail], weights: [53, 24, 14, 9] } } }
+      - { name: received_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: complete_date, type: DATE, description: Date the last required verification arrived, gen: { date_offset: { from_column: received_date, days: { min: 0, max: 10 }, clamp_to_as_of: true } } }
+      - { name: docs_hold, type: BOOLEAN, description: Application was placed on hold awaiting applicant documents, gen: { bernoulli: 0.1 } }
+      - { name: decision_cal_days, type: INTEGER, description: Calendar days from complete application to decision, gen: { lognormal: { mu: 3.25, sigma: 0.4, min: 3, max: 240 } } }
+      - { name: decision_code, type: VARCHAR, gen: { choice: { values: [A, D, W], weights: [70, 22, 8] } }, dirty: false }
+      - { name: expedited, type: BOOLEAN, gen: { bernoulli: 0.08 } }
+    plant:
+      - id: P-PUB-11
+        description: "North puts far more applications on document hold in mid-2026 (new income-verification checklist)"
+        where: { region: North }
+        window: { column: received_date, from: "2026-05-01", to: "2026-08-31" }
+        adjust: { docs_hold: { set: true, pct: 50 } }
+      - id: P-PUB-12
+        description: "Applications on document hold take about 2.3x longer to decide"
+        where: { docs_hold: true }
+        adjust: { decision_cal_days: { multiply: 2.3 } }
+      - id: P-PUB-13
+        description: "Riverside decisions slow down in mid-2026 after eligibility worker vacancies"
+        where: { region: Riverside }
+        window: { column: received_date, from: "2026-05-01", to: "2026-09-30" }
+        adjust: { decision_cal_days: { multiply: 1.4 } }
+
+  - name: BEN_PAYMENT
+    system: Benefits issuance (CDC)
+    description: Issued benefit payments (EBT, direct deposit, provider disbursements) with quality-control and integrity outcomes
+    key: payment_id
+    rows: { S: 6000, M: 60000, L: 300000 }
+    loaded_at_from: issue_date
+    cdc_noise: { duplicate_updates_pct: 3, deletes_pct: 0.3, dirty_strings_pct: 3, late_arrivals_pct: 1 }
+    columns:
+      - { name: payment_id, type: VARCHAR, gen: { seq: { prefix: "PMT-", pad: 9 } } }
+      - { name: case_id, type: VARCHAR, gen: { fk: { table: CM_CASE, column: case_id } } }
+      - { name: program_code, type: VARCHAR, gen: { derive_from: { fk_column: case_id, parent_column: program_code } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: case_id, parent_column: region } }, dirty: false }
+      - { name: issue_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: amount, type: DOUBLE, gen: { lognormal: { mu: 5.55, sigma: 0.55, min: 15, max: 4000, decimals: 2 } } }
+      - { name: is_improper, type: BOOLEAN, description: Quality control found an over- or underpayment, gen: { bernoulli: 0.032 } }
+      - { name: improper_ratio, type: DOUBLE, description: Share of the amount found improper, gen: { uniform: { min: 0.4, max: 1.0, decimals: 2 } } }
+      - { name: error_type, type: VARCHAR, gen: { choice: { values: [Income verification, Household composition, Administrative error, Duplicate issuance], weights: [40, 28, 24, 8] } } }
+      - { name: issued_on_time, type: BOOLEAN, gen: { bernoulli: 0.978 } }
+      - { name: payment_status, type: VARCHAR, gen: { choice: { values: [Issued, Voided], weights: [98.4, 1.6] } } }
+      - { name: integrity_flag, type: BOOLEAN, description: Case under an integrity flag at issuance, gen: { bernoulli: 0.024 } }
+      - { name: flag_reason, type: VARCHAR, gen: { choice: { values: [Unreported income match, Duplicate participation, Address outside county, Identity verification, Employment data match], weights: [34, 14, 18, 12, 22] } } }
+      - { name: flag_status, type: VARCHAR, gen: { choice: { values: [Open review, Referred, Overpayment established, Cleared], weights: [36, 14, 28, 22] } } }
+      - { name: recovery_ratio, type: DOUBLE, description: Share of an established overpayment recovered to date, gen: { uniform: { min: 0.0, max: 1.0, decimals: 2 } } }
+    plant:
+      - id: P-PUB-14
+        description: "Cash Assistance income-verification errors spike in Q2 2026 (missed wage-match updates)"
+        where: { program_code: CA }
+        window: { column: issue_date, from: "2026-04-01", to: "2026-06-30" }
+        adjust: { is_improper: { set: true, pct: 16 }, error_type: { set: Income verification, pct: 80 } }
+      - id: P-PUB-15
+        description: "Voided payments are mostly duplicate issuances later reversed (excluded unless asked)"
+        where: { payment_status: Voided }
+        adjust: { is_improper: { set: true, pct: 70 }, error_type: { set: Duplicate issuance } }
+      - id: P-PUB-16
+        description: "South raises more address-outside-county integrity flags in 2026"
+        where: { region: South }
+        window: { column: issue_date, from: "2026-01-01", to: "2026-09-30" }
+        adjust: { integrity_flag: { set: true, pct: 3 }, flag_reason: { set: Address outside county, pct: 50 } }
+
+  # ── Constituent services ─────────────────────────────────────────────────────────────────────────
+  - name: SR311_REQUEST
+    system: 311 CRM (CDC)
+    description: 311 service requests from phone, mobile app, web and walk-in
+    key: sr_id
+    rows: { S: 5000, M: 50000, L: 250000 }
+    loaded_at_from: created_ts
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.3, dirty_strings_pct: 5, late_arrivals_pct: 1 }
+    columns:
+      - { name: sr_id, type: VARCHAR, gen: { seq: { prefix: "SR-", pad: 8 } } }
+      - { name: request_type, type: VARCHAR, gen: { choice: { values: [Pothole, Missed trash pickup, Streetlight out, Graffiti removal, Noise complaint, Benefits inquiry, Abandoned vehicle, Water leak, Tree or debris, Housing inspection], weights: [17, 16, 10, 7, 9, 14, 7, 6, 7, 7] } } }
+      - { name: channel, type: VARCHAR, gen: { choice: { values: [Phone, Mobile app, Web, Walk-in], weights: [42, 29, 21, 8] } } }
+      - { name: region, type: VARCHAR, gen: { choice: { values: [North, Central, South, Riverside], weights: [27, 31, 22, 20] } } }
+      - { name: created_ts, type: TIMESTAMP, gen: { datetime: { from: "2025-01-01", to: asOf, seasonality: { month: [1.0, 1.05, 1.15, 1.15, 1.1, 1.05, 1.0, 1.0, 0.95, 0.95, 0.9, 0.9] } } } }
+      - { name: resolution_days, type: DOUBLE, description: Days from creation to closure, gen: { lognormal: { mu: 0.55, sigma: 0.85, min: 0.05, max: 120, decimals: 2 } } }
+      - { name: is_duplicate, type: BOOLEAN, description: Merged into a parent request as a duplicate, gen: { bernoulli: 0.06 } }
+      - { name: reopened, type: BOOLEAN, gen: { bernoulli: 0.045 } }
+      - { name: survey_score, type: INTEGER, gen: { choice: { values: [1, 2, 3, 4, 5], weights: [6, 8, 14, 34, 38] } }, null_pct: 62 }
+      - { name: caller_name, type: VARCHAR, gen: { person: full }, tags: [PII], null_pct: 35 }
+    plant:
+      - id: P-PUB-17
+        description: "Spring 2026 freeze-thaw pothole surge"
+        window: { column: created_ts, from: "2026-02-01", to: "2026-04-30" }
+        adjust: { request_type: { set: Pothole, pct: 12 } }
+      - id: P-PUB-18
+        description: "Noise complaints close quickly"
+        where: { request_type: Noise complaint }
+        adjust: { resolution_days: { multiply: 0.6 } }
+      - id: P-PUB-19
+        description: "Benefits inquiries are answered by the contact center within the day"
+        where: { request_type: Benefits inquiry }
+        adjust: { resolution_days: { multiply: 0.4 } }
+      - id: P-PUB-20
+        description: "Streetlight repairs wait for an electrical crew"
+        where: { request_type: Streetlight out }
+        adjust: { resolution_days: { multiply: 1.6 } }
+      - id: P-PUB-21
+        description: "Missed trash pickups are collected next day"
+        where: { request_type: Missed trash pickup }
+        adjust: { resolution_days: { multiply: 0.45 } }
+      - id: P-PUB-22
+        description: "Abandoned vehicles need a 72-hour notice before tow"
+        where: { request_type: Abandoned vehicle }
+        adjust: { resolution_days: { multiply: 2.4 } }
+      - id: P-PUB-23
+        description: "Water leaks are dispatched same day"
+        where: { request_type: Water leak }
+        adjust: { resolution_days: { multiply: 0.25 } }
+      - id: P-PUB-24
+        description: "Tree and debris removal waits for a parks crew"
+        where: { request_type: Tree or debris }
+        adjust: { resolution_days: { multiply: 1.4 } }
+      - id: P-PUB-25
+        description: "Housing inspections need a scheduled inspector visit"
+        where: { request_type: Housing inspection }
+        adjust: { resolution_days: { multiply: 3.2 } }
+      - id: P-PUB-26
+        description: "Riverside pothole repairs fall behind in 2026 (one patching crew short)"
+        where: { request_type: Pothole, region: Riverside }
+        window: { column: created_ts, from: "2026-01-01", to: "2026-09-30" }
+        adjust: { resolution_days: { multiply: 2.3 } }
+      - id: P-PUB-27
+        description: "Central missed-trash requests miss SLA after the Q3 2026 hauler change"
+        where: { request_type: Missed trash pickup, region: Central }
+        window: { column: created_ts, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { resolution_days: { multiply: 3.0 } }
+      - id: P-PUB-28
+        description: "Duplicates are closed at merge (excluded from resolution metrics unless asked)"
+        where: { is_duplicate: true }
+        adjust: { resolution_days: { set: 0.05 }, survey_score: { set: 5, pct: 30 } }
+
+  # ── Permits & licensing ──────────────────────────────────────────────────────────────────────────
+  - name: PRM_APPLICATION
+    system: Permitting (land management)
+    description: Building, trade and right-of-way permit applications with review track and outcome
+    key: permit_id
+    rows: { S: 1200, M: 12000, L: 60000 }
+    loaded_at_from: submitted_date
+    cdc_noise: { duplicate_updates_pct: 3, deletes_pct: 0.3, dirty_strings_pct: 4 }
+    columns:
+      - { name: permit_id, type: VARCHAR, gen: { seq: { prefix: "BP-", pad: 7 } } }
+      - { name: permit_type, type: VARCHAR, gen: { choice: { values: [Residential building, Commercial building, Electrical, Plumbing, Mechanical, Demolition, Sign, Right-of-way], weights: [26, 9, 18, 14, 12, 4, 5, 12] } } }
+      - { name: review_track, type: VARCHAR, gen: { choice: { values: [Over the counter, Standard, Major], weights: [32, 56, 12] } } }
+      - { name: region, type: VARCHAR, gen: { choice: { values: [North, Central, South, Riverside], weights: [27, 31, 22, 20] } } }
+      - { name: submitted_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: review_days, type: INTEGER, description: Calendar days from complete submittal to issue or denial, gen: { lognormal: { mu: 2.55, sigma: 0.5, min: 1, max: 365 } } }
+      - { name: outcome, type: VARCHAR, gen: { choice: { values: [Issued, Denied, Withdrawn], weights: [88, 4, 8] } } }
+      - { name: valuation_usd, type: DOUBLE, gen: { lognormal: { mu: 10.3, sigma: 1.1, min: 500, max: 50000000, decimals: 0 } } }
+      - { name: applicant_name, type: VARCHAR, gen: { person: full }, tags: [PII] }
+      - { name: applicant_email, type: VARCHAR, gen: { template: "applicant.{permit_id}@example.org" }, tags: [PII], dirty: false }
+    plant:
+      - id: P-PUB-29
+        description: "Over-the-counter permits are issued the same day"
+        where: { review_track: Over the counter }
+        adjust: { review_days: { set: 0 } }
+      - id: P-PUB-30
+        description: "Major projects need multi-discipline plan review"
+        where: { review_track: Major }
+        adjust: { review_days: { multiply: 1.9 } }
+      - id: P-PUB-31
+        description: "Commercial building permits take longest (fire and structural review)"
+        where: { permit_type: Commercial building }
+        adjust: { review_days: { multiply: 1.7 } }
+      - id: P-PUB-32
+        description: "Central plan review slows in Q3 2026 after two plan reviewer vacancies"
+        where: { region: Central }
+        window: { column: submitted_date, from: "2026-06-01", to: "2026-09-30" }
+        adjust: { review_days: { multiply: 1.5 } }
+
+  - name: PRM_INSPECTION
+    system: Permitting (field inspections)
+    description: Field inspections performed against permits
+    key: inspection_id
+    rows: { S: 2000, M: 20000, L: 100000 }
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 3 }
+    columns:
+      - { name: inspection_id, type: VARCHAR, gen: { seq: { prefix: "INSP-", pad: 8 } } }
+      - { name: permit_id, type: VARCHAR, gen: { fk: { table: PRM_APPLICATION, column: permit_id } } }
+      - { name: permit_type, type: VARCHAR, gen: { derive_from: { fk_column: permit_id, parent_column: permit_type } } }
+      - { name: inspection_type, type: VARCHAR, gen: { choice: { values: [Footing, Framing, Electrical rough-in, Plumbing rough-in, Final], weights: [14, 22, 20, 18, 26] } } }
+      - { name: days_to_inspect, type: INTEGER, gen: { lognormal: { mu: 0.4, sigma: 0.6, min: 0, max: 20 } } }
+      - { name: result, type: VARCHAR, gen: { choice: { values: [Pass, Fail, Partial], weights: [77, 18, 5] } } }
+      - { name: inspector_name, type: VARCHAR, gen: { person: full }, tags: [PII] }
+    plant:
+      - id: P-PUB-33
+        description: "Commercial building inspections fail more often"
+        where: { permit_type: Commercial building }
+        adjust: { result: { set: Fail, pct: 15 } }
+
+  # ── Public works ─────────────────────────────────────────────────────────────────────────────────
+  - name: PW_ROAD_SEGMENT
+    system: Pavement management
+    description: County-maintained road segments with pavement condition index (PCI)
+    key: segment_id
+    rows: { S: 3000, M: 3000, L: 3000 }
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 3 }
+    columns:
+      - { name: segment_id, type: VARCHAR, gen: { seq: { prefix: "RS-", pad: 5 } } }
+      - { name: region, type: VARCHAR, gen: { choice: { values: [North, Central, South, Riverside], weights: [27, 31, 22, 20] } } }
+      - { name: functional_class, type: VARCHAR, gen: { choice: { values: [Arterial, Collector, Local], weights: [18, 27, 55] } } }
+      - { name: lane_miles, type: DOUBLE, gen: { lognormal: { mu: -0.3, sigma: 0.5, min: 0.05, max: 6, decimals: 2 } } }
+      - { name: pci, type: INTEGER, description: Pavement condition index 0-100, gen: { normal: { mean: 68, sd: 15, min: 5, max: 100 } } }
+      - { name: last_paved_year, type: INTEGER, gen: { uniform: { min: 1990, max: 2025 } } }
+    plant:
+      - id: P-PUB-34
+        description: "Riverside roads are in poorer condition (deferred resurfacing)"
+        where: { region: Riverside }
+        adjust: { pci: { multiply: 0.82 } }
+
+  - name: PW_WORK_ORDER
+    system: Public works maintenance (CMMS)
+    description: Street maintenance work orders against road segments
+    key: work_order_id
+    rows: { S: 2500, M: 25000, L: 125000 }
+    loaded_at_from: reported_date
+    cdc_noise: { duplicate_updates_pct: 3, deletes_pct: 0.3, dirty_strings_pct: 3 }
+    columns:
+      - { name: work_order_id, type: VARCHAR, gen: { seq: { prefix: "PW-", pad: 8 } } }
+      - { name: segment_id, type: VARCHAR, gen: { fk: { table: PW_ROAD_SEGMENT, column: segment_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: segment_id, parent_column: region } }, dirty: false }
+      - { name: work_type, type: VARCHAR, gen: { choice: { values: [Pothole repair, Crack seal, Streetlight repair, Sign replacement, Storm drain cleaning, Sidewalk repair], weights: [34, 12, 18, 12, 14, 10] } } }
+      - { name: reported_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf, seasonality: { month: [1.2, 1.4, 1.5, 1.3, 1.0, 0.9, 0.8, 0.8, 0.9, 1.0, 1.0, 1.1] } } } }
+      - { name: repair_days, type: DOUBLE, gen: { lognormal: { mu: 0.9, sigma: 0.6, min: 0.1, max: 180, decimals: 1 } } }
+      - { name: crew_type, type: VARCHAR, gen: { choice: { values: [County crew, Contractor], weights: [72, 28] } } }
+      - { name: labor_hours, type: DOUBLE, gen: { lognormal: { mu: 1.5, sigma: 0.6, min: 0.5, max: 120, decimals: 1 } } }
+      - { name: cost_usd, type: DOUBLE, gen: { lognormal: { mu: 6.4, sigma: 0.7, min: 40, max: 250000, decimals: 2 } } }
+      - { name: crew_lead, type: VARCHAR, gen: { person: full }, tags: [PII] }
+    plant:
+      - id: P-PUB-35
+        description: "Riverside pothole repairs slow in spring 2026"
+        where: { work_type: Pothole repair, region: Riverside }
+        window: { column: reported_date, from: "2026-02-01", to: "2026-06-30" }
+        adjust: { repair_days: { multiply: 2.2 } }
+      - id: P-PUB-36
+        description: "Sidewalk repairs are scheduled into a concrete programme"
+        where: { work_type: Sidewalk repair }
+        adjust: { repair_days: { multiply: 4.0 } }
+      - id: P-PUB-37
+        description: "Crack seal and storm drain work are batched by route"
+        where: { work_type: { in: [Crack seal, Storm drain cleaning] } }
+        adjust: { repair_days: { multiply: 2.0 } }
+
+  # ── Finance, procurement, grants and workforce ───────────────────────────────────────────────────
+  - name: FIN_GL_LINE
+    system: County financial system (GL)
+    description: Adopted budget, actual expenditure and positions by department and fiscal month (Jan 2025 - Sep 2026)
+    key: line_no
+    rows: { S: 252, M: 252, L: 252 }
+    cdc_noise: { duplicate_updates_pct: 2 }
+    columns:
+      - { name: line_no, type: INTEGER, gen: { seq: { start: 0 } } }
+      - { name: dept_idx, type: INTEGER, gen: { formula: "line_no % 12" } }
+      - { name: period_idx, type: INTEGER, description: Months since January 2025, gen: { formula: "floor(line_no / 12)" } }
+      - name: department
+        type: VARCHAR
+        gen: { formula: "if(dept_idx == 0, 'Eligibility Services', if(dept_idx == 1, 'Case Management', if(dept_idx == 2, 'Public Works', if(dept_idx == 3, 'Community Development', if(dept_idx == 4, '311 Contact Center', if(dept_idx == 5, 'Finance Office', if(dept_idx == 6, 'Parks & Facilities', if(dept_idx == 7, 'Solid Waste', if(dept_idx == 8, 'Code Enforcement', if(dept_idx == 9, 'Information Technology', if(dept_idx == 10, 'County Administration', 'Water Utility')))))))))))" }
+      - name: base_monthly
+        type: DOUBLE
+        gen: { formula: "if(dept_idx == 0, 3600000, if(dept_idx == 1, 2600000, if(dept_idx == 2, 4400000, if(dept_idx == 3, 1300000, if(dept_idx == 4, 900000, if(dept_idx == 5, 800000, if(dept_idx == 6, 1600000, if(dept_idx == 7, 2200000, if(dept_idx == 8, 700000, if(dept_idx == 9, 1500000, if(dept_idx == 10, 1100000, 2000000)))))))))))", decimals: 0 }
+      - { name: budget_noise, type: DOUBLE, gen: { normal: { mean: 1.0, sd: 0.02, decimals: 4 } } }
+      - { name: budget_amount, type: DOUBLE, gen: { formula: "base_monthly * budget_noise", decimals: 2 } }
+      - { name: exec_ratio, type: DOUBLE, gen: { normal: { mean: 0.955, sd: 0.035, min: 0.8, max: 1.1, decimals: 4 } } }
+      - { name: actual_amount, type: DOUBLE, gen: { formula: "budget_amount * exec_ratio", decimals: 2 } }
+      - name: fte_authorized
+        type: DOUBLE
+        gen: { formula: "if(dept_idx == 0, 320, if(dept_idx == 1, 240, if(dept_idx == 2, 260, if(dept_idx == 3, 95, if(dept_idx == 4, 70, if(dept_idx == 5, 55, if(dept_idx == 6, 120, if(dept_idx == 7, 140, if(dept_idx == 8, 45, if(dept_idx == 9, 60, if(dept_idx == 10, 85, 110)))))))))))", decimals: 1 }
+      - { name: fill_ratio, type: DOUBLE, gen: { normal: { mean: 0.915, sd: 0.012, min: 0.8, max: 1.0, decimals: 3 } } }
+      - { name: fte_filled, type: DOUBLE, gen: { formula: "round(fte_authorized * fill_ratio, 1)", decimals: 1 } }
+      - { name: is_administrative, type: BOOLEAN, gen: { formula: "dept_idx == 5 || dept_idx == 9 || dept_idx == 10" } }
+    plant:
+      - id: P-PUB-38
+        description: "Public Works overspends in FY2027 Q1 (pothole season carry-over and contractor patching)"
+        where: { dept_idx: 2, period_idx: { in: [18, 19, 20] } }
+        adjust: { actual_amount: { multiply: 1.22 } }
+      - id: P-PUB-39
+        description: "Eligibility Services vacancies climb through 2026"
+        where: { dept_idx: 0, period_idx: { in: [12, 13, 14, 15, 16, 17, 18, 19, 20] } }
+        adjust: { fte_filled: { multiply: 0.88 } }
+      - id: P-PUB-40
+        description: "Community Development underspends while plan reviewer posts are vacant in FY2027 Q1"
+        where: { dept_idx: 3, period_idx: { in: [18, 19, 20] } }
+        adjust: { actual_amount: { multiply: 0.86 }, fte_filled: { multiply: 0.9 } }
+
+  - name: FIN_VENDOR
+    system: County financial system (vendor master)
+    description: Vendor master
+    key: vendor_id
+    rows: { S: 80, M: 80, L: 80 }
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 5 }
+    columns:
+      - { name: vendor_id, type: VARCHAR, gen: { seq: { prefix: "VND-", pad: 4 } } }
+      - { name: vendor_name, type: VARCHAR, gen: { company: true } }
+      - { name: category, type: VARCHAR, gen: { choice: { values: [Construction services, Road materials, Fleet & equipment, IT & software, Professional services, Facilities maintenance, Social services providers, Office supplies], weights: [14, 12, 12, 14, 14, 12, 12, 10] } } }
+      - { name: local_small_business, type: BOOLEAN, gen: { bernoulli: 0.35 } }
+      - { name: tax_id, type: VARCHAR, gen: { template: "TIN-{vendor_id}" }, tags: [GOV_ID], dirty: false }
+      - { name: contact_email, type: VARCHAR, gen: { template: "ap.{vendor_id}@example.org" }, tags: [PII], dirty: false }
+
+  - name: FIN_PO_LINE
+    system: County financial system (purchasing)
+    description: Requisition lines and the purchase orders raised for them
+    key: po_line_id
+    rows: { S: 15000, M: 15000, L: 15000 }
+    loaded_at_from: requisition_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.5, dirty_strings_pct: 4, late_arrivals_pct: 1 }
+    columns:
+      - { name: po_line_id, type: VARCHAR, gen: { seq: { prefix: "PO-", pad: 8 } } }
+      - { name: vendor_id, type: VARCHAR, gen: { fk: { table: FIN_VENDOR, column: vendor_id, dist: zipf, s: 0.8 } } }
+      - { name: category, type: VARCHAR, gen: { derive_from: { fk_column: vendor_id, parent_column: category } } }
+      - { name: department, type: VARCHAR, gen: { choice: { values: [Eligibility Services, Case Management, Public Works, Community Development, 311 Contact Center, Parks & Facilities, Solid Waste, Information Technology, Water Utility], weights: [8, 6, 26, 6, 4, 12, 12, 14, 12] } } }
+      - { name: requisition_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: procurement_method, type: VARCHAR, gen: { choice: { values: [Cooperative contract, Competitive bid, Informal quote, Sole source, Emergency], weights: [30, 18, 34, 8, 10] } } }
+      - { name: cycle_days, type: INTEGER, description: Calendar days from requisition to purchase order, gen: { lognormal: { mu: 2.6, sigma: 0.5, min: 1, max: 365 } } }
+      - { name: spend_usd, type: DOUBLE, gen: { lognormal: { mu: 8.3, sigma: 1.2, min: 50, max: 3000000, decimals: 2 } } }
+      - { name: on_contract, type: BOOLEAN, gen: { bernoulli: 0.84 } }
+      - { name: buyer, type: VARCHAR, gen: { person: full }, tags: [PII] }
+    plant:
+      - id: P-PUB-41
+        description: "Emergency purchases are placed within a day or two (excluded from cycle time unless asked)"
+        where: { procurement_method: Emergency }
+        adjust: { cycle_days: { set: 1 }, on_contract: { set: false, pct: 70 } }
+      - id: P-PUB-42
+        description: "Formal competitive bids take far longer (advertising period and evaluation)"
+        where: { procurement_method: Competitive bid }
+        adjust: { cycle_days: { multiply: 2.6 } }
+      - id: P-PUB-43
+        description: "IT & software purchasing slows in 2026 Q2-Q3 (new security review step)"
+        where: { category: IT & software }
+        window: { column: requisition_date, from: "2026-04-01", to: "2026-09-30" }
+        adjust: { cycle_days: { multiply: 1.8 } }
+      - id: P-PUB-46
+        description: "The new e-procurement approval workflow (live May 2026) adds approval steps to every requisition"
+        window: { column: requisition_date, from: "2026-05-01", to: "2026-09-30" }
+        adjust: { cycle_days: { multiply: 1.3 } }
+
+  - name: GRT_AWARD
+    system: Grants management
+    description: Federal, state and foundation grant awards with drawdown pace
+    key: grant_id
+    rows: { S: 140, M: 140, L: 140 }
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 3 }
+    columns:
+      - { name: grant_id, type: VARCHAR, gen: { seq: { prefix: "GR-", pad: 4 } } }
+      - { name: funder, type: VARCHAR, gen: { choice: { values: [Federal, State, Foundation], weights: [52, 38, 10] } } }
+      - { name: program_area, type: VARCHAR, gen: { choice: { values: [Human services, Transportation, Public safety, Housing, Parks & environment, Workforce development], weights: [28, 18, 14, 16, 12, 12] } } }
+      - { name: department, type: VARCHAR, gen: { choice: { values: [Eligibility Services, Case Management, Public Works, Community Development, Parks & Facilities, County Administration], weights: [24, 14, 22, 16, 12, 12] } } }
+      - { name: award_amount, type: DOUBLE, gen: { lognormal: { mu: 13.2, sigma: 0.9, min: 50000, max: 40000000, decimals: 0 } } }
+      - { name: start_date, type: DATE, gen: { date: { from: "2023-07-01", to: "2026-06-30" } } }
+      - { name: term_days, type: INTEGER, gen: { uniform: { min: 365, max: 1095 } } }
+      - { name: draw_pace, type: DOUBLE, description: Drawdown relative to elapsed award period, gen: { normal: { mean: 0.92, sd: 0.16, min: 0.1, max: 1.3, decimals: 3 } } }
+    plant:
+      - id: P-PUB-44
+        description: "Transportation grants draw down slowly (projects waiting on right-of-way acquisition)"
+        where: { program_area: Transportation }
+        adjust: { draw_pace: { multiply: 0.5 } }
+
+  - name: HR_POSITION
+    system: HR position control
+    description: Authorised county positions, filled or vacant
+    key: position_id
+    rows: { S: 2400, M: 2400, L: 2400 }
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 3 }
+    columns:
+      - { name: position_id, type: VARCHAR, gen: { seq: { prefix: "POS-", pad: 5 } } }
+      - { name: department, type: VARCHAR, gen: { choice: { values: [Eligibility Services, Case Management, Public Works, Community Development, 311 Contact Center, Finance Office, Parks & Facilities, Solid Waste, Code Enforcement, Information Technology, County Administration, Water Utility], weights: [320, 240, 260, 95, 70, 55, 120, 140, 45, 60, 85, 110] } } }
+      - { name: region, type: VARCHAR, gen: { choice: { values: [North, Central, South, Riverside], weights: [27, 31, 22, 20] } } }
+      - { name: job_family, type: VARCHAR, gen: { choice: { values: [Eligibility worker, Caseworker, Inspector, Plan reviewer, Maintenance worker, Engineer, Analyst, Clerk], weights: [18, 16, 6, 4, 22, 6, 12, 16] } } }
+      - { name: is_filled, type: BOOLEAN, gen: { bernoulli: 0.9 } }
+      - { name: vacant_days, type: INTEGER, gen: { lognormal: { mu: 4.0, sigma: 0.6, min: 5, max: 720 } } }
+      - { name: agency_cover, type: BOOLEAN, gen: { bernoulli: 0.18 } }
+      - { name: incumbent_name, type: VARCHAR, gen: { person: full }, tags: [PII] }
+    plant:
+      - id: P-PUB-45
+        description: "Riverside eligibility worker posts are hard to fill"
+        where: { region: Riverside, job_family: Eligibility worker }
+        adjust: { is_filled: { set: false, pct: 25 } }

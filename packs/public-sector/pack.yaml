@@ -1,0 +1,48 @@
+id: public-sector
+name: Public Sector
+version: 1.0.0
+depth: deep
+code: PUB
+industry: County government services
+company:
+  name: Westland County Services
+  short: WCS
+  hq: Westland City
+  description: County government serving 1.1M residents across four service districts — human services, permits, public works and 311
+database: WCS_AI_PLATFORM
+locale: en-US
+currency: USD
+asOf: 2026-09-30
+seed: 20261010
+regions: [North, Central, South, Riverside]
+overridable:
+  regions: true
+  companyName: true
+  terms: [district, service center, caseworker]
+home:
+  heroQuestion: "What was average benefit processing time by district last quarter, excluding applications on hold for documents?"
+  heroAgent: AG-PUB-002
+  headlineKpis: [KPI-PUB-PROC-DAYS, KPI-PUB-BACKLOG, KPI-PUB-311-SLA, KPI-PUB-IMPROPER]
+  theatreScenarios: [SC-PUB-001, SC-PUB-008, SC-PUB-016]
+icon: landmark
+hook: Benefits, permits, public works and 311 data — governed for AI
+story_roles:
+  heroScenario: SC-PUB-001
+  certDemoProduct: DP-PUB-006
+  lifecycleDemoProduct: DP-PUB-007
+  incidentForStory: INC-PUB-LATE-FEED
+  knockoutKpi: KPI-PUB-PROC-DAYS
+  qualityFixAgent: AG-PUB-001
+lint_terms:
+  - Westland
+  - caseworker
+  - caseload
+  - constituent
+  - constituents
+  - eligibility
+  - pothole
+  - potholes
+  - improper payment
+  - overpayment
+  - drawdown
+  - plan review

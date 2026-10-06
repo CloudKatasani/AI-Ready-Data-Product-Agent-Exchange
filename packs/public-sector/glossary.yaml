@@ -1,0 +1,981 @@
+# Westland County Services business glossary (synthetic). Ported from the AI-Ready public-sector glossary (T-001..T-027)
+# and the ADPM public-sector pack; ids, owners and mappings adapted to this pack's personas, warehouse and semantic views.
+
+# ── Constituents & districts ────────────────────────────────────────────────────────────────────────
+- id: GT-PUB-CONSTITUENT
+  name: Constituent
+  definition: "A resident or household member with a record in the county case management system, whether or not they currently receive a service."
+  formula: "One record per constituent_id; Active when status = Active"
+  domain: Constituent services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [resident record, person record]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CONSTITUENT.constituent_id, CURATED_SILVER.CONSTITUENT.constituent_id]
+    metrics: []
+
+- id: GT-PUB-DISTRICT
+  name: Service district
+  definition: "One of the county's four service districts — North, Central, South and Riverside — that own offices, caseworkers and constituents. Row access is granted by district."
+  formula: "Mapped from the district code on the office, request, permit or road segment"
+  domain: Constituent services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [district, service area]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_OFFICE.region, CONFORMED_GOLD.FCT_SERVICE_REQUEST.region, CONFORMED_GOLD.FCT_PAYMENT.region]
+    metrics: []
+
+- id: GT-PUB-OFFICE
+  name: Service office
+  definition: "A human services office in a district where applications are processed and cases are managed."
+  formula: "One row per office_id; two offices per district"
+  domain: Human services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [service center, local office]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_OFFICE.office_name]
+    metrics: []
+
+- id: GT-PUB-GOV-ID
+  name: Government identifier
+  definition: "A government-issued personal identifier captured at intake for identity and data matching. Classified GOV_ID: masked for every role except the data steward."
+  formula: "Tagged GOV_ID; MASK_GOV_ID attached"
+  domain: Governance
+  owner: public-sector:steward
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [gov id, government id]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CONSTITUENT.gov_id, CONFORMED_GOLD.FCT_PAYMENT.case_gov_id]
+    metrics: []
+
+
+# ── Human services ──────────────────────────────────────────────────────────────────────────────────
+- id: GT-PUB-PROGRAM
+  name: Benefit program
+  definition: "A county-administered benefit: Food Assistance, Cash Assistance, Medical Assistance, Child Care Subsidy or Energy Assistance."
+  formula: "program_code in (FA, CA, MA, CCS, EA)"
+  domain: Human services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [program, benefit type]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_APPLICATION.program_name, CONFORMED_GOLD.FCT_CASE.program_name]
+    metrics: []
+
+- id: GT-PUB-APPLICATION
+  name: Benefit application
+  definition: "A request for a benefit program submitted by or for a constituent, from receipt through the eligibility decision."
+  formula: "One row per application_id"
+  domain: Human services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [application]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_APPLICATION.application_id]
+    metrics: []
+
+- id: GT-PUB-COMPLETE-APP
+  name: Complete application
+  definition: "An application for which every required verification (identity, income, residency, household) has been received; the processing clock starts on this date."
+  formula: "complete_date = date the last required verification was received"
+  domain: Human services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [complete date, verifications received]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_APPLICATION.complete_date]
+    metrics: []
+
+- id: GT-PUB-PROC-DAYS
+  name: Benefit processing time
+  definition: "The number of county business days from a complete application to the eligibility decision. Weekends and county holidays do not count, and applications on hold for applicant documents are excluded unless requested."
+  formula: "Mean business days in (complete_date, decision_date], document holds excluded (BR-PUB-001, BR-PUB-002)"
+  domain: Human services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [processing days, case processing time, eligibility processing time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_APPLICATION.processing_days]
+    metrics: [avg_processing_days]
+
+- id: GT-PUB-DOC-HOLD
+  name: Document hold
+  definition: "An application placed on hold because the applicant has not yet supplied a required document. Held applications are reported separately from processing time."
+  formula: "docs_hold = TRUE"
+  domain: Human services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [on hold for documents, awaiting documents]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_APPLICATION.docs_hold]
+    metrics: []
+
+- id: GT-PUB-TIMELY
+  name: Timely processing rate
+  definition: "The share of decided applications decided within the 30-business-day standard."
+  formula: "Applications with processing days ≤ 30 ÷ applications decided × 100"
+  domain: Human services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [timeliness rate, within 30 days]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_APPLICATION.processing_days]
+    metrics: [timely_processing_rate]
+
+- id: GT-PUB-OVER-STANDARD
+  name: Applications over standard
+  definition: "Decided applications whose processing days exceed the 30-business-day standard."
+  formula: "count of decided applications with processing days > 30"
+  domain: Human services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [late decisions, over 30-day standard]
+  mappings:
+    columns: []
+    metrics: [applications_over_standard]
+
+- id: GT-PUB-APPROVAL
+  name: Approval rate
+  definition: "Approved applications as a share of applications approved or denied; withdrawn applications are excluded."
+  formula: "Approved ÷ (Approved + Denied) × 100"
+  domain: Human services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [approval percentage]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_APPLICATION.decision]
+    metrics: [approval_rate]
+
+- id: GT-PUB-DECIDED
+  name: Applications decided
+  definition: "Applications with an eligibility decision (approved, denied or withdrawn) in the period."
+  formula: "count of applications by decision date"
+  domain: Human services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [determinations made]
+  mappings:
+    columns: []
+    metrics: [applications_decided]
+
+- id: GT-PUB-ONLINE-SHARE
+  name: Online application share
+  definition: "Applications submitted online by the constituent, as a share of all decided applications."
+  formula: "channel = Online ÷ applications decided × 100"
+  domain: Human services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [digital self-service rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_APPLICATION.channel]
+    metrics: [online_application_share]
+
+- id: GT-PUB-CASE
+  name: Open case
+  definition: "A constituent's enrolment in one benefit program that has not been closed, managed by an assigned caseworker."
+  formula: "One row per case_id; open when case_status = Open"
+  domain: Human services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [open program case]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CASE.case_status]
+    metrics: [open_cases]
+
+- id: GT-PUB-BACKLOG
+  name: Case backlog
+  definition: "Open cases with a new application, renewal or reported change awaiting a caseworker decision at the end of the period."
+  formula: "count of open cases where pending_action <> 'None' (BR-PUB-013)"
+  domain: Human services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [backlog, cases awaiting decision]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CASE.pending_action]
+    metrics: [case_backlog]
+
+- id: GT-PUB-BACKLOG-AGE
+  name: Backlog age
+  definition: "Average days the items in the case backlog have waited for a caseworker decision."
+  formula: "mean pending_days over backlog cases"
+  domain: Human services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [average backlog age]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CASE.pending_days]
+    metrics: [backlog_age_days]
+
+- id: GT-PUB-CASELOAD
+  name: Caseload
+  definition: "Open cases per filled caseworker position; vacant positions are not counted."
+  formula: "Open cases ÷ filled caseworker positions (BR-PUB-014)"
+  domain: Human services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [cases per caseworker]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_OFFICE.caseworkers]
+    metrics: [avg_caseload]
+
+
+# ── Benefit payments & integrity ────────────────────────────────────────────────────────────────────
+- id: GT-PUB-BENEFIT-PAYMENT
+  name: Benefit payment
+  definition: "A benefit amount issued on a case for a benefit month by EBT, direct deposit or provider disbursement."
+  formula: "One row per payment_id; payment_amount as issued; voided payments excluded"
+  domain: Benefit payments
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [benefits issued, benefit dollars]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PAYMENT.payment_amount]
+    metrics: [benefits_paid]
+
+- id: GT-PUB-PAYMENTS-ISSUED
+  name: Payments issued
+  definition: "The number of benefit payments issued in the period, excluding voided payments."
+  formula: "count of issued payments"
+  domain: Benefit payments
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [payment count]
+  mappings:
+    columns: []
+    metrics: [payments_issued]
+
+- id: GT-PUB-PAY-ACCURACY
+  name: Payment accuracy
+  definition: "The share of benefit payments issued in the correct amount to an eligible recipient, as determined by quality-control review."
+  formula: "Payments without an improper finding ÷ payments issued × 100"
+  domain: Benefit payments
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [payment accuracy rate, paid correctly]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PAYMENT.is_improper]
+    metrics: [payment_accuracy_rate]
+
+- id: GT-PUB-IMPROPER
+  name: Improper payment rate
+  definition: "Dollars paid that should not have been paid or were paid in the wrong amount — overpayments and underpayments both count — as a share of dollars issued."
+  formula: "Σ improper_amount ÷ Σ payment_amount × 100 (BR-PUB-009)"
+  domain: Benefit payments
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [improper rate, payment error rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PAYMENT.improper_amount]
+    metrics: [improper_payment_rate]
+
+- id: GT-PUB-IMPROPER-USD
+  name: Improper payment dollars
+  definition: "Dollars over- or under-paid, as found by quality control."
+  formula: "Σ improper_amount"
+  domain: Benefit payments
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [dollars paid in error]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PAYMENT.improper_amount]
+    metrics: [improper_payment_amount]
+
+- id: GT-PUB-ERROR-TYPE
+  name: QC error type
+  definition: "The quality-control category of an improper payment: income verification, household composition, administrative error or duplicate issuance."
+  formula: "error_type on improper payments"
+  domain: Benefit payments
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [error cause]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PAYMENT.error_type]
+    metrics: []
+
+- id: GT-PUB-ONTIME-PAYMENT
+  name: On-time payment
+  definition: "A payment issued on or before the scheduled issuance date for its benefit month."
+  formula: "issued_on_time = TRUE"
+  domain: Benefit payments
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [timely issuance]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PAYMENT.issued_on_time]
+    metrics: [on_time_payment_rate]
+
+- id: GT-PUB-INTEGRITY-FLAG
+  name: Integrity flag
+  definition: "A data-match or referral finding that places a paying case under program integrity review (open review or referred). A flag is a review, not a finding of fraud."
+  formula: "Flagged for review when flag_status in ('Open review', 'Referred') (BR-PUB-010)"
+  domain: Program integrity
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [flagged for review]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PAYMENT.flag_status]
+    metrics: [cases_flagged]
+
+- id: GT-PUB-FLAG-RATE
+  name: Integrity flag rate
+  definition: "The share of paying cases that carried an integrity flag on a payment in the period."
+  formula: "flagged paying cases ÷ paying cases × 100"
+  domain: Program integrity
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: IN_REVIEW
+  cde: false
+  synonyms: [flag rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PAYMENT.integrity_flag]
+    metrics: [integrity_flag_rate]
+
+- id: GT-PUB-OVERPAYMENT
+  name: Overpayment established
+  definition: "An overpayment amount formally established on a flagged case after review, recoverable from the recipient."
+  formula: "Σ overpayment_amount where flag_status = 'Overpayment established'"
+  domain: Program integrity
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [overpayment claim]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PAYMENT.overpayment_amount]
+    metrics: [overpayments_established]
+
+- id: GT-PUB-RECOVERY
+  name: Overpayment recovery
+  definition: "Amounts recovered against established overpayments by repayment, benefit offset or tax intercept."
+  formula: "Recovery rate = Σ recovered_amount ÷ Σ overpayment_amount × 100"
+  domain: Program integrity
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [recovery rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PAYMENT.recovered_amount]
+    metrics: [overpayment_recovery_rate]
+
+
+# ── 311 service requests ────────────────────────────────────────────────────────────────────────────
+- id: GT-PUB-311-REQUEST
+  name: 311 service request
+  definition: "A non-emergency request or report from a resident logged through 311 by phone, mobile app, web or walk-in. Duplicates are merged into the parent request."
+  formula: "One row per sr_id; merged duplicates excluded (BR-PUB-005)"
+  domain: Constituent services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [311 request, service request]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SERVICE_REQUEST.sr_id]
+    metrics: [service_requests]
+
+- id: GT-PUB-REQUEST-TYPE
+  name: Request type
+  definition: "The 311 catalogue type of a request, which sets the responsible department and the SLA."
+  formula: "One of ten catalogue types"
+  domain: Constituent services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [service type]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SERVICE_REQUEST.request_type]
+    metrics: []
+
+- id: GT-PUB-RESOLUTION-TIME
+  name: 311 resolution time
+  definition: "Calendar days from the creation of a 311 request to its closure."
+  formula: "mean of closed_ts − created_ts in days, closed requests"
+  domain: Constituent services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [time to close]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SERVICE_REQUEST.resolution_days]
+    metrics: [avg_resolution_days]
+
+- id: GT-PUB-SLA
+  name: 311 SLA attainment
+  definition: "The share of closed 311 requests resolved within the SLA for their request type."
+  formula: "requests closed within sla_days ÷ closed requests × 100 (BR-PUB-006)"
+  domain: Constituent services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [on-time resolution, service level]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SERVICE_REQUEST.sla_days, CONFORMED_GOLD.FCT_SERVICE_REQUEST.within_sla]
+    metrics: [sla_attainment_pct]
+
+- id: GT-PUB-REOPEN
+  name: 311 reopen rate
+  definition: "The share of closed 311 requests reopened because the issue was not resolved."
+  formula: "reopened ÷ closed requests × 100"
+  domain: Constituent services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [reopened requests]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SERVICE_REQUEST.reopened]
+    metrics: [reopen_rate]
+
+- id: GT-PUB-CSAT
+  name: Citizen satisfaction
+  definition: "The share of post-closure 311 survey responses scoring 4 or 5 on a five-point scale. In review: the survey method and response weighting are being revised."
+  formula: "Responses with score ≥ 4 ÷ responses × 100 (BR-PUB-007)"
+  domain: Constituent services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: IN_REVIEW
+  cde: false
+  synonyms: [resident satisfaction, satisfaction score]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SERVICE_REQUEST.survey_score]
+    metrics: [citizen_satisfaction_pct]
+
+- id: GT-PUB-POTHOLE-TIME
+  name: Pothole repair time
+  definition: "Calendar days from a pothole report to closure of the 311 request after the repair."
+  formula: "mean resolution_days where request_type = 'Pothole'"
+  domain: Public works
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [pothole response time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SERVICE_REQUEST.resolution_days]
+    metrics: [pothole_repair_days]
+
+- id: GT-PUB-OPEN-311
+  name: Open 311 request
+  definition: "A 311 request not yet closed at the reporting date."
+  formula: "status = 'Open'"
+  domain: Constituent services
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [unresolved request]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SERVICE_REQUEST.status]
+    metrics: [open_requests]
+
+
+# ── Permits ─────────────────────────────────────────────────────────────────────────────────────────
+- id: GT-PUB-PERMIT-TYPE
+  name: Permit type
+  definition: "The kind of building, trade or right-of-way permit applied for."
+  formula: "One of eight permit types"
+  domain: Permits
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [permit category]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PERMIT.permit_type]
+    metrics: []
+
+- id: GT-PUB-REVIEW-TRACK
+  name: Review track
+  definition: "How a permit is reviewed: over the counter (same day), standard review or major project review."
+  formula: "review_track in (Over the counter, Standard, Major)"
+  domain: Permits
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [review type]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PERMIT.review_track]
+    metrics: []
+
+- id: GT-PUB-PERMIT-TAT
+  name: Permit turnaround
+  definition: "Calendar days from a complete permit submittal to the permit decision, excluding over-the-counter permits unless requested."
+  formula: "mean review_days, over-the-counter excluded (BR-PUB-011)"
+  domain: Permits
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [permit turnaround time, plan review time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PERMIT.review_days]
+    metrics: [avg_permit_turnaround_days]
+
+- id: GT-PUB-PERMIT-ONTIME
+  name: Permit timeliness
+  definition: "The share of permit decisions made within the review target for their track."
+  formula: "decisions within target_days ÷ decisions × 100 (BR-PUB-012)"
+  domain: Permits
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [on-time permits]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PERMIT.within_target]
+    metrics: [permits_within_target_pct]
+
+- id: GT-PUB-PERMITS-ISSUED
+  name: Permits issued
+  definition: "Permits approved and issued in the period."
+  formula: "count of permits with status Issued by decision date"
+  domain: Permits
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [issued permits]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PERMIT.status]
+    metrics: [permits_issued]
+
+- id: GT-PUB-INSPECTION-PASS
+  name: First inspection pass rate
+  definition: "The share of inspected permits whose first field inspection passed."
+  formula: "first inspections passed ÷ permits inspected × 100"
+  domain: Permits
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [first-time pass rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PERMIT.first_inspection_passed]
+    metrics: [first_inspection_pass_rate]
+
+- id: GT-PUB-PERMIT-FEE
+  name: Permit fee
+  definition: "The fee charged on an issued permit: a base fee plus a share of declared valuation."
+  formula: "85 + 1.1% of valuation"
+  domain: Permits
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [permit fees]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PERMIT.permit_fee]
+    metrics: [permit_fee_revenue]
+
+- id: GT-PUB-VALUATION
+  name: Construction valuation
+  definition: "The declared value of the construction work covered by a permit."
+  formula: "Σ valuation_usd"
+  domain: Permits
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: DRAFT
+  cde: false
+  synonyms: [declared valuation]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PERMIT.valuation_usd]
+    metrics: [total_valuation]
+
+
+# ── Public works ────────────────────────────────────────────────────────────────────────────────────
+- id: GT-PUB-PCI
+  name: Pavement condition index
+  definition: "A 0-100 score of a road segment's surface condition; below 40 is Poor, 40-69 Fair, 70 and above Good."
+  formula: "pci band from the latest pavement survey"
+  domain: Public works
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [pci, road condition]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORK_ORDER.pci]
+    metrics: []
+
+- id: GT-PUB-WORK-ORDER
+  name: Street work order
+  definition: "A street maintenance job — pothole, crack seal, streetlight, sign, storm drain or sidewalk — raised against a road segment."
+  formula: "One row per work_order_id"
+  domain: Public works
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [maintenance job]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORK_ORDER.work_order_id]
+    metrics: [work_orders_completed]
+
+- id: GT-PUB-REPAIR-TIME
+  name: Repair time
+  definition: "Days from the report of a street defect to completion of the work order."
+  formula: "mean repair_days of completed work orders"
+  domain: Public works
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [days to repair]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORK_ORDER.repair_days]
+    metrics: [avg_repair_days]
+
+- id: GT-PUB-ON-TIME-REPAIR
+  name: On-time repair rate
+  definition: "The share of completed work orders finished within the target for their work type."
+  formula: "work orders within target_days ÷ completed × 100 (BR-PUB-027)"
+  domain: Public works
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [repairs on time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORK_ORDER.on_time]
+    metrics: [on_time_repair_pct]
+
+- id: GT-PUB-WO-BACKLOG
+  name: Work order backlog
+  definition: "Street maintenance work orders reported but not completed at the reporting date."
+  formula: "count of open work orders"
+  domain: Public works
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [open work orders]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORK_ORDER.completed]
+    metrics: [open_work_orders]
+
+- id: GT-PUB-WO-COST
+  name: Work order cost
+  definition: "Labour, material and contractor cost of a street maintenance work order."
+  formula: "mean cost_usd"
+  domain: Public works
+  owner: public-sector:hs-dpo
+  steward: public-sector:steward
+  status: DRAFT
+  cde: false
+  synonyms: [job cost]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORK_ORDER.cost_usd]
+    metrics: [avg_cost_per_order]
+
+
+# ── Finance, procurement & grants ───────────────────────────────────────────────────────────────────
+- id: GT-PUB-DEPARTMENT
+  name: County department
+  definition: "An organisational unit of the county with its own budget, positions and purchasing."
+  formula: "One of twelve departments in the chart of accounts"
+  domain: Finance
+  owner: public-sector:county-administrator
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [dept]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_BUDGET.department]
+    metrics: []
+
+- id: GT-PUB-FISCAL-YEAR
+  name: Fiscal year
+  definition: "The county budget year, running 1 July to 30 June and named for the year in which it ends (FY2027 = July 2026 to June 2027)."
+  formula: "fiscal_year = FY + (year + 1 if month ≥ 7 else year)"
+  domain: Finance
+  owner: public-sector:county-administrator
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [budget year, fy]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_DATE.fiscal_year]
+    metrics: []
+
+- id: GT-PUB-ADOPTED-BUDGET
+  name: Adopted budget
+  definition: "The budget appropriated by the Board of Supervisors for a department, spread by month."
+  formula: "Σ budget_amount"
+  domain: Finance
+  owner: public-sector:county-administrator
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [appropriation]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_BUDGET.budget_amount]
+    metrics: [adopted_budget]
+
+- id: GT-PUB-ACTUAL-EXP
+  name: Actual expenditure
+  definition: "Expenditure posted to the general ledger for a department and month."
+  formula: "Σ actual_amount"
+  domain: Finance
+  owner: public-sector:county-administrator
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [actuals]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_BUDGET.actual_amount]
+    metrics: [actual_expenditure]
+
+- id: GT-PUB-BUDGET-VARIANCE
+  name: Budget variance
+  definition: "Actual expenditure minus adopted budget, as a share of adopted budget, for the current fiscal year to date unless another fiscal year is named. A positive variance is an overspend."
+  formula: "(Σ actual − Σ budget) ÷ Σ budget × 100 (BR-PUB-015, BR-PUB-016)"
+  domain: Finance
+  owner: public-sector:county-administrator
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [variance to budget, budget vs actual]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_BUDGET.actual_amount, CONFORMED_GOLD.FCT_BUDGET.budget_amount]
+    metrics: [budget_variance_pct]
+
+- id: GT-PUB-BUDGET-EXEC
+  name: Budget execution
+  definition: "Actual expenditure as a share of the adopted budget for the same months."
+  formula: "Σ actual ÷ Σ budget × 100"
+  domain: Finance
+  owner: public-sector:county-administrator
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [budget execution rate]
+  mappings:
+    columns: []
+    metrics: [budget_execution_pct]
+
+- id: GT-PUB-VACANCY
+  name: Workforce vacancy rate
+  definition: "Authorised positions that are unfilled, as a share of authorised positions."
+  formula: "(authorised − filled) ÷ authorised × 100 (BR-PUB-017)"
+  domain: Workforce
+  owner: public-sector:county-administrator
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [staff vacancy rate, unfilled positions]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_BUDGET.fte_filled]
+    metrics: [vacancy_rate]
+
+- id: GT-PUB-PROC-CYCLE
+  name: Procurement cycle time
+  definition: "Calendar days from a requisition to the purchase order raised for it, excluding emergency purchases unless requested."
+  formula: "mean cycle_days, emergency excluded (BR-PUB-018)"
+  domain: Procurement
+  owner: public-sector:county-administrator
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [requisition to po time, purchasing cycle time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PO_SPEND.cycle_days]
+    metrics: [procurement_cycle_days]
+
+- id: GT-PUB-SPEND
+  name: Purchasing spend
+  definition: "Spend on purchase orders raised with vendors."
+  formula: "Σ spend_usd by PO date"
+  domain: Procurement
+  owner: public-sector:county-administrator
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [po spend, vendor spend]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PO_SPEND.spend_usd]
+    metrics: [total_spend]
+
+- id: GT-PUB-ON-CONTRACT
+  name: Spend on contract
+  definition: "Spend placed against an active county or cooperative contract as a share of total spend."
+  formula: "Σ spend where on_contract ÷ Σ spend × 100 (BR-PUB-020)"
+  domain: Procurement
+  owner: public-sector:county-administrator
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [contract coverage]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PO_SPEND.on_contract]
+    metrics: [on_contract_spend_pct]
+
+- id: GT-PUB-PROC-METHOD
+  name: Procurement method
+  definition: "How a purchase was solicited: cooperative contract, competitive bid, informal quote, sole source or emergency."
+  formula: "procurement_method on the requisition (BR-PUB-019)"
+  domain: Procurement
+  owner: public-sector:county-administrator
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [purchasing method, solicitation type]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PO_SPEND.procurement_method]
+    metrics: [competitive_spend_pct]
+
+- id: GT-PUB-PO-LINE
+  name: Purchase order line
+  definition: "One requisition line converted to a purchase order."
+  formula: "One row per po_line_id"
+  domain: Procurement
+  owner: public-sector:county-administrator
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [po line]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PO_SPEND.po_line_id]
+    metrics: [po_lines]
+
+- id: GT-PUB-SPEND-CATEGORY
+  name: Spend category
+  definition: "The commodity or service category of a vendor and its purchases."
+  formula: "category from the vendor master"
+  domain: Procurement
+  owner: public-sector:county-administrator
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [commodity]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PO_SPEND.category]
+    metrics: []
+
+- id: GT-PUB-VENDOR
+  name: Vendor
+  definition: "A supplier of goods or services to the county. Vendor tax identifiers are GOV_ID and masked outside purchasing."
+  formula: "One row per vendor_id"
+  domain: Procurement
+  owner: public-sector:county-administrator
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [supplier]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_VENDOR.vendor_name]
+    metrics: []
+
+- id: GT-PUB-GRANT-AWARD
+  name: Grant award
+  definition: "A federal, state or foundation grant awarded to a county department for a fixed award period."
+  formula: "One row per grant_id; active while the award period has not ended"
+  domain: Grants
+  owner: public-sector:county-administrator
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [grant funding]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_GRANT.award_amount]
+    metrics: [grant_awarded, active_grants]
+
+- id: GT-PUB-GRANT-AREA
+  name: Grant program area
+  definition: "The service area a grant funds, such as human services, transportation or housing."
+  formula: "program_area on the award"
+  domain: Grants
+  owner: public-sector:county-administrator
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [focus area]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_GRANT.program_area]
+    metrics: []
+
+- id: GT-PUB-DRAWDOWN
+  name: Grant drawdown rate
+  definition: "Dollars drawn down from grant awards as a share of dollars awarded, for active grants unless closed grants are requested."
+  formula: "Σ drawn_amount ÷ Σ award_amount × 100 (BR-PUB-021)"
+  domain: Grants
+  owner: public-sector:county-administrator
+  steward: public-sector:steward
+  status: APPROVED
+  cde: true
+  synonyms: [drawdown rate, grant spend-down]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_GRANT.drawn_amount]
+    metrics: [grant_drawdown_rate]
+
+- id: GT-PUB-GRANT-AT-RISK
+  name: Grant at risk
+  definition: "An active grant whose drawdown trails the elapsed share of its award period by more than 20 percentage points."
+  formula: "at_risk = drawn share < elapsed share − 0.2 (BR-PUB-022)"
+  domain: Grants
+  owner: public-sector:county-administrator
+  steward: public-sector:steward
+  status: APPROVED
+  cde: false
+  synonyms: [lagging grant]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_GRANT.at_risk]
+    metrics: [grants_at_risk]

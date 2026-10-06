@@ -1,0 +1,26 @@
+id: DP-PUB-002
+name: Benefits Case Processing
+domain: Human Services
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 1.6.0
+owner: public-sector:hs-dpo
+steward: public-sector:steward
+description: Benefit applications, processing business days against the 30-day standard, document holds, case backlog and caseload by program, office and district.
+purpose: Operational and state reporting on eligibility timeliness, backlog and caseworker workload from one certified source.
+decision: { persona: Director of Eligibility Operations, decision: "Which offices get overtime, reassigned work or temporary eligibility workers this month", cadence: Weekly, workaround: "Case management exports rebuilt in a spreadsheet every Monday", consequence: "Applications breach the federal 30-day standard before anyone sees the backlog building" }
+sample_questions: ["What was average benefit processing time by district last quarter?", "Which five offices have the largest case backlog?", "Is the timely processing rate within target this year?"]
+semantic_view: CASE_PROCESSING
+output_ports:
+  - { kind: semantic, ref: CASE_PROCESSING }
+  - { kind: semantic, ref: CASELOAD }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_PUB_002_CASE_PROCESSING }
+  - { kind: agent, ref: AG-PUB-002 }
+sla: { freshness_minutes: 15, availability_pct: 99.5, max_null_rate_pct: 1.0 }
+kpis: [KPI-PUB-PROC-DAYS, KPI-PUB-TIMELY, KPI-PUB-OVER-STD, KPI-PUB-APPROVAL, KPI-PUB-DECIDED, KPI-PUB-ONLINE-APPS, KPI-PUB-BACKLOG, KPI-PUB-BACKLOG-AGE, KPI-PUB-CASELOAD]
+upstream: [CONFORMED_GOLD.FCT_APPLICATION, CONFORMED_GOLD.FCT_CASE, CONFORMED_GOLD.DIM_OFFICE]
+consumers: [Program operations, State reporting, Program Analyst agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-PUB-002

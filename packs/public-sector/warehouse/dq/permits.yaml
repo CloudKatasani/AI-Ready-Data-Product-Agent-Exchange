@@ -1,0 +1,34 @@
+# Permits & inspections DQ rules (FCT_PERMIT).
+- id: DQ-PUB-032
+  object: CONFORMED_GOLD.FCT_PERMIT
+  column: review_days
+  dimension: validity
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Review days are never negative; over-the-counter permits record zero.
+- id: DQ-PUB-033
+  object: CONFORMED_GOLD.FCT_PERMIT
+  column: permit_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per permit application.
+- id: DQ-PUB-034
+  object: CONFORMED_GOLD.FCT_PERMIT
+  column: decision_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: Permit decisions from the latest business day have arrived from the permitting system.
+- id: DQ-PUB-035
+  object: CONFORMED_GOLD.FCT_PERMIT
+  column: review_track
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Over the counter, Standard, Major]
+  severity: medium
+  alert_route: steward
+  description: Review tracks conform to the permit review standard.

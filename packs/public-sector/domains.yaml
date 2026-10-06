@@ -1,0 +1,70 @@
+# Domains, conformed backbone entities and links (ported from the ADPM public-sector pack — person → case →
+# service → outcome — and adapted to the Westland County warehouse). Owners are persona refs; golden sources
+# are Gold objects in WCS_AI_PLATFORM.
+domains:
+  - id: constituent-services
+    name: Constituent Services
+    description: Residents known to the county, how they contact it (311 phone, app, web, walk-in) and how quickly and well their requests are resolved.
+    owner: public-sector:steward
+    entities: [Constituent, Service request]
+  - id: human-services
+    name: Human Services
+    description: Benefit applications, eligibility decisions, program cases, caseworker assignment, backlog and processing timeliness.
+    owner: public-sector:hs-dpo
+    entities: [Application, Case, Service office]
+  - id: benefit-payments
+    name: Benefit Payments & Integrity
+    description: Benefit issuance, quality-control accuracy, improper payments, integrity flags, overpayments and recovery.
+    owner: public-sector:hs-dpo
+    entities: [Payment, Integrity flag]
+  - id: permits-licensing
+    name: Permits & Licensing
+    description: Building and trade permit applications, plan review turnaround, inspections and permit fees.
+    owner: public-sector:hs-dpo
+    entities: [Permit, Inspection]
+  - id: public-works
+    name: Public Works
+    description: Road segments and pavement condition, street maintenance work orders, crews and repair timeliness.
+    owner: public-sector:hs-dpo
+    entities: [Road segment, Work order]
+  - id: finance-procurement
+    name: Finance & Procurement
+    description: Adopted budget and actual expenditure by department and fiscal period, purchasing, vendors and grant awards.
+    owner: public-sector:county-administrator
+    entities: [Budget line, Vendor, Purchase order line, Grant award]
+  - id: workforce
+    name: Workforce
+    description: Authorised and filled positions, vacancies and agency cover by department and district.
+    owner: public-sector:county-administrator
+    entities: [Position]
+
+backbone:
+  entities:
+    - { name: Constituent, description: "A resident or household member with a record in the county case management system", key: constituent_id, domain: constituent-services, golden_source: CONFORMED_GOLD.DIM_CONSTITUENT }
+    - { name: Service request, description: "One 311 request or report from a resident, routed to a responsible department", key: sr_id, domain: constituent-services, golden_source: CONFORMED_GOLD.FCT_SERVICE_REQUEST }
+    - { name: Service office, description: "A human services office in one of the four service districts, with its caseworkers", key: office_id, domain: human-services, golden_source: CONFORMED_GOLD.DIM_OFFICE }
+    - { name: Application, description: "A request for a benefit program, from receipt through the eligibility decision", key: application_id, domain: human-services, golden_source: CONFORMED_GOLD.FCT_APPLICATION }
+    - { name: Case, description: "A constituent's enrolment in one benefit program, managed by an assigned caseworker", key: case_id, domain: human-services, golden_source: CONFORMED_GOLD.FCT_CASE }
+    - { name: Payment, description: "A benefit amount issued on a case for a benefit month", key: payment_id, domain: benefit-payments, golden_source: CONFORMED_GOLD.FCT_PAYMENT }
+    - { name: Integrity flag, description: "A data-match finding that places a paying case under program integrity review", key: payment_id, domain: benefit-payments, golden_source: CONFORMED_GOLD.FCT_PAYMENT }
+    - { name: Permit, description: "A building, trade or right-of-way permit application and its review outcome", key: permit_id, domain: permits-licensing, golden_source: CONFORMED_GOLD.FCT_PERMIT }
+    - { name: Inspection, description: "A field inspection performed against a permit", key: inspection_id, domain: permits-licensing, golden_source: CURATED_SILVER.PERMIT_INSPECTION }
+    - { name: Road segment, description: "A section of county-maintained road with a pavement condition index", key: segment_id, domain: public-works, golden_source: CURATED_SILVER.ROAD_SEGMENT }
+    - { name: Work order, description: "A street maintenance job (pothole, streetlight, sign, drain, sidewalk) against a road segment", key: work_order_id, domain: public-works, golden_source: CONFORMED_GOLD.FCT_WORK_ORDER }
+    - { name: Budget line, description: "Adopted budget, actual expenditure and positions for one department in one fiscal month", key: "department, period_month", domain: finance-procurement, golden_source: CONFORMED_GOLD.FCT_BUDGET }
+    - { name: Vendor, description: "A supplier of goods or services to the county", key: vendor_id, domain: finance-procurement, golden_source: CONFORMED_GOLD.DIM_VENDOR }
+    - { name: Purchase order line, description: "One requisition line and the purchase order raised for it", key: po_line_id, domain: finance-procurement, golden_source: CONFORMED_GOLD.FCT_PO_SPEND }
+    - { name: Grant award, description: "A federal, state or foundation grant awarded to a county department", key: grant_id, domain: finance-procurement, golden_source: CONFORMED_GOLD.FCT_GRANT }
+    - { name: Position, description: "An authorised county position, filled or vacant", key: position_id, domain: workforce, golden_source: CONFORMED_GOLD.FCT_POSITION }
+  links:
+    - { from: Constituent, to: Application, cardinality: 1:N, via: constituent_id }
+    - { from: Constituent, to: Case, cardinality: 1:N, via: constituent_id }
+    - { from: Service office, to: Case, cardinality: 1:N, via: office_id }
+    - { from: Service office, to: Application, cardinality: 1:N, via: office_id }
+    - { from: Case, to: Payment, cardinality: 1:N, via: case_id }
+    - { from: Payment, to: Integrity flag, cardinality: 1:1, via: payment_id }
+    - { from: Permit, to: Inspection, cardinality: 1:N, via: permit_id }
+    - { from: Road segment, to: Work order, cardinality: 1:N, via: segment_id }
+    - { from: Vendor, to: Purchase order line, cardinality: 1:N, via: vendor_id }
+    - { from: Budget line, to: Position, cardinality: N:M, via: department }
+    - { from: Grant award, to: Budget line, cardinality: N:M, via: department }

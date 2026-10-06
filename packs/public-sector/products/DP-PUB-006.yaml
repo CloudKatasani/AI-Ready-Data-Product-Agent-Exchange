@@ -1,0 +1,29 @@
+id: DP-PUB-006
+name: Program Integrity
+domain: Benefit Payments & Integrity
+archetype: CONSUMER_ALIGNED
+initial_status: IN_CERTIFICATION
+seed_stage: 11
+version: 1.0.0-rc.1
+owner: public-sector:hs-dpo
+steward: public-sector:steward
+description: Integrity flags, reviews, overpayments established and recoveries on paying cases, with the case head's identifier for data matching.
+purpose: Give integrity staff, caseworker analysts and agents a certified view of cases under review and overpayment recovery.
+decision: { persona: Program Integrity Manager, decision: "Which data-match types and districts to prioritise for review this month", cadence: Monthly, workaround: "Data-match hit lists worked from a shared drive and tallied by hand", consequence: "Overpayments age past the point of recovery while low-value matches absorb reviewer time" }
+sample_questions: ["How many cases are flagged for program integrity review this year?", "Overpayment recovery rate by district this year", "Integrity flag rate by program"]
+semantic_view: PROGRAM_INTEGRITY
+output_ports:
+  - { kind: semantic, ref: PROGRAM_INTEGRITY }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_PUB_006_PROGRAM_INTEGRITY }
+  - { kind: agent, ref: AG-PUB-003 }
+sla: { freshness_minutes: 1440, availability_pct: 99.5, max_null_rate_pct: 0.5 }
+kpis: [KPI-PUB-FLAGGED, KPI-PUB-FLAG-RATE, KPI-PUB-RECOVERY]
+upstream: [CONFORMED_GOLD.FCT_PAYMENT]
+consumers: [Program integrity unit, Caseworker analysts, Payment Integrity Copilot agent]
+lifecycle_seed: { artifacts: auto }
+certification_script:
+  initial: { gate4: warn, gate6: fail }
+  fixes:
+    - { id: FIX-1, check: semantic.verified_queries, label: "Add 3 verified queries for cases flagged for review", effect: { overlay: VERIFIED_QUERY, keys: [VQ-PUB-083, VQ-PUB-084, VQ-PUB-085] } }
+    - { id: FIX-2, check: governance.masking, label: "Attach GOV_ID masking to the case head identifier", effect: { policy_attach: { policy: MASK_GOV_ID, columns: [CONFORMED_GOLD.FCT_PAYMENT.case_gov_id] } } }
+value_case: VC-PUB-006

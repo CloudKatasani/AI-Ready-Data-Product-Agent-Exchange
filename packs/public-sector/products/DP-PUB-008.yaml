@@ -1,0 +1,23 @@
+id: DP-PUB-008
+name: Workforce Capacity
+domain: Workforce
+archetype: AGGREGATE
+initial_status: DRAFT
+seed_stage: 2
+version: 0.1.0
+owner: public-sector:county-administrator
+steward: null
+description: Authorised and filled positions, vacancy age and agency cover by department, district and job family.
+purpose: Decide which services to recruit into permanently rather than continue covering with agency staff.
+decision: { persona: Director of Human Resources, decision: "Which vacant posts to convert from agency cover to permanent recruitment", cadence: Monthly, workaround: "Position control lists and agency invoices reconciled by hand each month", consequence: "Agency cover becomes permanent by default at twice the cost" }
+sample_questions: ["Which departments carry the highest vacancy rate?", "How long have eligibility worker posts been vacant?"]
+semantic_view: null
+output_ports:
+  - { kind: sql, ref: DATA_PRODUCTS.DP_PUB_008_WORKFORCE_CAPACITY }
+sla: { freshness_minutes: 10080, availability_pct: 98.0, max_null_rate_pct: 2.0 }
+kpis: []
+upstream: [CONFORMED_GOLD.FCT_POSITION]
+consumers: [Human resources]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: null

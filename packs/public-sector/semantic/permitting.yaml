@@ -1,0 +1,77 @@
+name: PERMITTING
+description: Building, trade and right-of-way permits — review turnaround against target, permits issued, inspections and fees
+tables:
+  - { alias: p, fqn: CONFORMED_GOLD.FCT_PERMIT, pk: permit_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: p.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: p.region, label: District, synonyms: [district, service district, area], term: GT-PUB-DISTRICT }
+  - { name: permit_type, expr: p.permit_type, label: Permit type, synonyms: [type of permit, permit category, kind of permit], term: GT-PUB-PERMIT-TYPE }
+  - { name: review_track, expr: p.review_track, label: Review track, synonyms: [review type, track], term: GT-PUB-REVIEW-TRACK }
+  - { name: permit_status, expr: p.status, label: Permit status, synonyms: [permit outcome] }
+  - { name: applicant_name, expr: p.applicant_name, label: Applicant, synonyms: [applicant name, permit applicant, permit applicants] }
+time_dimensions:
+  - { name: decision_date, expr: d.date, default: true }
+facts:
+  - { name: review_days, expr: p.review_days, description: Calendar days from complete submittal to decision }
+  - { name: valuation_usd, expr: p.valuation_usd, description: Declared construction valuation }
+metrics:
+  - name: avg_permit_turnaround_days
+    label: Permit turnaround
+    expr: AVG(p.review_days)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [permit turnaround time, plan review time, permit review time, days to issue a permit, permit processing time]
+    term: GT-PUB-PERMIT-TAT
+    description: Mean calendar days from a complete submittal to the permit decision, excluding over-the-counter permits
+    default_filters: [ { rule: BR-PUB-011 } ]
+    naive_expr: AVG(coalesce(p.review_days, 0))
+  - name: permits_within_target_pct
+    label: Permits decided within target
+    expr: 100.0 * AVG(CASE WHEN p.review_days IS NOT NULL THEN CASE WHEN p.within_target THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [permit timeliness, on-time permits, permits within review target]
+    term: GT-PUB-PERMIT-ONTIME
+    description: Share of permit decisions made within the review target for their track (20 days standard, 45 days major)
+    default_filters: [ { rule: BR-PUB-011 } ]
+  - name: permits_issued
+    label: Permits issued
+    expr: COUNT_IF(p.issued)
+    unit: permits
+    decimals: 0
+    direction: neutral
+    synonyms: [issued permits, number of permits issued, permits approved]
+    term: GT-PUB-PERMITS-ISSUED
+    description: Permits issued in the period
+  - name: first_inspection_pass_rate
+    label: First inspection pass rate
+    expr: 100.0 * AVG(CASE WHEN p.first_inspection_passed IS NOT NULL THEN CASE WHEN p.first_inspection_passed THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [inspection pass rate, first-time pass rate, passed first inspection]
+    term: GT-PUB-INSPECTION-PASS
+    description: Share of inspected permits whose first field inspection passed
+  - name: permit_fee_revenue
+    label: Permit fee revenue
+    expr: SUM(CASE WHEN p.issued THEN p.permit_fee ELSE 0 END)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [permit fees, fees collected, permit revenue]
+    term: GT-PUB-PERMIT-FEE
+    description: Fees on permits issued in the period
+  - name: total_valuation
+    label: Construction valuation
+    expr: SUM(p.valuation_usd)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [project valuation, construction value, declared valuation]
+    term: GT-PUB-VALUATION
+    description: Declared construction valuation of permits decided in the period
+products: [DP-PUB-004]

@@ -1,0 +1,32 @@
+id: AG-PUB-002
+name: Program Analyst
+domain: Human Services
+status: PRODUCTION
+owner: public-sector:hs-dpo
+on_call: Human Services Data Ops
+avatar: { icon: clipboard-list, hue: 150 }
+capability: "Answers questions on benefit processing time against the 30-day standard, timeliness, approvals, case backlog, backlog age and caseload."
+personas_served: [Program Operations Manager, Director of Eligibility Operations, Caseworker Analyst]
+out_of_scope: ["deciding individual applications", "caseworker performance rankings", "fair hearing outcomes", "changing eligibility rules"]
+products:
+  - { id: DP-PUB-002, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [CASE_PROCESSING, CASELOAD], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-PUB-ELIGIBILITY-MANUAL, DOC-PUB-DATA-GOVERNANCE] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-PUB-PROC-DAYS, grains: [month, quarter], slices: [region, office, program, channel], depth: rank_drivers }
+  - { kpi: KPI-PUB-TIMELY, grains: [month, quarter], slices: [region, office, program], depth: explain }
+  - { kpi: KPI-PUB-OVER-STD, grains: [month, quarter], slices: [region, office, program], depth: rank_drivers }
+  - { kpi: KPI-PUB-APPROVAL, grains: [month, quarter], slices: [region, program, channel], depth: explain }
+  - { kpi: KPI-PUB-DECIDED, grains: [week, month, quarter], slices: [region, office, program, channel], depth: trend }
+  - { kpi: KPI-PUB-ONLINE-APPS, grains: [month, quarter], slices: [region, program], depth: trend }
+  - { kpi: KPI-PUB-BACKLOG, grains: [], slices: [region, office, program, pending_action], depth: rank_drivers }
+  - { kpi: KPI-PUB-BACKLOG-AGE, grains: [], slices: [region, office, program, pending_action], depth: rank_drivers }
+  - { kpi: KPI-PUB-CASELOAD, grains: [], slices: [region, office], depth: explain }
+instructions: [INS-PUB-002-P, INS-PUB-002-R, INS-PUB-002-G, INS-PUB-002-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.05, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-PUB-001, SC-PUB-002, SC-PUB-003, SC-PUB-004, SC-PUB-005, SC-PUB-006, SC-PUB-007]

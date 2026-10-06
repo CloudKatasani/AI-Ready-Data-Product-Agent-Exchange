@@ -1,0 +1,58 @@
+# 311 service request DQ rules (FCT_SERVICE_REQUEST).
+- id: DQ-PUB-025
+  object: CONFORMED_GOLD.FCT_SERVICE_REQUEST
+  column: resolution_days
+  dimension: validity
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Resolution time is never negative (closure cannot precede creation).
+- id: DQ-PUB-026
+  object: CONFORMED_GOLD.FCT_SERVICE_REQUEST
+  column: resolution_days
+  dimension: accuracy
+  assertion: "max <= 400"
+  severity: medium
+  alert_route: engineering
+  description: No request stays open for more than 400 days before closure; longer values indicate a missed closure event.
+- id: DQ-PUB-027
+  object: CONFORMED_GOLD.FCT_SERVICE_REQUEST
+  column: sla_days
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every request type maps to an SLA in the 311 service level standard.
+- id: DQ-PUB-028
+  object: CONFORMED_GOLD.FCT_SERVICE_REQUEST
+  column: sla_days
+  dimension: accuracy
+  assertion: "min >= 1"
+  severity: medium
+  alert_route: steward
+  description: SLAs are at least one day.
+- id: DQ-PUB-029
+  object: CONFORMED_GOLD.FCT_SERVICE_REQUEST
+  column: sr_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per 311 request after CDC deduplication.
+- id: DQ-PUB-030
+  object: CONFORMED_GOLD.FCT_SERVICE_REQUEST
+  column: created_ts
+  dimension: timeliness
+  assertion: "freshness_min <= 240"
+  severity: high
+  alert_route: engineering
+  description: The latest 311 request is no more than four hours old at the end of the reporting day (the 311 CRM feed is on time).
+- id: DQ-PUB-031
+  object: CONFORMED_GOLD.FCT_SERVICE_REQUEST
+  column: request_type
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Pothole, Missed trash pickup, Streetlight out, Graffiti removal, Noise complaint, Benefits inquiry, Abandoned vehicle, Water leak, Tree or debris, Housing inspection]
+  severity: medium
+  alert_route: steward
+  description: Request types conform to the 311 catalogue.

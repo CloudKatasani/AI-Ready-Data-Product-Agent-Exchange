@@ -1,0 +1,61 @@
+name: PROGRAM_INTEGRITY
+description: Program integrity — paying cases under review, integrity flag rate, overpayments established and recovered
+tables:
+  - { alias: p, fqn: CONFORMED_GOLD.FCT_PAYMENT, pk: payment_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: p.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: p.region, label: District, synonyms: [district, service district, area], term: GT-PUB-DISTRICT }
+  - { name: program, expr: p.program_name, label: Program, synonyms: [benefit program, program type], term: GT-PUB-PROGRAM }
+  - { name: flag_reason, expr: p.flag_reason, label: Flag reason, synonyms: [data match type, reason flagged, match reason] }
+  - { name: flag_status, expr: p.flag_status, label: Flag status, synonyms: [review status, integrity status] }
+  - { name: payment_status, expr: p.payment_status, label: Payment status, synonyms: [voided payments, issued or voided] }
+  - { name: case_head_gov_id, expr: p.case_gov_id, label: Case head government ID, synonyms: [government id, gov id, case identifier], term: GT-PUB-GOV-ID }
+time_dimensions:
+  - { name: issue_date, expr: d.date, default: true }
+facts:
+  - { name: overpayment_amount, expr: p.overpayment_amount, description: Overpayment established on the payment }
+  - { name: recovered_amount, expr: p.recovered_amount, description: Overpayment recovered to date }
+metrics:
+  - name: cases_flagged
+    label: Cases flagged for review
+    expr: COUNT(DISTINCT CASE WHEN p.flagged_for_review THEN p.case_key END)
+    unit: cases
+    decimals: 0
+    direction: neutral
+    synonyms: [flagged cases, cases under review, integrity reviews, cases in review]
+    term: GT-PUB-INTEGRITY-FLAG
+    description: Paying cases with an integrity flag in open review or referred for investigation
+    default_filters: [ { rule: BR-PUB-008 } ]
+  - name: integrity_flag_rate
+    label: Integrity flag rate
+    expr: 100.0 * COUNT(DISTINCT CASE WHEN p.integrity_flag THEN p.case_key END) / COUNT(DISTINCT p.case_key)
+    unit: '%'
+    decimals: 2
+    direction: neutral
+    synonyms: [flag rate, share of cases flagged]
+    term: GT-PUB-FLAG-RATE
+    description: Share of paying cases that carried an integrity flag on a payment in the period
+    default_filters: [ { rule: BR-PUB-008 } ]
+  - name: overpayments_established
+    label: Overpayments established
+    expr: SUM(p.overpayment_amount)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [established overpayments, overpayment claims, overpaid amount]
+    term: GT-PUB-OVERPAYMENT
+    description: Overpayment dollars established on flagged payments issued in the period
+    default_filters: [ { rule: BR-PUB-008 } ]
+  - name: overpayment_recovery_rate
+    label: Overpayment recovery rate
+    expr: 100.0 * SUM(p.recovered_amount) / NULLIF(SUM(p.overpayment_amount), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [recovery rate, share recovered, overpayments recovered]
+    term: GT-PUB-RECOVERY
+    description: Dollars recovered as a share of overpayments established on payments issued in the period
+    default_filters: [ { rule: BR-PUB-008 } ]
+products: [DP-PUB-006]

@@ -1,0 +1,24 @@
+id: DP-PUB-007
+name: Street Maintenance
+domain: Public Works
+archetype: CONSUMER_ALIGNED
+initial_status: IN_DEVELOPMENT
+seed_stage: 6
+version: 0.5.0
+owner: public-sector:hs-dpo
+steward: public-sector:steward
+description: Street maintenance work orders joined to road segment condition, with repair time against target, backlog and cost.
+purpose: Prioritise patching and resurfacing crews where poor pavement meets slow repairs.
+decision: { persona: Public Works Operations Manager, decision: "Which districts and work types get contractor patching crews next month", cadence: Monthly, workaround: "Maintenance system reports reconciled with the pavement survey spreadsheet", consequence: "Crews follow complaint volume while Riverside's poor roads keep generating repeat potholes" }
+sample_questions: ["On-time repair rate by work type this year", "Open work orders by district", "Average repair time on poor-condition roads"]
+semantic_view: PUBLIC_WORKS
+output_ports:
+  - { kind: semantic, ref: PUBLIC_WORKS }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_PUB_007_STREET_MAINTENANCE }
+sla: { freshness_minutes: 1440, availability_pct: 98.0, max_null_rate_pct: 2.0 }
+kpis: [KPI-PUB-WO-ONTIME, KPI-PUB-WO-BACKLOG]
+upstream: [CONFORMED_GOLD.FCT_WORK_ORDER]
+consumers: [Public works operations]
+lifecycle_seed: { artifacts: auto, open_proposals: true }
+certification_script: null
+value_case: VC-PUB-007

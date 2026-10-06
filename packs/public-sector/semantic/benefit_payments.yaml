@@ -1,0 +1,81 @@
+name: BENEFIT_PAYMENTS
+description: Benefit payments issued — dollars, quality-control accuracy, improper payments and issuance timeliness
+tables:
+  - { alias: p, fqn: CONFORMED_GOLD.FCT_PAYMENT, pk: payment_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: p.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: p.region, label: District, synonyms: [district, service district, area], term: GT-PUB-DISTRICT }
+  - { name: program, expr: p.program_name, label: Program, synonyms: [benefit program, program type], term: GT-PUB-PROGRAM }
+  - { name: error_type, expr: p.error_type, label: QC error type, synonyms: [error type, error cause, cause of error], term: GT-PUB-ERROR-TYPE }
+  - { name: payment_status, expr: p.payment_status, label: Payment status, synonyms: [voided payments, issued or voided] }
+  - { name: issued_on_time, expr: p.issued_on_time, label: Issued on time, synonyms: [on schedule] }
+time_dimensions:
+  - { name: issue_date, expr: d.date, default: true }
+facts:
+  - { name: payment_amount, expr: p.payment_amount, description: Amount issued }
+  - { name: improper_amount, expr: p.improper_amount, description: Over- or underpaid amount found by quality control }
+metrics:
+  - name: benefits_paid
+    label: Benefits paid
+    expr: SUM(p.payment_amount)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [benefit dollars issued, benefits issued, total benefits, amount paid out]
+    term: GT-PUB-BENEFIT-PAYMENT
+    description: Benefit dollars issued in the period, excluding voided payments
+    default_filters: [ { rule: BR-PUB-008 } ]
+  - name: payments_issued
+    label: Payments issued
+    expr: COUNT(*)
+    unit: payments
+    decimals: 0
+    direction: neutral
+    synonyms: [number of payments, payment count]
+    term: GT-PUB-PAYMENTS-ISSUED
+    description: Benefit payments issued in the period, excluding voided payments
+    default_filters: [ { rule: BR-PUB-008 } ]
+  - name: payment_accuracy_rate
+    label: Payment accuracy
+    expr: 100.0 * AVG(CASE WHEN p.is_improper THEN 0 ELSE 1 END)
+    unit: '%'
+    decimals: 2
+    direction: higher_is_better
+    synonyms: [payment accuracy rate, accuracy rate, paid correctly, benefit payment accuracy]
+    term: GT-PUB-PAY-ACCURACY
+    description: Share of payments issued without an improper quality-control finding
+    default_filters: [ { rule: BR-PUB-008 } ]
+  - name: improper_payment_rate
+    label: Improper payment rate
+    expr: 100.0 * SUM(p.improper_amount) / SUM(p.payment_amount)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [improper rate, payment error rate, ipr]
+    term: GT-PUB-IMPROPER
+    description: Improper (over- and under-paid) dollars as a share of dollars issued
+    default_filters: [ { rule: BR-PUB-008 } ]
+    naive_expr: 100.0 * AVG(CASE WHEN p.is_improper THEN 1 ELSE 0 END)
+  - name: improper_payment_amount
+    label: Improper payment dollars
+    expr: SUM(p.improper_amount)
+    unit: USD
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [improper dollars, dollars paid in error, improper payment amount]
+    term: GT-PUB-IMPROPER-USD
+    description: Dollars over- or under-paid, as found by quality control
+    default_filters: [ { rule: BR-PUB-008 } ]
+  - name: on_time_payment_rate
+    label: On-time payment rate
+    expr: 100.0 * AVG(CASE WHEN p.issued_on_time THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 2
+    direction: higher_is_better
+    synonyms: [timely issuance, on-time issuance, paid on time]
+    term: GT-PUB-ONTIME-PAYMENT
+    description: Share of payments issued on or before the scheduled issuance date
+    default_filters: [ { rule: BR-PUB-008 } ]
+products: [DP-PUB-003]

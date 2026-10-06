@@ -1,0 +1,58 @@
+name: CASELOAD
+description: Open program cases, the backlog awaiting a caseworker decision, backlog age and caseload per caseworker (snapshot at the reporting date)
+tables:
+  - { alias: c, fqn: CONFORMED_GOLD.FCT_CASE, pk: case_key }
+  - { alias: o, fqn: CONFORMED_GOLD.DIM_OFFICE, pk: office_key }
+relationships:
+  - { from: c.office_key, to: o.office_key }
+dimensions:
+  - { name: region, expr: o.region, label: District, synonyms: [district, service district, area], term: GT-PUB-DISTRICT }
+  - { name: office, expr: o.office_name, label: Office, synonyms: [service center, local office, field office], term: GT-PUB-OFFICE }
+  - { name: program, expr: c.program_name, label: Program, synonyms: [benefit program, program type], term: GT-PUB-PROGRAM }
+  - { name: pending_action, expr: c.pending_action, label: Pending action, synonyms: [awaiting action, backlog type, action pending] }
+  - { name: case_status, expr: c.case_status, label: Case status, synonyms: [open or closed] }
+  - { name: backlog_age_band, expr: c.backlog_age_band, label: Backlog age band, synonyms: [age band, how long waiting] }
+facts:
+  - { name: pending_days, expr: c.pending_days, description: Days a backlog item has waited }
+metrics:
+  - name: open_cases
+    label: Open cases
+    expr: COUNT_IF(c.case_status = 'Open')
+    unit: cases
+    decimals: 0
+    direction: neutral
+    synonyms: [active cases, cases open, number of open cases]
+    term: GT-PUB-CASE
+    description: Program cases open at the reporting date
+  - name: case_backlog
+    label: Case backlog
+    expr: COUNT_IF(c.in_backlog)
+    unit: cases
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [backlog, cases awaiting decision, pending cases, cases waiting]
+    term: GT-PUB-BACKLOG
+    description: Open cases with an application, renewal or change report awaiting a caseworker decision
+  - name: backlog_age_days
+    label: Backlog age
+    expr: AVG(CASE WHEN c.in_backlog THEN c.pending_days END)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [average backlog age, days pending, age of backlog, how long cases wait]
+    term: GT-PUB-BACKLOG-AGE
+    description: Mean days backlog items have waited for a caseworker decision
+  - name: avg_caseload
+    label: Average caseload
+    expr: COUNT_IF(c.case_status = 'Open') / MAX(o.county_caseworkers)
+    scope_exprs:
+      - { dimension: office, expr: COUNT_IF(c.case_status = 'Open') / MAX(o.caseworkers) }
+      - { dimension: region, expr: COUNT_IF(c.case_status = 'Open') / MAX(o.region_caseworkers) }
+    unit: cases
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [caseload, cases per caseworker, workload per caseworker]
+    term: GT-PUB-CASELOAD
+    description: Open cases per filled caseworker position
+    naive_expr: COUNT(*) / COUNT(DISTINCT c.office_key)
+products: [DP-PUB-002]

@@ -1,0 +1,132 @@
+# Human services DQ rules (FCT_APPLICATION, FCT_CASE, DIM_OFFICE, DIM_CONSTITUENT and their Silver sources).
+- id: DQ-PUB-001
+  object: CONFORMED_GOLD.FCT_APPLICATION
+  column: processing_days
+  dimension: validity
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Processing business days are never negative (the decision cannot precede the complete date).
+- id: DQ-PUB-002
+  object: CONFORMED_GOLD.FCT_APPLICATION
+  column: processing_days
+  dimension: accuracy
+  assertion: "max <= 400"
+  severity: medium
+  alert_route: engineering
+  description: No decided application took more than 400 business days; longer values indicate a missing decision event.
+- id: DQ-PUB-003
+  object: CONFORMED_GOLD.FCT_APPLICATION
+  column: docs_hold
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every application carries a document-hold flag so the timeliness rule (BR-PUB-002) can be applied.
+- id: DQ-PUB-004
+  object: CONFORMED_GOLD.FCT_APPLICATION
+  column: complete_date
+  dimension: completeness
+  assertion: "null_rate <= 0.01"
+  severity: high
+  alert_route: steward
+  description: The complete date (processing clock start) is present for all but the most recently received applications.
+- id: DQ-PUB-005
+  object: CONFORMED_GOLD.FCT_APPLICATION
+  column: decision
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Approved, Denied, Withdrawn, Pending]
+  severity: medium
+  alert_route: steward
+  description: Decisions conform to the eligibility manual's outcome list.
+- id: DQ-PUB-006
+  object: CONFORMED_GOLD.FCT_APPLICATION
+  column: application_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per application after CDC deduplication.
+- id: DQ-PUB-007
+  object: CONFORMED_GOLD.FCT_APPLICATION
+  column: decision_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: Eligibility decisions from the latest business day have arrived (the eligibility CDC feed is current).
+- id: DQ-PUB-008
+  object: CONFORMED_GOLD.FCT_CASE
+  column: pending_action
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [None, New application, Renewal, Change report]
+  severity: high
+  alert_route: steward
+  description: Pending actions conform to the case management operating procedures (backlog depends on them).
+- id: DQ-PUB-009
+  object: CONFORMED_GOLD.FCT_CASE
+  column: case_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per program case.
+- id: DQ-PUB-010
+  object: CONFORMED_GOLD.FCT_CASE
+  column: opened_date
+  dimension: timeliness
+  assertion: "freshness_min <= 4320"
+  severity: medium
+  alert_route: engineering
+  description: Newly opened cases from the last three days have arrived.
+- id: DQ-PUB-011
+  object: CONFORMED_GOLD.DIM_OFFICE
+  column: region
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [North, Central, South, Riverside]
+  severity: critical
+  alert_route: steward
+  description: Office district is one of the four service districts (row access policy RAP_DISTRICT depends on it).
+- id: DQ-PUB-012
+  object: CONFORMED_GOLD.DIM_OFFICE
+  column: caseworkers
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: Every office has at least one filled caseworker position (caseload denominator).
+- id: DQ-PUB-013
+  object: CONFORMED_GOLD.DIM_OFFICE
+  column: caseworkers
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Filled caseworker positions are recorded for every office.
+- id: DQ-PUB-014
+  object: CONFORMED_GOLD.DIM_CONSTITUENT
+  column: constituent_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: critical
+  alert_route: engineering
+  description: One current row per constituent.
+- id: DQ-PUB-015
+  object: CONFORMED_GOLD.DIM_CONSTITUENT
+  column: constituent_id
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^WC-[0-9]{7}$"
+  severity: medium
+  alert_route: engineering
+  description: Constituent ids follow the case management numbering convention after trimming.
+- id: DQ-PUB-016
+  object: CURATED_SILVER.BENEFIT_APPLICATION
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: medium
+  alert_route: engineering
+  description: The curated application table has been refreshed within the last day.

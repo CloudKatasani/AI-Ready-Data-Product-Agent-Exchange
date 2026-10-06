@@ -1,0 +1,40 @@
+id: AG-PUB-001
+name: Constituent Services Assistant
+domain: Constituent Services
+status: PRODUCTION
+owner: public-sector:hs-dpo
+on_call: 311 Analytics
+avatar: { icon: message-square, hue: 190 }
+capability: "Answers questions on 311 volume, resolution time, SLA attainment, reopens, resident satisfaction, pothole repair time and permit turnaround."
+personas_served: [311 Operations Manager, Building Official, Caseworker Analyst]
+out_of_scope: ["dispatching street repair crews", "approving or denying permits", "individual resident request history", "code enforcement citations"]
+products:
+  - { id: DP-PUB-001, columns: "*" }
+  - { id: DP-PUB-004, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [SERVICE_REQUESTS, PERMITTING], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-PUB-311-STANDARD, DOC-PUB-PERMIT-STANDARDS, DOC-PUB-STREET-MAINTENANCE, DOC-PUB-DATA-GOVERNANCE] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+  - { tool: request_access_link }
+kpi_coverage:
+  - { kpi: KPI-PUB-311-VOLUME, grains: [day, week, month, quarter], slices: [region, request_type, department, channel], depth: trend }
+  - { kpi: KPI-PUB-311-RES, grains: [month, quarter], slices: [region, request_type, department, channel], depth: rank_drivers }
+  - { kpi: KPI-PUB-311-SLA, grains: [month, quarter], slices: [region, request_type, department], depth: explain }
+  - { kpi: KPI-PUB-311-REOPEN, grains: [month, quarter], slices: [region, request_type, department], depth: explain }
+  - { kpi: KPI-PUB-CSAT, grains: [month, quarter], slices: [region, request_type, channel], depth: explain }
+  - { kpi: KPI-PUB-POTHOLE, grains: [month, quarter], slices: [region, channel], depth: rank_drivers }
+  - { kpi: KPI-PUB-PERMIT-TAT, grains: [month, quarter], slices: [region, permit_type, review_track], depth: rank_drivers }
+  - { kpi: KPI-PUB-PERMIT-ONTIME, grains: [month, quarter], slices: [region, permit_type, review_track], depth: explain }
+  - { kpi: KPI-PUB-PERMITS, grains: [month, quarter], slices: [region, permit_type], depth: trend }
+  - { kpi: KPI-PUB-INSP-PASS, grains: [month, quarter], slices: [region, permit_type], depth: explain }
+instructions: [INS-PUB-001-P, INS-PUB-001-R, INS-PUB-001-G, INS-PUB-001-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: masked, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.05, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-PUB-008, SC-PUB-009, SC-PUB-010, SC-PUB-011, SC-PUB-012, SC-PUB-013, SC-PUB-014, SC-PUB-015]
+quality_fix:
+  feedback_question: "What share of residents walk away happy?"
+  fix: { type: synonym, payload: { term: walk away happy, synonyms: [walked away happy, walking away happy], maps_to: { kind: metric, ref: citizen_satisfaction_pct } } }
+  eval_before_pct: 88
+  eval_after_pct: 94

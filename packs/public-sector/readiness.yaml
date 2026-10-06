@@ -1,0 +1,6 @@
+# Readiness preset labels for Westland County Services (preset ids from the ported readiness engine: early, mid, advanced).
+preset_labels:
+  early: Report-request driven
+  mid: Modernising data office
+  advanced: Governed county data platform
+question_overrides: []

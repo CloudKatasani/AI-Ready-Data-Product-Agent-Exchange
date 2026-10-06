@@ -1,0 +1,70 @@
+# "Break something" templates (05 §2.4). Ported from the AI-Ready public-sector ext/operate.ts incident scripts and
+# retargeted to the Keystone Gold objects. Effects are applied as overlay views while an incident is open.
+- id: INC-PUB-LATE-FEED
+  kind: late_feed
+  title: 311 request feed six hours late
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_SERVICE_REQUEST
+  column: created_ts
+  params: { lag_hours: 6 }
+  affects: { products: [DP-PUB-001], agents: [AG-PUB-001] }
+  narrative: >-
+    The CDC extract from the 311 CRM stalled after a vendor patch and no new requests have landed for six hours. The
+    Service Requests (311) product is behind its 30-minute freshness SLA, so today's volume and open-request counts
+    are understated and any agent answer about this week's 311 service levels is stale.
+  detection: Freshness rule DQ-PUB-030 on FCT_SERVICE_REQUEST.created_ts fails and the product moves to Degraded.
+  resolution: Restart the CRM extract, backfill the six-hour gap and re-run the DQ rules; the product returns to Healthy.
+- id: INC-PUB-NULL-SPIKE
+  kind: null_spike
+  title: Null spike in benefit payment amounts
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_PAYMENT
+  column: payment_amount
+  params: { null_pct: 15 }
+  affects: { products: [DP-PUB-003, DP-PUB-006], agents: [AG-PUB-003] }
+  narrative: >-
+    A change to the issuance file layout left 15% of payments without an amount, so benefits paid and the improper
+    payment denominator (a critical data element) arrive empty. The improper payment rate would be overstated for the
+    affected programs while the gap remains.
+  detection: Completeness rule DQ-PUB-017 on payment_amount fails; Benefit Payments is Degraded.
+  resolution: Revert the issuance file mapping, reload the affected payments and confirm the null rate is back under 0.1%.
+- id: INC-PUB-DUP-LOAD
+  kind: duplicate_load
+  title: Duplicate permit load
+  severity: SEV3
+  object: CONFORMED_GOLD.FCT_PERMIT
+  params: { duplicate_pct: 12 }
+  affects: { products: [DP-PUB-004], agents: [AG-PUB-001] }
+  narrative: >-
+    A replayed permitting batch loaded 12% of permits twice. Permits issued and fee revenue are inflated while the
+    duplicates remain, and turnaround averages shift by permit type.
+  detection: Uniqueness rule DQ-PUB-033 on permit_id fails and the row count jumps against the trailing average.
+  resolution: Delete the replayed batch by load id, re-run deduplication and confirm dup_rate returns to zero.
+- id: INC-PUB-SCHEMA-DRIFT
+  kind: schema_drift
+  title: Purchasing spend column renamed upstream
+  severity: SEV1
+  object: CONFORMED_GOLD.FCT_PO_SPEND
+  column: spend_usd
+  params: { rename_to: line_amount_usd }
+  affects: { products: [DP-PUB-005], agents: [AG-PUB-004] }
+  narrative: >-
+    A financial system upgrade renamed the requisition spend column to line_amount_usd without a contract change.
+    Every purchasing metric that depends on spend (purchasing spend, spend on contract, competitive spend) fails to
+    compile, so the Finance & Procurement Copilot declines with an incident banner instead of answering.
+  detection: Metric compilation for PROCUREMENT fails and DQ-PUB-045 cannot find its column; the contract check flags a breaking change.
+  resolution: Map line_amount_usd back to spend_usd in Silver, raise a contract major version with a 30-day notice and re-run checks.
+- id: INC-PUB-VOLUME
+  kind: volume_anomaly
+  title: Missing days of eligibility decisions
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_APPLICATION
+  column: decision_date
+  params: { missing_days: 3 }
+  affects: { products: [DP-PUB-002], agents: [AG-PUB-002] }
+  narrative: >-
+    Three daily files from the eligibility system never arrived, so the most recent three days of decisions are
+    missing. Applications decided and processing-time trends show a false drop at the end of the series, just before
+    the quarterly state timeliness return.
+  detection: Timeliness rule DQ-PUB-007 on decision_date fails and daily decision volume drops against the trailing average; the product is Degraded.
+  resolution: Request the missing files from the eligibility system vendor, load them and confirm daily volumes match the trailing average.

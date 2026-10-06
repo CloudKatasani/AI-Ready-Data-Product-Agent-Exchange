@@ -1,0 +1,67 @@
+# Benefit payment and program integrity DQ rules (FCT_PAYMENT).
+- id: DQ-PUB-017
+  object: CONFORMED_GOLD.FCT_PAYMENT
+  column: payment_amount
+  dimension: completeness
+  assertion: "null_rate <= 0.001"
+  severity: critical
+  alert_route: steward
+  description: Every payment has an issued amount (benefits paid and the improper payment denominator).
+- id: DQ-PUB-018
+  object: CONFORMED_GOLD.FCT_PAYMENT
+  column: payment_amount
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: Issued amounts are positive; reversals are recorded as voided payments.
+- id: DQ-PUB-019
+  object: CONFORMED_GOLD.FCT_PAYMENT
+  column: improper_amount
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Improper amount is populated (zero when quality control found no error).
+- id: DQ-PUB-020
+  object: CONFORMED_GOLD.FCT_PAYMENT
+  column: improper_amount
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Improper amounts are recorded as absolute values for over- and underpayments.
+- id: DQ-PUB-021
+  object: CONFORMED_GOLD.FCT_PAYMENT
+  column: flag_status
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Open review, Referred, Overpayment established, Cleared]
+  severity: high
+  alert_route: steward
+  description: Integrity flag statuses conform to the program integrity procedures.
+- id: DQ-PUB-022
+  object: CONFORMED_GOLD.FCT_PAYMENT
+  column: payment_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per payment after CDC deduplication.
+- id: DQ-PUB-023
+  object: CONFORMED_GOLD.FCT_PAYMENT
+  column: issue_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: Payments from the latest issuance run have arrived.
+- id: DQ-PUB-024
+  object: CONFORMED_GOLD.FCT_PAYMENT
+  column: case_gov_id
+  dimension: validity
+  assertion: "regex_rate >= 0.999"
+  pattern: "^SID-WC-[0-9]{7}$"
+  severity: medium
+  alert_route: steward
+  description: Case head identifiers are in the synthetic intake format expected by MASK_GOV_ID and data matching.

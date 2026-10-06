@@ -1,0 +1,94 @@
+name: SERVICE_REQUESTS
+description: 311 service requests — volume, resolution time, SLA attainment, reopens and resident satisfaction
+tables:
+  - { alias: s, fqn: CONFORMED_GOLD.FCT_SERVICE_REQUEST, pk: sr_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: s.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: s.region, label: District, synonyms: [district, service district, area], term: GT-PUB-DISTRICT }
+  - { name: request_type, expr: s.request_type, label: Request type, synonyms: [service type, issue type, type of request], term: GT-PUB-REQUEST-TYPE }
+  - { name: department, expr: s.department, label: Department, synonyms: [responsible department, owning department], term: GT-PUB-DEPARTMENT }
+  - { name: channel, expr: s.channel, label: Channel, synonyms: [intake channel, contact channel] }
+  - { name: request_status, expr: s.status, label: Request status, synonyms: [open or closed] }
+  - { name: is_duplicate, expr: s.is_duplicate, label: Merged duplicate, synonyms: [duplicate request, duplicates] }
+  - { name: caller_name, expr: s.caller_name, label: Caller, synonyms: [caller name, requester] }
+time_dimensions:
+  - { name: created_date, expr: d.date, default: true }
+facts:
+  - { name: resolution_days, expr: s.resolution_days, description: Days from creation to closure }
+  - { name: sla_days, expr: s.sla_days, description: SLA for the request type in days }
+metrics:
+  - name: service_requests
+    label: 311 service requests
+    expr: COUNT(*)
+    unit: requests
+    decimals: 0
+    direction: neutral
+    synonyms: [311 requests, service requests, 311 volume, calls to 311, number of 311 requests]
+    term: GT-PUB-311-REQUEST
+    description: 311 requests created in the period, excluding merged duplicates
+    default_filters: [ { rule: BR-PUB-005 } ]
+    naive_expr: COUNT(*)
+  - name: avg_resolution_days
+    label: 311 resolution time
+    expr: AVG(s.resolution_days)
+    unit: days
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [resolution time, time to close, days to resolve, average days to close]
+    term: GT-PUB-RESOLUTION-TIME
+    description: Mean calendar days from creation to closure of closed 311 requests
+    default_filters: [ { rule: BR-PUB-005 } ]
+    naive_expr: AVG(coalesce(s.resolution_days, 0))
+  - name: sla_attainment_pct
+    label: 311 SLA attainment
+    expr: 100.0 * AVG(CASE WHEN s.closed THEN CASE WHEN s.within_sla THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [sla attainment, on-time resolution, service level attainment, resolved within sla]
+    term: GT-PUB-SLA
+    description: Share of closed 311 requests resolved within the SLA for their request type
+    default_filters: [ { rule: BR-PUB-005 } ]
+  - name: reopen_rate
+    label: 311 reopen rate
+    expr: 100.0 * AVG(CASE WHEN s.closed THEN CASE WHEN s.reopened THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [reopen rate, reopened requests, requests reopened]
+    term: GT-PUB-REOPEN
+    description: Share of closed 311 requests reopened after closure
+    default_filters: [ { rule: BR-PUB-005 } ]
+  - name: citizen_satisfaction_pct
+    label: Citizen satisfaction
+    expr: 100.0 * AVG(CASE WHEN s.survey_score IS NOT NULL THEN CASE WHEN s.survey_score >= 4 THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [resident satisfaction, satisfaction score, csat, survey satisfaction]
+    term: GT-PUB-CSAT
+    description: Share of post-closure survey responses scoring 4 or 5 on the five-point scale
+    default_filters: [ { rule: BR-PUB-005 } ]
+  - name: pothole_repair_days
+    label: Pothole repair time
+    expr: AVG(CASE WHEN s.request_type = 'Pothole' THEN s.resolution_days END)
+    unit: days
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [pothole repair days, days to fix a pothole, pothole response time, time to fix potholes]
+    term: GT-PUB-POTHOLE-TIME
+    description: Mean calendar days from a pothole report to closure of the 311 request
+    default_filters: [ { rule: BR-PUB-005 } ]
+  - name: open_requests
+    label: Open 311 requests
+    expr: COUNT_IF(s.status = 'Open')
+    unit: requests
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [open requests, 311 backlog, unresolved requests]
+    term: GT-PUB-OPEN-311
+    description: 311 requests not yet closed at the reporting date
+    default_filters: [ { rule: BR-PUB-005 } ]
+products: [DP-PUB-001]

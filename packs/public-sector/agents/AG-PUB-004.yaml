@@ -1,0 +1,31 @@
+id: AG-PUB-004
+name: Finance & Procurement Copilot
+domain: Finance & Procurement
+status: PRODUCTION
+owner: public-sector:county-administrator
+on_call: Budget Office Analytics
+avatar: { icon: landmark, hue: 45 }
+capability: "Answers questions on budget variance and execution, position vacancies, purchasing spend, procurement cycle time, contract coverage and grant drawdown."
+personas_served: [Budget Director, Purchasing Manager, Deputy County Administrator]
+out_of_scope: ["approving purchase orders", "awarding contracts to vendors", "amending the adopted budget", "hiring decisions for individual posts"]
+products:
+  - { id: DP-PUB-005, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [BUDGET_FINANCE, PROCUREMENT, GRANT_FUNDING], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-PUB-BUDGET-MANUAL, DOC-PUB-PROCUREMENT-POLICY] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-PUB-BUDGET-VAR, grains: [month], slices: [department, fiscal_quarter, administrative], depth: rank_drivers }
+  - { kpi: KPI-PUB-BUDGET-EXEC, grains: [month], slices: [department, administrative], depth: explain }
+  - { kpi: KPI-PUB-VACANCY, grains: [month], slices: [department], depth: rank_drivers }
+  - { kpi: KPI-PUB-PROC-CYCLE, grains: [month, quarter], slices: [procurement_method, category, department], depth: rank_drivers }
+  - { kpi: KPI-PUB-SPEND, grains: [month, quarter], slices: [category, vendor, department, procurement_method], depth: rank_drivers }
+  - { kpi: KPI-PUB-ON-CONTRACT, grains: [month, quarter], slices: [category, department, vendor], depth: explain }
+  - { kpi: KPI-PUB-DRAWDOWN, grains: [], slices: [funder, program_area, department], depth: rank_drivers }
+  - { kpi: KPI-PUB-GRANTS-AT-RISK, grains: [], slices: [funder, program_area, department], depth: rank_drivers }
+instructions: [INS-PUB-004-P, INS-PUB-004-R, INS-PUB-004-G, INS-PUB-004-O]
+guardrails: { citations_required: true, refuse_customer_level: false, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.05, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-PUB-021, SC-PUB-022, SC-PUB-023, SC-PUB-024, SC-PUB-025, SC-PUB-026]

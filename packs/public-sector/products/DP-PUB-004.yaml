@@ -1,0 +1,25 @@
+id: DP-PUB-004
+name: Permits & Inspections
+domain: Permits & Licensing
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 1.2.0
+owner: public-sector:hs-dpo
+steward: public-sector:steward
+description: Permit applications by type, track and district with review turnaround against target, permits issued, first inspection pass rate and fees.
+purpose: Plan-review staffing, permit timeliness reporting to the Board and open-data publication.
+decision: { persona: Building Official, decision: "Where to add plan-review capacity or contract reviewers next quarter", cadence: Quarterly, workaround: "Permitting system reports exported and filtered by hand to drop same-day permits", consequence: "Commercial projects stall in review and developers escalate to the Board" }
+sample_questions: ["What was permit turnaround by permit type last quarter?", "Permits issued by district this year", "First inspection pass rate by permit type"]
+semantic_view: PERMITTING
+output_ports:
+  - { kind: semantic, ref: PERMITTING }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_PUB_004_PERMITS }
+  - { kind: agent, ref: AG-PUB-001 }
+sla: { freshness_minutes: 60, availability_pct: 99.0, max_null_rate_pct: 1.0 }
+kpis: [KPI-PUB-PERMIT-TAT, KPI-PUB-PERMIT-ONTIME, KPI-PUB-PERMITS, KPI-PUB-INSP-PASS]
+upstream: [CONFORMED_GOLD.FCT_PERMIT]
+consumers: [Community development, Open-data portal, Constituent Services Assistant agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-PUB-004

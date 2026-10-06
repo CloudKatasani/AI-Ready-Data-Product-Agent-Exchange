@@ -1,0 +1,27 @@
+id: DP-PUB-005
+name: Finance & Procurement
+domain: Finance & Procurement
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 3.1.0
+owner: public-sector:county-administrator
+steward: public-sector:steward
+description: Adopted budget versus actuals and positions by department and fiscal period, purchasing cycle time and contract coverage, and grant drawdown.
+purpose: Budget monitoring for the Board, purchasing performance and grant compliance from one certified finance source.
+decision: { persona: Budget Director, decision: "Which departments need a mid-year budget adjustment or hiring freeze exception", cadence: Monthly, workaround: "General ledger extracts reconciled in a budget workbook at each month-end", consequence: "Overspends surface at year-end and grant funds are returned unspent" }
+sample_questions: ["What is budget variance by department this fiscal year?", "How has procurement cycle time changed this year?", "Which program areas have the lowest grant drawdown rate?"]
+semantic_view: BUDGET_FINANCE
+output_ports:
+  - { kind: semantic, ref: BUDGET_FINANCE }
+  - { kind: semantic, ref: PROCUREMENT }
+  - { kind: semantic, ref: GRANT_FUNDING }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_PUB_005_FINANCE_PROCUREMENT }
+  - { kind: agent, ref: AG-PUB-004 }
+sla: { freshness_minutes: 1440, availability_pct: 99.0, max_null_rate_pct: 1.0 }
+kpis: [KPI-PUB-BUDGET-VAR, KPI-PUB-BUDGET-EXEC, KPI-PUB-VACANCY, KPI-PUB-PROC-CYCLE, KPI-PUB-SPEND, KPI-PUB-ON-CONTRACT, KPI-PUB-DRAWDOWN, KPI-PUB-GRANTS-AT-RISK]
+upstream: [CONFORMED_GOLD.FCT_BUDGET, CONFORMED_GOLD.FCT_PO_SPEND, CONFORMED_GOLD.DIM_VENDOR, CONFORMED_GOLD.FCT_GRANT]
+consumers: [Budget office, Purchasing, Grants office, Finance & Procurement Copilot agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-PUB-005

@@ -1,0 +1,229 @@
+# Westland County Services business rules (synthetic). Rules with an `apply` block are applied by the metric
+# compiler as default filters; the rest are definitions, thresholds and policies cited in answers.
+# Ported from the AI-Ready public-sector context (BR-001..BR-018) and extended for permits, public works and finance.
+
+# ── Eligibility & case management ───────────────────────────────────────────────────────────────────
+- id: BR-PUB-001
+  domain: Eligibility
+  text: "Processing days count county business days from a complete application to the eligibility decision; weekends and county holidays are excluded. An application is complete when every required verification has been received."
+  kind: definition
+  metric: avg_processing_days
+  source_doc: DOC-PUB-ELIGIBILITY-MANUAL
+
+- id: BR-PUB-002
+  domain: Eligibility
+  text: "Processing time and timeliness exclude applications placed on hold awaiting the applicant's documents, unless the question explicitly asks to include them; the hold population is reported separately."
+  kind: filter
+  metric: avg_processing_days
+  source_doc: DOC-PUB-ELIGIBILITY-MANUAL
+  apply:
+    filter: { dimension: on_document_hold, op: "=", value: false }
+    unless_question_mentions: [including document holds, including applications on hold, including holds, including on-hold applications, including those on hold]
+
+- id: BR-PUB-003
+  domain: Eligibility
+  text: "The county processing standard is 30 business days from a complete application (7 days for expedited food assistance). An application exceeds the standard when its processing days are greater than 30; timely processing rate is decided applications within the standard divided by decided applications."
+  kind: threshold
+  metric: timely_processing_rate
+  source_doc: DOC-PUB-ELIGIBILITY-MANUAL
+
+- id: BR-PUB-004
+  domain: Eligibility
+  text: "Approval rate excludes withdrawn applications: approved divided by approved plus denied."
+  kind: definition
+  metric: approval_rate
+  source_doc: DOC-PUB-ELIGIBILITY-MANUAL
+
+- id: BR-PUB-013
+  domain: Case management
+  text: "Case backlog counts open cases with a new application, renewal or reported change awaiting a caseworker decision at the reporting date; backlog age is the mean days those items have waited."
+  kind: definition
+  metric: case_backlog
+  source_doc: DOC-PUB-ELIGIBILITY-MANUAL
+
+- id: BR-PUB-014
+  domain: Case management
+  text: "Caseload is open cases divided by filled caseworker positions; vacant positions are not counted. Office, district and county caseload use the caseworkers at the matching scope."
+  kind: definition
+  metric: avg_caseload
+  source_doc: DOC-PUB-ELIGIBILITY-MANUAL
+
+- id: BR-PUB-028
+  domain: Eligibility
+  text: "Eligibility, overpayment and fraud referral decisions are made by a named caseworker or investigator and can be appealed; agents never decide an individual application or case."
+  kind: policy
+  source_doc: DOC-PUB-ELIGIBILITY-MANUAL
+
+# ── 311 service requests ────────────────────────────────────────────────────────────────────────────
+- id: BR-PUB-005
+  domain: "311"
+  text: "311 volume, resolution time, SLA attainment and satisfaction exclude requests merged into a parent as duplicates, unless the question asks to include them."
+  kind: filter
+  metric: avg_resolution_days
+  source_doc: DOC-PUB-311-STANDARD
+  apply:
+    filter: { dimension: is_duplicate, op: "=", value: false }
+    unless_question_mentions: [including duplicates, including merged duplicates, duplicate requests]
+
+- id: BR-PUB-006
+  domain: "311"
+  text: "A 311 request is on time when it is closed within the SLA for its request type: 1 day for water leaks; 2 days for missed trash pickups and benefits inquiries; 3 days for noise complaints; 5 days for potholes and graffiti; 7 days for streetlights and tree or debris; 10 days for abandoned vehicles; 14 days for housing inspections."
+  kind: threshold
+  metric: sla_attainment_pct
+  source_doc: DOC-PUB-311-STANDARD
+
+- id: BR-PUB-007
+  domain: "311"
+  text: "Citizen satisfaction counts post-closure survey responses scoring 4 or 5 on the five-point scale, divided by all responses; requests without a response are excluded."
+  kind: definition
+  metric: citizen_satisfaction_pct
+  source_doc: DOC-PUB-311-STANDARD
+
+# ── Benefit payments & integrity ────────────────────────────────────────────────────────────────────
+- id: BR-PUB-008
+  domain: Payments
+  text: "Payment metrics exclude voided payments (cancelled and reissued), unless the question asks to include them."
+  kind: filter
+  metric: improper_payment_rate
+  source_doc: DOC-PUB-PAYMENT-INTEGRITY
+  apply:
+    filter: { dimension: payment_status, op: "=", value: Issued }
+    unless_question_mentions: [including voided, including reversed, voided payments]
+
+- id: BR-PUB-009
+  domain: Payments
+  text: "The improper payment rate is dollar-based and counts both overpayments and underpayments: improper dollars divided by dollars issued. Payment accuracy is count-based: payments without an improper finding divided by payments issued."
+  kind: definition
+  metric: improper_payment_rate
+  source_doc: DOC-PUB-PAYMENT-INTEGRITY
+
+- id: BR-PUB-010
+  domain: Program integrity
+  text: "A case is flagged for review when its integrity flag status is Open review or Referred. An integrity flag is a review, not a finding of fraud; agents never label an individual as committing fraud."
+  kind: policy
+  metric: cases_flagged
+  source_doc: DOC-PUB-PAYMENT-INTEGRITY
+
+- id: BR-PUB-029
+  domain: Program integrity
+  text: "Recovery rate is dollars recovered (repayment, benefit offset or tax intercept) divided by overpayments established on payments issued in the period."
+  kind: definition
+  metric: overpayment_recovery_rate
+  source_doc: DOC-PUB-PAYMENT-INTEGRITY
+
+# ── Permits ─────────────────────────────────────────────────────────────────────────────────────────
+- id: BR-PUB-011
+  domain: Permits
+  text: "Permit turnaround and timeliness exclude over-the-counter permits issued the same day, unless the question asks to include them."
+  kind: filter
+  metric: avg_permit_turnaround_days
+  source_doc: DOC-PUB-PERMIT-STANDARDS
+  apply:
+    filter: { dimension: review_track, op: "!=", value: Over the counter }
+    unless_question_mentions: [including over the counter, including over-the-counter, including same-day permits]
+
+- id: BR-PUB-012
+  domain: Permits
+  text: "Permit review targets are 1 day for over-the-counter permits, 20 calendar days for standard review and 45 calendar days for major projects, measured from a complete submittal."
+  kind: threshold
+  metric: permits_within_target_pct
+  source_doc: DOC-PUB-PERMIT-STANDARDS
+
+# ── Public works ────────────────────────────────────────────────────────────────────────────────────
+- id: BR-PUB-027
+  domain: Public works
+  text: "Repair targets by work type: potholes 3 days, sign replacement 5 days, streetlights 7 days, storm drains 10 days, crack seal 14 days and sidewalks 30 days from the report. Pothole repair time reported to residents is measured on the 311 request, from report to closure."
+  kind: threshold
+  metric: on_time_repair_pct
+  source_doc: DOC-PUB-STREET-MAINTENANCE
+
+# ── Finance, procurement & grants ───────────────────────────────────────────────────────────────────
+- id: BR-PUB-015
+  domain: Finance
+  text: "Budget figures are reported for the current fiscal year to date (FY2027, which began 1 July 2026), unless the question names another fiscal year. The county fiscal year runs July to June."
+  kind: filter
+  metric: budget_variance_pct
+  source_doc: DOC-PUB-BUDGET-MANUAL
+  apply:
+    filter: { dimension: fiscal_year, op: "=", value: FY2027 }
+    unless_question_mentions: [fy2026, fy 2026, last fiscal year, prior fiscal year, previous fiscal year, all fiscal years]
+
+- id: BR-PUB-016
+  domain: Finance
+  text: "Budget variance is actual expenditure minus adopted budget, as a share of adopted budget; a positive variance is an overspend. Departments more than 5% over budget for the fiscal year to date report to the Board."
+  kind: threshold
+  metric: budget_variance_pct
+  source_doc: DOC-PUB-BUDGET-MANUAL
+
+- id: BR-PUB-017
+  domain: Workforce
+  text: "Vacancy rate is authorised positions minus filled positions, divided by authorised positions, averaged over the months in scope."
+  kind: definition
+  metric: vacancy_rate
+  source_doc: DOC-PUB-BUDGET-MANUAL
+
+- id: BR-PUB-018
+  domain: Procurement
+  text: "Procurement cycle time is calendar days from requisition to purchase order and excludes emergency purchases, unless the question asks to include them."
+  kind: filter
+  metric: procurement_cycle_days
+  source_doc: DOC-PUB-PROCUREMENT-POLICY
+  apply:
+    filter: { dimension: procurement_method, op: "!=", value: Emergency }
+    unless_question_mentions: [including emergency, emergency purchases, including emergencies]
+
+- id: BR-PUB-019
+  domain: Procurement
+  text: "Purchases above 50,000 dollars are formally bid or placed on a competitively awarded cooperative contract; sole-source purchases need a written justification approved by the purchasing manager."
+  kind: threshold
+  metric: competitive_spend_pct
+  source_doc: DOC-PUB-PROCUREMENT-POLICY
+
+- id: BR-PUB-020
+  domain: Procurement
+  text: "Spend on contract is spend placed against an active county or cooperative contract, divided by total spend on purchase orders raised in the period."
+  kind: definition
+  metric: on_contract_spend_pct
+  source_doc: DOC-PUB-PROCUREMENT-POLICY
+
+- id: BR-PUB-021
+  domain: Grants
+  text: "Grant drawdown and award totals cover active grants (award period not yet ended), unless the question asks to include closed grants."
+  kind: filter
+  metric: grant_drawdown_rate
+  source_doc: DOC-PUB-BUDGET-MANUAL
+  apply:
+    filter: { dimension: grant_status, op: "=", value: Active }
+    unless_question_mentions: [including closed, closed grants, all grants]
+
+- id: BR-PUB-022
+  domain: Grants
+  text: "A grant is at risk when its drawdown trails the elapsed share of its award period by more than 20 percentage points; at-risk grants are reviewed monthly by the grants office."
+  kind: threshold
+  metric: grants_at_risk
+  source_doc: DOC-PUB-BUDGET-MANUAL
+
+# ── Governance policies ─────────────────────────────────────────────────────────────────────────────
+- id: BR-PUB-023
+  domain: Governance
+  text: "Constituent names, contact details, street addresses, applicant and caller names are PII and are masked for every persona without PII clearance; government and vendor tax identifiers are GOV_ID and shown only to the data steward."
+  kind: policy
+  source_doc: DOC-PUB-DATA-GOVERNANCE
+
+- id: BR-PUB-024
+  domain: Governance
+  text: "District-based personas see only rows for their own service districts; county totals are not disclosed to them."
+  kind: policy
+  source_doc: DOC-PUB-DATA-GOVERNANCE
+
+- id: BR-PUB-025
+  domain: Governance
+  text: "Agents answer with aggregates only. Requests for an individual constituent's case, payments, contact details or eligibility are declined and redirected to the caseworker process."
+  kind: policy
+  source_doc: DOC-PUB-DATA-GOVERNANCE
+
+- id: BR-PUB-026
+  domain: Governance
+  text: "Open-data publications contain aggregates only, and any cell describing fewer than 11 constituents is suppressed."
+  kind: policy
+  source_doc: DOC-PUB-DATA-GOVERNANCE

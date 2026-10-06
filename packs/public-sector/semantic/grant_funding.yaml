@@ -1,0 +1,52 @@
+name: GRANT_FUNDING
+description: Grant awards and drawdown against the elapsed award period, by funder, program area and department
+tables:
+  - { alias: g, fqn: CONFORMED_GOLD.FCT_GRANT, pk: grant_key }
+dimensions:
+  - { name: funder, expr: g.funder, label: Funder, synonyms: [funding source, grantor] }
+  - { name: program_area, expr: g.program_area, label: Program area, synonyms: [grant program, focus area], term: GT-PUB-GRANT-AREA }
+  - { name: department, expr: g.department, label: Department, synonyms: [dept, county department, grantee department], term: GT-PUB-DEPARTMENT }
+  - { name: grant_status, expr: g.grant_status, label: Grant status, synonyms: [active or closed] }
+facts:
+  - { name: award_amount, expr: g.award_amount, description: Amount awarded }
+  - { name: drawn_amount, expr: g.drawn_amount, description: Amount drawn down to date }
+metrics:
+  - name: grant_awarded
+    label: Grant awards
+    expr: SUM(g.award_amount)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [grant funding, grant dollars awarded, awarded grants]
+    term: GT-PUB-GRANT-AWARD
+    description: Total awarded on grants in scope (active grants by default)
+    default_filters: [ { rule: BR-PUB-021 } ]
+  - name: grant_drawdown_rate
+    label: Grant drawdown rate
+    expr: 100.0 * SUM(g.drawn_amount) / SUM(g.award_amount)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [drawdown rate, grant spend-down, share of grant drawn, grant utilisation]
+    term: GT-PUB-DRAWDOWN
+    description: Dollars drawn down as a share of dollars awarded (active grants by default)
+    default_filters: [ { rule: BR-PUB-021 } ]
+  - name: grants_at_risk
+    label: Grants at risk
+    expr: COUNT_IF(g.at_risk)
+    unit: grants
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [at-risk grants, grants behind schedule, lagging grants]
+    term: GT-PUB-GRANT-AT-RISK
+    description: Active grants whose drawdown trails the elapsed award period by more than 20 points
+  - name: active_grants
+    label: Active grants
+    expr: COUNT_IF(g.grant_status = 'Active')
+    unit: grants
+    decimals: 0
+    direction: neutral
+    synonyms: [open grants, number of active grants]
+    term: GT-PUB-GRANT-AWARD
+    description: Grants whose award period has not ended
+products: [DP-PUB-005]

@@ -1,0 +1,81 @@
+name: CASE_PROCESSING
+description: Benefit application processing — business days from a complete application to decision, the 30-day standard and outcomes
+tables:
+  - { alias: a, fqn: CONFORMED_GOLD.FCT_APPLICATION, pk: application_key }
+  - { alias: o, fqn: CONFORMED_GOLD.DIM_OFFICE, pk: office_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: a.office_key, to: o.office_key }
+  - { from: a.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: a.region, label: District, synonyms: [district, service district, area], term: GT-PUB-DISTRICT }
+  - { name: office, expr: o.office_name, label: Office, synonyms: [service center, local office, field office], term: GT-PUB-OFFICE }
+  - { name: program, expr: a.program_name, label: Program, synonyms: [benefit program, program type], term: GT-PUB-PROGRAM }
+  - { name: channel, expr: a.channel, label: Application channel, synonyms: [submission channel, how applied] }
+  - { name: decision, expr: a.decision, label: Decision, synonyms: [outcome, eligibility decision, determination] }
+  - { name: on_document_hold, expr: a.docs_hold, label: On hold for documents, synonyms: [document hold, waiting for documents, on hold], term: GT-PUB-DOC-HOLD }
+  - { name: expedited, expr: a.expedited, label: Expedited, synonyms: [expedited service, rush] }
+time_dimensions:
+  - { name: decision_date, expr: d.date, default: true }
+facts:
+  - { name: processing_days, expr: a.processing_days, description: Business days from complete application to decision }
+metrics:
+  - name: avg_processing_days
+    label: Average processing time
+    expr: AVG(a.processing_days)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [processing time, processing days, case processing time, benefit processing time, time to decision, days to decide]
+    term: GT-PUB-PROC-DAYS
+    description: Mean business days from a complete application to the eligibility decision, excluding applications on hold for documents
+    default_filters: [ { rule: BR-PUB-002 } ]
+    naive_expr: AVG(date_diff('day', a.received_date, a.decision_date))
+  - name: timely_processing_rate
+    label: Timely processing rate
+    expr: 100.0 * AVG(CASE WHEN a.decided THEN CASE WHEN a.within_standard THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [timeliness rate, processed within standard, decided within 30 days, on-time decisions]
+    term: GT-PUB-TIMELY
+    description: Share of decided applications decided within 30 business days of a complete application
+    default_filters: [ { rule: BR-PUB-002 } ]
+  - name: applications_over_standard
+    label: Applications over 30-day standard
+    expr: COUNT_IF(a.processing_days > 30)
+    unit: applications
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [applications over standard, late decisions, applications past 30 days, overdue decisions]
+    term: GT-PUB-OVER-STANDARD
+    description: Decided applications that took more than 30 business days from a complete application
+    default_filters: [ { rule: BR-PUB-002 } ]
+  - name: approval_rate
+    label: Approval rate
+    expr: 100.0 * COUNT_IF(a.decision = 'Approved') / NULLIF(COUNT_IF(a.decision IN ('Approved', 'Denied')), 0)
+    unit: '%'
+    decimals: 1
+    direction: neutral
+    synonyms: [approval percentage, share approved, approvals vs denials]
+    term: GT-PUB-APPROVAL
+    description: Approved applications as a share of approved plus denied; withdrawn applications are excluded
+  - name: applications_decided
+    label: Applications decided
+    expr: COUNT_IF(a.decided)
+    unit: applications
+    decimals: 0
+    direction: neutral
+    synonyms: [decisions made, determinations made, applications processed]
+    term: GT-PUB-DECIDED
+    description: Applications with an eligibility decision in the period
+  - name: online_application_share
+    label: Online application share
+    expr: 100.0 * AVG(CASE WHEN a.channel = 'Online' THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [digital self-service rate, applied online, online share]
+    term: GT-PUB-ONLINE-SHARE
+    description: Share of decided applications submitted online
+products: [DP-PUB-002]

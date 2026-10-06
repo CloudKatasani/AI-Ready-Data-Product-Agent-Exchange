@@ -1,0 +1,410 @@
+# KPIs with target bands, calibrated against the scale-M warehouse (AI-Ready public-sector kpis.ts K-01..K-26
+# plus permits, public works, procurement and grants). `window` is evaluated relative to pack asOf;
+# `last n unit` = the n most recent complete units (ADR-0011); `{}` = no time window (snapshot or rule-scoped).
+- id: KPI-PUB-311-VOLUME
+  name: 311 service requests
+  definition: "311 requests created in the month, excluding merged duplicates"
+  formula: "count of 311 requests by creation date (duplicates excluded, BR-PUB-005)"
+  unit: "requests"
+  direction: target_band
+  target: { min: 1700, max: 2300 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-PUB-311-REQUEST
+  metric: service_requests
+  products: [DP-PUB-001]
+- id: KPI-PUB-311-RES
+  name: 311 resolution time
+  definition: "Average calendar days from 311 request creation to closure"
+  formula: "mean of closure − creation in days, closed requests (duplicates excluded)"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 2.0, max: 3.5 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-PUB-RESOLUTION-TIME
+  metric: avg_resolution_days
+  products: [DP-PUB-001]
+- id: KPI-PUB-311-SLA
+  name: 311 SLA attainment
+  definition: "Share of closed 311 requests resolved within the SLA for their request type"
+  formula: "requests closed within type SLA ÷ closed requests"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 85, max: 95 }
+  window: { ytd: true }
+  term: GT-PUB-SLA
+  metric: sla_attainment_pct
+  products: [DP-PUB-001]
+- id: KPI-PUB-311-REOPEN
+  name: 311 reopen rate
+  definition: "Share of closed 311 requests reopened after closure"
+  formula: "reopened requests ÷ closed requests"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 2, max: 6 }
+  window: { ytd: true }
+  term: GT-PUB-REOPEN
+  metric: reopen_rate
+  products: [DP-PUB-001]
+- id: KPI-PUB-CSAT
+  name: Citizen satisfaction
+  definition: "Share of 311 post-closure survey responses scoring 4 or 5"
+  formula: "responses with score ≥ 4 ÷ responses (BR-PUB-007)"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 70, max: 88 }
+  window: { ytd: true }
+  term: GT-PUB-CSAT
+  metric: citizen_satisfaction_pct
+  products: [DP-PUB-001]
+- id: KPI-PUB-POTHOLE
+  name: Pothole repair time
+  definition: "Average calendar days from a pothole report to closure"
+  formula: "mean resolution days of closed pothole requests"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 2.0, max: 3.5 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-PUB-POTHOLE-TIME
+  metric: pothole_repair_days
+  products: [DP-PUB-001]
+- id: KPI-PUB-PROC-DAYS
+  name: Benefit processing time
+  definition: "Average business days from a complete application to the eligibility decision, excluding applications on hold for documents"
+  formula: "mean processing business days of applications decided in the period (BR-PUB-001, BR-PUB-002)"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 16, max: 23 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-PUB-PROC-DAYS
+  metric: avg_processing_days
+  products: [DP-PUB-002]
+- id: KPI-PUB-TIMELY
+  name: Timely processing rate
+  definition: "Share of decided applications decided within 30 business days"
+  formula: "applications with processing days ≤ 30 ÷ applications decided"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 85, max: 95 }
+  window: { ytd: true }
+  term: GT-PUB-TIMELY
+  metric: timely_processing_rate
+  products: [DP-PUB-002]
+- id: KPI-PUB-OVER-STD
+  name: Applications over standard
+  definition: "Decided applications that took more than 30 business days from a complete application"
+  formula: "count of decided applications with processing days > 30"
+  unit: "applications"
+  direction: lower_is_better
+  target: { min: 1200, max: 1900 }
+  window: { ytd: true }
+  term: GT-PUB-OVER-STANDARD
+  metric: applications_over_standard
+  products: [DP-PUB-002]
+- id: KPI-PUB-APPROVAL
+  name: Approval rate
+  definition: "Approved applications as a share of approvals and denials"
+  formula: "approved ÷ (approved + denied)"
+  unit: "%"
+  direction: target_band
+  target: { min: 70, max: 82 }
+  window: { ytd: true }
+  term: GT-PUB-APPROVAL
+  metric: approval_rate
+  products: [DP-PUB-002]
+- id: KPI-PUB-DECIDED
+  name: Applications decided
+  definition: "Benefit applications with an eligibility decision in the month"
+  formula: "count of applications by decision date"
+  unit: "applications"
+  direction: target_band
+  target: { min: 1600, max: 2200 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-PUB-DECIDED
+  metric: applications_decided
+  products: [DP-PUB-002]
+- id: KPI-PUB-ONLINE-APPS
+  name: Online application share
+  definition: "Share of decided applications submitted online"
+  formula: "online applications ÷ applications decided"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 45, max: 65 }
+  window: { ytd: true }
+  term: GT-PUB-ONLINE-SHARE
+  metric: online_application_share
+  products: [DP-PUB-002]
+- id: KPI-PUB-BACKLOG
+  name: Case backlog
+  definition: "Open cases with an application, renewal or change awaiting a caseworker decision"
+  formula: "count of open cases with a pending action (BR-PUB-013)"
+  unit: "cases"
+  direction: lower_is_better
+  target: { min: 1500, max: 2300 }
+  window: {}
+  term: GT-PUB-BACKLOG
+  metric: case_backlog
+  products: [DP-PUB-002]
+- id: KPI-PUB-BACKLOG-AGE
+  name: Backlog age
+  definition: "Average days backlog items have waited for a caseworker decision"
+  formula: "mean pending days of backlog cases"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 20, max: 35 }
+  window: {}
+  term: GT-PUB-BACKLOG-AGE
+  metric: backlog_age_days
+  products: [DP-PUB-002]
+- id: KPI-PUB-CASELOAD
+  name: Average caseload
+  definition: "Open cases per filled caseworker position"
+  formula: "open cases ÷ filled caseworker positions (BR-PUB-014)"
+  unit: "cases"
+  direction: lower_is_better
+  target: { min: 90, max: 130 }
+  window: {}
+  term: GT-PUB-CASELOAD
+  metric: avg_caseload
+  products: [DP-PUB-002]
+- id: KPI-PUB-BEN-PAID
+  name: Benefits paid
+  definition: "Benefit dollars issued year to date, excluding voided payments"
+  formula: "sum of payment amounts issued"
+  unit: "USD"
+  direction: target_band
+  target: { min: 6500000, max: 8500000 }
+  window: { ytd: true }
+  term: GT-PUB-BENEFIT-PAYMENT
+  metric: benefits_paid
+  products: [DP-PUB-003]
+- id: KPI-PUB-PAY-ACC
+  name: Payment accuracy
+  definition: "Share of payments issued in the correct amount to an eligible recipient"
+  formula: "payments without an improper finding ÷ payments issued (BR-PUB-009)"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 95, max: 98.5 }
+  window: { ytd: true }
+  term: GT-PUB-PAY-ACCURACY
+  metric: payment_accuracy_rate
+  products: [DP-PUB-003]
+- id: KPI-PUB-IMPROPER
+  name: Improper payment rate
+  definition: "Improper (over- and under-paid) dollars as a share of dollars issued"
+  formula: "improper dollars ÷ dollars issued (BR-PUB-009)"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 1.5, max: 3.0 }
+  window: { ytd: true }
+  term: GT-PUB-IMPROPER
+  metric: improper_payment_rate
+  products: [DP-PUB-003]
+- id: KPI-PUB-IMPROPER-USD
+  name: Improper payment dollars
+  definition: "Dollars over- or under-paid year to date"
+  formula: "sum of improper amounts found by quality control"
+  unit: "USD"
+  direction: lower_is_better
+  target: { min: 120000, max: 240000 }
+  window: { ytd: true }
+  term: GT-PUB-IMPROPER-USD
+  metric: improper_payment_amount
+  products: [DP-PUB-003]
+- id: KPI-PUB-ONTIME-PAY
+  name: On-time payment rate
+  definition: "Share of payments issued by the scheduled issuance date"
+  formula: "on-time payments ÷ payments issued"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 96, max: 99.5 }
+  window: { ytd: true }
+  term: GT-PUB-ONTIME-PAYMENT
+  metric: on_time_payment_rate
+  products: [DP-PUB-003]
+- id: KPI-PUB-FLAGGED
+  name: Cases flagged for review
+  definition: "Paying cases with an integrity flag in open review or referred"
+  formula: "count of distinct cases with flag status Open review or Referred (BR-PUB-010)"
+  unit: "cases"
+  direction: target_band
+  target: { min: 250, max: 450 }
+  window: { ytd: true }
+  term: GT-PUB-INTEGRITY-FLAG
+  metric: cases_flagged
+  products: [DP-PUB-006]
+- id: KPI-PUB-FLAG-RATE
+  name: Integrity flag rate
+  definition: "Share of paying cases that carry an integrity flag this year"
+  formula: "flagged paying cases ÷ paying cases"
+  unit: "%"
+  direction: target_band
+  target: { min: 2, max: 6 }
+  window: { ytd: true }
+  term: GT-PUB-FLAG-RATE
+  metric: integrity_flag_rate
+  products: [DP-PUB-006]
+- id: KPI-PUB-RECOVERY
+  name: Overpayment recovery rate
+  definition: "Share of established overpayments recovered"
+  formula: "recovered ÷ overpayments established (BR-PUB-029)"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 35, max: 65 }
+  window: { ytd: true }
+  term: GT-PUB-RECOVERY
+  metric: overpayment_recovery_rate
+  products: [DP-PUB-006]
+- id: KPI-PUB-PERMIT-TAT
+  name: Permit turnaround
+  definition: "Average calendar days from a complete submittal to the permit decision, excluding over-the-counter permits"
+  formula: "mean review days of permits decided in the period (BR-PUB-011)"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 14, max: 22 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-PUB-PERMIT-TAT
+  metric: avg_permit_turnaround_days
+  products: [DP-PUB-004]
+- id: KPI-PUB-PERMIT-ONTIME
+  name: Permits within target
+  definition: "Share of permit decisions made within the review target for their track"
+  formula: "decisions within target ÷ decisions (BR-PUB-012)"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 75, max: 92 }
+  window: { ytd: true }
+  term: GT-PUB-PERMIT-ONTIME
+  metric: permits_within_target_pct
+  products: [DP-PUB-004]
+- id: KPI-PUB-PERMITS
+  name: Permits issued
+  definition: "Permits issued in the month"
+  formula: "count of issued permits by decision date"
+  unit: "permits"
+  direction: target_band
+  target: { min: 420, max: 600 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-PUB-PERMITS-ISSUED
+  metric: permits_issued
+  products: [DP-PUB-004]
+- id: KPI-PUB-INSP-PASS
+  name: First inspection pass rate
+  definition: "Share of inspected permits whose first field inspection passed"
+  formula: "first inspections passed ÷ permits inspected"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 70, max: 85 }
+  window: { ytd: true }
+  term: GT-PUB-INSPECTION-PASS
+  metric: first_inspection_pass_rate
+  products: [DP-PUB-004]
+- id: KPI-PUB-BUDGET-VAR
+  name: Budget variance
+  definition: "Actual expenditure versus adopted budget, fiscal year to date"
+  formula: "(actual − budget) ÷ budget, current fiscal year (BR-PUB-015, BR-PUB-016)"
+  unit: "%"
+  direction: target_band
+  target: { min: -5, max: 2 }
+  window: {}
+  term: GT-PUB-BUDGET-VARIANCE
+  metric: budget_variance_pct
+  products: [DP-PUB-005]
+- id: KPI-PUB-BUDGET-EXEC
+  name: Budget execution
+  definition: "Actual expenditure as a share of the adopted budget, fiscal year to date"
+  formula: "actual ÷ budget, current fiscal year"
+  unit: "%"
+  direction: target_band
+  target: { min: 92, max: 102 }
+  window: {}
+  term: GT-PUB-BUDGET-EXEC
+  metric: budget_execution_pct
+  products: [DP-PUB-005]
+- id: KPI-PUB-VACANCY
+  name: Workforce vacancy rate
+  definition: "Unfilled authorised positions as a share of authorised positions, fiscal year to date"
+  formula: "(authorised − filled) ÷ authorised (BR-PUB-017)"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 6, max: 12 }
+  window: {}
+  term: GT-PUB-VACANCY
+  metric: vacancy_rate
+  products: [DP-PUB-005]
+- id: KPI-PUB-PROC-CYCLE
+  name: Procurement cycle time
+  definition: "Average calendar days from requisition to purchase order, excluding emergency purchases"
+  formula: "mean cycle days of purchase orders raised in the period (BR-PUB-018)"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 16, max: 28 }
+  window: { ytd: true }
+  term: GT-PUB-PROC-CYCLE
+  metric: procurement_cycle_days
+  products: [DP-PUB-005]
+- id: KPI-PUB-SPEND
+  name: Purchasing spend
+  definition: "Spend on purchase orders raised year to date"
+  formula: "sum of PO line spend"
+  unit: "USD"
+  direction: target_band
+  target: { min: 40000000, max: 65000000 }
+  window: { ytd: true }
+  term: GT-PUB-SPEND
+  metric: total_spend
+  products: [DP-PUB-005]
+- id: KPI-PUB-ON-CONTRACT
+  name: Spend on contract
+  definition: "Share of spend placed against an active contract"
+  formula: "on-contract spend ÷ total spend (BR-PUB-020)"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 75, max: 90 }
+  window: { ytd: true }
+  term: GT-PUB-ON-CONTRACT
+  metric: on_contract_spend_pct
+  products: [DP-PUB-005]
+- id: KPI-PUB-DRAWDOWN
+  name: Grant drawdown rate
+  definition: "Dollars drawn down as a share of dollars awarded on active grants"
+  formula: "drawn ÷ awarded, active grants (BR-PUB-021)"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 40, max: 65 }
+  window: {}
+  term: GT-PUB-DRAWDOWN
+  metric: grant_drawdown_rate
+  products: [DP-PUB-005]
+- id: KPI-PUB-GRANTS-AT-RISK
+  name: Grants at risk
+  definition: "Active grants whose drawdown trails the elapsed award period by more than 20 points"
+  formula: "count of at-risk active grants (BR-PUB-022)"
+  unit: "grants"
+  direction: lower_is_better
+  target: { min: 5, max: 25 }
+  window: {}
+  term: GT-PUB-GRANT-AT-RISK
+  metric: grants_at_risk
+  products: [DP-PUB-005]
+- id: KPI-PUB-WO-ONTIME
+  name: On-time repair rate
+  definition: "Share of completed street maintenance work orders finished within target"
+  formula: "work orders completed within target ÷ completed work orders (BR-PUB-027)"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 75, max: 92 }
+  window: { ytd: true }
+  term: GT-PUB-ON-TIME-REPAIR
+  metric: on_time_repair_pct
+  products: [DP-PUB-007]
+- id: KPI-PUB-WO-BACKLOG
+  name: Open work orders
+  definition: "Street maintenance work orders reported but not completed"
+  formula: "count of open work orders at the reporting date"
+  unit: "work orders"
+  direction: lower_is_better
+  target: { min: 120, max: 260 }
+  window: {}
+  term: GT-PUB-WO-BACKLOG
+  metric: open_work_orders
+  products: [DP-PUB-007]

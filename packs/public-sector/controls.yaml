@@ -1,0 +1,149 @@
+# Control library for Westland County Services (fictional). Oversight bodies and jurisdictions are invented;
+# frameworks are named for the public standards they are modelled on. Ported from the ADPM public-sector
+# controls (lawful basis, FOI readiness, open data, special category, equality, retention, automated decisions,
+# residency) and extended for benefits, permits and finance. Illustrative, not legal advice.
+jurisdictions:
+  - { id: JUR-WCS-STATE, name: "State of Calloway (human services programs)", regulator: "Calloway Department of Human Services" }
+  - { id: JUR-WCS-FED, name: "Federally funded benefit programs", regulator: "Federal program oversight office (USDA/HHS-style)" }
+  - { id: JUR-WCS-COUNTY, name: "Westland County ordinances", regulator: "Westland County Board of Supervisors" }
+  - { id: JUR-WCS-AUDIT, name: "County internal policy", regulator: "Westland County Audit Committee" }
+
+controls:
+  - id: CTL-PUB-001
+    name: Lawful basis for constituent data
+    framework: State human services privacy act
+    description: >-
+      Constituent personal data is processed only under a recorded lawful basis (program administration) with a named
+      controller. Names, contact details and addresses are masked for every persona without PII clearance.
+    jurisdiction: JUR-WCS-STATE
+    applies_to: { classes: [PII], domains: [constituent-services, human-services] }
+    evidence: Masking attachment report for every PII-tagged column and the lawful-basis register entry per product.
+    stage: 6
+  - id: CTL-PUB-002
+    name: Government identifier protection
+    framework: Federal computer matching and privacy rules (state data-match agreement)
+    description: >-
+      Government identifiers captured at intake are classified GOV_ID, stored only in governed tables, masked for every
+      persona except the data steward and used for data matching under a signed matching agreement.
+    jurisdiction: JUR-WCS-FED
+    applies_to: { classes: [GOV_ID], domains: [human-services, benefit-payments] }
+    evidence: Column classification scan showing GOV_ID only on tagged columns, each with MASK_GOV_ID attached.
+    stage: 6
+  - id: CTL-PUB-003
+    name: Timely eligibility processing
+    framework: Federal timeliness standard (30-day processing, 7-day expedited)
+    description: >-
+      Eligibility decisions are made within 30 business days of a complete application. Processing time is reported
+      excluding applications on hold for applicant documents, and the hold population is reported separately.
+    jurisdiction: JUR-WCS-FED
+    applies_to: { domains: [human-services] }
+    evidence: Certified processing-time metric definition, the document-hold business rule and the quarterly timeliness return.
+    stage: 11
+  - id: CTL-PUB-004
+    name: Payment accuracy and improper payments
+    framework: Payment Integrity Information Act-style reporting
+    description: >-
+      Improper payment rates are measured in dollars over quality-control sampled payments, include over- and
+      underpayments and are reported annually with corrective action plans for error types above tolerance.
+    jurisdiction: JUR-WCS-FED
+    applies_to: { domains: [benefit-payments] }
+    evidence: Improper payment rate by program and error type from the certified Benefit Payments product.
+    stage: 11
+  - id: CTL-PUB-005
+    name: Automated decision safeguards
+    framework: State automated decision-making rule
+    description: >-
+      Decisions affecting entitlement — eligibility, overpayment, fraud referral — are made by a named human, are
+      explainable and can be appealed. Agents never determine eligibility or label an individual as committing fraud.
+    jurisdiction: JUR-WCS-STATE
+    applies_to: { domains: [human-services, benefit-payments] }
+    evidence: Agent out-of-scope lists, refusal test results and the human decision log for integrity referrals.
+    stage: 10
+  - id: CTL-PUB-006
+    name: Statutory records retention
+    framework: County records retention schedule
+    description: >-
+      Case files, eligibility determinations and payment records are retained seven years after case closure; 311
+      records three years; permit records permanently. History in the platform is append-only.
+    jurisdiction: JUR-WCS-COUNTY
+    applies_to: { domains: [human-services, benefit-payments, constituent-services, permits-licensing] }
+    evidence: Retention configuration per object and the most recent certified destruction log.
+    stage: 9
+  - id: CTL-PUB-007
+    name: Open data publication and small-cell suppression
+    framework: County open-data policy
+    description: >-
+      Published datasets carry a catalogue record and an open licence, contain aggregates only and suppress any cell
+      describing fewer than 11 constituents.
+    jurisdiction: JUR-WCS-COUNTY
+    applies_to: { domains: [constituent-services, permits-licensing, public-works] }
+    evidence: Catalogue records for each published dataset and the suppression check on every published extract.
+    stage: 12
+  - id: CTL-PUB-008
+    name: Public records reproducibility
+    framework: State public records act (FOI readiness)
+    description: >-
+      Any figure published or given to the Board must be reproducible from a certified product version, metric
+      definition and query in response to a public records request.
+    jurisdiction: JUR-WCS-STATE
+    applies_to: { domains: [constituent-services, human-services, finance-procurement] }
+    evidence: Answer citations (product version, metric, SQL) retained with the published figure.
+    stage: 11
+  - id: CTL-PUB-009
+    name: Budgetary control
+    framework: GASB-style budgetary reporting
+    description: >-
+      Budget variance and execution are reported by fiscal year (July to June) against the adopted budget; definitions
+      used in Board reports come from one certified product with a versioned contract.
+    jurisdiction: JUR-WCS-AUDIT
+    applies_to: { domains: [finance-procurement, workforce] }
+    evidence: Reconciliation of actual expenditure to the general ledger and the approved contract version history.
+    stage: 11
+  - id: CTL-PUB-010
+    name: Procurement and vendor due diligence
+    framework: County purchasing ordinance
+    description: >-
+      Purchases above the informal threshold are competitively bid or placed on a cooperative contract; vendors are
+      onboarded after tax identity checks, and vendor tax identifiers are GOV_ID and masked outside purchasing.
+    jurisdiction: JUR-WCS-COUNTY
+    applies_to: { classes: [GOV_ID], domains: [finance-procurement] }
+    evidence: Procurement method mix, sole-source justifications and masking on DIM_VENDOR.tax_id.
+    stage: 4
+  - id: CTL-PUB-011
+    name: Grant compliance and drawdown
+    framework: Uniform Guidance-style grant administration
+    description: >-
+      Grant expenditure is drawn down in line with the award period; grants behind their expected drawdown are
+      reviewed monthly so funds are not returned unspent.
+    jurisdiction: JUR-WCS-FED
+    applies_to: { domains: [finance-procurement] }
+    evidence: Drawdown rate and at-risk grant list from the certified Finance & Procurement product.
+    stage: 11
+  - id: CTL-PUB-012
+    name: Critical data element ownership
+    framework: County data governance policy
+    description: >-
+      Every critical data element has a named owner and steward, at least one executable data quality rule and a
+      glossary term before the product that exposes it can be certified.
+    jurisdiction: JUR-WCS-AUDIT
+    applies_to: { domains: [constituent-services, human-services, benefit-payments, permits-licensing, public-works, finance-procurement, workforce] }
+    evidence: CDE register with owners, linked DQ rules and their latest results.
+    stage: 8
+  - id: CTL-PUB-013
+    name: Equality impact
+    framework: Public sector equality duty
+    description: >-
+      Service analytics support assessment of differential impact across districts and preferred languages;
+      special category data is excluded from general analytics.
+    jurisdiction: JUR-WCS-COUNTY
+    applies_to: { domains: [constituent-services, human-services] }
+    evidence: District and language breakdowns available for timeliness and 311 service levels.
+    stage: 3
+  - id: CTL-PUB-014
+    name: Data residency
+    framework: County information security standard
+    description: Constituent, case and payment data are processed and stored within the state.
+    jurisdiction: JUR-WCS-COUNTY
+    applies_to: { classes: [PII, GOV_ID], domains: [constituent-services, human-services, benefit-payments] }
+    evidence: Platform region configuration and storage location report.
+    stage: 5
