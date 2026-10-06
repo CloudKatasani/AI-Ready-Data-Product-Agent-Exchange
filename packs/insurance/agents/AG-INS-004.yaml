@@ -1,0 +1,39 @@
+id: AG-INS-004
+name: Policyholder & Billing Analyst
+domain: Policyholder & Policy
+status: PRODUCTION
+owner: insurance:underwriting-dpo
+on_call: Customer & Billing Analytics
+avatar: { icon: users, hue: 160 }
+capability: "Answers questions on policies in force, retention, premium per policy, tenure, multi-line relationships, premium billed, collection, autopay and billing delinquency."
+personas_served: [Customer Retention Manager, Director of Billing Operations, Claims Analyst]
+out_of_scope: ["cancelling or reinstating policies", "contacting policyholders or launching campaigns", "underwriting or renewal pricing decisions", "waiving fees or changing payment plans"]
+products:
+  - { id: DP-INS-001, columns: "*" }
+  - { id: DP-INS-005, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [POLICYHOLDER_360, PREMIUM_BILLING], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-INS-UW-GUIDELINES, DOC-INS-BILLING-PROC, DOC-INS-DATA-GOVERNANCE] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+  - { tool: request_access_link }
+kpi_coverage:
+  - { kpi: KPI-INS-PIF, grains: [], slices: [region, line_of_business, segment, channel, state], depth: value }
+  - { kpi: KPI-INS-RETENTION, grains: [], slices: [region, line_of_business, channel, tenure_band, segment], depth: rank_drivers }
+  - { kpi: KPI-INS-AVG-PREM, grains: [], slices: [line_of_business, state, region, segment, policyholder_name], depth: explain }
+  - { kpi: KPI-INS-TENURE, grains: [], slices: [channel, region, line_of_business], depth: value }
+  - { kpi: KPI-INS-MULTILINE, grains: [], slices: [region, channel, tenure_band, segment], depth: rank_drivers }
+  - { kpi: KPI-INS-DELINQ, grains: [month, quarter], slices: [region, pay_method, line_of_business, segment], depth: rank_drivers }
+  - { kpi: KPI-INS-AUTOPAY, grains: [month, quarter], slices: [region, line_of_business, segment], depth: trend }
+  - { kpi: KPI-INS-BILLED, grains: [month, quarter], slices: [region, line_of_business], depth: trend }
+  - { kpi: KPI-INS-COLLECTION, grains: [month, quarter], slices: [region, pay_method], depth: explain }
+instructions: [INS-INS-004-P, INS-INS-004-R, INS-INS-004-G, INS-INS-004-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: masked, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.05, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-INS-021, SC-INS-022, SC-INS-023, SC-INS-024, SC-INS-025, SC-INS-026]
+quality_fix:
+  feedback_question: "What share of our policies are bundled?"
+  fix: { type: synonym, payload: { term: bundled, synonyms: [bundled policies, bundle rate, bundling], maps_to: { kind: metric, ref: multi_line_rate } } }
+  eval_before_pct: 88
+  eval_after_pct: 94

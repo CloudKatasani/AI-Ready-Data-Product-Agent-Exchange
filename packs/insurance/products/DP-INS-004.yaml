@@ -1,0 +1,25 @@
+id: DP-INS-004
+name: Distribution Performance
+domain: Underwriting & Distribution
+archetype: CONSUMER_ALIGNED
+initial_status: CERTIFIED
+seed_stage: 12
+version: 1.3.0
+owner: insurance:underwriting-dpo
+steward: insurance:data-steward
+description: Submission funnel by agency, channel, region and line — submissions, quotes, binds, new business premium and quote turnaround.
+purpose: Agency management, producer reviews and new business planning from one certified funnel.
+decision: { persona: Head of Distribution, decision: "Which agencies get a service review and where to invest in the direct channel", cadence: Monthly, workaround: "Agency portal exports pivoted by hand before each producer review", consequence: "Slow-quoting agencies lose business to competitors and the review list is a month out of date" }
+sample_questions: ["What was our quote-to-bind ratio last quarter?", "Which agencies take longer than 3 days to quote?", "New business premium by channel this year"]
+semantic_view: SUBMISSION_FUNNEL
+output_ports:
+  - { kind: semantic, ref: SUBMISSION_FUNNEL }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_INS_004_DISTRIBUTION }
+  - { kind: agent, ref: AG-INS-003 }
+sla: { freshness_minutes: 1440, availability_pct: 99.0, max_null_rate_pct: 1.0 }
+kpis: [KPI-INS-QTB, KPI-INS-NB-PREM, KPI-INS-TURNAROUND, KPI-INS-SUBMISSIONS]
+upstream: [CONFORMED_GOLD.FCT_SUBMISSION, CONFORMED_GOLD.DIM_AGENCY]
+consumers: [Distribution managers, Underwriting, Distribution Insights agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-INS-004

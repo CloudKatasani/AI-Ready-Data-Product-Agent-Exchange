@@ -1,0 +1,24 @@
+id: DP-INS-007
+name: Customer Experience
+domain: Billing & Service
+archetype: CONSUMER_ALIGNED
+initial_status: IN_DEVELOPMENT
+seed_stage: 6
+version: 0.4.0
+owner: insurance:underwriting-dpo
+steward: insurance:data-steward
+description: Policyholder service contacts with channel, reason, first-contact resolution, complaints and post-contact survey scores, joined to the policyholder record.
+purpose: Show which journeys and regions erode loyalty — especially claim-status contacts after a catastrophe — so service and claims can fix them first.
+decision: { persona: Head of Customer Experience, decision: "Which service journeys to fix first and where to add catastrophe surge capacity", cadence: Monthly, workaround: "Survey platform dashboards with no link to region, reason or policy", consequence: "Post-catastrophe detractors are found through regulator complaints, not data" }
+sample_questions: ["Net promoter score by region", "Complaint rate by contact channel", "First-contact resolution by contact reason"]
+semantic_view: CUSTOMER_EXPERIENCE
+output_ports:
+  - { kind: semantic, ref: CUSTOMER_EXPERIENCE }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_INS_007_CUSTOMER_EXPERIENCE }
+sla: { freshness_minutes: 60, availability_pct: 99.0, max_null_rate_pct: 1.0 }
+kpis: [KPI-INS-NPS, KPI-INS-COMPLAINT, KPI-INS-FCR]
+upstream: [CONFORMED_GOLD.FCT_SERVICE_CONTACT, CONFORMED_GOLD.DIM_POLICYHOLDER]
+consumers: [Customer experience, Service operations]
+lifecycle_seed: { artifacts: auto, open_proposals: true }
+certification_script: null
+value_case: VC-INS-007

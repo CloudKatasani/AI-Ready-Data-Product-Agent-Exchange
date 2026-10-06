@@ -1,0 +1,650 @@
+# Sentinel Mutual business glossary (synthetic). Ported from the AI-Ready insurance glossary (T-001..T-028) and
+# the ADPM insurance pack (risk item, bind, reserve); ids, owners and mappings adapted to this pack's personas,
+# warehouse and semantic views.
+
+# ── Underwriting result ───────────────────────────────────────────────────────────────────────────
+- id: GT-INS-LOSS-RATIO
+  name: "Loss Ratio"
+  definition: "Incurred losses (paid plus case reserves) divided by earned premium for the same accident period. The reported loss ratio excludes catastrophe-coded losses, which are shown separately as catastrophe points; it is never calculated on written premium."
+  formula: "Σ incurred losses (catastrophe excluded) ÷ Σ earned premium"
+  domain: Underwriting result
+  owner: insurance:chief-underwriting-officer
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [ex-cat loss ratio, attritional loss ratio]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_UW_LEDGER.incurred_loss, CONFORMED_GOLD.FCT_UW_LEDGER.earned_premium]
+    metrics: [loss_ratio]
+
+- id: GT-INS-CAT-LOSS
+  name: "Catastrophe Loss Ratio"
+  definition: "Losses on claims carrying a code from the catastrophe code list, expressed as points of earned premium. Added to the ex-cat loss ratio it gives the all-in loss ratio."
+  formula: "Σ catastrophe-coded incurred losses ÷ Σ earned premium"
+  domain: Underwriting result
+  owner: insurance:chief-underwriting-officer
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [cat points, catastrophe load]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_UW_LEDGER.is_catastrophe]
+    metrics: [cat_loss_ratio]
+
+- id: GT-INS-CAT-EVENT
+  name: "Catastrophe Event"
+  definition: "A named event on the catastrophe code list (hurricane, wildfire, severe convective storm or winter storm) with a footprint and date window. Any claim carrying the event's code is a catastrophe claim."
+  domain: Underwriting result
+  owner: insurance:chief-underwriting-officer
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [cat code, cat event code, catastrophe code]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CAT_EVENT.event_code, CONFORMED_GOLD.FCT_CLAIM.is_catastrophe]
+    metrics: []
+
+- id: GT-INS-LAE
+  name: "Loss Adjustment Expense"
+  definition: "The cost of investigating, adjusting and settling claims (adjusters, independent appraisers, legal defence), reported as a ratio to earned premium."
+  formula: "Σ LAE ÷ Σ earned premium"
+  domain: Underwriting result
+  owner: insurance:claims-ops-manager
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [lae ratio, adjusting expense]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_UW_LEDGER.lae_amount]
+    metrics: [lae_ratio]
+
+- id: GT-INS-EXPENSE-RATIO
+  name: "Expense Ratio"
+  definition: "Commission and other underwriting expense as a share of earned premium."
+  formula: "Σ underwriting expense ÷ Σ earned premium"
+  domain: Underwriting result
+  owner: insurance:chief-underwriting-officer
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [underwriting expense ratio]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_UW_LEDGER.uw_expense]
+    metrics: [expense_ratio]
+
+- id: GT-INS-COMBINED-RATIO
+  name: "Combined Ratio"
+  definition: "The all-in loss ratio plus the LAE ratio plus the expense ratio, each on earned premium. Below 100% is an underwriting profit."
+  formula: "(Σ incurred + Σ LAE + Σ underwriting expense) ÷ Σ earned premium"
+  domain: Underwriting result
+  owner: insurance:chief-underwriting-officer
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [combined operating ratio]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_UW_LEDGER.incurred_loss, CONFORMED_GOLD.FCT_UW_LEDGER.lae_amount, CONFORMED_GOLD.FCT_UW_LEDGER.uw_expense]
+    metrics: [combined_ratio]
+
+- id: GT-INS-EARNED-PREMIUM
+  name: "Earned Premium"
+  definition: "The portion of written premium for which coverage has already been provided in the period; the denominator of every loss and expense ratio."
+  formula: "Σ earned premium"
+  domain: Underwriting result
+  owner: insurance:chief-underwriting-officer
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [premium earned]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_UW_LEDGER.earned_premium, CURATED_SILVER.PREMIUM_MONTH.earned_premium]
+    metrics: [earned_premium]
+
+- id: GT-INS-WRITTEN-PREMIUM
+  name: "Written Premium"
+  definition: "Premium on policies written or renewed in the period, before it is earned; used for growth, never as a loss ratio denominator."
+  formula: "Σ written premium"
+  domain: Underwriting result
+  owner: insurance:chief-underwriting-officer
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [gross written premium, gwp]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_UW_LEDGER.written_premium]
+    metrics: [written_premium]
+
+- id: GT-INS-INCURRED-LOSS
+  name: "Incurred Loss"
+  definition: "Paid losses plus case reserves on claims with a loss date in the period. Excludes loss adjustment expense."
+  formula: "Σ paid + Σ case reserve"
+  domain: Underwriting result
+  owner: insurance:claims-ops-manager
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [incurred losses, losses incurred]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_UW_LEDGER.incurred_loss, CONFORMED_GOLD.FCT_CLAIM.incurred_loss]
+    metrics: [incurred_losses]
+
+- id: GT-INS-CLAIM-FREQUENCY
+  name: "Claim Frequency"
+  definition: "Claims per 100 policy-years of earned exposure, annualised."
+  formula: "100 × 12 × claims ÷ exposure months"
+  domain: Underwriting result
+  owner: insurance:chief-underwriting-officer
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [claims per exposure]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_UW_LEDGER.claim_count, CONFORMED_GOLD.FCT_UW_LEDGER.exposure_months]
+    metrics: [claim_frequency]
+
+- id: GT-INS-ACCIDENT-YEAR
+  name: "Accident Year"
+  definition: "The calendar year in which the loss occurred. \"This year\" in a loss ratio means accident year to date: losses with a loss date from 1 January against premium earned in the same months."
+  domain: Actuarial & reserving
+  owner: insurance:chief-underwriting-officer
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [loss year]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_RESERVE.accident_year]
+    metrics: []
+
+# ── Claims ─────────────────────────────────────────────────────────────────────────────────────────
+- id: GT-INS-CLAIM
+  name: "Reported Claim"
+  definition: "A loss notified to Sentinel Mutual under a policy, counted once from first notice of loss (FNOL) by its loss date."
+  domain: Claims
+  owner: insurance:claims-ops-manager
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [first notice of loss, reported claims]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CLAIM.claim_id, CONFORMED_GOLD.FCT_CLAIM.loss_date]
+    metrics: [claims_reported]
+
+- id: GT-INS-SEVERITY
+  name: "Claim Severity"
+  definition: "The average incurred loss per claim with a loss date in the period. Catastrophe claims are excluded unless requested; LAE is excluded."
+  formula: "Σ incurred ÷ claims (catastrophe excluded)"
+  domain: Claims
+  owner: insurance:claims-ops-manager
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [average claim cost]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CLAIM.incurred_loss]
+    metrics: [avg_severity]
+
+- id: GT-INS-CYCLE-TIME
+  name: "Claims Cycle Time"
+  definition: "Days from first notice of loss to closure, measured on closed claims."
+  formula: "mean(closed date − reported date)"
+  domain: Claims
+  owner: insurance:claims-ops-manager
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [cycle time to settle, settlement cycle time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CLAIM.cycle_days]
+    metrics: [avg_cycle_days]
+
+- id: GT-INS-OPEN-CLAIM
+  name: "Open Claim"
+  definition: "A claim with status Open or Reopened and a case reserve above zero. Claims fully paid and awaiting only a subrogation recovery are not open."
+  domain: Claims
+  owner: insurance:claims-ops-manager
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [pending claim, open inventory]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CLAIM.is_open, CONFORMED_GOLD.FCT_CLAIM.claim_status]
+    metrics: [open_claims]
+
+- id: GT-INS-PAID-LOSS
+  name: "Paid Loss"
+  definition: "Loss payments made to claimants and vendors on claims, excluding loss adjustment expense."
+  domain: Claims
+  owner: insurance:claims-ops-manager
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [loss paid]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CLAIM.paid_loss]
+    metrics: [paid_losses]
+
+- id: GT-INS-SUBROGATION
+  name: "Subrogation Recovery"
+  definition: "Money recovered from a responsible third party or their insurer after Sentinel Mutual has paid a claim. The recovery rate divides recoveries by paid losses on subrogation-eligible closed claims."
+  formula: "Σ recoveries ÷ Σ paid on eligible closed claims"
+  domain: Claims
+  owner: insurance:claims-ops-manager
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [subro, subrogation recoveries]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CLAIM.subro_recovered, CONFORMED_GOLD.FCT_CLAIM.subro_eligible]
+    metrics: [subrogation_recovery_rate]
+
+- id: GT-INS-SIU-REFERRAL
+  name: "SIU Referral"
+  definition: "A claim referred to the special investigations unit because it matches fraud indicators. The referral rate is referred claims over claims reported; a referral is not a finding of fraud."
+  domain: Claims
+  owner: insurance:claims-ops-manager
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [special investigations referral, fraud referral]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CLAIM.siu_referred]
+    metrics: [fraud_referral_rate]
+
+- id: GT-INS-CLAIMANT
+  name: "Claimant"
+  definition: "The person or business making a claim under a policy — the policyholder or a third party. Claimant names and phone numbers are personal data."
+  domain: Claims
+  owner: insurance:claims-ops-manager
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [injured party, third-party claimant]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CLAIM.claimant_name, CONFORMED_GOLD.FCT_RESERVE.claimant_name]
+    metrics: []
+
+- id: GT-INS-LARGE-LOSS
+  name: "Large Loss"
+  definition: "A claim with incurred losses of $50,000 or more; open injury large losses are reviewed quarterly by a claims manager."
+  domain: Claims
+  owner: insurance:claims-ops-manager
+  steward: insurance:data-steward
+  status: IN_REVIEW
+  cde: false
+  synonyms: [large losses]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CLAIM.large_loss]
+    metrics: []
+
+# ── Actuarial & reserving ────────────────────────────────────────────────────────────────────────
+- id: GT-INS-CASE-RESERVE
+  name: "Case Reserve"
+  definition: "The adjuster's estimate of the remaining cost to settle an open claim, reported at each month-end valuation. Closed claims carry no case reserve."
+  domain: Actuarial & reserving
+  owner: insurance:chief-underwriting-officer
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [case outstanding]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_RESERVE.case_reserve, CONFORMED_GOLD.FCT_CLAIM.case_reserve]
+    metrics: [case_reserve_balance, avg_case_reserve]
+
+- id: GT-INS-IBNR
+  name: "IBNR Reserve"
+  definition: "Incurred-but-not-reported reserve: the provision for claims that have occurred but are not yet reported or not yet fully reserved, set by the reserving committee by line and allocated to open claims pro rata to case reserve."
+  domain: Actuarial & reserving
+  owner: insurance:chief-underwriting-officer
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [incurred but not reported]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_RESERVE.ibnr_reserve]
+    metrics: [ibnr_reserve]
+
+- id: GT-INS-CARRIED-RESERVE
+  name: "Carried Loss Reserve"
+  definition: "Case reserves plus IBNR held on the balance sheet at a valuation date."
+  formula: "Σ case reserve + Σ IBNR"
+  domain: Actuarial & reserving
+  owner: insurance:chief-underwriting-officer
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [carried reserve, held reserves]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_RESERVE.carried_reserve]
+    metrics: [total_loss_reserves]
+
+- id: GT-INS-RESERVE-ADEQUACY
+  name: "Reserve Adequacy"
+  definition: "Carried reserves as a share of the actuarial central indication. Below 95% for a line triggers a reserving committee review."
+  formula: "Σ carried ÷ Σ indicated"
+  domain: Actuarial & reserving
+  owner: insurance:chief-underwriting-officer
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [reserve sufficiency ratio]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_RESERVE.indicated_reserve, CONFORMED_GOLD.FCT_RESERVE.carried_reserve]
+    metrics: [reserve_adequacy]
+
+- id: GT-INS-VALUATION-DATE
+  name: "Valuation Date"
+  definition: "The month-end at which case reserves, IBNR and the actuarial indication are measured."
+  domain: Actuarial & reserving
+  owner: insurance:chief-underwriting-officer
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [month-end valuation]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_RESERVE.valuation_date]
+    metrics: []
+
+# ── Underwriting & distribution ──────────────────────────────────────────────────────────────────
+- id: GT-INS-QUOTE-TO-BIND
+  name: "Quote-to-Bind Ratio"
+  definition: "Bound submissions divided by quoted submissions, by received date. Submissions declined before a quote are excluded."
+  formula: "bound ÷ quoted"
+  domain: Distribution
+  owner: insurance:underwriting-dpo
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [hit ratio, bind ratio]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUBMISSION.bound, CONFORMED_GOLD.FCT_SUBMISSION.quoted]
+    metrics: [quote_to_bind_ratio]
+
+- id: GT-INS-NEW-BUSINESS
+  name: "New Business Premium"
+  definition: "Premium bound on new policies. Renewals, rewrites of existing business and reinstatements are excluded."
+  domain: Distribution
+  owner: insurance:underwriting-dpo
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [new business written premium]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUBMISSION.bound_premium, CONFORMED_GOLD.FCT_SUBMISSION.submission_type, CONFORMED_GOLD.FCT_SUBMISSION.quoted_premium]
+    metrics: [new_business_premium]
+
+- id: GT-INS-TURNAROUND
+  name: "Quote Turnaround"
+  definition: "Days from receiving a complete submission to issuing a quote. The agency service standard is three business days."
+  domain: Distribution
+  owner: insurance:underwriting-dpo
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [speed to quote]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUBMISSION.turnaround_days]
+    metrics: [quote_turnaround_days]
+
+- id: GT-INS-SUBMISSION
+  name: "Quote Submission"
+  definition: "A request from an agency, broker or the direct channel to quote a new, rewritten or reinstated risk."
+  domain: Distribution
+  owner: insurance:underwriting-dpo
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [quote request]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUBMISSION.submission_id]
+    metrics: [submissions_received]
+
+- id: GT-INS-BIND
+  name: "Bind"
+  definition: "The moment a quote becomes an in-force policy under a licensed underwriter's or appointed agency's binding authority."
+  domain: Distribution
+  owner: insurance:underwriting-dpo
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [bound policy]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUBMISSION.bound]
+    metrics: []
+
+- id: GT-INS-AGENCY
+  name: "Agency"
+  definition: "An appointed independent or captive agency, a broker, or the Sentinel Direct digital channel that places business with Sentinel Mutual."
+  domain: Distribution
+  owner: insurance:underwriting-dpo
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [producer, appointed agency]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_AGENCY.agency_name]
+    metrics: []
+
+- id: GT-INS-CHANNEL
+  name: "Distribution Channel"
+  definition: "How business reaches Sentinel Mutual: independent agent, captive agent, broker or direct digital."
+  domain: Distribution
+  owner: insurance:underwriting-dpo
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [sales channel]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_AGENCY.channel, CONFORMED_GOLD.DIM_POLICY.channel]
+    metrics: []
+
+# ── Policyholder & policy ────────────────────────────────────────────────────────────────────────
+- id: GT-INS-POLICYHOLDER
+  name: "Policyholder"
+  definition: "The person or business that holds the insurance contract and pays the premium. Names, contact details, dates of birth and licence numbers are personal data."
+  domain: Policyholder
+  owner: insurance:underwriting-dpo
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [insured, named insured]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_POLICYHOLDER.policyholder_id, CONFORMED_GOLD.DIM_POLICY.policyholder_key]
+    metrics: []
+
+- id: GT-INS-PIF
+  name: "Policy in Force"
+  definition: "A policy with status In force at the as-of date: its current term has started and it has not lapsed or been cancelled."
+  domain: Policyholder
+  owner: insurance:underwriting-dpo
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [policies in force, in-force policy]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_POLICY.in_force, CONFORMED_GOLD.DIM_POLICY.policy_status, CONFORMED_GOLD.DIM_POLICY.policy_id]
+    metrics: [policies_in_force]
+
+- id: GT-INS-RETENTION
+  name: "Policy Retention"
+  definition: "Policies renewed divided by policies that reached a renewal date in the period; mid-term cancellations are tracked separately and excluded from the denominator."
+  formula: "renewed ÷ due for renewal"
+  domain: Policyholder
+  owner: insurance:underwriting-dpo
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [renewal retention]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_POLICY.renewed, CONFORMED_GOLD.DIM_POLICY.renewal_due]
+    metrics: [retention_rate]
+
+- id: GT-INS-AVG-PREMIUM
+  name: "Average Premium per Policy"
+  definition: "The average current-term annual premium of policies in force."
+  domain: Policyholder
+  owner: insurance:underwriting-dpo
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [average annual premium]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_POLICY.annual_premium]
+    metrics: [avg_premium_per_policy]
+
+- id: GT-INS-TENURE
+  name: "Policyholder Tenure"
+  definition: "Years since the policy's original inception, averaged over policies in force."
+  domain: Policyholder
+  owner: insurance:underwriting-dpo
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [years insured]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_POLICY.tenure_years]
+    metrics: [avg_tenure_years]
+
+- id: GT-INS-MULTI-LINE
+  name: "Multi-Line Policyholder"
+  definition: "A policyholder with in-force policies in two or more lines of business (for example auto and home). The multi-line rate is the share of in-force policies held by multi-line policyholders."
+  domain: Policyholder
+  owner: insurance:underwriting-dpo
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [multi-line customer, cross-line relationship]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_POLICYHOLDER.multi_line, CONFORMED_GOLD.DIM_POLICY.multi_line]
+    metrics: [multi_line_rate]
+
+- id: GT-INS-LOB
+  name: "Line of Business"
+  definition: "A product line — personal auto, homeowners, commercial auto, commercial property, general liability or workers compensation — mapped to its statutory annual statement line."
+  domain: Policyholder
+  owner: insurance:underwriting-dpo
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [lob, product line]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_POLICY.line_of_business, CONFORMED_GOLD.DIM_LINE.line_of_business]
+    metrics: []
+
+- id: GT-INS-REGION
+  name: "Region"
+  definition: "One of Sentinel Mutual's four operating regions (Northeast, Midwest, South, West), taken from the policy's risk state. Region drives row-level access."
+  domain: Policyholder
+  owner: insurance:underwriting-dpo
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [operating region]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_POLICY.region, CONFORMED_GOLD.DIM_POLICYHOLDER.region, CONFORMED_GOLD.DIM_AGENCY.region]
+    metrics: []
+
+- id: GT-INS-RISK-ITEM
+  name: "Risk Item"
+  definition: "The specific object insured under a policy — a vehicle, dwelling, commercial building or payroll — with its insured value."
+  domain: Policyholder
+  owner: insurance:underwriting-dpo
+  steward: insurance:data-steward
+  status: DRAFT
+  cde: false
+  synonyms: [insured object]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_POLICY.insured_value]
+    metrics: []
+
+# ── Billing & service ────────────────────────────────────────────────────────────────────────────
+- id: GT-INS-DELINQUENCY
+  name: "Billing Delinquency"
+  definition: "An invoice more than 30 days past due at month end. The delinquency rate is delinquent invoices over invoices issued."
+  domain: Billing
+  owner: insurance:data-steward
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [premium delinquency rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INVOICE.days_past_due]
+    metrics: [billing_delinquency_rate]
+
+- id: GT-INS-AUTOPAY
+  name: "Autopay"
+  definition: "An invoice paid by automatic bank draft or recurring card payment."
+  domain: Billing
+  owner: insurance:data-steward
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [automatic payment, eft]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INVOICE.autopay, CONFORMED_GOLD.FCT_INVOICE.pay_method]
+    metrics: [autopay_rate]
+
+- id: GT-INS-PREMIUM-BILLED
+  name: "Premium Billed"
+  definition: "Premium instalments invoiced to policyholders in the period."
+  domain: Billing
+  owner: insurance:data-steward
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [billed premium]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INVOICE.amount_due]
+    metrics: [premium_billed]
+
+- id: GT-INS-COLLECTION
+  name: "Premium Collection Rate"
+  definition: "Premium payments received as a share of premium billed for the same invoices."
+  domain: Billing
+  owner: insurance:data-steward
+  steward: insurance:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [cash collection rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INVOICE.paid_amount]
+    metrics: [collection_rate]
+
+- id: GT-INS-NPS
+  name: "Net Promoter Score"
+  definition: "Percentage of surveyed policyholders scoring 9–10 (promoters) minus the percentage scoring 0–6 (detractors) on likelihood to recommend."
+  formula: "% promoters − % detractors"
+  domain: Service
+  owner: insurance:data-steward
+  steward: insurance:data-steward
+  status: IN_REVIEW
+  cde: false
+  synonyms: [net promoter]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SERVICE_CONTACT.nps_score]
+    metrics: [nps]
+
+- id: GT-INS-COMPLAINT
+  name: "Complaint"
+  definition: "A service contact in which the policyholder expresses dissatisfaction that requires a response; complaints are reportable to the state regulator on request."
+  domain: Service
+  owner: insurance:data-steward
+  steward: insurance:data-steward
+  status: IN_REVIEW
+  cde: false
+  synonyms: [policyholder complaint]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SERVICE_CONTACT.complaint]
+    metrics: [complaint_rate]
+
+- id: GT-INS-FCR
+  name: "First-Contact Resolution"
+  definition: "A service contact resolved without the policyholder having to contact Sentinel Mutual again on the same matter."
+  domain: Service
+  owner: insurance:data-steward
+  steward: insurance:data-steward
+  status: IN_REVIEW
+  cde: false
+  synonyms: [first contact resolution]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SERVICE_CONTACT.first_contact_resolved]
+    metrics: [first_contact_resolution_rate]

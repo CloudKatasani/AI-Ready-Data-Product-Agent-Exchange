@@ -1,0 +1,59 @@
+name: SUBMISSION_FUNNEL
+description: Submission funnel by agency and channel — submissions, quote-to-bind, new business premium and speed to quote
+tables:
+  - { alias: s, fqn: CONFORMED_GOLD.FCT_SUBMISSION, pk: submission_key }
+  - { alias: a, fqn: CONFORMED_GOLD.DIM_AGENCY, pk: agency_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: s.agency_key, to: a.agency_key }
+  - { from: s.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: a.region, label: Region, synonyms: [territory, operating region], term: GT-INS-REGION }
+  - { name: agency, expr: a.agency_name, label: Agency, synonyms: [agencies, producer, broker firm], term: GT-INS-AGENCY }
+  - { name: channel, expr: a.channel, label: Distribution channel, synonyms: [sales channel, distribution channels], term: GT-INS-CHANNEL }
+  - { name: line_of_business, expr: s.line_of_business, label: Line of business, synonyms: [lob, product line, lines of business], term: GT-INS-LOB }
+  - { name: submission_type, expr: s.submission_type, label: Submission type, synonyms: [business type, new or rewrite] }
+time_dimensions:
+  - { name: received_date, expr: d.date, default: true }
+facts:
+  - { name: quoted_premium_amount, expr: s.quoted_premium }
+metrics:
+  - name: submissions_received
+    label: Submissions received
+    expr: COUNT(*)
+    unit: submissions
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [submission count, submission volume, submissions, applications received]
+    term: GT-INS-SUBMISSION
+    description: Submissions received in the period (governed submission sample)
+  - name: quote_to_bind_ratio
+    label: Quote-to-bind ratio
+    expr: 100.0 * SUM(CASE WHEN s.bound THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN s.quoted THEN 1 ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [bind rate, quote to bind, conversion rate, bind ratio]
+    term: GT-INS-QUOTE-TO-BIND
+    description: Bound submissions as a share of quoted submissions; declined-before-quote excluded
+    naive_expr: 100.0 * AVG(CASE WHEN s.bound THEN 1 ELSE 0 END)
+  - name: new_business_premium
+    label: New business premium
+    expr: SUM(s.bound_premium)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [nb premium, new business, new premium bound]
+    term: GT-INS-NEW-BUSINESS
+    description: Premium bound on new business; rewrites and reinstatements excluded by default (BR-INS-016)
+    default_filters: [ { rule: BR-INS-016 } ]
+  - name: quote_turnaround_days
+    label: Quote turnaround
+    expr: AVG(s.turnaround_days)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [speed to quote, days to quote, turnaround time, time to quote]
+    term: GT-INS-TURNAROUND
+    description: Average days from submission to quote, quoted submissions only
+products: [DP-INS-004]

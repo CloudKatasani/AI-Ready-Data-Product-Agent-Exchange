@@ -1,0 +1,47 @@
+name: CUSTOMER_EXPERIENCE
+description: Policyholder service contacts — NPS from post-contact surveys, complaints and first-contact resolution
+tables:
+  - { alias: s, fqn: CONFORMED_GOLD.FCT_SERVICE_CONTACT, pk: contact_key }
+  - { alias: h, fqn: CONFORMED_GOLD.DIM_POLICYHOLDER, pk: policyholder_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: s.policyholder_key, to: h.policyholder_key }
+  - { from: s.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: h.region, label: Region, synonyms: [territory, operating region], term: GT-INS-REGION }
+  - { name: contact_channel, expr: s.contact_channel, label: Contact channel, synonyms: [service channel] }
+  - { name: contact_reason, expr: s.contact_reason, label: Contact reason, synonyms: [reason for contact, call reason] }
+  - { name: segment, expr: h.segment, label: Segment, synonyms: [personal or commercial] }
+time_dimensions:
+  - { name: contact_date, expr: d.date, default: true }
+facts:
+  - { name: handle_time_minutes, expr: s.handle_minutes }
+metrics:
+  - name: nps
+    label: Net promoter score
+    expr: 100.0 * (SUM(CASE WHEN s.nps_score >= 9 THEN 1 ELSE 0 END) - SUM(CASE WHEN s.nps_score <= 6 THEN 1 ELSE 0 END)) / NULLIF(COUNT(s.nps_score), 0)
+    unit: points
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [nps score, promoter score, likelihood to recommend]
+    term: GT-INS-NPS
+    description: Promoters minus detractors as a share of surveyed contacts
+  - name: complaint_rate
+    label: Complaint rate
+    expr: 100.0 * AVG(CASE WHEN s.complaint THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [complaints share, share of complaints]
+    term: GT-INS-COMPLAINT
+    description: Share of service contacts logged as complaints
+  - name: first_contact_resolution_rate
+    label: First-contact resolution
+    expr: 100.0 * AVG(CASE WHEN s.first_contact_resolved THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [fcr, resolved first time, first call resolution]
+    term: GT-INS-FCR
+    description: Share of service contacts resolved without a follow-up
+products: [DP-INS-007]

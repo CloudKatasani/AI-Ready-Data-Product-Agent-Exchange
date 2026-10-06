@@ -1,0 +1,82 @@
+# Seeded intake requests and demand-board items. REQ-INS-001 deliberately near-duplicates DP-INS-003
+# (Underwriting Result) so the intake duplicate detector fires (AC5.1).
+requests:
+  - id: REQ-INS-001
+    title: Regional loss ratio scorecard
+    requester: insurance:claims-analyst
+    decision: Which lines in my regions need underwriting attention or claims process changes next quarter
+    decider: Regional Claims Director
+    cadence: Monthly
+    workaround: Policy and claims extracts filtered to my regions and loss ratios computed by hand
+    questions:
+      - What was the loss ratio by region last quarter?
+      - Which lines of business have the highest loss ratio excluding catastrophes?
+      - How has the combined ratio trended this year?
+      - What are catastrophe losses costing us this year?
+    stakes: Attritional deterioration in my regions goes unnoticed behind catastrophe noise
+    freshness: Monthly by business day 5
+    status: SUBMITTED
+  - id: REQ-INS-002
+    title: Catastrophe accumulation monitor
+    requester: insurance:chief-underwriting-officer
+    decision: Where to suspend new property business and how much property catastrophe reinsurance to buy
+    decider: Head of Catastrophe Risk
+    cadence: Weekly, daily during hurricane season
+    workaround: Exposure spreadsheets refreshed by hand before each reinsurance renewal
+    questions:
+      - How much insured value sits in hurricane and wildfire zones?
+      - What share of property insured value is in catastrophe zones by region?
+      - How close are we to the 40% accumulation limit?
+    stakes: Accumulation passes the limit before anyone notices and one event exceeds the reinsurance programme
+    freshness: Weekly
+    status: APPROVED
+  - id: REQ-INS-003
+    title: Fraud referral workbench
+    requester: insurance:claims-ops-manager
+    decision: Which open claims to refer to the special investigations unit this week
+    decider: SIU Manager
+    cadence: Weekly
+    workaround: Referrals raised ad hoc by individual adjusters
+    questions:
+      - Which open claims match known fraud indicators?
+      - Which parties appear on multiple recent claims?
+      - What value is exposed on each referral candidate?
+    stakes: Fraudulent claims settle before referral and recovery becomes unlikely
+    freshness: Daily by 06:00
+    status: IN_TRIAGE
+  - id: REQ-INS-004
+    title: Reinsurance recovery tracker
+    requester: insurance:underwriting-dpo
+    decision: Which ceded recoveries to pursue and which treaties to renegotiate at renewal
+    decider: Reinsurance Manager
+    cadence: Quarterly
+    workaround: Treaty bordereaux reconciled in spreadsheets
+    questions:
+      - Which claims trigger recoveries under the property catastrophe treaty?
+      - How much is due from each reinsurer?
+      - What share of the hurricane losses is ceded?
+    stakes: Recoveries are collected late or missed and treaty pricing is negotiated blind
+    freshness: Monthly
+    status: SUBMITTED
+  - id: REQ-INS-005
+    title: Northeast claims severity drill-down
+    requester: insurance:claims-analyst
+    decision: Which Northeast handling teams to review in the next claims audit
+    decider: Regional Claims Director
+    cadence: Monthly
+    workaround: Monthly email from the claims operations manager with a pivot table
+    questions:
+      - What was claim severity in the Northeast last quarter by handling team?
+      - Which causes of loss drive Northeast severity?
+      - How many Northeast claims were referred to SIU last quarter?
+    stakes: Audit effort spent on teams that are not driving Northeast severity
+    freshness: Monthly
+    status: MERGED
+
+demand_items:
+  - { id: DM-INS-001, title: Catastrophe exposure product, kind: product, description: "Property insured value by catastrophe zone against the 40% accumulation limit, joined to the catastrophe code list.", requested_by: insurance:chief-underwriting-officer, votes: 16 }
+  - { id: DM-INS-002, title: Catastrophe response agent, kind: agent, description: "Answers how many claims, how much incurred and which regions an event has hit, from certified claims data during an event.", requested_by: insurance:claims-ops-manager, votes: 13 }
+  - { id: DM-INS-003, title: Rate adequacy product, kind: product, description: "Charged versus technical premium by line, segment and region for the pricing review, aggregated only.", requested_by: insurance:chief-underwriting-officer, votes: 10 }
+  - { id: DM-INS-004, title: Reinsurance recovery product, kind: product, description: "Ceded exposure and recoveries due by treaty, with the claims that trigger them.", requested_by: insurance:underwriting-dpo, votes: 7 }
+  - { id: DM-INS-005, title: Service experience agent, kind: agent, description: "Explains NPS, complaints and first-contact resolution by journey once Customer Experience is certified.", requested_by: insurance:data-steward, votes: 6 }
+  - { id: DM-INS-006, title: Fraud referral product, kind: product, description: "Open claims matching fraud indicators with exposed value and party linkage, for SIU triage.", requested_by: insurance:claims-ops-manager, votes: 5 }

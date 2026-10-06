@@ -1,0 +1,49 @@
+# Five demo identities, one per archetype (01-functional-spec §2.2). Archetypes A–D are ported from the
+# AI-Ready insurance personas; E is new. People are generated, not real.
+- id: insurance:claims-analyst
+  archetype: A
+  name: Paloma Esterhazy
+  title: Claims Analyst, Northeast & Midwest
+  domain: Claims
+  roles: [DATA_CONSUMER]
+  row_filter: { dimension: region, allowed: [Northeast, Midwest] }
+  unmasked: []
+  cares: Severity, open inventory, payments, cycle time and the loss ratio in the Northeast and Midwest; wants plain answers she can take to the claims floor this week.
+  sees: Northeast and Midwest only; claimant and policyholder PII, government identifiers and card data masked.
+- id: insurance:claims-ops-manager
+  archetype: B
+  name: Desmond Achterberg
+  title: Claims Operations Manager
+  domain: Claims operations
+  roles: [DATA_CONSUMER, ANALYST]
+  unmasked: []
+  cares: Loss ratio by line, combined ratio, catastrophe losses, claim severity and cycle time, and how the agency funnel feeds the book.
+  sees: All regions; personal data masked.
+- id: insurance:underwriting-dpo
+  archetype: C
+  name: Mei Lin Zhao
+  title: Underwriting Data Product Owner
+  domain: Underwriting & distribution
+  roles: [DOMAIN_PRODUCT_OWNER, DATA_ENGINEER]
+  unmasked: []
+  cares: Shipping certified underwriting, claims, distribution and billing products that agents can trust.
+  sees: All regions; PII masked; can build and submit products for review.
+- id: insurance:data-steward
+  archetype: D
+  name: Harriet Quansah
+  title: Enterprise Data Steward
+  domain: Governance
+  roles: [DATA_STEWARD, GOVERNANCE_COUNCIL, PRIVACY_OFFICER]
+  unmasked: [PII, PCI, GOV_ID]
+  cares: Glossary health, CDE ownership, masking coverage on claimant data, reserving lineage and certification decisions.
+  sees: Everything, unmasked; approves access requests and certification gates.
+- id: insurance:chief-underwriting-officer
+  archetype: E
+  name: Rosalind Okonjo
+  title: Chief Underwriting Officer
+  domain: Executive
+  roles: [EXECUTIVE, PORTFOLIO_LEAD, GOVERNANCE_COUNCIL]
+  unmasked: []
+  aggregates_only: true
+  cares: Combined ratio against plan, catastrophe exposure, reserve adequacy, retention and where to invest next.
+  sees: Aggregates only; portfolio, value and readiness.

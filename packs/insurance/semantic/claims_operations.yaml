@@ -1,0 +1,90 @@
+name: CLAIMS_OPERATIONS
+description: Claims at claim grain — volumes, severity, cycle time, open inventory, payments, subrogation and SIU referrals
+tables:
+  - { alias: c, fqn: CONFORMED_GOLD.FCT_CLAIM, pk: claim_key }
+  - { alias: p, fqn: CONFORMED_GOLD.DIM_POLICY, pk: policy_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: c.policy_key, to: p.policy_key }
+  - { from: c.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: p.region, label: Region, synonyms: [territory, operating region], term: GT-INS-REGION }
+  - { name: state, expr: p.state, label: State, synonyms: [states, loss state] }
+  - { name: line_of_business, expr: p.line_of_business, label: Line of business, synonyms: [lob, product line, lines of business], term: GT-INS-LOB }
+  - { name: cause_of_loss, expr: c.cause_of_loss, label: Cause of loss, synonyms: [loss cause, causes of loss, peril type] }
+  - { name: handling_team, expr: c.handling_team, label: Adjuster team, synonyms: [handling team, adjuster teams, claims unit] }
+  - { name: claim_status, expr: c.claim_status, label: Claim status, synonyms: [open or closed] }
+  - { name: catastrophe, expr: c.is_catastrophe, label: Catastrophe claim, synonyms: [cat claim, catastrophe coded claim], term: GT-INS-CAT-EVENT }
+  - { name: claimant_name, expr: c.claimant_name, label: Claimant, synonyms: [claimant name, claimants] }
+time_dimensions:
+  - { name: loss_date, expr: d.date, default: true }
+facts:
+  - { name: incurred_loss_amount, expr: c.incurred_loss }
+  - { name: cycle_time_days, expr: c.cycle_days }
+metrics:
+  - name: claims_reported
+    label: Claims reported
+    expr: COUNT(*)
+    unit: claims
+    decimals: 0
+    direction: neutral
+    synonyms: [claim count, number of claims, claim volume, fnol volume]
+    term: GT-INS-CLAIM
+    description: Claims with a loss date in the period (governed claim sample)
+  - name: avg_severity
+    label: Average claim severity
+    expr: AVG(c.incurred_loss)
+    unit: USD
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [claim severity, severity, average claim cost, average incurred per claim]
+    term: GT-INS-SEVERITY
+    description: Average incurred loss per claim with a loss date in the period; catastrophe claims excluded by default (BR-INS-004)
+    default_filters: [ { rule: BR-INS-004 } ]
+    naive_expr: AVG(c.paid_loss)
+  - name: avg_cycle_days
+    label: Claims cycle time
+    expr: AVG(CASE WHEN c.is_closed THEN c.cycle_days END)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [cycle time, days to settle, time to settle, days to close]
+    term: GT-INS-CYCLE-TIME
+    description: Average days from first notice of loss to closure, claims closed so far
+  - name: open_claims
+    label: Open claims
+    expr: SUM(CASE WHEN c.is_open THEN 1 ELSE 0 END)
+    unit: claims
+    decimals: 0
+    direction: neutral
+    synonyms: [pending claims, open inventory, claims inventory, open claim count]
+    term: GT-INS-OPEN-CLAIM
+    description: Claims open or reopened with a case reserve above zero at the as-of date
+  - name: paid_losses
+    label: Paid losses
+    expr: SUM(c.paid_loss)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [loss payments, claim payments, paid loss]
+    term: GT-INS-PAID-LOSS
+    description: Loss payments made on claims with a loss date in the period (LAE excluded)
+  - name: subrogation_recovery_rate
+    label: Subrogation recovery rate
+    expr: 100.0 * SUM(c.subro_recovered) / NULLIF(SUM(CASE WHEN c.subro_eligible AND c.is_closed THEN c.paid_loss ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [subro rate, subrogation rate, recovery rate]
+    term: GT-INS-SUBROGATION
+    description: Recoveries as a share of paid losses on subrogation-eligible claims closed so far
+  - name: fraud_referral_rate
+    label: Fraud referral rate
+    expr: 100.0 * AVG(CASE WHEN c.siu_referred THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 2
+    direction: neutral
+    synonyms: [siu referral rate, siu rate, fraud referrals]
+    term: GT-INS-SIU-REFERRAL
+    description: Share of claims referred to the special investigations unit
+products: [DP-INS-002]

@@ -1,0 +1,50 @@
+id: insurance
+name: Insurance
+version: 1.0.0
+depth: deep
+code: INS
+industry: Property & casualty insurance
+company:
+  name: Sentinel Mutual
+  short: SMI
+  hq: Larkspur Point
+  description: Mutual property and casualty carrier writing personal and commercial lines through 60 agencies across four regions
+database: SMI_AI_PLATFORM
+locale: en-US
+currency: USD
+asOf: 2026-09-30
+seed: 20261006
+regions: [Northeast, Midwest, South, West]
+overridable:
+  regions: true
+  companyName: true
+  terms: [agency, line of business, catastrophe event]
+home:
+  heroQuestion: "What was the loss ratio by region last quarter, excluding catastrophe losses?"
+  heroAgent: AG-INS-002
+  headlineKpis: [KPI-INS-LOSS-RATIO, KPI-INS-COMBINED, KPI-INS-CYCLE, KPI-INS-RETENTION]
+  theatreScenarios: [SC-INS-001, SC-INS-010, SC-INS-016]
+icon: umbrella
+hook: Policy, claims, reserving and distribution data — governed for AI
+story_roles:
+  heroScenario: SC-INS-001
+  certDemoProduct: DP-INS-006
+  lifecycleDemoProduct: DP-INS-007
+  incidentForStory: INC-INS-LATE-FEED
+  knockoutKpi: KPI-INS-LOSS-RATIO
+  qualityFixAgent: AG-INS-004
+lint_terms:
+  - Sentinel
+  - Larkspur Point
+  - loss ratio
+  - combined ratio
+  - policyholder
+  - underwriting
+  - catastrophe
+  - subrogation
+  - IBNR
+  - earned premium
+  - written premium
+  - quote-to-bind
+  - FNOL
+  - claimant

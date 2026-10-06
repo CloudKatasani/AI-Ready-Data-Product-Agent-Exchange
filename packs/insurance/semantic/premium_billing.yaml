@@ -1,0 +1,57 @@
+name: PREMIUM_BILLING
+description: Premium invoices — premium billed, collection, autopay adoption and delinquency by region, line and payment method
+tables:
+  - { alias: i, fqn: CONFORMED_GOLD.FCT_INVOICE, pk: invoice_key }
+  - { alias: p, fqn: CONFORMED_GOLD.DIM_POLICY, pk: policy_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: i.policy_key, to: p.policy_key }
+  - { from: i.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: p.region, label: Region, synonyms: [territory, operating region], term: GT-INS-REGION }
+  - { name: line_of_business, expr: p.line_of_business, label: Line of business, synonyms: [lob, product line, lines of business], term: GT-INS-LOB }
+  - { name: segment, expr: p.segment, label: Segment, synonyms: [personal or commercial, personal vs commercial] }
+  - { name: pay_method, expr: i.pay_method, label: Payment method, synonyms: [pay method, how they pay, payment type] }
+  - { name: dpd_bucket, expr: i.dpd_bucket, label: Days past due bucket, synonyms: [aging bucket, past due bucket] }
+time_dimensions:
+  - { name: invoice_date, expr: d.date, default: true }
+facts:
+  - { name: amount_due_amount, expr: i.amount_due }
+metrics:
+  - name: billing_delinquency_rate
+    label: Billing delinquency rate
+    expr: 100.0 * AVG(CASE WHEN i.days_past_due > 30 THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [premium delinquency, past due rate, delinquency rate, invoices past due]
+    term: GT-INS-DELINQUENCY
+    description: Share of invoices more than 30 days past due at month end
+  - name: autopay_rate
+    label: Autopay rate
+    expr: 100.0 * AVG(CASE WHEN i.autopay THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [autopay adoption, automatic payment share, eft share]
+    term: GT-INS-AUTOPAY
+    description: Share of invoices paid by automatic bank or card payment
+  - name: premium_billed
+    label: Premium billed
+    expr: SUM(i.amount_due)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [billed premium, amount billed, premium invoiced]
+    term: GT-INS-PREMIUM-BILLED
+    description: Premium instalments invoiced in the period (governed invoice sample)
+  - name: collection_rate
+    label: Premium collection rate
+    expr: 100.0 * SUM(i.paid_amount) / NULLIF(SUM(i.amount_due), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [collection rate, cash collected rate, premium collected]
+    term: GT-INS-COLLECTION
+    description: Premium payments received as a share of premium billed
+products: [DP-INS-005]

@@ -1,0 +1,94 @@
+sensitivity_classes:
+  - { class: PII, description: "Nonpublic personal information about policyholders, claimants, adjusters or contacts" }
+  - { class: PCI, description: "Payment card data on premium payments" }
+  - { class: GOV_ID, description: "Driver licence and taxpayer identifiers" }
+
+masking_policies:
+  - { id: MASK_PII, class: PII, macro: mask_pii, description: "Replace personal data with ••• unless the persona is cleared for PII" }
+  - { id: MASK_EMAIL, class: PII, macro: mask_email, description: "Hash the local part of email addresses" }
+  - { id: MASK_PHONE, class: PII, macro: mask_phone, description: "Show only the last four digits of phone numbers" }
+  - { id: MASK_PCI, class: PCI, macro: mask_pci, description: "Show only the last four digits of card numbers" }
+  - { id: MASK_GOV_ID, class: GOV_ID, macro: mask_gov_id, description: "Show only the last four characters of licence and taxpayer identifiers" }
+
+row_access_policies:
+  - id: RAP_REGION
+    dimension: region
+    description: "Regional personas see only rows for their own regions (via the policy's, policyholder's or agency's region)"
+    bindings:
+      - { object: CONFORMED_GOLD.DIM_POLICY, column: region }
+      - { object: CONFORMED_GOLD.DIM_POLICYHOLDER, column: region }
+      - { object: CONFORMED_GOLD.DIM_AGENCY, column: region }
+      - { object: CURATED_SILVER.INSURANCE_POLICY, column: region }
+      - { object: CURATED_SILVER.POLICYHOLDER, column: region }
+      - { object: CURATED_SILVER.AGENCY, column: region }
+
+column_tags:
+  # Policyholder PII and identifiers — masked for every persona without clearance.
+  - { column: CONFORMED_GOLD.DIM_POLICYHOLDER.first_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_POLICYHOLDER.last_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_POLICYHOLDER.full_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_POLICYHOLDER.email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CONFORMED_GOLD.DIM_POLICYHOLDER.phone, classes: [PII], masking: MASK_PHONE }
+  - { column: CONFORMED_GOLD.DIM_POLICYHOLDER.street_address, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_POLICYHOLDER.date_of_birth, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_POLICYHOLDER.license_number, classes: [GOV_ID], masking: MASK_GOV_ID }
+  - { column: CONFORMED_GOLD.FCT_CLAIM.claimant_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.FCT_CLAIM.adjuster_name, classes: [PII], masking: MASK_PII }
+  # Certification demo (DP-INS-006 gate 6): claimant name and phone on the reserve fact are not masked until FIX-2.
+  - { column: CONFORMED_GOLD.FCT_RESERVE.claimant_name, classes: [PII], masking: MASK_PII, mask_pending_fix: FIX-2 }
+  - { column: CONFORMED_GOLD.FCT_RESERVE.claimant_phone, classes: [PII], masking: MASK_PII, mask_pending_fix: FIX-2 }
+  - { column: CURATED_SILVER.POLICYHOLDER.first_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.POLICYHOLDER.last_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.POLICYHOLDER.email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.POLICYHOLDER.phone, classes: [PII], masking: MASK_PHONE }
+  - { column: CURATED_SILVER.POLICYHOLDER.street_address, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.POLICYHOLDER.date_of_birth, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.POLICYHOLDER.license_number, classes: [GOV_ID], masking: MASK_GOV_ID }
+  - { column: CURATED_SILVER.CLAIM_HEADER.claimant_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.CLAIM_HEADER.claimant_phone, classes: [PII], masking: MASK_PHONE }
+  - { column: CURATED_SILVER.RESERVE_VALUATION.claimant_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.RESERVE_VALUATION.claimant_phone, classes: [PII], masking: MASK_PHONE }
+  - { column: CURATED_SILVER.ADJUSTER.adjuster_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.PAYMENT.card_number, classes: [PCI], masking: MASK_PCI }
+  - { column: CURATED_SILVER.SERVICE_CONTACT.contact_notes, classes: [PII], masking: MASK_PII }
+  # Critical data elements (each has DQ rules in warehouse/dq).
+  - { column: CONFORMED_GOLD.DIM_POLICY.policy_id, cde: true }
+  - { column: CONFORMED_GOLD.DIM_POLICY.region, cde: true }
+  - { column: CONFORMED_GOLD.DIM_POLICY.line_of_business, cde: true }
+  - { column: CONFORMED_GOLD.DIM_POLICY.policy_status, cde: true }
+  - { column: CONFORMED_GOLD.DIM_POLICY.annual_premium, cde: true }
+  - { column: CONFORMED_GOLD.DIM_POLICYHOLDER.policyholder_id, cde: true }
+  - { column: CONFORMED_GOLD.FCT_UW_LEDGER.earned_premium, cde: true }
+  - { column: CONFORMED_GOLD.FCT_UW_LEDGER.incurred_loss, cde: true }
+  - { column: CONFORMED_GOLD.FCT_UW_LEDGER.is_catastrophe, cde: true }
+  - { column: CONFORMED_GOLD.FCT_CLAIM.incurred_loss, cde: true }
+  - { column: CONFORMED_GOLD.FCT_CLAIM.paid_loss, cde: true }
+  - { column: CONFORMED_GOLD.FCT_CLAIM.claim_status, cde: true }
+  - { column: CONFORMED_GOLD.FCT_RESERVE.case_reserve, cde: true }
+  - { column: CONFORMED_GOLD.FCT_RESERVE.ibnr_reserve, cde: true }
+  - { column: CONFORMED_GOLD.FCT_RESERVE.valuation_date, cde: true }
+  - { column: CONFORMED_GOLD.FCT_INVOICE.days_past_due, cde: true }
+  - { column: CONFORMED_GOLD.FCT_SUBMISSION.submission_type, cde: true }
+  - { column: CONFORMED_GOLD.FCT_SUBMISSION.turnaround_days, cde: true }
+  - { column: CONFORMED_GOLD.FCT_SUBMISSION.quoted_premium, cde: true }
+  - { column: CONFORMED_GOLD.DIM_AGENCY.channel, cde: true }
+
+grants:
+  - persona: insurance:claims-analyst
+    products: [DP-INS-001, DP-INS-002, DP-INS-003, DP-INS-005]
+    agents: [AG-INS-001, AG-INS-002, AG-INS-004]
+  - persona: insurance:claims-ops-manager
+    products: [DP-INS-002, DP-INS-003, DP-INS-004, DP-INS-005]
+    agents: [AG-INS-001, AG-INS-002, AG-INS-003]
+  - persona: insurance:underwriting-dpo
+    products: [DP-INS-001, DP-INS-002, DP-INS-003, DP-INS-004, DP-INS-005, DP-INS-007]
+    agents: [AG-INS-001, AG-INS-002, AG-INS-003, AG-INS-004]
+  - persona: insurance:data-steward
+    products: [DP-INS-001, DP-INS-002, DP-INS-003, DP-INS-004, DP-INS-005, DP-INS-006, DP-INS-007, DP-INS-008]
+    agents: [AG-INS-001, AG-INS-002, AG-INS-003, AG-INS-004, AG-INS-005]
+  - persona: insurance:chief-underwriting-officer
+    # Aggregates only (archetype E): sees every headline KPI tile, never row-level data.
+    products: [DP-INS-001, DP-INS-002, DP-INS-003, DP-INS-004, DP-INS-005, DP-INS-006]
+    agents: [AG-INS-001, AG-INS-002, AG-INS-003, AG-INS-004]
+
+public_products: []

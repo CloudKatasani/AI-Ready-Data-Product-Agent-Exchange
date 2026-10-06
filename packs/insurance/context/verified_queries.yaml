@@ -1,0 +1,409 @@
+# Verified queries — curated question -> MetricQuery pairs, ported from AI-Ready insurance `context.ts` (VQ-001..VQ-048)
+# and the Marketplace AG-INS demo exchanges. Every query compiles through compileMetricQuery() on the named view.
+# LOSS_RESERVES deliberately has only 7 active entries: the DP-INS-006 certification story (gate 4) activates the
+# three reserve adequacy, IBNR-by-accident-year and quarterly reserve queries (pending_fix) via FIX-1.
+
+# ---------------------------------------------------------------- POLICYHOLDER_360
+- id: VQ-INS-001
+  question: "How many policies do we have in force?"
+  query: { view: POLICYHOLDER_360, metrics: [policies_in_force] }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-06-04
+- id: VQ-INS-002
+  question: "Policies in force by region"
+  query: { view: POLICYHOLDER_360, metrics: [policies_in_force], dimensions: [region], orderBy: [{ field: policies_in_force, dir: desc }] }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-07-07
+- id: VQ-INS-003
+  question: "What is our policy retention?"
+  query: { view: POLICYHOLDER_360, metrics: [retention_rate] }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-08-10
+- id: VQ-INS-004
+  question: "Policy retention by line of business"
+  query: { view: POLICYHOLDER_360, metrics: [retention_rate], dimensions: [line_of_business], orderBy: [{ field: retention_rate, dir: desc }] }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-05-13
+- id: VQ-INS-005
+  question: "Average premium per policy by line of business"
+  query: { view: POLICYHOLDER_360, metrics: [avg_premium_per_policy], dimensions: [line_of_business], orderBy: [{ field: avg_premium_per_policy, dir: desc }] }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-06-16
+- id: VQ-INS-006
+  question: "Average policyholder tenure by distribution channel"
+  query: { view: POLICYHOLDER_360, metrics: [avg_tenure_years], dimensions: [channel], orderBy: [{ field: avg_tenure_years, dir: desc }] }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-07-19
+- id: VQ-INS-007
+  question: "Multi-line rate by region"
+  query: { view: POLICYHOLDER_360, metrics: [multi_line_rate], dimensions: [region], orderBy: [{ field: multi_line_rate, dir: desc }] }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-08-22
+- id: VQ-INS-008
+  question: "Policies in force for personal lines"
+  query: { view: POLICYHOLDER_360, metrics: [policies_in_force], filters: [{ dimension: segment, op: "=", value: Personal }] }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-05-25
+- id: VQ-INS-009
+  question: "Policy retention by region"
+  query: { view: POLICYHOLDER_360, metrics: [retention_rate], dimensions: [region], orderBy: [{ field: retention_rate, dir: desc }] }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-06-01
+# ---------------------------------------------------------------- PREMIUM_BILLING
+- id: VQ-INS-010
+  question: "What is the billing delinquency rate this year?"
+  query: { view: PREMIUM_BILLING, metrics: [billing_delinquency_rate], timeRange: { ytd: true } }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-07-04
+- id: VQ-INS-011
+  question: "Billing delinquency rate by payment method this year"
+  query: { view: PREMIUM_BILLING, metrics: [billing_delinquency_rate], dimensions: [pay_method], timeRange: { ytd: true }, orderBy: [{ field: billing_delinquency_rate, dir: desc }] }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-08-07
+- id: VQ-INS-012
+  question: "Autopay rate by region this year"
+  query: { view: PREMIUM_BILLING, metrics: [autopay_rate], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: autopay_rate, dir: desc }] }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-05-10
+- id: VQ-INS-013
+  question: "How much premium was billed this year?"
+  query: { view: PREMIUM_BILLING, metrics: [premium_billed], timeRange: { ytd: true } }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-06-13
+- id: VQ-INS-014
+  question: "Premium collection rate by region this year"
+  query: { view: PREMIUM_BILLING, metrics: [collection_rate], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: collection_rate, dir: desc }] }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-07-16
+- id: VQ-INS-015
+  question: "Billing delinquency rate by month this year"
+  query: { view: PREMIUM_BILLING, metrics: [billing_delinquency_rate], timeGrain: month, timeRange: { ytd: true } }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-08-19
+# ---------------------------------------------------------------- UNDERWRITING_RESULT
+- id: VQ-INS-016
+  question: "What is the loss ratio by line of business this year, excluding catastrophe losses?"
+  query: { view: UNDERWRITING_RESULT, metrics: [loss_ratio], dimensions: [line_of_business], timeRange: { ytd: true }, orderBy: [{ field: loss_ratio, dir: desc }] }
+  agent: AG-INS-002
+  verified_by: insurance:data-steward
+  verified_at: 2026-05-22
+- id: VQ-INS-017
+  question: "What is the all-in loss ratio this year?"
+  query: { view: UNDERWRITING_RESULT, metrics: [loss_ratio], timeRange: { ytd: true } }
+  agent: AG-INS-002
+  verified_by: insurance:data-steward
+  verified_at: 2026-06-25
+- id: VQ-INS-018
+  question: "Catastrophe loss ratio by quarter"
+  query: { view: UNDERWRITING_RESULT, metrics: [cat_loss_ratio], timeGrain: quarter }
+  agent: AG-INS-002
+  verified_by: insurance:data-steward
+  verified_at: 2026-07-01
+- id: VQ-INS-019
+  question: "Combined ratio this year"
+  query: { view: UNDERWRITING_RESULT, metrics: [combined_ratio], timeRange: { ytd: true } }
+  agent: AG-INS-002
+  verified_by: insurance:data-steward
+  verified_at: 2026-08-04
+- id: VQ-INS-020
+  question: "Expense ratio by quarter this year"
+  query: { view: UNDERWRITING_RESULT, metrics: [expense_ratio], timeGrain: quarter, timeRange: { ytd: true } }
+  agent: AG-INS-002
+  verified_by: insurance:data-steward
+  verified_at: 2026-05-07
+- id: VQ-INS-021
+  question: "Earned premium this year by region"
+  query: { view: UNDERWRITING_RESULT, metrics: [earned_premium], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: earned_premium, dir: desc }] }
+  agent: AG-INS-002
+  verified_by: insurance:data-steward
+  verified_at: 2026-06-10
+- id: VQ-INS-022
+  question: "Written premium by distribution channel this year"
+  query: { view: UNDERWRITING_RESULT, metrics: [written_premium], dimensions: [channel], timeRange: { ytd: true }, orderBy: [{ field: written_premium, dir: desc }] }
+  agent: AG-INS-002
+  verified_by: insurance:data-steward
+  verified_at: 2026-07-13
+- id: VQ-INS-023
+  question: "Claim frequency by region this year"
+  query: { view: UNDERWRITING_RESULT, metrics: [claim_frequency], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: claim_frequency, dir: desc }] }
+  agent: AG-INS-002
+  verified_by: insurance:data-steward
+  verified_at: 2026-08-16
+- id: VQ-INS-024
+  question: "Incurred losses by catastrophe peril this year"
+  query: { view: UNDERWRITING_RESULT, metrics: [incurred_losses], dimensions: [cat_peril], timeRange: { ytd: true }, orderBy: [{ field: incurred_losses, dir: desc }] }
+  agent: AG-INS-002
+  verified_by: insurance:data-steward
+  verified_at: 2026-05-19
+- id: VQ-INS-025
+  question: "LAE ratio by line of business this year"
+  query: { view: UNDERWRITING_RESULT, metrics: [lae_ratio], dimensions: [line_of_business], timeRange: { ytd: true }, orderBy: [{ field: lae_ratio, dir: desc }] }
+  agent: AG-INS-002
+  verified_by: insurance:data-steward
+  verified_at: 2026-06-22
+- id: VQ-INS-026
+  question: "Loss ratio by region for Q3 2026"
+  query: { view: UNDERWRITING_RESULT, metrics: [loss_ratio], dimensions: [region], timeRange: { from: 2026-07-01, to: 2026-09-30 }, orderBy: [{ field: loss_ratio, dir: desc }] }
+  agent: AG-INS-002
+  verified_by: insurance:data-steward
+  verified_at: 2026-07-25
+- id: VQ-INS-027
+  question: "Top 5 states by incurred losses this year"
+  query: { view: UNDERWRITING_RESULT, metrics: [incurred_losses], dimensions: [state], timeRange: { ytd: true }, orderBy: [{ field: incurred_losses, dir: desc }], limit: 5, analysis: rank }
+  agent: AG-INS-002
+  verified_by: insurance:data-steward
+  verified_at: 2026-08-01
+- id: VQ-INS-028
+  question: "Earned premium by month this year"
+  query: { view: UNDERWRITING_RESULT, metrics: [earned_premium], timeGrain: month, timeRange: { ytd: true } }
+  agent: AG-INS-002
+  verified_by: insurance:data-steward
+  verified_at: 2026-05-04
+# ---------------------------------------------------------------- CLAIMS_OPERATIONS
+- id: VQ-INS-029
+  question: "How many claims were reported this year?"
+  query: { view: CLAIMS_OPERATIONS, metrics: [claims_reported], timeRange: { ytd: true } }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-06-07
+- id: VQ-INS-030
+  question: "Average claim severity by line of business this year"
+  query: { view: CLAIMS_OPERATIONS, metrics: [avg_severity], dimensions: [line_of_business], timeRange: { ytd: true }, orderBy: [{ field: avg_severity, dir: desc }] }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-07-10
+- id: VQ-INS-031
+  question: "Claims cycle time by adjuster team this year"
+  query: { view: CLAIMS_OPERATIONS, metrics: [avg_cycle_days], dimensions: [handling_team], timeRange: { ytd: true }, orderBy: [{ field: avg_cycle_days, dir: desc }] }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-08-13
+- id: VQ-INS-032
+  question: "Open claims by line of business"
+  query: { view: CLAIMS_OPERATIONS, metrics: [open_claims], dimensions: [line_of_business], orderBy: [{ field: open_claims, dir: desc }] }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-05-16
+- id: VQ-INS-033
+  question: "Paid losses by month this year"
+  query: { view: CLAIMS_OPERATIONS, metrics: [paid_losses], timeGrain: month, timeRange: { ytd: true } }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-06-19
+- id: VQ-INS-034
+  question: "Subrogation recovery rate this year"
+  query: { view: CLAIMS_OPERATIONS, metrics: [subrogation_recovery_rate], timeRange: { ytd: true } }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-07-22
+- id: VQ-INS-035
+  question: "Fraud referral rate by region this year"
+  query: { view: CLAIMS_OPERATIONS, metrics: [fraud_referral_rate], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: fraud_referral_rate, dir: desc }] }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-08-25
+- id: VQ-INS-036
+  question: "Claims reported by cause of loss this year"
+  query: { view: CLAIMS_OPERATIONS, metrics: [claims_reported], dimensions: [cause_of_loss], timeRange: { ytd: true }, orderBy: [{ field: claims_reported, dir: desc }] }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-05-01
+- id: VQ-INS-037
+  question: "Open claims by region"
+  query: { view: CLAIMS_OPERATIONS, metrics: [open_claims], dimensions: [region], orderBy: [{ field: open_claims, dir: desc }] }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-06-04
+- id: VQ-INS-038
+  question: "Claims cycle time by line of business this year"
+  query: { view: CLAIMS_OPERATIONS, metrics: [avg_cycle_days], dimensions: [line_of_business], timeRange: { ytd: true }, orderBy: [{ field: avg_cycle_days, dir: desc }] }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-07-07
+# ---------------------------------------------------------------- LOSS_RESERVES
+- id: VQ-INS-039
+  question: "What is our total case reserve balance this month?"
+  query: { view: LOSS_RESERVES, metrics: [case_reserve_balance], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-08-10
+- id: VQ-INS-040
+  question: "IBNR reserve by line of business"
+  query: { view: LOSS_RESERVES, metrics: [ibnr_reserve], dimensions: [line_of_business], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: ibnr_reserve, dir: desc }] }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-05-13
+- id: VQ-INS-041
+  question: "Case reserve balance trend for the last six months"
+  query: { view: LOSS_RESERVES, metrics: [case_reserve_balance], timeGrain: month, timeRange: { last: { n: 6, unit: month } } }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-06-16
+- id: VQ-INS-042
+  question: "Total loss reserves by accident year"
+  query: { view: LOSS_RESERVES, metrics: [total_loss_reserves], dimensions: [accident_year], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-07-19
+- id: VQ-INS-043
+  question: "Average case reserve per open claim by line of business"
+  query: { view: LOSS_RESERVES, metrics: [avg_case_reserve], dimensions: [line_of_business], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: avg_case_reserve, dir: desc }] }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-08-22
+- id: VQ-INS-044
+  question: "Case reserve balance by region"
+  query: { view: LOSS_RESERVES, metrics: [case_reserve_balance], dimensions: [region], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: case_reserve_balance, dir: desc }] }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-05-25
+- id: VQ-INS-045
+  question: "IBNR reserve as of the June quarter close"
+  query: { view: LOSS_RESERVES, metrics: [ibnr_reserve], timeRange: { from: 2026-06-01, to: 2026-06-30 } }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-06-01
+- id: VQ-INS-046
+  question: "Reserve adequacy by line of business"
+  query: { view: LOSS_RESERVES, metrics: [reserve_adequacy], dimensions: [line_of_business], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: reserve_adequacy, dir: asc }] }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-07-04
+  status: pending_fix
+- id: VQ-INS-047
+  question: "IBNR reserve by accident year"
+  query: { view: LOSS_RESERVES, metrics: [ibnr_reserve], dimensions: [accident_year], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-08-07
+  status: pending_fix
+- id: VQ-INS-048
+  question: "Total loss reserves trend by quarter this year"
+  query: { view: LOSS_RESERVES, metrics: [total_loss_reserves], timeGrain: quarter, timeRange: { ytd: true } }
+  agent: AG-INS-001
+  verified_by: insurance:data-steward
+  verified_at: 2026-05-10
+  status: pending_fix
+# ---------------------------------------------------------------- SUBMISSION_FUNNEL
+- id: VQ-INS-049
+  question: "What was our quote-to-bind ratio last quarter?"
+  query: { view: SUBMISSION_FUNNEL, metrics: [quote_to_bind_ratio], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-INS-003
+  verified_by: insurance:underwriting-dpo
+  verified_at: 2026-06-13
+- id: VQ-INS-050
+  question: "Quote-to-bind ratio by distribution channel this year"
+  query: { view: SUBMISSION_FUNNEL, metrics: [quote_to_bind_ratio], dimensions: [channel], timeRange: { ytd: true }, orderBy: [{ field: quote_to_bind_ratio, dir: desc }] }
+  agent: AG-INS-003
+  verified_by: insurance:underwriting-dpo
+  verified_at: 2026-07-16
+- id: VQ-INS-051
+  question: "Which agencies take longer than 3 days to quote this year?"
+  query: { view: SUBMISSION_FUNNEL, metrics: [quote_turnaround_days], dimensions: [agency], timeRange: { ytd: true }, orderBy: [{ field: quote_turnaround_days, dir: desc }], limit: 10, analysis: rank }
+  agent: AG-INS-003
+  verified_by: insurance:underwriting-dpo
+  verified_at: 2026-08-19
+- id: VQ-INS-052
+  question: "New business premium by distribution channel this year"
+  query: { view: SUBMISSION_FUNNEL, metrics: [new_business_premium], dimensions: [channel], timeRange: { ytd: true }, orderBy: [{ field: new_business_premium, dir: desc }] }
+  agent: AG-INS-003
+  verified_by: insurance:underwriting-dpo
+  verified_at: 2026-05-22
+- id: VQ-INS-053
+  question: "Top 10 agencies by new business premium this year"
+  query: { view: SUBMISSION_FUNNEL, metrics: [new_business_premium], dimensions: [agency], timeRange: { ytd: true }, orderBy: [{ field: new_business_premium, dir: desc }], limit: 10, analysis: rank }
+  agent: AG-INS-003
+  verified_by: insurance:underwriting-dpo
+  verified_at: 2026-06-25
+- id: VQ-INS-054
+  question: "Quote turnaround by line of business this year"
+  query: { view: SUBMISSION_FUNNEL, metrics: [quote_turnaround_days], dimensions: [line_of_business], timeRange: { ytd: true }, orderBy: [{ field: quote_turnaround_days, dir: desc }] }
+  agent: AG-INS-003
+  verified_by: insurance:underwriting-dpo
+  verified_at: 2026-07-01
+- id: VQ-INS-055
+  question: "Submissions received by month this year"
+  query: { view: SUBMISSION_FUNNEL, metrics: [submissions_received], timeGrain: month, timeRange: { ytd: true } }
+  agent: AG-INS-003
+  verified_by: insurance:underwriting-dpo
+  verified_at: 2026-08-04
+- id: VQ-INS-056
+  question: "Quote-to-bind trend by quarter"
+  query: { view: SUBMISSION_FUNNEL, metrics: [quote_to_bind_ratio], timeGrain: quarter }
+  agent: AG-INS-003
+  verified_by: insurance:underwriting-dpo
+  verified_at: 2026-05-07
+- id: VQ-INS-057
+  question: "New business premium including rewrites and reinstatements this year"
+  query: { view: SUBMISSION_FUNNEL, metrics: [new_business_premium], timeRange: { ytd: true } }
+  agent: AG-INS-003
+  verified_by: insurance:underwriting-dpo
+  verified_at: 2026-06-10
+# ---------------------------------------------------------------- CUSTOMER_EXPERIENCE
+- id: VQ-INS-058
+  question: "Net promoter score by region"
+  query: { view: CUSTOMER_EXPERIENCE, metrics: [nps], dimensions: [region], orderBy: [{ field: nps, dir: desc }] }
+  verified_by: insurance:data-steward
+  verified_at: 2026-07-13
+- id: VQ-INS-059
+  question: "Complaint rate by contact channel"
+  query: { view: CUSTOMER_EXPERIENCE, metrics: [complaint_rate], dimensions: [contact_channel], orderBy: [{ field: complaint_rate, dir: desc }] }
+  verified_by: insurance:data-steward
+  verified_at: 2026-08-16
+- id: VQ-INS-060
+  question: "First-contact resolution by contact reason"
+  query: { view: CUSTOMER_EXPERIENCE, metrics: [first_contact_resolution_rate], dimensions: [contact_reason], orderBy: [{ field: first_contact_resolution_rate, dir: desc }] }
+  verified_by: insurance:data-steward
+  verified_at: 2026-05-19
+# ---------------------------------------------------------------- additions (≥ 10 per certified view)
+- id: VQ-INS-061
+  question: "Average premium per policy by state"
+  query: { view: POLICYHOLDER_360, metrics: [avg_premium_per_policy], dimensions: [state], orderBy: [{ field: avg_premium_per_policy, dir: desc }] }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-08-04
+- id: VQ-INS-062
+  question: "What is the autopay rate this year?"
+  query: { view: PREMIUM_BILLING, metrics: [autopay_rate], timeRange: { ytd: true } }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-08-06
+- id: VQ-INS-063
+  question: "Premium billed by line of business this year"
+  query: { view: PREMIUM_BILLING, metrics: [premium_billed], dimensions: [line_of_business], timeRange: { ytd: true }, orderBy: [{ field: premium_billed, dir: desc }] }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-08-08
+- id: VQ-INS-064
+  question: "Premium collection rate by payment method this year"
+  query: { view: PREMIUM_BILLING, metrics: [collection_rate], dimensions: [pay_method], timeRange: { ytd: true }, orderBy: [{ field: collection_rate, dir: desc }] }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-08-10
+- id: VQ-INS-065
+  question: "Billing delinquency rate by line of business this year"
+  query: { view: PREMIUM_BILLING, metrics: [billing_delinquency_rate], dimensions: [line_of_business], timeRange: { ytd: true }, orderBy: [{ field: billing_delinquency_rate, dir: desc }] }
+  agent: AG-INS-004
+  verified_by: insurance:data-steward
+  verified_at: 2026-08-12
+- id: VQ-INS-066
+  question: "Submissions received by line of business this year"
+  query: { view: SUBMISSION_FUNNEL, metrics: [submissions_received], dimensions: [line_of_business], timeRange: { ytd: true }, orderBy: [{ field: submissions_received, dir: desc }] }
+  agent: AG-INS-003
+  verified_by: insurance:underwriting-dpo
+  verified_at: 2026-08-14

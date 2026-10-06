@@ -1,0 +1,126 @@
+# Policy and policyholder DQ rules.
+- id: DQ-INS-001
+  object: CONFORMED_GOLD.DIM_POLICY
+  column: policy_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per policy after CDC deduplication.
+- id: DQ-INS-002
+  object: CONFORMED_GOLD.DIM_POLICY
+  column: policy_id
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every policy carries its identifier.
+- id: DQ-INS-003
+  object: CONFORMED_GOLD.DIM_POLICY
+  column: region
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every policy carries a region so row access can be applied.
+- id: DQ-INS-004
+  object: CONFORMED_GOLD.DIM_POLICY
+  column: region
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Northeast, Midwest, South, West]
+  severity: critical
+  alert_route: steward
+  description: Regions conform to the four operating regions.
+- id: DQ-INS-005
+  object: CONFORMED_GOLD.DIM_POLICY
+  column: line_of_business
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Personal Auto, Homeowners, Commercial Auto, Commercial Property, General Liability, Workers Compensation]
+  severity: high
+  alert_route: steward
+  description: Lines of business conform to the product catalogue.
+- id: DQ-INS-006
+  object: CONFORMED_GOLD.DIM_POLICY
+  column: line_of_business
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: high
+  alert_route: steward
+  description: Every policy carries a line of business.
+- id: DQ-INS-007
+  object: CONFORMED_GOLD.DIM_POLICY
+  column: policy_status
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [In force, Lapsed, Cancelled]
+  severity: high
+  alert_route: steward
+  description: Policy status is one of In force, Lapsed or Cancelled (BR-INS-013).
+- id: DQ-INS-008
+  object: CONFORMED_GOLD.DIM_POLICY
+  column: policy_status
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every policy carries a status for the policies-in-force count.
+- id: DQ-INS-009
+  object: CONFORMED_GOLD.DIM_POLICY
+  column: annual_premium
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: Annual premium is positive on every policy.
+- id: DQ-INS-010
+  object: CONFORMED_GOLD.DIM_POLICY
+  column: annual_premium
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every policy carries its current-term annual premium.
+- id: DQ-INS-011
+  object: CONFORMED_GOLD.DIM_POLICY
+  column: term_start
+  dimension: timeliness
+  assertion: "freshness_min <= 4320"
+  severity: medium
+  alert_route: engineering
+  description: New and renewed terms from policy administration land within three days.
+- id: DQ-INS-012
+  object: CONFORMED_GOLD.DIM_POLICYHOLDER
+  column: policyholder_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per policyholder after CDC deduplication.
+- id: DQ-INS-013
+  object: CONFORMED_GOLD.DIM_POLICYHOLDER
+  column: policyholder_id
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every policyholder carries its identifier.
+- id: DQ-INS-014
+  object: CONFORMED_GOLD.DIM_POLICYHOLDER
+  column: email
+  dimension: validity
+  assertion: "regex_rate >= 0.99"
+  pattern: '^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]+$'
+  severity: medium
+  alert_route: steward
+  description: Email addresses are well formed where present.
+- id: DQ-INS-015
+  object: CONFORMED_GOLD.DIM_POLICYHOLDER
+  column: region
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Northeast, Midwest, South, West]
+  severity: high
+  alert_route: steward
+  description: Policyholder regions conform to the four operating regions.

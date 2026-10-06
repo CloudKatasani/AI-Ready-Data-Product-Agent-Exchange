@@ -1,0 +1,456 @@
+# Scripted scenarios for Sentinel Mutual — ported from AI-Ready insurance `scenarios.ts` (S-01..S-15) and the
+# Marketplace AG-INS-001..004 demo exchanges. Numbers come from golden.json; `expect` holds shape assertions only.
+# Together the 28 scenarios cover all 15 patterns (04 §6).
+
+# ================================================================ AG-INS-002 Underwriting Copilot
+- id: SC-INS-001
+  agent: AG-INS-002
+  pattern: 3
+  question: "What was the loss ratio by region last quarter?"
+  paraphrases:
+    - "What was the loss ratio by region last quarter, excluding catastrophe losses?"
+    - "loss ratio per region last qtr"
+    - "ex-cat loss ratio by territory last quarter"
+  kind: answer
+  query: { view: UNDERWRITING_RESULT, metrics: [loss_ratio], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: loss_ratio, dir: desc }] }
+  answer:
+    headline: "{{top.region}} had the highest loss ratio last quarter at {{top.loss_ratio}}%."
+    narrative: "Catastrophe-coded losses are excluded (BR-INS-001) and losses are measured on earned premium. {{bottom.region}} was lowest at {{bottom.loss_ratio}}% across {{rows}} regions; the company-wide loss ratio was {{total.loss_ratio}}%."
+    chart: bar
+  followups: ["Which lines drove the West?", "Include catastrophe losses", "Loss ratio trend this year"]
+  expect: { rows: 4, top: { region: West }, rules: [BR-INS-001] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-INS-002
+  agent: AG-INS-002
+  pattern: 10
+  question: "What was the loss ratio by region last quarter, including catastrophe losses?"
+  paraphrases:
+    - "loss ratio by region last quarter including cats"
+    - "all-in loss ratio by region last quarter"
+  kind: answer
+  query: { view: UNDERWRITING_RESULT, metrics: [loss_ratio], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: loss_ratio, dir: desc }] }
+  answer:
+    headline: "Including catastrophe losses, {{top.region}} had the highest loss ratio last quarter at {{top.loss_ratio}}%."
+    narrative: "You asked for catastrophe losses, so the exclusion in BR-INS-001 is not applied. The August Atlantic hurricane pushes the South to the top — compare with the standard ex-cat view, where the West leads."
+    chart: bar
+  followups: ["Exclude catastrophe losses", "Catastrophe loss ratio by quarter"]
+  expect: { rows: 4, top: { region: South } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-INS-003
+  agent: AG-INS-002
+  pattern: 4
+  question: "How has the combined ratio trended month by month this year?"
+  paraphrases:
+    - "Monthly combined ratio year to date"
+    - "combined ratio trend ytd by month"
+  kind: answer
+  query: { view: UNDERWRITING_RESULT, metrics: [combined_ratio], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "The combined ratio is {{total.combined_ratio}}% year to date, moving {{delta.combined_ratio}} points from January to the latest month."
+    narrative: "All-in loss ratio plus LAE and expense ratios on earned premium over {{rows}} months (BR-INS-003). Watch August: the Atlantic hurricane lifts the all-in loss ratio."
+    chart: line
+  followups: ["Loss ratio by region last quarter", "Catastrophe loss ratio by quarter"]
+  expect: { rows: 9 }
+
+- id: SC-INS-004
+  agent: AG-INS-002
+  pattern: 7
+  question: "How has earned premium changed quarter over quarter this year?"
+  paraphrases:
+    - "Earned premium by quarter year to date"
+    - "is earned premium growing quarter on quarter?"
+  kind: answer
+  query: { view: UNDERWRITING_RESULT, metrics: [earned_premium], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "Earned premium moved {{delta.earned_premium}} from the first to the latest quarter this year."
+    narrative: "Premium earned in each of the {{rows}} quarters this year (governed policy-month sample), reflecting the 2026 rate increases earning through."
+    chart: line
+  followups: ["Written premium by distribution channel this year", "Combined ratio this year"]
+  expect: { rows: 3 }
+
+- id: SC-INS-005
+  agent: AG-INS-002
+  pattern: 2
+  question: "Is the expense ratio within target this year?"
+  paraphrases:
+    - "Are we inside our expense ratio target year to date?"
+    - "expense ratio vs target ytd"
+  kind: answer
+  query: { view: UNDERWRITING_RESULT, metrics: [expense_ratio], timeRange: { ytd: true }, analysis: compare_target }
+  answer:
+    headline: "The expense ratio is {{top.expense_ratio}}% year to date — {{vsTarget.top}} target."
+    narrative: "Commission and underwriting expense on earned premium (BR-INS-008); the Q3 contingent-commission accrual on personal lines is included."
+    chart: kpi
+  followups: ["Expense ratio by quarter this year", "Combined ratio this year"]
+  expect: { rows: 1 }
+
+- id: SC-INS-006
+  agent: AG-INS-002
+  pattern: 5
+  question: "Which five states had the highest incurred losses this year?"
+  paraphrases:
+    - "Top 5 states by incurred losses this year"
+    - "worst states for incurred losses ytd"
+  kind: answer
+  query: { view: UNDERWRITING_RESULT, metrics: [incurred_losses], dimensions: [state], timeRange: { ytd: true }, orderBy: [{ field: incurred_losses, dir: desc }], limit: 5, analysis: rank }
+  answer:
+    headline: "{{top.state}} had the highest incurred losses this year at {{top.incurred_losses}}."
+    narrative: "The {{rows}} states with the most incurred losses (paid plus case reserves, catastrophe losses included) on claims with a loss date this year (BR-INS-005)."
+    chart: bar
+  followups: ["Incurred losses by catastrophe peril this year", "Loss ratio by region last quarter"]
+  expect: { rows: 5, top: { state: TX } }
+
+- id: SC-INS-007
+  agent: AG-INS-002
+  pattern: 15
+  question: "What is our quote-to-bind ratio?"
+  paraphrases:
+    - "How many of our quotes are binding?"
+  kind: redirect
+  query: null
+  redirect_to: AG-INS-003
+  answer:
+    headline: "That's a distribution question — Distribution Insights answers it."
+    narrative: "I cover loss, expense and combined ratios, premium and claim frequency. Distribution Insights is certified on the submission funnel, quote-to-bind and new business premium."
+    chart: none
+  followups: ["Ask Distribution Insights", "What can you answer?"]
+
+- id: SC-INS-008
+  agent: AG-INS-002
+  pattern: 15
+  question: "File our homeowners rate increase with the state."
+  paraphrases:
+    - "Can you submit the homeowners rate filing for us?"
+    - "Change the auto rates in Texas"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't file or change rates — that is outside what this agent is allowed to do."
+    narrative: "Rate filings and pricing changes are decided by the pricing actuary and filed by product and state. I can show you the loss ratio and combined ratio by line and region so the filing has the evidence."
+    chart: none
+  followups: ["Loss ratio by line of business this year", "Combined ratio this year"]
+
+# ================================================================ AG-INS-001 Claims Analyst
+- id: SC-INS-009
+  agent: AG-INS-001
+  pattern: 1
+  question: "How many open claims do we have?"
+  paraphrases:
+    - "open claim count"
+    - "how many claims are still open"
+  kind: answer
+  query: { view: CLAIMS_OPERATIONS, metrics: [open_claims], analysis: value }
+  answer:
+    headline: "There are {{top.open_claims}} open claims in the governed claim sample."
+    narrative: "Claims with status Open or Reopened and a case reserve above zero (BR-INS-009)."
+    chart: kpi
+  followups: ["Open claims by line of business", "Claims cycle time by adjuster team this year"]
+  expect: { rows: 1 }
+
+- id: SC-INS-010
+  agent: AG-INS-001
+  pattern: 12
+  question: "Which five claimants have the highest average claim severity this year?"
+  paraphrases:
+    - "Top 5 claimants by claim severity this year"
+    - "largest claimants by severity ytd"
+  kind: answer
+  query: { view: CLAIMS_OPERATIONS, metrics: [avg_severity], dimensions: [claimant_name], timeRange: { ytd: true }, orderBy: [{ field: avg_severity, dir: desc }], limit: 5, analysis: rank }
+  answer:
+    headline: "The largest claimant severity this year is {{top.avg_severity}}."
+    narrative: "Claimant names are masked unless your persona is cleared for PII under the masking policy. Showing the top {{rows}} claimants by average incurred loss, catastrophe claims excluded (BR-INS-004)."
+    chart: table
+  followups: ["Average claim severity by line of business this year", "Open claims by line of business"]
+  expect: { rows: 5, rules: [BR-INS-004] }
+  personas_expect: { A: { masked: [claimant_name], rowFiltered: true }, D: { masked: [] } }
+
+- id: SC-INS-011
+  agent: AG-INS-001
+  pattern: 6
+  question: "What is driving paid losses by cause of loss this year?"
+  paraphrases:
+    - "Which causes of loss contribute most to paid losses this year?"
+    - "paid losses breakdown by loss cause ytd"
+  kind: answer
+  query: { view: CLAIMS_OPERATIONS, metrics: [paid_losses], dimensions: [cause_of_loss], timeRange: { ytd: true }, orderBy: [{ field: paid_losses, dir: desc }], analysis: contribution }
+  answer:
+    headline: "{{top.cause_of_loss}} drove the most paid losses this year at {{top.paid_losses}}."
+    narrative: "Total paid losses were {{total.paid_losses}} across {{rows}} causes of loss on claims with a loss date this year; LAE is excluded."
+    chart: bar
+  followups: ["Average claim severity by line of business this year", "Subrogation recovery rate this year"]
+  expect: { rows: 19 }
+
+- id: SC-INS-012
+  agent: AG-INS-001
+  pattern: 14
+  question: "What is our total case reserve balance?"
+  paraphrases:
+    - "case reserve balance at the latest valuation"
+    - "how much do we hold in case reserves"
+  kind: answer
+  query: { view: LOSS_RESERVES, metrics: [case_reserve_balance], timeRange: { last: { n: 1, unit: month } } }
+  answer:
+    headline: "The case reserve balance at the latest month-end valuation is {{top.case_reserve_balance}}."
+    narrative: "Loss Reserves is still in certification, so treat this figure as provisional. Balances come from month-end valuations and are averaged, never summed (BR-INS-015)."
+    chart: kpi
+  followups: ["IBNR reserve by line of business", "When will Loss Reserves be certified?"]
+  expect: { rows: 1, certified: false }
+  personas_expect: { A: { kind: decline } }
+
+- id: SC-INS-013
+  agent: AG-INS-001
+  pattern: 9
+  question: "How do claim severity and cycle time compare across adjuster teams this year?"
+  paraphrases:
+    - "Compare claim severity and claims cycle time by adjuster team"
+    - "adjuster team comparison of severity and cycle time ytd"
+  kind: answer
+  query: { view: CLAIMS_OPERATIONS, metrics: [avg_severity, avg_cycle_days], dimensions: [handling_team], timeRange: { ytd: true }, orderBy: [{ field: avg_severity, dir: desc }] }
+  answer:
+    headline: "{{top.handling_team}} carries the highest claim severity this year at {{top.avg_severity}}, with a cycle time of {{top.avg_cycle_days}} days."
+    narrative: "{{bottom.handling_team}} is lowest at {{bottom.avg_severity}} and {{bottom.avg_cycle_days}} days, across {{rows}} adjuster teams; catastrophe claims are excluded (BR-INS-004)."
+    chart: bar
+  followups: ["Claims cycle time by line of business this year", "Open claims by line of business"]
+  expect: { rows: 5, top: { handling_team: Complex & large loss }, rules: [BR-INS-004] }
+
+- id: SC-INS-014
+  agent: AG-INS-001
+  pattern: 13
+  question: "How many claims did each region report last quarter?"
+  paraphrases:
+    - "claims reported by region last quarter"
+    - "claim volume per region last qtr"
+  kind: answer
+  query: { view: CLAIMS_OPERATIONS, metrics: [claims_reported], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: claims_reported, dir: desc }] }
+  answer:
+    headline: "{{top.region}} reported the most claims last quarter: {{top.claims_reported}}."
+    narrative: "Claims with a loss date last quarter across the {{rows}} regions you are entitled to see; the region row-access policy applies."
+    chart: bar
+  followups: ["Average claim severity by line of business this year", "Fraud referral rate by region this year"]
+  expect: { rows: 4, top: { region: South } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-INS-015
+  agent: AG-INS-001
+  pattern: 15
+  question: "Settle this claim for the claimant today."
+  paraphrases:
+    - "Pay out the full claim amount now"
+    - "Can you authorise the settlement payment?"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't settle claims or authorise payments — a licensed adjuster with authority does that."
+    narrative: "Coverage and settlement decisions are made and documented by a named adjuster within their authority (CTL-INS-003). I can show you severity, cycle time and payments for the line so the adjuster has context."
+    chart: none
+  followups: ["Average claim severity by line of business this year", "How many open claims do we have?"]
+
+# ================================================================ AG-INS-003 Distribution Insights
+- id: SC-INS-016
+  agent: AG-INS-003
+  pattern: 5
+  question: "Which five agencies have the slowest quote turnaround this year?"
+  paraphrases:
+    - "Top 5 agencies by quote turnaround days this year"
+    - "slowest agencies for speed to quote ytd"
+  kind: answer
+  query: { view: SUBMISSION_FUNNEL, metrics: [quote_turnaround_days], dimensions: [agency], timeRange: { ytd: true }, orderBy: [{ field: quote_turnaround_days, dir: desc }], limit: 5, analysis: rank }
+  answer:
+    headline: "{{top.agency}} has the slowest quote turnaround this year at {{top.quote_turnaround_days}} days."
+    narrative: "The {{rows}} slowest agencies by average days from submission to quote. Agencies averaging more than 3 days are flagged for a service review (BR-INS-021)."
+    chart: bar
+  followups: ["Quote-to-bind ratio by distribution channel this year", "New business premium by distribution channel this year"]
+  expect: { rows: 5, top: { agency: Ironwood Services LLC } }
+
+- id: SC-INS-017
+  agent: AG-INS-003
+  pattern: 3
+  question: "What is the quote-to-bind ratio by distribution channel this year?"
+  paraphrases:
+    - "Which channel converts quotes to binds best this year?"
+    - "bind rate by sales channel ytd"
+  kind: answer
+  query: { view: SUBMISSION_FUNNEL, metrics: [quote_to_bind_ratio], dimensions: [channel], timeRange: { ytd: true }, orderBy: [{ field: quote_to_bind_ratio, dir: desc }] }
+  answer:
+    headline: "{{top.channel}} has the highest quote-to-bind ratio this year at {{top.quote_to_bind_ratio}}%."
+    narrative: "{{bottom.channel}} trails at {{bottom.quote_to_bind_ratio}}%. Bound over quoted submissions; submissions declined before a quote are excluded (BR-INS-020)."
+    chart: bar
+  followups: ["Quote turnaround by line of business this year", "New business premium by distribution channel this year"]
+  expect: { rows: 4, top: { channel: Direct digital } }
+  personas_expect: { A: { kind: decline } }
+
+- id: SC-INS-018
+  agent: AG-INS-003
+  pattern: 11
+  question: "What's our hit ratio by line of business last quarter?"
+  paraphrases:
+    - "hit ratio per lob last qtr"
+    - "close rate by product line last quarter"
+  kind: answer
+  query: { view: SUBMISSION_FUNNEL, metrics: [quote_to_bind_ratio], dimensions: [line_of_business], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: quote_to_bind_ratio, dir: desc }] }
+  answer:
+    headline: "{{top.line_of_business}} has the highest quote-to-bind ratio last quarter at {{top.quote_to_bind_ratio}}%."
+    narrative: "\"Hit ratio\" maps to the quote-to-bind ratio: bound over quoted submissions (BR-INS-020). Commercial lines bound less often in Q3 as Sentinel held rate; shown across {{rows}} lines of business."
+    chart: bar
+  followups: ["Quote-to-bind ratio by distribution channel this year", "Quote turnaround by line of business this year"]
+  expect: { rows: 6 }
+
+- id: SC-INS-019
+  agent: AG-INS-003
+  pattern: 7
+  question: "How has new business premium changed month over month this year?"
+  paraphrases:
+    - "Monthly new business premium year to date"
+    - "is new business premium growing each month?"
+  kind: answer
+  query: { view: SUBMISSION_FUNNEL, metrics: [new_business_premium], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "New business premium moved {{delta.new_business_premium}} from January to the latest month this year."
+    narrative: "Premium bound on new business in each of the {{rows}} months; rewrites and reinstatements are excluded (BR-INS-016)."
+    chart: line
+  followups: ["New business premium by distribution channel this year", "Top 10 agencies by new business premium this year"]
+  expect: { rows: 9, rules: [BR-INS-016] }
+
+- id: SC-INS-020
+  agent: AG-INS-003
+  pattern: 15
+  question: "Appoint this agency and give them binding authority."
+  paraphrases:
+    - "Grant binding authority to this producer"
+    - "Terminate the agency appointment for the slow quoter"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't appoint agencies or grant binding authority — distribution leadership decides that."
+    narrative: "Appointments and binding authority are granted by the head of distribution under the underwriting guidelines. I can show you an agency's submissions, quote-to-bind and turnaround to support the decision."
+    chart: none
+  followups: ["Which five agencies have the slowest quote turnaround this year?", "Quote-to-bind ratio by distribution channel this year"]
+
+# ================================================================ AG-INS-004 Policyholder & Billing Analyst
+- id: SC-INS-021
+  agent: AG-INS-004
+  pattern: 2
+  question: "Is policy retention within target?"
+  paraphrases:
+    - "Are we hitting our retention target?"
+    - "policy retention vs target"
+  kind: answer
+  query: { view: POLICYHOLDER_360, metrics: [retention_rate], analysis: compare_target }
+  answer:
+    headline: "Policy retention is {{top.retention_rate}}% — {{vsTarget.top}} target."
+    narrative: "Policies renewed over policies that reached a renewal date; mid-term cancellations are excluded (BR-INS-019)."
+    chart: kpi
+  followups: ["Policy retention by region", "Policy retention by line of business"]
+  expect: { rows: 1 }
+
+- id: SC-INS-022
+  agent: AG-INS-004
+  pattern: 3
+  question: "What is the billing delinquency rate by region this year?"
+  paraphrases:
+    - "Which region has the most premium delinquency this year?"
+    - "past due rate by territory ytd"
+  kind: answer
+  query: { view: PREMIUM_BILLING, metrics: [billing_delinquency_rate], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: billing_delinquency_rate, dir: desc }] }
+  answer:
+    headline: "{{top.region}} has the highest billing delinquency rate this year at {{top.billing_delinquency_rate}}%."
+    narrative: "{{bottom.region}} is lowest at {{bottom.billing_delinquency_rate}}%. Invoices more than 30 days past due at month end (BR-INS-023), across the {{rows}} regions you are entitled to see."
+    chart: bar
+  followups: ["Billing delinquency rate by payment method this year", "Autopay rate by region this year"]
+  expect: { rows: 4, top: { region: South } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-INS-023
+  agent: AG-INS-004
+  pattern: 8
+  question: "How is average premium per policy distributed across states?"
+  paraphrases:
+    - "Spread of average premium per policy by state"
+    - "average premium per policy percentiles across states"
+  kind: answer
+  query: { view: POLICYHOLDER_360, metrics: [avg_premium_per_policy], dimensions: [state], analysis: distribution }
+  answer:
+    headline: "Across {{top.state_count}} states, the median average premium per policy is {{top.avg_premium_per_policy_p50}}."
+    narrative: "The middle 80% of states sit between {{top.avg_premium_per_policy_p10}} and {{top.avg_premium_per_policy_p90}}; the highest state averages {{top.avg_premium_per_policy_max}}."
+    chart: table
+  followups: ["Average premium per policy by line of business", "Policies in force by region"]
+  expect: { rows: 1 }
+
+- id: SC-INS-024
+  agent: AG-INS-004
+  pattern: 11
+  question: "How are our policyholders doing?"
+  paraphrases:
+    - "policyholder update"
+  kind: clarify
+  query: null
+  answer:
+    headline: "\"How policyholders are doing\" can mean a few things — which one do you need?"
+    narrative: "I can show policies in force, policy retention, average premium per policy, tenure or the billing delinquency rate. Pick one and a slice."
+    chart: none
+  followups: ["Policies in force by region", "Policy retention by region", "Billing delinquency rate by region this year"]
+
+- id: SC-INS-025
+  agent: AG-INS-004
+  pattern: 4
+  question: "How has the autopay rate trended month by month this year?"
+  paraphrases:
+    - "Monthly autopay rate year to date"
+    - "autopay adoption trend ytd by month"
+  kind: answer
+  query: { view: PREMIUM_BILLING, metrics: [autopay_rate], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "The autopay rate moved {{delta.autopay_rate}} points from January to the latest month this year."
+    narrative: "Share of invoices paid by automatic bank draft or card in each of the {{rows}} months."
+    chart: line
+  followups: ["Autopay rate by region this year", "Billing delinquency rate by payment method this year"]
+  expect: { rows: 9 }
+
+- id: SC-INS-026
+  agent: AG-INS-004
+  pattern: 9
+  question: "How do policy retention and average premium per policy compare across distribution channels?"
+  paraphrases:
+    - "Compare policy retention and average premium per policy by distribution channel"
+    - "distribution channel comparison of retention and premium per policy"
+  kind: answer
+  query: { view: POLICYHOLDER_360, metrics: [retention_rate, avg_premium_per_policy], dimensions: [channel], orderBy: [{ field: retention_rate, dir: desc }] }
+  answer:
+    headline: "{{top.channel}} retains best at {{top.retention_rate}}%, with an average premium per policy of {{top.avg_premium_per_policy}}."
+    narrative: "{{bottom.channel}} retains least at {{bottom.retention_rate}}% with {{bottom.avg_premium_per_policy}} per policy, across {{rows}} distribution channels (BR-INS-019)."
+    chart: bar
+  followups: ["Policy retention by region", "Average policyholder tenure by distribution channel"]
+  expect: { rows: 4 }
+
+# ================================================================ AG-INS-005 Data Steward Assistant (no semantic views)
+- id: SC-INS-027
+  agent: AG-INS-005
+  pattern: 15
+  question: "What can you answer?"
+  paraphrases:
+    - "What can you help me with?"
+    - "help"
+  kind: help
+  query: null
+  answer:
+    headline: "I explain governance across the data estate — I don't analyse business KPIs."
+    narrative: "Ask me what a glossary term or metric means, the certification status of a data product, or where governance gaps such as missing stewards or masking sit. For KPI numbers, ask the domain agents."
+    chart: none
+  followups: ["Which products are not yet certified?", "What does loss ratio mean?", "Which critical data elements lack a steward?"]
+
+- id: SC-INS-028
+  agent: AG-INS-005
+  pattern: 15
+  question: "Approve the access request for Loss Reserves."
+  paraphrases:
+    - "Grant me access to DP-INS-006"
+    - "Can you approve my access request?"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't approve access requests — agents act, humans decide."
+    narrative: "Access to a data product is granted only by its owner or steward through the access workflow. I can show you the request status and who can approve it."
+    chart: none
+  followups: ["Who can approve access to Loss Reserves?", "What is the certification status of Loss Reserves?"]

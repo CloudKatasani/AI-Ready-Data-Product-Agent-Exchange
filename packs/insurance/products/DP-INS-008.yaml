@@ -1,0 +1,23 @@
+id: DP-INS-008
+name: Catastrophe Exposure
+domain: Underwriting Result
+archetype: AGGREGATE
+initial_status: DRAFT
+seed_stage: 2
+version: 0.1.0
+owner: insurance:underwriting-dpo
+steward: null
+description: Property insured value by catastrophe zone, joined to the catastrophe code list and catastrophe losses, against the accumulation limit.
+purpose: Monitor hurricane and wildfire accumulation against the 40% underwriting concentration limit before new property business is written.
+decision: { persona: Head of Catastrophe Risk, decision: "Where to suspend new property business and how much reinsurance to buy", cadence: Weekly, workaround: "Exposure spreadsheets refreshed by hand before each reinsurance renewal", consequence: "Accumulation in hurricane and wildfire zones passes the limit before anyone notices" }
+sample_questions: ["How much insured value sits in hurricane and wildfire zones?", "Share of property insured value in catastrophe zones by region"]
+semantic_view: null
+output_ports:
+  - { kind: sql, ref: DATA_PRODUCTS.DP_INS_008_CATASTROPHE_EXPOSURE }
+sla: { freshness_minutes: 10080, availability_pct: 98.0, max_null_rate_pct: 2.0 }
+kpis: []
+upstream: [CONFORMED_GOLD.DIM_POLICY, CONFORMED_GOLD.DIM_CAT_EVENT, CURATED_SILVER.CAT_EVENT]
+consumers: [Catastrophe risk, Reinsurance]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: null

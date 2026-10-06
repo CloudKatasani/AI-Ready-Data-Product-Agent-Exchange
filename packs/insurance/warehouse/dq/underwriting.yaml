@@ -1,0 +1,65 @@
+# Underwriting ledger DQ rules.
+- id: DQ-INS-016
+  object: CONFORMED_GOLD.FCT_UW_LEDGER
+  column: earned_premium
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every ledger row carries earned premium (zero on claim rows) — the denominator of every ratio.
+- id: DQ-INS-017
+  object: CONFORMED_GOLD.FCT_UW_LEDGER
+  column: earned_premium
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: critical
+  alert_route: steward
+  description: Earned premium is never negative.
+- id: DQ-INS-018
+  object: CONFORMED_GOLD.FCT_UW_LEDGER
+  column: incurred_loss
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every ledger row carries incurred losses (zero on premium rows).
+- id: DQ-INS-019
+  object: CONFORMED_GOLD.FCT_UW_LEDGER
+  column: incurred_loss
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Incurred losses are never negative.
+- id: DQ-INS-020
+  object: CONFORMED_GOLD.FCT_UW_LEDGER
+  column: is_catastrophe
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every ledger row carries the catastrophe flag so BR-INS-001 can be applied.
+- id: DQ-INS-021
+  object: CONFORMED_GOLD.FCT_UW_LEDGER
+  column: txn_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One ledger row per premium record or claim.
+- id: DQ-INS-022
+  object: CONFORMED_GOLD.FCT_UW_LEDGER
+  column: txn_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: The ledger is no more than a day behind the claims and premium feeds.
+- id: DQ-INS-023
+  object: CONFORMED_GOLD.FCT_UW_LEDGER
+  column: exposure_months
+  dimension: validity
+  assertion: "min >= 0"
+  severity: medium
+  alert_route: engineering
+  description: Exposure months are never negative.

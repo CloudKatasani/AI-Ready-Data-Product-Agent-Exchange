@@ -1,0 +1,87 @@
+# Value cases per product (marketplace value model). All figures are illustrative and synthetic.
+- id: VC-INS-001
+  product: DP-INS-001
+  hypothesis: One certified policyholder record lets retention teams contact multi-line households before renewal and stops one-relationship lapses going unseen.
+  baseline: "Policy lists exported per line and matched on address by hand; multi-policy household lapse about 11%."
+  benefit_model: "policies_retained * average_annual_premium * margin_rate + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Additional policies retained per year through pre-renewal outreach", value: 3800, unit: policies, source: "Retention pilot, H1 2026" }
+    - { text: "Average annual premium per retained policy", value: 2400, unit: usd, source: "Policyholder 360 certified product, Sep 2026" }
+    - { text: "Underwriting margin on retained premium", value: 0.06, unit: ratio, source: "Plan combined ratio FY26" }
+    - { text: "Analyst hours saved per year", value: 420, unit: hours, source: "Service analytics time study" }
+    - { text: "Fully loaded analyst rate", value: 105, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 591300
+  measured: { value_usd: 498000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-INS-002
+  product: DP-INS-002
+  hypothesis: Certified claim-level performance with handling teams and SIU referral lets claims operations route complex claims earlier and refer suspected fraud before settlement.
+  baseline: "Claims queue sorted by notification date; median cycle time 27 days; referrals raised ad hoc by adjusters."
+  benefit_model: "cycle_days_saved * claims_per_year * cost_per_claim_day + fraud_savings"
+  assumptions:
+    - { text: "Cycle-time days saved per claim through earlier routing", value: 3, unit: days, source: "Claims triage pilot, 2026" }
+    - { text: "Claims handled per year", value: 210000, unit: claims, source: "Claims platform volumes FY25" }
+    - { text: "Handling cost per open claim-day", value: 2.1, unit: usd, source: "Claims expense model FY26" }
+    - { text: "Fraud savings from earlier SIU referral", value: 650000, unit: usd, source: "SIU retrospective review 2025" }
+  annual_value_usd: 1973000
+  measured: { value_usd: 1580000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-INS-003
+  product: DP-INS-003
+  hypothesis: One governed underwriting ledger, with catastrophe losses separated consistently, cuts quarterly rate review preparation and directs rate action to the lines and regions whose attritional loss ratio is above plan.
+  baseline: "Policy and claims extracts joined by hand each quarter; rate review preparation takes ten working days."
+  benefit_model: "premium_repriced * loss_ratio_points_improved / 100 + preparation_days_saved * team_day_rate"
+  assumptions:
+    - { text: "Premium repriced earlier because the attritional trend was visible a quarter sooner", value: 180000000, unit: usd, source: "Pricing committee, 2026 filings" }
+    - { text: "Loss ratio improvement on repriced premium", value: 0.6, unit: points, source: "Actuarial rate adequacy study" }
+    - { text: "Preparation days saved per year", value: 28, unit: days, source: "Actuarial time recording" }
+    - { text: "Actuarial team day rate", value: 6500, unit: usd_per_day, source: "Finance planning rates FY26" }
+  annual_value_usd: 1262000
+  measured: { value_usd: 1110000, period: "2026-Q1..2026-Q3 annualised", confidence: high }
+- id: VC-INS-004
+  product: DP-INS-004
+  hypothesis: A certified submission funnel finds slow-quoting agencies and under-converting channels early, lifting bound new business.
+  baseline: "Agency portal exports pivoted by hand before each producer review; service reviews a month late."
+  benefit_model: "additional_policies_bound * average_new_business_premium * margin_rate"
+  assumptions:
+    - { text: "Additional policies bound per year from faster quoting", value: 5200, unit: policies, source: "Distribution pilot with five agencies, 2026" }
+    - { text: "Average new business premium", value: 2100, unit: usd, source: "Distribution Performance certified product, Sep 2026" }
+    - { text: "Lifetime margin rate on new business", value: 0.08, unit: ratio, source: "Customer lifetime value model FY26" }
+  annual_value_usd: 873600
+  measured: { value_usd: 702000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-INS-005
+  product: DP-INS-005
+  hypothesis: Certified billing data lets finance push autopay where delinquency is highest and grant catastrophe relief before cancellations for non-payment start.
+  baseline: "Aging report e-mailed monthly; post-catastrophe delinquency noticed only when cancellation notices go out."
+  benefit_model: "premium_collected_sooner * cost_of_funds + cancellations_avoided * average_annual_premium * margin_rate"
+  assumptions:
+    - { text: "Premium collected sooner per year", value: 42000000, unit: usd, source: "Billing operations, 2026 autopay campaign" }
+    - { text: "Annual cost of funds on receivables", value: 0.045, unit: ratio, source: "Treasury FY26" }
+    - { text: "Cancellations for non-payment avoided per year", value: 1100, unit: policies, source: "Billing relief pilot, 2025 hurricane" }
+    - { text: "Average annual premium", value: 2400, unit: usd, source: "Policyholder 360 certified product" }
+    - { text: "Underwriting margin on retained premium", value: 0.06, unit: ratio, source: "Plan combined ratio FY26" }
+  annual_value_usd: 2048400
+  measured: { value_usd: 1500000, period: "2026-Q1..2026-Q3 annualised", confidence: low }
+- id: VC-INS-006
+  product: DP-INS-006
+  hypothesis: A certified reserve view with adequacy against the indication surfaces under-reserved long-tail lines a quarter earlier, avoiding adverse development surprises.
+  baseline: "Reserving extracts reconciled in a desktop actuarial model; adequacy reviewed quarterly, two months after close."
+  benefit_model: "adverse_development_avoided * earlier_recognition_value + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Adverse development recognised a quarter earlier", value: 9000000, unit: usd, source: "Reserving committee, 2025 GL review" }
+    - { text: "Value of earlier recognition (capital and pricing)", value: 0.08, unit: ratio, source: "Capital model FY26" }
+    - { text: "Actuarial hours saved per year", value: 900, unit: hours, source: "Actuarial time recording" }
+    - { text: "Fully loaded actuarial rate", value: 140, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 846000
+  measured: null
+- id: VC-INS-007
+  product: DP-INS-007
+  hypothesis: Linking surveys and complaints to region, reason and policyholder finds failing service journeys — especially after catastrophes — and lifts retention.
+  baseline: "Survey dashboards with no link to region or reason; post-catastrophe detractors found through regulator complaints."
+  benefit_model: "detractors_converted * retention_uplift * average_annual_premium + complaints_avoided * cost_per_complaint"
+  assumptions:
+    - { text: "Detractors reached with a recovery call per year", value: 9000, unit: policyholders, source: "Service recovery pilot, 2026" }
+    - { text: "Retention uplift among recovered detractors", value: 0.08, unit: ratio, source: "Service recovery pilot, 2026" }
+    - { text: "Average annual premium", value: 2400, unit: usd, source: "Policyholder 360 certified product" }
+    - { text: "Complaints avoided per year", value: 1400, unit: complaints, source: "Complaints analysis 2025" }
+    - { text: "Cost per complaint handled", value: 120, unit: usd, source: "Service cost model FY26" }
+  annual_value_usd: 1896000
+  measured: null

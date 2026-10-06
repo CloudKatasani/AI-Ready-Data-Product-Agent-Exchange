@@ -1,0 +1,50 @@
+# Premium billing DQ rules.
+- id: DQ-INS-049
+  object: CONFORMED_GOLD.FCT_INVOICE
+  column: invoice_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per invoice.
+- id: DQ-INS-050
+  object: CONFORMED_GOLD.FCT_INVOICE
+  column: days_past_due
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every invoice carries days past due for the delinquency rate.
+- id: DQ-INS-051
+  object: CONFORMED_GOLD.FCT_INVOICE
+  column: days_past_due
+  dimension: validity
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Days past due are never negative.
+- id: DQ-INS-052
+  object: CONFORMED_GOLD.FCT_INVOICE
+  column: amount_due
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: Invoice amounts are positive.
+- id: DQ-INS-053
+  object: CONFORMED_GOLD.FCT_INVOICE
+  column: invoice_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: Invoices from the billing platform are no more than a day behind.
+- id: DQ-INS-054
+  object: CONFORMED_GOLD.FCT_INVOICE
+  column: pay_method
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Autopay - bank, Autopay - card, Check, Online one-time, Agency bill]
+  severity: medium
+  alert_route: steward
+  description: Payment methods conform to the billing catalogue.

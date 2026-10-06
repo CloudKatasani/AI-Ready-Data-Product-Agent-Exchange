@@ -1,0 +1,27 @@
+id: AG-INS-003
+name: Distribution Insights
+domain: Underwriting & Distribution
+status: PRODUCTION
+owner: insurance:underwriting-dpo
+on_call: Distribution Analytics
+avatar: { icon: network, hue: 45 }
+capability: "Answers questions on agencies, submissions, quote-to-bind, new business premium and speed to quote by channel, region and line."
+personas_served: [Head of Distribution, Underwriting Manager, Regional Sales Manager]
+out_of_scope: ["binding authority", "agency commission rates", "individual producer compensation", "appointing or terminating agencies"]
+products:
+  - { id: DP-INS-004, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [SUBMISSION_FUNNEL], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-INS-UW-GUIDELINES] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-INS-QTB, grains: [month, quarter], slices: [channel, line_of_business, region, agency, submission_type], depth: rank_drivers }
+  - { kpi: KPI-INS-NB-PREM, grains: [month, quarter, year], slices: [channel, agency, line_of_business, region], depth: trend }
+  - { kpi: KPI-INS-TURNAROUND, grains: [month, quarter], slices: [agency, channel, line_of_business], depth: rank_drivers }
+  - { kpi: KPI-INS-SUBMISSIONS, grains: [month, quarter], slices: [channel, line_of_business, region, submission_type], depth: trend }
+instructions: [INS-INS-003-P, INS-INS-003-R, INS-INS-003-G, INS-INS-003-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.05, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-INS-016, SC-INS-017, SC-INS-018, SC-INS-019, SC-INS-020]

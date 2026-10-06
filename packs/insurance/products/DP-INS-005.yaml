@@ -1,0 +1,25 @@
+id: DP-INS-005
+name: Premium Billing
+domain: Billing & Service
+archetype: SOURCE_ALIGNED
+initial_status: CERTIFIED
+seed_stage: 12
+version: 2.0.2
+owner: insurance:underwriting-dpo
+steward: insurance:data-steward
+description: Premium invoices with payment method, payments received, days past due and delinquency bucket by region and line.
+purpose: Premium collection, autopay adoption and delinquency monitoring for finance and service.
+decision: { persona: Director of Billing Operations, decision: "Where to push autopay enrolment and which regions need catastrophe payment relief", cadence: Monthly, workaround: "Billing platform aging report emailed as a spreadsheet", consequence: "Delinquency after a catastrophe is spotted only when cancellations for non-payment start" }
+sample_questions: ["What is the billing delinquency rate this year?", "Autopay rate by region this year", "Premium collection rate by region"]
+semantic_view: PREMIUM_BILLING
+output_ports:
+  - { kind: semantic, ref: PREMIUM_BILLING }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_INS_005_PREMIUM_BILLING }
+  - { kind: agent, ref: AG-INS-004 }
+sla: { freshness_minutes: 1440, availability_pct: 99.0, max_null_rate_pct: 0.5 }
+kpis: [KPI-INS-DELINQ, KPI-INS-AUTOPAY, KPI-INS-BILLED, KPI-INS-COLLECTION]
+upstream: [CONFORMED_GOLD.FCT_INVOICE, CONFORMED_GOLD.DIM_POLICY]
+consumers: [Finance, Billing operations, Policyholder & Billing Analyst agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-INS-005

@@ -1,0 +1,68 @@
+name: LOSS_RESERVES
+description: Month-end reserve valuations — case reserves, IBNR, carried reserves and adequacy against the actuarial indication
+tables:
+  - { alias: r, fqn: CONFORMED_GOLD.FCT_RESERVE, pk: reserve_key }
+  - { alias: p, fqn: CONFORMED_GOLD.DIM_POLICY, pk: policy_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: r.policy_key, to: p.policy_key }
+  - { from: r.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: p.region, label: Region, synonyms: [territory, operating region], term: GT-INS-REGION }
+  - { name: line_of_business, expr: p.line_of_business, label: Line of business, synonyms: [lob, product line, lines of business], term: GT-INS-LOB }
+  - { name: accident_year, expr: r.accident_year, label: Accident year, synonyms: [ay, loss year], term: GT-INS-ACCIDENT-YEAR }
+  - { name: claimant_name, expr: r.claimant_name, label: Claimant, synonyms: [claimant name, claimants] }
+  - { name: claimant_phone, expr: r.claimant_phone, label: Claimant phone, synonyms: [claimant contact] }
+time_dimensions:
+  - { name: valuation_date, expr: d.date, default: true }
+facts:
+  - { name: case_reserve_amount, expr: r.case_reserve }
+  - { name: ibnr_amount, expr: r.ibnr_reserve }
+metrics:
+  - name: case_reserve_balance
+    label: Case reserve balance
+    expr: SUM(r.case_reserve) / COUNT(DISTINCT r.date_key)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [case reserves, case outstanding, case os, outstanding case reserves]
+    term: GT-INS-CASE-RESERVE
+    description: Case reserves on open claims, averaged across the month-end valuations in the period (BR-INS-009)
+    naive_expr: SUM(r.case_reserve)
+  - name: ibnr_reserve
+    label: IBNR reserve
+    expr: SUM(r.ibnr_reserve) / COUNT(DISTINCT r.date_key)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [ibnr, incurred but not reported reserve, ibnr reserves]
+    term: GT-INS-IBNR
+    description: Incurred-but-not-reported reserve allocated to open claims, averaged across month-end valuations
+  - name: total_loss_reserves
+    label: Total loss reserves
+    expr: SUM(r.carried_reserve) / COUNT(DISTINCT r.date_key)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [carried reserves, loss reserves, total reserves]
+    term: GT-INS-CARRIED-RESERVE
+    description: Case plus IBNR reserves carried, averaged across month-end valuations
+  - name: avg_case_reserve
+    label: Average case reserve per open claim
+    expr: AVG(r.case_reserve)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [reserve per open claim, average case reserve, average reserve per claim]
+    term: GT-INS-CASE-RESERVE
+    description: Average case reserve on open claims at month-end valuations
+  - name: reserve_adequacy
+    label: Reserve adequacy
+    expr: 100.0 * SUM(r.carried_reserve) / NULLIF(SUM(r.indicated_reserve), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [reserve adequacy ratio, carried to indicated, reserve sufficiency]
+    term: GT-INS-RESERVE-ADEQUACY
+    description: Carried reserves as a share of the actuarial central indication
+products: [DP-INS-006]

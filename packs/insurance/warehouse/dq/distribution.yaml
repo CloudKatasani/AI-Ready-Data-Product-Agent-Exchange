@@ -1,0 +1,59 @@
+# Distribution (submission funnel) DQ rules.
+- id: DQ-INS-042
+  object: CONFORMED_GOLD.FCT_SUBMISSION
+  column: submission_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per submission.
+- id: DQ-INS-043
+  object: CONFORMED_GOLD.FCT_SUBMISSION
+  column: submission_type
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [New business, Rewrite, Reinstatement]
+  severity: high
+  alert_route: steward
+  description: Submission types conform so BR-INS-016 can exclude rewrites and reinstatements.
+- id: DQ-INS-044
+  object: CONFORMED_GOLD.FCT_SUBMISSION
+  column: received_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: Submissions from the underwriting workbench are no more than a day behind.
+- id: DQ-INS-045
+  object: CONFORMED_GOLD.FCT_SUBMISSION
+  column: turnaround_days
+  dimension: validity
+  assertion: "min >= 0"
+  severity: medium
+  alert_route: engineering
+  description: Quote turnaround is never negative.
+- id: DQ-INS-046
+  object: CONFORMED_GOLD.FCT_SUBMISSION
+  column: quoted_premium
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: medium
+  alert_route: steward
+  description: Quoted premium is positive.
+- id: DQ-INS-047
+  object: CONFORMED_GOLD.DIM_AGENCY
+  column: agency_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per agency.
+- id: DQ-INS-048
+  object: CONFORMED_GOLD.DIM_AGENCY
+  column: channel
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Independent agent, Captive agent, Broker, Direct digital]
+  severity: medium
+  alert_route: steward
+  description: Agency channels conform to the distribution model.

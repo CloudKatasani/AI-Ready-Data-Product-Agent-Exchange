@@ -1,0 +1,126 @@
+# Sentinel Mutual synonyms (synthetic): insurance jargon → governed metric, dimension, value or glossary term.
+# Ported from the AI-Ready insurance synonym list (LR, COR, LOB, PIF, LAE, subro, case OS, IBNR, hit ratio, TIV, EP, GWP).
+
+# ── Underwriting result ──────────────────────────────────────────────────────────────────────────────
+- term: Loss ratio
+  synonyms: [loss ratio excluding cats, ex cat lr, attritional lr]
+  maps_to: { kind: metric, ref: loss_ratio }
+- term: Combined ratio
+  synonyms: [combined, underwriting combined ratio, cr all in]
+  maps_to: { kind: metric, ref: combined_ratio }
+- term: Catastrophe loss ratio
+  synonyms: [cat losses as points, catastrophe impact on the loss ratio, cat load points]
+  maps_to: { kind: metric, ref: cat_loss_ratio }
+- term: LAE ratio
+  synonyms: [adjusting expense ratio, alae and ulae ratio]
+  maps_to: { kind: metric, ref: lae_ratio }
+- term: Expense ratio
+  synonyms: [cost ratio, acquisition expense ratio]
+  maps_to: { kind: metric, ref: expense_ratio }
+- term: Earned premium
+  synonyms: [earned, premium we have earned, net earned]
+  maps_to: { kind: metric, ref: earned_premium }
+- term: Written premium
+  synonyms: [top line premium, premium volume written]
+  maps_to: { kind: metric, ref: written_premium }
+- term: Claim frequency
+  synonyms: [how often claims happen, claims per hundred policies]
+  maps_to: { kind: metric, ref: claim_frequency }
+- term: Catastrophe peril
+  synonyms: [cat perils, type of catastrophe]
+  maps_to: { kind: dimension, ref: cat_peril }
+- term: Hurricane
+  synonyms: [hurricanes, named storm, tropical storm]
+  maps_to: { kind: value, ref: cat_peril=Hurricane }
+- term: Wildfire
+  synonyms: [wildfires, brush fire]
+  maps_to: { kind: value, ref: cat_peril=Wildfire }
+
+# ── Claims ─────────────────────────────────────────────────────────────────────────────────────────
+- term: Claims reported
+  synonyms: [claims filed, new claims, fnols]
+  maps_to: { kind: metric, ref: claims_reported }
+- term: Average claim severity
+  synonyms: [average cost per claim, average loss per claim, claim cost]
+  maps_to: { kind: metric, ref: avg_severity }
+- term: Claims cycle time
+  synonyms: [how long claims take, settlement time, claim duration]
+  maps_to: { kind: metric, ref: avg_cycle_days }
+- term: Open claims
+  synonyms: [claims still open, open claim inventory, outstanding claims]
+  maps_to: { kind: metric, ref: open_claims }
+- term: Paid losses
+  synonyms: [paid claims dollars, payments on claims, what we paid out]
+  maps_to: { kind: metric, ref: paid_losses }
+- term: Subrogation recovery rate
+  synonyms: [subro recovery, recoveries from third parties, subro yield]
+  maps_to: { kind: metric, ref: subrogation_recovery_rate }
+- term: Fraud referral rate
+  synonyms: [siu referrals, suspected fraud rate, special investigations referrals]
+  maps_to: { kind: metric, ref: fraud_referral_rate }
+- term: Adjuster team
+  synonyms: [handling unit, claims team, adjusting team]
+  maps_to: { kind: dimension, ref: handling_team }
+- term: Fast track
+  synonyms: [express claims, straight through claims]
+  maps_to: { kind: value, ref: handling_team=Fast track }
+- term: Bodily injury
+  synonyms: [injury claims, bi claims]
+  maps_to: { kind: value, ref: cause_of_loss=Bodily injury }
+
+# ── Reserving ────────────────────────────────────────────────────────────────────────────────────────
+- term: Case reserve balance
+  synonyms: [case os balance, outstanding reserves on open claims, case reserve total]
+  maps_to: { kind: metric, ref: case_reserve_balance }
+- term: IBNR reserve
+  synonyms: [ibnr balance, unreported claims reserve]
+  maps_to: { kind: metric, ref: ibnr_reserve }
+- term: Reserve adequacy
+  synonyms: [are we reserved adequately, reserve strength, reserve redundancy or deficiency]
+  maps_to: { kind: metric, ref: reserve_adequacy }
+- term: Total loss reserves
+  synonyms: [reserves on the balance sheet, total carried reserves]
+  maps_to: { kind: metric, ref: total_loss_reserves }
+
+# ── Distribution ─────────────────────────────────────────────────────────────────────────────────────
+- term: Quote-to-bind ratio
+  synonyms: [hit ratio, hit rate, close rate, quote conversion]
+  maps_to: { kind: metric, ref: quote_to_bind_ratio }
+- term: New business premium
+  synonyms: [new business volume, new premium, nb written]
+  maps_to: { kind: metric, ref: new_business_premium }
+- term: Quote turnaround
+  synonyms: [how fast we quote, quote speed, days to turn a quote]
+  maps_to: { kind: metric, ref: quote_turnaround_days }
+- term: Agency
+  synonyms: [agent partner, independent agency, brokerage]
+  maps_to: { kind: dimension, ref: agency }
+- term: Direct digital
+  synonyms: [direct channel, online direct, sentinel direct]
+  maps_to: { kind: value, ref: channel=Direct digital }
+
+# ── Policyholder & billing ───────────────────────────────────────────────────────────────────────────
+- term: Policies in force
+  synonyms: [book of business count, policy count, number of policies]
+  maps_to: { kind: metric, ref: policies_in_force }
+- term: Policy retention
+  synonyms: [renewal ratio, policies kept at renewal, persistency]
+  maps_to: { kind: metric, ref: retention_rate }
+- term: Average premium per policy
+  synonyms: [average policy premium, premium per risk]
+  maps_to: { kind: metric, ref: avg_premium_per_policy }
+- term: Billing delinquency rate
+  synonyms: [late payers, overdue invoices, past due premium]
+  maps_to: { kind: metric, ref: billing_delinquency_rate }
+- term: Autopay rate
+  synonyms: [auto pay share, recurring payment share]
+  maps_to: { kind: metric, ref: autopay_rate }
+- term: Personal lines
+  synonyms: [personal line, consumer lines]
+  maps_to: { kind: value, ref: segment=Personal }
+- term: Commercial lines
+  synonyms: [commercial line, business lines]
+  maps_to: { kind: value, ref: segment=Commercial }
+- term: Insured
+  synonyms: [policy holder]
+  maps_to: { kind: term, ref: GT-INS-POLICYHOLDER }

@@ -1,0 +1,65 @@
+# Loss reserve DQ rules.
+- id: DQ-INS-034
+  object: CONFORMED_GOLD.FCT_RESERVE
+  column: case_reserve
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every valuation carries a case reserve.
+- id: DQ-INS-035
+  object: CONFORMED_GOLD.FCT_RESERVE
+  column: case_reserve
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Case reserves are never negative.
+- id: DQ-INS-036
+  object: CONFORMED_GOLD.FCT_RESERVE
+  column: ibnr_reserve
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every valuation carries allocated IBNR.
+- id: DQ-INS-037
+  object: CONFORMED_GOLD.FCT_RESERVE
+  column: ibnr_reserve
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: IBNR is never negative.
+- id: DQ-INS-038
+  object: CONFORMED_GOLD.FCT_RESERVE
+  column: valuation_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: The latest month-end valuation has landed.
+- id: DQ-INS-039
+  object: CONFORMED_GOLD.FCT_RESERVE
+  column: valuation_date
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every reserve row carries its valuation date.
+- id: DQ-INS-040
+  object: CONFORMED_GOLD.FCT_RESERVE
+  column: valuation_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per claim-month valuation.
+- id: DQ-INS-041
+  object: CONFORMED_GOLD.FCT_RESERVE
+  column: indicated_reserve
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: medium
+  alert_route: steward
+  description: Every valuation carries a positive actuarial indication.

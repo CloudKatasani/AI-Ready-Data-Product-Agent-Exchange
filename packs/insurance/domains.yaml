@@ -1,0 +1,63 @@
+# Domains, conformed backbone entities and links (ported from the ADPM insurance pack — party to policy to risk
+# to claim — and adapted to the Sentinel Mutual warehouse). Owners are persona refs; golden sources are Gold
+# objects in SMI_AI_PLATFORM.
+domains:
+  - id: policyholder-policy
+    name: Policyholder & Policy
+    description: Who is insured, which policies they hold across personal and commercial lines, premium, tenure, renewal and multi-line relationships.
+    owner: insurance:underwriting-dpo
+    entities: [Policyholder, Policy, Line of business]
+  - id: underwriting-distribution
+    name: Underwriting & Distribution
+    description: Agencies and brokers, the submission funnel from quote to bind, new business premium and speed to quote.
+    owner: insurance:underwriting-dpo
+    entities: [Agency, Submission]
+  - id: claims-recovery
+    name: Claims & Recovery
+    description: First notice of loss, adjusting, payments, cycle time, subrogation and salvage recoveries and special investigations referrals.
+    owner: insurance:claims-ops-manager
+    entities: [Claim, Adjuster]
+  - id: actuarial-reserving
+    name: Actuarial & Reserving
+    description: Month-end case reserves, IBNR, actuarial indications and reserve adequacy by line and accident year.
+    owner: insurance:chief-underwriting-officer
+    entities: [Reserve valuation]
+  - id: underwriting-result
+    name: Underwriting Result
+    description: Earned and written premium, incurred losses, loss adjustment and underwriting expense — the loss, expense and combined ratios by line, region and accident period.
+    owner: insurance:chief-underwriting-officer
+    entities: [Underwriting transaction, Catastrophe event]
+  - id: billing-service
+    name: Billing & Service
+    description: Premium invoices, payment methods, delinquency, service contacts, complaints and policyholder survey scores.
+    owner: insurance:data-steward
+    entities: [Invoice, Payment, Service contact]
+
+backbone:
+  entities:
+    - { name: Policyholder, description: "A person or business holding at least one Sentinel Mutual policy", key: policyholder_id, domain: policyholder-policy, golden_source: CONFORMED_GOLD.DIM_POLICYHOLDER }
+    - { name: Policy, description: "An insurance contract for one line of business with its current term, premium, status and renewal outcome", key: policy_id, domain: policyholder-policy, golden_source: CONFORMED_GOLD.DIM_POLICY }
+    - { name: Line of business, description: "A product line (personal auto, homeowners, commercial auto, commercial property, general liability, workers compensation) and its statutory statement line", key: line_code, domain: policyholder-policy, golden_source: CONFORMED_GOLD.DIM_LINE }
+    - { name: Agency, description: "An appointed independent or captive agency, broker or the direct digital channel", key: agency_id, domain: underwriting-distribution, golden_source: CONFORMED_GOLD.DIM_AGENCY }
+    - { name: Submission, description: "A request to quote new or rewritten business, from receipt to quote, bind or decline", key: submission_id, domain: underwriting-distribution, golden_source: CONFORMED_GOLD.FCT_SUBMISSION }
+    - { name: Claim, description: "A notified loss under a policy with incurred, paid, reserve, LAE, recoveries, cycle time and catastrophe code", key: claim_id, domain: claims-recovery, golden_source: CONFORMED_GOLD.FCT_CLAIM }
+    - { name: Adjuster, description: "A claims professional and the handling team they belong to", key: adjuster_id, domain: claims-recovery, golden_source: CURATED_SILVER.ADJUSTER }
+    - { name: Reserve valuation, description: "One claim at one month-end valuation: case reserve, allocated IBNR and the actuarial indication", key: "valuation_id", domain: actuarial-reserving, golden_source: CONFORMED_GOLD.FCT_RESERVE }
+    - { name: Underwriting transaction, description: "One earned-premium record or one claim, conformed into a single ledger for loss and combined ratios", key: txn_id, domain: underwriting-result, golden_source: CONFORMED_GOLD.FCT_UW_LEDGER }
+    - { name: Catastrophe event, description: "An event on the catastrophe code list with peril, footprint region and dates", key: event_code, domain: underwriting-result, golden_source: CONFORMED_GOLD.DIM_CAT_EVENT }
+    - { name: Invoice, description: "A premium instalment billed to a policyholder with due amount, payment method and days past due", key: invoice_id, domain: billing-service, golden_source: CONFORMED_GOLD.FCT_INVOICE }
+    - { name: Payment, description: "A premium payment received against an invoice", key: payment_id, domain: billing-service, golden_source: CURATED_SILVER.PAYMENT }
+    - { name: Service contact, description: "One policyholder service interaction with reason, resolution and any survey score", key: contact_id, domain: billing-service, golden_source: CONFORMED_GOLD.FCT_SERVICE_CONTACT }
+  links:
+    - { from: Policyholder, to: Policy, cardinality: 1:N, via: policyholder_id }
+    - { from: Line of business, to: Policy, cardinality: 1:N, via: line_of_business }
+    - { from: Agency, to: Policy, cardinality: 1:N, via: agency_id }
+    - { from: Agency, to: Submission, cardinality: 1:N, via: agency_id }
+    - { from: Policy, to: Claim, cardinality: 1:N, via: policy_id }
+    - { from: Adjuster, to: Claim, cardinality: 1:N, via: adjuster_id }
+    - { from: Catastrophe event, to: Claim, cardinality: 1:N, via: cat_code }
+    - { from: Claim, to: Reserve valuation, cardinality: 1:N, via: claim_id }
+    - { from: Policy, to: Underwriting transaction, cardinality: 1:N, via: policy_id }
+    - { from: Policy, to: Invoice, cardinality: 1:N, via: policy_id }
+    - { from: Invoice, to: Payment, cardinality: 1:N, via: invoice_id }
+    - { from: Policyholder, to: Service contact, cardinality: 1:N, via: policyholder_id }

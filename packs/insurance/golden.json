@@ -1,0 +1,1031 @@
+{
+  "pack": "insurance",
+  "version": "1.0.0",
+  "scale": "M",
+  "scenarios": {
+    "SC-INS-001": {
+      "agent": "AG-INS-002",
+      "kind": "answer",
+      "headline": "West had the highest loss ratio last quarter at 71.6%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Catastrophe-coded losses are excluded (BR-INS-001) and losses are measured on earned premium. South was lowest at 56.2% across 4 regions; the company-wide loss ratio was 62.5%.",
+      "sqlHash": "ec0cdf3aa4a8578c",
+      "columns": [
+        "region",
+        "loss_ratio"
+      ],
+      "rows": [
+        [
+          "West",
+          71.6333
+        ],
+        [
+          "Northeast",
+          62.9124
+        ],
+        [
+          "Midwest",
+          62.5142
+        ],
+        [
+          "South",
+          56.211
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-003@3.2.1",
+        "metric:UNDERWRITING_RESULT.loss_ratio",
+        "rule:BR-INS-001",
+        "verified_query:VQ-INS-026",
+        "document:DOC-INS-STAT-GUIDE#4"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Northeast had the highest loss ratio last quarter at 62.9%.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-INS-002": {
+      "agent": "AG-INS-002",
+      "kind": "answer",
+      "headline": "Including catastrophe losses, South had the highest loss ratio last quarter at 96.2%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "You asked for catastrophe losses, so the exclusion in BR-INS-001 is not applied. The August Atlantic hurricane pushes the South to the top — compare with the standard ex-cat view, where the West leads.",
+      "sqlHash": "347298117f664762",
+      "columns": [
+        "region",
+        "loss_ratio"
+      ],
+      "rows": [
+        [
+          "South",
+          96.191
+        ],
+        [
+          "West",
+          81.5627
+        ],
+        [
+          "Northeast",
+          62.9124
+        ],
+        [
+          "Midwest",
+          62.5142
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-003@3.2.1",
+        "metric:UNDERWRITING_RESULT.loss_ratio",
+        "verified_query:VQ-INS-026",
+        "document:DOC-INS-STAT-GUIDE#3"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Including catastrophe losses, Northeast had the highest loss ratio last quarter at 62.9%.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-INS-003": {
+      "agent": "AG-INS-002",
+      "kind": "answer",
+      "headline": "The combined ratio is 101.9% year to date, moving −13.2 points from January to the latest month.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "All-in loss ratio plus LAE and expense ratios on earned premium over 9 months (BR-INS-003). Watch August: the Atlantic hurricane lifts the all-in loss ratio.",
+      "sqlHash": "84f00eae171483c1",
+      "columns": [
+        "period",
+        "combined_ratio"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          111.481
+        ],
+        [
+          "2026-02-01",
+          92.9651
+        ],
+        [
+          "2026-03-01",
+          97.9556
+        ],
+        [
+          "2026-04-01",
+          92.6379
+        ],
+        [
+          "2026-05-01",
+          109.203
+        ],
+        [
+          "2026-06-01",
+          80.7584
+        ],
+        [
+          "2026-07-01",
+          93.9862
+        ],
+        [
+          "2026-08-01",
+          138.859
+        ],
+        [
+          "2026-09-01",
+          98.3114
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-003@3.2.1",
+        "metric:UNDERWRITING_RESULT.combined_ratio",
+        "verified_query:VQ-INS-019",
+        "document:DOC-INS-STAT-GUIDE#4"
+      ],
+      "personas": {}
+    },
+    "SC-INS-004": {
+      "agent": "AG-INS-002",
+      "kind": "answer",
+      "headline": "Earned premium moved +$1,906,899 from the first to the latest quarter this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Premium earned in each of the 3 quarters this year (governed policy-month sample), reflecting the 2026 rate increases earning through.",
+      "sqlHash": "511afd52233663ae",
+      "columns": [
+        "period",
+        "earned_premium"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          34501800
+        ],
+        [
+          "2026-04-01",
+          35360300
+        ],
+        [
+          "2026-07-01",
+          36408700
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-003@3.2.1",
+        "metric:UNDERWRITING_RESULT.earned_premium",
+        "verified_query:VQ-INS-028",
+        "document:DOC-INS-STAT-GUIDE#4"
+      ],
+      "personas": {}
+    },
+    "SC-INS-005": {
+      "agent": "AG-INS-002",
+      "kind": "answer",
+      "headline": "The expense ratio is 24.5% year to date — within target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Commission and underwriting expense on earned premium (BR-INS-008); the Q3 contingent-commission accrual on personal lines is included.",
+      "sqlHash": "c3602716cd67a5d8",
+      "columns": [
+        "expense_ratio",
+        "expense_ratio_target_min",
+        "expense_ratio_target_max"
+      ],
+      "rows": [
+        [
+          24.474,
+          22,
+          27
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-003@3.2.1",
+        "metric:UNDERWRITING_RESULT.expense_ratio",
+        "verified_query:VQ-INS-020",
+        "document:DOC-INS-STAT-GUIDE#4"
+      ],
+      "personas": {}
+    },
+    "SC-INS-006": {
+      "agent": "AG-INS-002",
+      "kind": "answer",
+      "headline": "TX had the highest incurred losses this year at $8,417,625.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "The 5 states with the most incurred losses (paid plus case reserves, catastrophe losses included) on claims with a loss date this year (BR-INS-005).",
+      "sqlHash": "8b027aff8f805744",
+      "columns": [
+        "state",
+        "incurred_losses"
+      ],
+      "rows": [
+        [
+          "TX",
+          8417630
+        ],
+        [
+          "FL",
+          7863820
+        ],
+        [
+          "CA",
+          7491100
+        ],
+        [
+          "NY",
+          5971630
+        ],
+        [
+          "IL",
+          5313610
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-003@3.2.1",
+        "metric:UNDERWRITING_RESULT.incurred_losses",
+        "verified_query:VQ-INS-027",
+        "document:DOC-INS-STAT-GUIDE#7"
+      ],
+      "personas": {}
+    },
+    "SC-INS-007": {
+      "agent": "AG-INS-002",
+      "kind": "redirect",
+      "headline": "That's a distribution question — Distribution Insights answers it.",
+      "narrative": "I cover loss, expense and combined ratios, premium and claim frequency. Distribution Insights is certified on the submission funnel, quote-to-bind and new business premium.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-INS-008": {
+      "agent": "AG-INS-002",
+      "kind": "decline",
+      "headline": "I can't file or change rates — that is outside what this agent is allowed to do.",
+      "narrative": "Rate filings and pricing changes are decided by the pricing actuary and filed by product and state. I can show you the loss ratio and combined ratio by line and region so the filing has the evidence.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-INS-009": {
+      "agent": "AG-INS-001",
+      "kind": "answer",
+      "headline": "There are 651 open claims in the governed claim sample.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Claims with status Open or Reopened and a case reserve above zero (BR-INS-009).",
+      "sqlHash": "b263017dede99036",
+      "columns": [
+        "open_claims"
+      ],
+      "rows": [
+        [
+          651
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-002@1.6.0",
+        "metric:CLAIMS_OPERATIONS.open_claims",
+        "document:DOC-INS-CLAIMS-STD#3"
+      ],
+      "personas": {}
+    },
+    "SC-INS-010": {
+      "agent": "AG-INS-001",
+      "kind": "answer",
+      "headline": "The largest claimant severity this year is $187,097.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Claimant names are masked unless your persona is cleared for PII under the masking policy. Showing the top 5 claimants by average incurred loss, catastrophe claims excluded (BR-INS-004).",
+      "sqlHash": "f82aecefd2748611",
+      "columns": [
+        "claimant_name",
+        "avg_severity"
+      ],
+      "rows": [
+        [
+          "Emily Williams",
+          187097
+        ],
+        [
+          "Fatima Hall",
+          179402
+        ],
+        [
+          "Patricia Adams",
+          161503
+        ],
+        [
+          "Sandra Torres",
+          153976
+        ],
+        [
+          "Mark Brown",
+          146935
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-002@1.6.0",
+        "metric:CLAIMS_OPERATIONS.avg_severity",
+        "rule:BR-INS-004",
+        "document:DOC-INS-CLAIMS-STD#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "The largest claimant severity this year is $191,200.",
+          "rowFiltered": true,
+          "masked": [
+            "claimant_name"
+          ]
+        },
+        "D": {
+          "kind": "answer",
+          "headline": "The largest claimant severity this year is $187,097.",
+          "rowFiltered": false,
+          "masked": []
+        }
+      }
+    },
+    "SC-INS-011": {
+      "agent": "AG-INS-001",
+      "kind": "answer",
+      "headline": "Collision drove the most paid losses this year at $12,840,097.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Total paid losses were $66,319,714 across 19 causes of loss on claims with a loss date this year; LAE is excluded.",
+      "sqlHash": "179576ba814fa22c",
+      "columns": [
+        "cause_of_loss",
+        "paid_losses",
+        "paid_losses_share_pct"
+      ],
+      "rows": [
+        [
+          "Collision",
+          12840100,
+          19.3609
+        ],
+        [
+          "Wind & hail",
+          10215500,
+          15.4034
+        ],
+        [
+          "Water damage",
+          7362880,
+          11.1021
+        ],
+        [
+          "Bodily injury",
+          5420730,
+          8.17364
+        ],
+        [
+          "Comprehensive",
+          4469910,
+          6.73994
+        ],
+        [
+          "Fire",
+          4167450,
+          6.28387
+        ],
+        [
+          "Hurricane",
+          3697690,
+          5.57555
+        ],
+        [
+          "Strain or sprain",
+          2336990,
+          3.52382
+        ],
+        [
+          "Glass",
+          2178350,
+          3.28463
+        ],
+        [
+          "Premises liability",
+          2154030,
+          3.24795
+        ],
+        [
+          "Theft",
+          1972710,
+          2.97454
+        ],
+        [
+          "Slip and fall",
+          1773090,
+          2.67355
+        ],
+        [
+          "Winter storm",
+          1594900,
+          2.40487
+        ],
+        [
+          "Liability",
+          1346370,
+          2.03012
+        ],
+        [
+          "Products liability",
+          1215450,
+          1.83272
+        ],
+        [
+          "Equipment breakdown",
+          1047390,
+          1.5793
+        ],
+        [
+          "Struck by object",
+          1037430,
+          1.56428
+        ],
+        [
+          "Cargo",
+          1028700,
+          1.55113
+        ],
+        [
+          "Wildfire",
+          460060,
+          0.6937
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-002@1.6.0",
+        "metric:CLAIMS_OPERATIONS.paid_losses",
+        "document:DOC-INS-CLAIMS-STD#3"
+      ],
+      "personas": {}
+    },
+    "SC-INS-012": {
+      "agent": "AG-INS-001",
+      "kind": "answer",
+      "headline": "The case reserve balance at the latest month-end valuation is $13,880,166.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Loss Reserves is still in certification, so treat this figure as provisional. Balances come from month-end valuations and are averaged, never summed (BR-INS-015).",
+      "sqlHash": "a54248f8aed42a8d",
+      "columns": [
+        "case_reserve_balance"
+      ],
+      "rows": [
+        [
+          13880200
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-006@1.0.0-rc.1",
+        "metric:LOSS_RESERVES.case_reserve_balance",
+        "verified_query:VQ-INS-039",
+        "document:DOC-INS-RESERVING#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "decline",
+          "headline": "You don’t have access to Loss Reserves yet."
+        }
+      }
+    },
+    "SC-INS-013": {
+      "agent": "AG-INS-001",
+      "kind": "answer",
+      "headline": "Complex & large loss carries the highest claim severity this year at $46,827, with a cycle time of 53.2 days.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Fast track is lowest at $12,227 and 9.4 days, across 5 adjuster teams; catastrophe claims are excluded (BR-INS-004).",
+      "sqlHash": "22c7ac089728f3fc",
+      "columns": [
+        "handling_team",
+        "avg_severity",
+        "avg_cycle_days"
+      ],
+      "rows": [
+        [
+          "Complex & large loss",
+          46827.3,
+          53.1572
+        ],
+        [
+          "Casualty",
+          35301.4,
+          51.0233
+        ],
+        [
+          "Property field",
+          15211.3,
+          21.442
+        ],
+        [
+          "Auto physical damage",
+          12743.3,
+          20.9335
+        ],
+        [
+          "Fast track",
+          12227.2,
+          9.36256
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-002@1.6.0",
+        "metric:CLAIMS_OPERATIONS.avg_severity",
+        "metric:CLAIMS_OPERATIONS.avg_cycle_days",
+        "rule:BR-INS-004",
+        "document:DOC-INS-CLAIMS-STD#1"
+      ],
+      "personas": {}
+    },
+    "SC-INS-014": {
+      "agent": "AG-INS-001",
+      "kind": "answer",
+      "headline": "South reported the most claims last quarter: 502.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Claims with a loss date last quarter across the 4 regions you are entitled to see; the region row-access policy applies.",
+      "sqlHash": "07577648224b472f",
+      "columns": [
+        "region",
+        "claims_reported"
+      ],
+      "rows": [
+        [
+          "South",
+          502
+        ],
+        [
+          "Northeast",
+          306
+        ],
+        [
+          "Midwest",
+          278
+        ],
+        [
+          "West",
+          269
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-002@1.6.0",
+        "metric:CLAIMS_OPERATIONS.claims_reported",
+        "document:DOC-INS-RESERVING#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Northeast reported the most claims last quarter: 306.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-INS-015": {
+      "agent": "AG-INS-001",
+      "kind": "decline",
+      "headline": "I can't settle claims or authorise payments — a licensed adjuster with authority does that.",
+      "narrative": "Coverage and settlement decisions are made and documented by a named adjuster within their authority (CTL-INS-003). I can show you severity, cycle time and payments for the line so the adjuster has context.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-INS-016": {
+      "agent": "AG-INS-003",
+      "kind": "answer",
+      "headline": "Ironwood Services LLC has the slowest quote turnaround this year at 4.1 days.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "The 5 slowest agencies by average days from submission to quote. Agencies averaging more than 3 days are flagged for a service review (BR-INS-021).",
+      "sqlHash": "d91d5eef9b9ff1b5",
+      "columns": [
+        "agency",
+        "quote_turnaround_days"
+      ],
+      "rows": [
+        [
+          "Ironwood Services LLC",
+          4.13455
+        ],
+        [
+          "Harbor Works",
+          2.22917
+        ],
+        [
+          "Harbor Services LLC",
+          2.2175
+        ],
+        [
+          "Northstar Holdings",
+          2.10037
+        ],
+        [
+          "Ironwood Partners",
+          2.04909
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-004@1.3.0",
+        "metric:SUBMISSION_FUNNEL.quote_turnaround_days",
+        "verified_query:VQ-INS-051",
+        "document:DOC-INS-UW-GUIDELINES#3"
+      ],
+      "personas": {}
+    },
+    "SC-INS-017": {
+      "agent": "AG-INS-003",
+      "kind": "answer",
+      "headline": "Direct digital has the highest quote-to-bind ratio this year at 41.9%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Broker trails at 16.4%. Bound over quoted submissions; submissions declined before a quote are excluded (BR-INS-020).",
+      "sqlHash": "514bba44cfcc4fff",
+      "columns": [
+        "channel",
+        "quote_to_bind_ratio"
+      ],
+      "rows": [
+        [
+          "Direct digital",
+          41.8879
+        ],
+        [
+          "Captive agent",
+          26.8493
+        ],
+        [
+          "Independent agent",
+          25.6833
+        ],
+        [
+          "Broker",
+          16.3507
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-004@1.3.0",
+        "metric:SUBMISSION_FUNNEL.quote_to_bind_ratio",
+        "verified_query:VQ-INS-050",
+        "document:DOC-INS-UW-GUIDELINES#3"
+      ],
+      "personas": {
+        "A": {
+          "kind": "decline",
+          "headline": "You don’t have access to Distribution Performance yet."
+        }
+      }
+    },
+    "SC-INS-018": {
+      "agent": "AG-INS-003",
+      "kind": "answer",
+      "headline": "Homeowners has the highest quote-to-bind ratio last quarter at 28.6%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "\"Hit ratio\" maps to the quote-to-bind ratio: bound over quoted submissions (BR-INS-020). Commercial lines bound less often in Q3 as Sentinel held rate; shown across 6 lines of business.",
+      "sqlHash": "3b1d64149b9f7d3b",
+      "columns": [
+        "line_of_business",
+        "quote_to_bind_ratio"
+      ],
+      "rows": [
+        [
+          "Homeowners",
+          28.6225
+        ],
+        [
+          "Personal Auto",
+          27.6259
+        ],
+        [
+          "Commercial Property",
+          22.8188
+        ],
+        [
+          "General Liability",
+          22.4138
+        ],
+        [
+          "Workers Compensation",
+          21.978
+        ],
+        [
+          "Commercial Auto",
+          20.9459
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-004@1.3.0",
+        "metric:SUBMISSION_FUNNEL.quote_to_bind_ratio",
+        "document:DOC-INS-UW-GUIDELINES#3"
+      ],
+      "personas": {}
+    },
+    "SC-INS-019": {
+      "agent": "AG-INS-003",
+      "kind": "answer",
+      "headline": "New business premium moved +$13,889 from January to the latest month this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Premium bound on new business in each of the 9 months; rewrites and reinstatements are excluded (BR-INS-016).",
+      "sqlHash": "fd1b36eb410d227d",
+      "columns": [
+        "period",
+        "new_business_premium"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          349716
+        ],
+        [
+          "2026-02-01",
+          400135
+        ],
+        [
+          "2026-03-01",
+          404650
+        ],
+        [
+          "2026-04-01",
+          381733
+        ],
+        [
+          "2026-05-01",
+          389215
+        ],
+        [
+          "2026-06-01",
+          391478
+        ],
+        [
+          "2026-07-01",
+          354541
+        ],
+        [
+          "2026-08-01",
+          373915
+        ],
+        [
+          "2026-09-01",
+          363605
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-004@1.3.0",
+        "metric:SUBMISSION_FUNNEL.new_business_premium",
+        "rule:BR-INS-016",
+        "verified_query:VQ-INS-057",
+        "document:DOC-INS-UW-GUIDELINES#3"
+      ],
+      "personas": {}
+    },
+    "SC-INS-020": {
+      "agent": "AG-INS-003",
+      "kind": "decline",
+      "headline": "I can't appoint agencies or grant binding authority — distribution leadership decides that.",
+      "narrative": "Appointments and binding authority are granted by the head of distribution under the underwriting guidelines. I can show you an agency's submissions, quote-to-bind and turnaround to support the decision.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-INS-021": {
+      "agent": "AG-INS-004",
+      "kind": "answer",
+      "headline": "Policy retention is 87.0% — within target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Policies renewed over policies that reached a renewal date; mid-term cancellations are excluded (BR-INS-019).",
+      "sqlHash": "f2a368f18e99ca46",
+      "columns": [
+        "retention_rate",
+        "retention_rate_target_min",
+        "retention_rate_target_max"
+      ],
+      "rows": [
+        [
+          86.984,
+          84,
+          90
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-001@2.1.0",
+        "metric:POLICYHOLDER_360.retention_rate",
+        "verified_query:VQ-INS-003",
+        "document:DOC-INS-UW-GUIDELINES#2"
+      ],
+      "personas": {}
+    },
+    "SC-INS-022": {
+      "agent": "AG-INS-004",
+      "kind": "answer",
+      "headline": "South has the highest billing delinquency rate this year at 5.88%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Midwest is lowest at 3.91%. Invoices more than 30 days past due at month end (BR-INS-023), across the 4 regions you are entitled to see.",
+      "sqlHash": "63b1132c3f6abb52",
+      "columns": [
+        "region",
+        "billing_delinquency_rate"
+      ],
+      "rows": [
+        [
+          "South",
+          5.88235
+        ],
+        [
+          "West",
+          4.01992
+        ],
+        [
+          "Northeast",
+          4.0092
+        ],
+        [
+          "Midwest",
+          3.91472
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-005@2.0.2",
+        "metric:PREMIUM_BILLING.billing_delinquency_rate",
+        "document:DOC-INS-BILLING-PROC#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Northeast has the highest billing delinquency rate this year at 4.01%.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-INS-023": {
+      "agent": "AG-INS-004",
+      "kind": "answer",
+      "headline": "Across 16 states, the median average premium per policy is $2,387.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "The middle 80% of states sit between $2,283 and $2,435; the highest state averages $2,455.",
+      "sqlHash": "0b06589042d53177",
+      "columns": [
+        "state_count",
+        "avg_premium_per_policy_p10",
+        "avg_premium_per_policy_p50",
+        "avg_premium_per_policy_p90",
+        "avg_premium_per_policy_min",
+        "avg_premium_per_policy_max"
+      ],
+      "rows": [
+        [
+          16,
+          2283.31,
+          2386.7,
+          2434.84,
+          2191.76,
+          2454.78
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-001@2.1.0",
+        "metric:POLICYHOLDER_360.avg_premium_per_policy",
+        "verified_query:VQ-INS-061",
+        "document:DOC-INS-BILLING-PROC#1"
+      ],
+      "personas": {}
+    },
+    "SC-INS-024": {
+      "agent": "AG-INS-004",
+      "kind": "clarify",
+      "headline": "\"How policyholders are doing\" can mean a few things — which one do you need?",
+      "narrative": "I can show policies in force, policy retention, average premium per policy, tenure or the billing delinquency rate. Pick one and a slice.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-INS-025": {
+      "agent": "AG-INS-004",
+      "kind": "answer",
+      "headline": "The autopay rate moved +0.2 points from January to the latest month this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Share of invoices paid by automatic bank draft or card in each of the 9 months.",
+      "sqlHash": "dfc1634d67b22e83",
+      "columns": [
+        "period",
+        "autopay_rate"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          52.6208
+        ],
+        [
+          "2026-02-01",
+          51.2119
+        ],
+        [
+          "2026-03-01",
+          52.8169
+        ],
+        [
+          "2026-04-01",
+          52.1438
+        ],
+        [
+          "2026-05-01",
+          49.0378
+        ],
+        [
+          "2026-06-01",
+          51.2491
+        ],
+        [
+          "2026-07-01",
+          51.2128
+        ],
+        [
+          "2026-08-01",
+          53.4014
+        ],
+        [
+          "2026-09-01",
+          52.8644
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-005@2.0.2",
+        "metric:PREMIUM_BILLING.autopay_rate",
+        "verified_query:VQ-INS-062",
+        "document:DOC-INS-BILLING-PROC#1"
+      ],
+      "personas": {}
+    },
+    "SC-INS-026": {
+      "agent": "AG-INS-004",
+      "kind": "answer",
+      "headline": "Direct digital retains best at 87.8%, with an average premium per policy of $2,384.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Independent agent retains least at 86.6% with $2,373 per policy, across 4 distribution channels (BR-INS-019).",
+      "sqlHash": "cdd9cc7be80d4b3e",
+      "columns": [
+        "channel",
+        "retention_rate",
+        "avg_premium_per_policy"
+      ],
+      "rows": [
+        [
+          "Direct digital",
+          87.8107,
+          2383.96
+        ],
+        [
+          "Broker",
+          87.3807,
+          2358.83
+        ],
+        [
+          "Captive agent",
+          86.7795,
+          2355.18
+        ],
+        [
+          "Independent agent",
+          86.5715,
+          2372.53
+        ]
+      ],
+      "citations": [
+        "product:DP-INS-001@2.1.0",
+        "metric:POLICYHOLDER_360.retention_rate",
+        "metric:POLICYHOLDER_360.avg_premium_per_policy",
+        "document:DOC-INS-BILLING-PROC#3"
+      ],
+      "personas": {}
+    },
+    "SC-INS-027": {
+      "agent": "AG-INS-005",
+      "kind": "help",
+      "headline": "I explain governance across the data estate — I don't analyse business KPIs.",
+      "narrative": "Ask me what a glossary term or metric means, the certification status of a data product, or where governance gaps such as missing stewards or masking sit. For KPI numbers, ask the domain agents.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-INS-028": {
+      "agent": "AG-INS-005",
+      "kind": "decline",
+      "headline": "I can't approve access requests — agents act, humans decide.",
+      "narrative": "Access to a data product is granted only by its owner or steward through the access workflow. I can show you the request status and who can approve it.",
+      "citations": [],
+      "personas": {}
+    }
+  }
+}

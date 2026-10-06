@@ -1,0 +1,410 @@
+# KPIs with target bands, calibrated against the scale-M warehouse (AI-Ready insurance kpis.ts + generators.config.ts
+# KPI_RANGES, Marketplace KPI manifests). `window` is evaluated relative to pack asOf; `last n unit` = the n most
+# recent complete units (ADR-0011). Absolute amounts are for the governed sample, not the whole book.
+- id: KPI-INS-LOSS-RATIO
+  name: Loss ratio
+  definition: "Incurred losses excluding catastrophe-coded claims as a share of earned premium, accident year to date"
+  formula: "ex-cat incurred losses ÷ earned premium"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 58, max: 66 }
+  window: { ytd: true }
+  term: GT-INS-LOSS-RATIO
+  metric: loss_ratio
+  products: [DP-INS-003]
+- id: KPI-INS-COMBINED
+  name: Combined ratio
+  definition: "All-in loss ratio plus LAE ratio plus expense ratio, accident year to date"
+  formula: "(incurred + LAE + underwriting expense) ÷ earned premium"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 97, max: 105 }
+  window: { ytd: true }
+  term: GT-INS-COMBINED-RATIO
+  metric: combined_ratio
+  products: [DP-INS-003]
+- id: KPI-INS-EXPENSE
+  name: Expense ratio
+  definition: "Commission and underwriting expense as a share of earned premium, year to date"
+  formula: "underwriting expense ÷ earned premium"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 22, max: 27 }
+  window: { ytd: true }
+  term: GT-INS-EXPENSE-RATIO
+  metric: expense_ratio
+  products: [DP-INS-003]
+- id: KPI-INS-LAE
+  name: LAE ratio
+  definition: "Loss adjustment expense as a share of earned premium, accident year to date"
+  formula: "LAE ÷ earned premium"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 6, max: 9 }
+  window: { ytd: true }
+  term: GT-INS-LAE
+  metric: lae_ratio
+  products: [DP-INS-003]
+- id: KPI-INS-CAT-LR
+  name: Catastrophe loss ratio
+  definition: "Catastrophe-coded incurred losses as points of earned premium, accident year to date"
+  formula: "cat-coded incurred losses ÷ earned premium"
+  unit: "pts"
+  direction: lower_is_better
+  target: { min: 4, max: 11 }
+  window: { ytd: true }
+  term: GT-INS-CAT-LOSS
+  metric: cat_loss_ratio
+  products: [DP-INS-003]
+- id: KPI-INS-EARNED
+  name: Earned premium
+  definition: "Premium earned year to date (governed policy-month sample)"
+  formula: "Σ earned premium"
+  unit: "USD"
+  direction: target_band
+  target: { min: 95000000, max: 120000000 }
+  window: { ytd: true }
+  term: GT-INS-EARNED-PREMIUM
+  metric: earned_premium
+  products: [DP-INS-003]
+- id: KPI-INS-WRITTEN
+  name: Written premium
+  definition: "Premium written year to date (governed policy-month sample)"
+  formula: "Σ written premium"
+  unit: "USD"
+  direction: target_band
+  target: { min: 100000000, max: 125000000 }
+  window: { ytd: true }
+  term: GT-INS-WRITTEN-PREMIUM
+  metric: written_premium
+  products: [DP-INS-003]
+- id: KPI-INS-INCURRED
+  name: Incurred losses
+  definition: "Paid plus case reserves on claims with a loss date this year, catastrophe losses included"
+  formula: "Σ incurred losses"
+  unit: "USD"
+  direction: target_band
+  target: { min: 70000000, max: 95000000 }
+  window: { ytd: true }
+  term: GT-INS-INCURRED-LOSS
+  metric: incurred_losses
+  products: [DP-INS-003]
+- id: KPI-INS-FREQUENCY
+  name: Claim frequency
+  definition: "Claims per 100 policy-years of earned exposure, year to date"
+  formula: "100 × 12 × claims ÷ exposure months"
+  unit: "per hundred policy-years"
+  direction: lower_is_better
+  target: { min: 7, max: 11.5 }
+  window: { ytd: true }
+  term: GT-INS-CLAIM-FREQUENCY
+  metric: claim_frequency
+  products: [DP-INS-003]
+- id: KPI-INS-CLAIMS
+  name: Claims reported
+  definition: "Claims with a loss date this year (governed claim sample)"
+  formula: "count of claims by loss date"
+  unit: "claims"
+  direction: target_band
+  target: { min: 3400, max: 4400 }
+  window: { ytd: true }
+  term: GT-INS-CLAIM
+  metric: claims_reported
+  products: [DP-INS-002]
+- id: KPI-INS-SEVERITY
+  name: Average claim severity
+  definition: "Average incurred loss per claim with a loss date this year, catastrophe claims excluded"
+  formula: "Σ incurred ÷ claims"
+  unit: "USD"
+  direction: lower_is_better
+  target: { min: 14000, max: 24000 }
+  window: { ytd: true }
+  term: GT-INS-SEVERITY
+  metric: avg_severity
+  products: [DP-INS-002]
+- id: KPI-INS-CYCLE
+  name: Claims cycle time
+  definition: "Average days from first notice of loss to closure, claims with a loss date this year that have closed"
+  formula: "mean of closed date − reported date"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 15, max: 30 }
+  window: { ytd: true }
+  term: GT-INS-CYCLE-TIME
+  metric: avg_cycle_days
+  products: [DP-INS-002]
+- id: KPI-INS-OPEN
+  name: Open claims
+  definition: "Claims open or reopened with a case reserve at the as-of date"
+  formula: "count of claims with status Open or Reopened and case reserve > 0"
+  unit: "claims"
+  direction: target_band
+  target: { min: 400, max: 700 }
+  window: {}
+  term: GT-INS-OPEN-CLAIM
+  metric: open_claims
+  products: [DP-INS-002]
+- id: KPI-INS-PAID
+  name: Paid losses
+  definition: "Loss payments on claims with a loss date this year"
+  formula: "Σ paid losses"
+  unit: "USD"
+  direction: target_band
+  target: { min: 45000000, max: 70000000 }
+  window: { ytd: true }
+  term: GT-INS-PAID-LOSS
+  metric: paid_losses
+  products: [DP-INS-002]
+- id: KPI-INS-SUBRO
+  name: Subrogation recovery rate
+  definition: "Recoveries as a share of paid losses on subrogation-eligible claims closed this year"
+  formula: "recovered ÷ paid on eligible closed claims"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 20, max: 40 }
+  window: { ytd: true }
+  term: GT-INS-SUBROGATION
+  metric: subrogation_recovery_rate
+  products: [DP-INS-002]
+- id: KPI-INS-FRAUD-REF
+  name: Fraud referral rate
+  definition: "Share of claims with a loss date this year referred to the special investigations unit"
+  formula: "SIU-referred claims ÷ claims"
+  unit: "%"
+  direction: target_band
+  target: { min: 2, max: 5 }
+  window: { ytd: true }
+  term: GT-INS-SIU-REFERRAL
+  metric: fraud_referral_rate
+  products: [DP-INS-002]
+- id: KPI-INS-CASE-RES
+  name: Case reserve balance
+  definition: "Case reserves on open claims at the latest month-end valuation"
+  formula: "Σ case reserve at valuation"
+  unit: "USD"
+  direction: target_band
+  target: { min: 10000000, max: 16000000 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-INS-CASE-RESERVE
+  metric: case_reserve_balance
+  products: [DP-INS-006]
+- id: KPI-INS-IBNR
+  name: IBNR reserve
+  definition: "Incurred-but-not-reported reserve at the latest month-end valuation"
+  formula: "Σ allocated IBNR at valuation"
+  unit: "USD"
+  direction: target_band
+  target: { min: 3500000, max: 6500000 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-INS-IBNR
+  metric: ibnr_reserve
+  products: [DP-INS-006]
+- id: KPI-INS-TOTAL-RES
+  name: Total loss reserves
+  definition: "Case plus IBNR reserves carried at the latest month-end valuation"
+  formula: "Σ case reserve + Σ IBNR"
+  unit: "USD"
+  direction: target_band
+  target: { min: 14000000, max: 22000000 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-INS-CARRIED-RESERVE
+  metric: total_loss_reserves
+  products: [DP-INS-006]
+- id: KPI-INS-RES-ADEQ
+  name: Reserve adequacy
+  definition: "Carried reserves as a share of the actuarial central indication at the latest valuation"
+  formula: "Σ carried ÷ Σ indicated"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 92, max: 100 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-INS-RESERVE-ADEQUACY
+  metric: reserve_adequacy
+  products: [DP-INS-006]
+- id: KPI-INS-AVG-RES
+  name: Average case reserve per open claim
+  definition: "Average case reserve on open claims at the latest valuation"
+  formula: "case reserves ÷ open claims with a reserve"
+  unit: "USD"
+  direction: target_band
+  target: { min: 7000, max: 12000 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-INS-CASE-RESERVE
+  metric: avg_case_reserve
+  products: [DP-INS-006]
+- id: KPI-INS-QTB
+  name: Quote-to-bind ratio
+  definition: "Share of quoted submissions that bound, year to date"
+  formula: "bound ÷ quoted submissions"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 22, max: 32 }
+  window: { ytd: true }
+  term: GT-INS-QUOTE-TO-BIND
+  metric: quote_to_bind_ratio
+  products: [DP-INS-004]
+- id: KPI-INS-NB-PREM
+  name: New business premium
+  definition: "Premium bound on new business this year, excluding rewrites and reinstatements (governed submission sample)"
+  formula: "Σ bound premium on new business"
+  unit: "USD"
+  direction: higher_is_better
+  target: { min: 2800000, max: 4200000 }
+  window: { ytd: true }
+  term: GT-INS-NEW-BUSINESS
+  metric: new_business_premium
+  products: [DP-INS-004]
+- id: KPI-INS-TURNAROUND
+  name: Quote turnaround
+  definition: "Average days from submission to quote, this year"
+  formula: "mean of quote date − received date"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 1, max: 3 }
+  window: { ytd: true }
+  term: GT-INS-TURNAROUND
+  metric: quote_turnaround_days
+  products: [DP-INS-004]
+- id: KPI-INS-SUBMISSIONS
+  name: Submissions received
+  definition: "Submissions received this year (governed submission sample)"
+  formula: "count of submissions"
+  unit: "submissions"
+  direction: higher_is_better
+  target: { min: 5500, max: 7500 }
+  window: { ytd: true }
+  term: GT-INS-SUBMISSION
+  metric: submissions_received
+  products: [DP-INS-004]
+- id: KPI-INS-PIF
+  name: Policies in force
+  definition: "Policies in force at the as-of date (governed policy sample)"
+  formula: "count of policies with status In force (BR-INS-013)"
+  unit: "policies"
+  direction: target_band
+  target: { min: 24000, max: 28000 }
+  window: {}
+  term: GT-INS-PIF
+  metric: policies_in_force
+  products: [DP-INS-001]
+- id: KPI-INS-RETENTION
+  name: Policy retention
+  definition: "Share of policies reaching a renewal date in the current term year that renewed"
+  formula: "renewed ÷ due for renewal"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 84, max: 90 }
+  window: {}
+  term: GT-INS-RETENTION
+  metric: retention_rate
+  products: [DP-INS-001]
+- id: KPI-INS-AVG-PREM
+  name: Average premium per policy
+  definition: "Average current-term annual premium of policies in force"
+  formula: "Σ annual premium ÷ policies in force"
+  unit: "USD"
+  direction: target_band
+  target: { min: 2100, max: 2700 }
+  window: {}
+  term: GT-INS-AVG-PREMIUM
+  metric: avg_premium_per_policy
+  products: [DP-INS-001]
+- id: KPI-INS-TENURE
+  name: Policyholder tenure
+  definition: "Average years since original inception, policies in force"
+  formula: "mean of as-of date − inception date"
+  unit: "years"
+  direction: higher_is_better
+  target: { min: 7, max: 11 }
+  window: {}
+  term: GT-INS-TENURE
+  metric: avg_tenure_years
+  products: [DP-INS-001]
+- id: KPI-INS-MULTILINE
+  name: Multi-line rate
+  definition: "Share of in-force policies held by policyholders with policies in two or more lines"
+  formula: "in-force policies of multi-line policyholders ÷ in-force policies"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 42, max: 58 }
+  window: {}
+  term: GT-INS-MULTI-LINE
+  metric: multi_line_rate
+  products: [DP-INS-001]
+- id: KPI-INS-DELINQ
+  name: Billing delinquency rate
+  definition: "Share of this year's invoices more than 30 days past due"
+  formula: "invoices > 30 days past due ÷ invoices"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 2, max: 6 }
+  window: { ytd: true }
+  term: GT-INS-DELINQUENCY
+  metric: billing_delinquency_rate
+  products: [DP-INS-005]
+- id: KPI-INS-AUTOPAY
+  name: Autopay rate
+  definition: "Share of this year's invoices paid by automatic bank or card payment"
+  formula: "autopay invoices ÷ invoices"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 45, max: 60 }
+  window: { ytd: true }
+  term: GT-INS-AUTOPAY
+  metric: autopay_rate
+  products: [DP-INS-005]
+- id: KPI-INS-BILLED
+  name: Premium billed
+  definition: "Premium instalments invoiced this year (governed invoice sample)"
+  formula: "Σ amount due"
+  unit: "USD"
+  direction: target_band
+  target: { min: 2600000, max: 3400000 }
+  window: { ytd: true }
+  term: GT-INS-PREMIUM-BILLED
+  metric: premium_billed
+  products: [DP-INS-005]
+- id: KPI-INS-COLLECTION
+  name: Premium collection rate
+  definition: "Premium received as a share of premium billed, this year"
+  formula: "Σ paid ÷ Σ billed"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 95, max: 99.5 }
+  window: { ytd: true }
+  term: GT-INS-COLLECTION
+  metric: collection_rate
+  products: [DP-INS-005]
+- id: KPI-INS-NPS
+  name: Net promoter score
+  definition: "Promoters minus detractors among surveyed service contacts"
+  formula: "% promoters − % detractors"
+  unit: "points"
+  direction: higher_is_better
+  target: { min: 30, max: 45 }
+  window: {}
+  term: GT-INS-NPS
+  metric: nps
+  products: [DP-INS-007]
+- id: KPI-INS-COMPLAINT
+  name: Complaint rate
+  definition: "Share of service contacts logged as complaints"
+  formula: "complaints ÷ service contacts"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 4, max: 8 }
+  window: {}
+  term: GT-INS-COMPLAINT
+  metric: complaint_rate
+  products: [DP-INS-007]
+- id: KPI-INS-FCR
+  name: First-contact resolution
+  definition: "Share of service contacts resolved without a follow-up"
+  formula: "resolved first time ÷ contacts"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 72, max: 85 }
+  window: {}
+  term: GT-INS-FCR
+  metric: first_contact_resolution_rate
+  products: [DP-INS-007]

@@ -1,0 +1,32 @@
+id: AG-INS-002
+name: Underwriting Copilot
+domain: Underwriting Result
+status: PRODUCTION
+owner: insurance:underwriting-dpo
+on_call: Underwriting Analytics
+avatar: { icon: scale, hue: 330 }
+capability: "Answers questions on loss ratios, catastrophe losses, LAE and expense ratios, the combined ratio, earned and written premium, incurred losses and claim frequency."
+personas_served: [Chief Underwriting Officer, Pricing Actuary, Claims Operations Manager]
+out_of_scope: ["binding or declining individual risks", "rate filings and pricing changes", "reserve adequacy opinions", "reinsurance purchasing"]
+products:
+  - { id: DP-INS-003, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [UNDERWRITING_RESULT], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-INS-STAT-GUIDE, DOC-INS-UW-GUIDELINES] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-INS-LOSS-RATIO, grains: [month, quarter, year], slices: [region, line_of_business, state, segment, channel], depth: rank_drivers }
+  - { kpi: KPI-INS-COMBINED, grains: [month, quarter, year], slices: [line_of_business, region, segment], depth: explain }
+  - { kpi: KPI-INS-EXPENSE, grains: [quarter, year], slices: [line_of_business, channel], depth: explain }
+  - { kpi: KPI-INS-LAE, grains: [quarter, year], slices: [line_of_business, region], depth: value }
+  - { kpi: KPI-INS-CAT-LR, grains: [month, quarter, year], slices: [region, cat_peril, cat_event, line_of_business], depth: rank_drivers }
+  - { kpi: KPI-INS-EARNED, grains: [month, quarter, year], slices: [region, line_of_business, channel, segment], depth: trend }
+  - { kpi: KPI-INS-WRITTEN, grains: [month, quarter, year], slices: [region, line_of_business, channel], depth: trend }
+  - { kpi: KPI-INS-INCURRED, grains: [month, quarter, year], slices: [state, region, line_of_business, cat_peril], depth: rank_drivers }
+  - { kpi: KPI-INS-FREQUENCY, grains: [quarter, year], slices: [region, line_of_business], depth: explain }
+instructions: [INS-INS-002-P, INS-INS-002-R, INS-INS-002-G, INS-INS-002-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-INS-001, SC-INS-002, SC-INS-003, SC-INS-004, SC-INS-005, SC-INS-006, SC-INS-007, SC-INS-008]

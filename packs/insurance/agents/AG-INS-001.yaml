@@ -1,0 +1,37 @@
+id: AG-INS-001
+name: Claims Analyst
+domain: Claims & Recovery
+status: PRODUCTION
+owner: insurance:underwriting-dpo
+on_call: Claims Analytics
+avatar: { icon: clipboard-list, hue: 200 }
+capability: "Answers questions on claim volumes, severity, cycle time, open inventory, paid losses, subrogation recoveries, SIU referral rates and loss reserves."
+personas_served: [Claims Analyst, Claims Operations Manager, Chief Actuary]
+out_of_scope: ["coverage determination", "settlement authority", "adjuster performance ratings", "setting or changing reserves"]
+products:
+  - { id: DP-INS-002, columns: "*" }
+  - { id: DP-INS-006, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [CLAIMS_OPERATIONS, LOSS_RESERVES], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-INS-CLAIMS-STD, DOC-INS-RESERVING] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+  - { tool: request_access_link }
+kpi_coverage:
+  - { kpi: KPI-INS-CLAIMS, grains: [month, quarter], slices: [region, line_of_business, cause_of_loss, handling_team, state], depth: trend }
+  - { kpi: KPI-INS-SEVERITY, grains: [month, quarter, year], slices: [line_of_business, region, cause_of_loss, handling_team, state, claimant_name], depth: rank_drivers }
+  - { kpi: KPI-INS-CYCLE, grains: [month, quarter], slices: [handling_team, line_of_business, region], depth: explain }
+  - { kpi: KPI-INS-OPEN, grains: [], slices: [line_of_business, region, handling_team, claim_status], depth: value }
+  - { kpi: KPI-INS-PAID, grains: [day, month, quarter], slices: [cause_of_loss, line_of_business, region], depth: rank_drivers }
+  - { kpi: KPI-INS-SUBRO, grains: [quarter, year], slices: [line_of_business, region], depth: explain }
+  - { kpi: KPI-INS-FRAUD-REF, grains: [month, quarter], slices: [region, line_of_business, cause_of_loss], depth: rank_drivers }
+  - { kpi: KPI-INS-CASE-RES, grains: [month, quarter], slices: [line_of_business, region, accident_year], depth: trend }
+  - { kpi: KPI-INS-IBNR, grains: [month, quarter], slices: [line_of_business, accident_year], depth: value }
+  - { kpi: KPI-INS-TOTAL-RES, grains: [month, quarter], slices: [accident_year, line_of_business], depth: trend }
+  - { kpi: KPI-INS-RES-ADEQ, grains: [month, quarter], slices: [line_of_business, region], depth: explain }
+  - { kpi: KPI-INS-AVG-RES, grains: [month], slices: [line_of_business, region], depth: value }
+instructions: [INS-INS-001-P, INS-INS-001-R, INS-INS-001-G, INS-INS-001-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: masked, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-INS-009, SC-INS-010, SC-INS-011, SC-INS-012, SC-INS-013, SC-INS-014, SC-INS-015]

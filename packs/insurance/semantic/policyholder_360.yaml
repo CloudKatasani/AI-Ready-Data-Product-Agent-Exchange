@@ -1,0 +1,69 @@
+name: POLICYHOLDER_360
+description: Policy and policyholder master — policies in force, retention, premium per policy, tenure and multi-line relationships
+tables:
+  - { alias: p, fqn: CONFORMED_GOLD.DIM_POLICY, pk: policy_key }
+  - { alias: h, fqn: CONFORMED_GOLD.DIM_POLICYHOLDER, pk: policyholder_key }
+relationships:
+  - { from: p.policyholder_key, to: h.policyholder_key }
+dimensions:
+  - { name: region, expr: p.region, label: Region, synonyms: [territory, operating region], term: GT-INS-REGION }
+  - { name: state, expr: p.state, label: State, synonyms: [states, policy state] }
+  - { name: line_of_business, expr: p.line_of_business, label: Line of business, synonyms: [lob, product line, lines of business], term: GT-INS-LOB }
+  - { name: segment, expr: p.segment, label: Segment, synonyms: [personal or commercial, personal vs commercial] }
+  - { name: channel, expr: p.channel, label: Distribution channel, synonyms: [sales channel, distribution channels], term: GT-INS-CHANNEL }
+  - { name: policy_status, expr: p.policy_status, label: Policy status, synonyms: [in force or lapsed] }
+  - { name: tenure_band, expr: h.tenure_band, label: Tenure band, synonyms: [tenure, years with us, customer tenure] }
+  - { name: age_band, expr: h.age_band, label: Age band, synonyms: [age group] }
+  - { name: policyholder_name, expr: h.full_name, label: Policyholder, synonyms: [policyholder name, insured name, policyholders] }
+time_dimensions:
+  - { name: inception_date, expr: p.inception_date, default: true }
+facts:
+  - { name: annual_premium_amount, expr: p.annual_premium }
+  - { name: tenure_years_value, expr: p.tenure_years }
+metrics:
+  - name: policies_in_force
+    label: Policies in force
+    expr: COUNT_IF(p.in_force)
+    unit: policies
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [pif, in-force policies, in force count, active policies]
+    term: GT-INS-PIF
+    description: Policies with status In force at the as-of date (governed policy sample)
+  - name: retention_rate
+    label: Policy retention
+    expr: 100.0 * SUM(CASE WHEN p.renewed THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN p.renewal_due THEN 1 ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [retention, renewal rate, renewal retention, policy retention rate]
+    term: GT-INS-RETENTION
+    description: Policies renewed as a share of policies that reached a renewal date; mid-term cancellations excluded
+  - name: avg_premium_per_policy
+    label: Average premium per policy
+    expr: AVG(CASE WHEN p.in_force THEN p.annual_premium END)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [average premium, premium per policy, average annual premium]
+    term: GT-INS-AVG-PREMIUM
+    description: Average current-term annual premium of policies in force
+  - name: avg_tenure_years
+    label: Policyholder tenure
+    expr: AVG(CASE WHEN p.in_force THEN p.tenure_years END)
+    unit: years
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [average tenure, tenure in years, policy tenure]
+    term: GT-INS-TENURE
+    description: Average years since original inception, policies in force
+  - name: multi_line_rate
+    label: Multi-line rate
+    expr: 100.0 * AVG(CASE WHEN p.in_force THEN CASE WHEN p.multi_line THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [multi-line share, multi line penetration, multiline rate]
+    term: GT-INS-MULTI-LINE
+    description: Share of in-force policies held by policyholders with in-force policies in two or more lines
+products: [DP-INS-001]

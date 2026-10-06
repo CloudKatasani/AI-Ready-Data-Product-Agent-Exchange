@@ -1,0 +1,104 @@
+# Knockout (Why AI-Ready): four governed answers and how each degrades when a layer is switched off.
+# declared_delta_pct is computed through the real knockout query path at scale M (pnpm knockout:deltas --update).
+answers:
+  - id: KO-INS-01
+    kpi: KPI-INS-LOSS-RATIO
+    question: "What is the loss ratio this year, excluding catastrophe losses?"
+    query: { view: UNDERWRITING_RESULT, metrics: [loss_ratio], timeRange: { ytd: true } }
+    failure_by_layer:
+      silver: wrong        # CDC duplicate claims and tombstoned policies inflate incurred losses and premium
+      gold: wrong          # no conformed ledger; catastrophe codes not resolved against the code list
+      semantic: wrong      # naive formula adds LAE to losses and divides by written premium
+      glossary: ambiguous  # "LR" and "attritional loss ratio" no longer resolve to the loss ratio
+      context: wrong       # catastrophe losses (BR-INS-001) are no longer excluded
+      governance: unsafe   # no certification, row access or lineage on the answer
+    declared_delta_pct: { silver: -0.1, gold: -0.1, semantic: 22.8, glossary: 0, context: 15.9, governance: 0 }
+  - id: KO-INS-02
+    kpi: KPI-INS-EARNED
+    question: "What is earned premium this year?"
+    query: { view: UNDERWRITING_RESULT, metrics: [earned_premium], timeRange: { ytd: true } }
+    failure_by_layer:
+      silver: wrong        # duplicate premium updates and deleted policies counted
+      gold: unverified     # same premium from Silver but no conformed policy dimension
+      semantic: wrong      # naive formula reports written premium as earned
+      glossary: ambiguous  # "EP" does not resolve to earned premium
+      context: unverified  # accident-year-to-date rule (BR-INS-005) not cited
+      governance: unsafe   # policyholder-level premium reachable without row access
+    declared_delta_pct: { silver: 0.6, gold: 0.6, semantic: 3.9, glossary: 0, context: 0, governance: 0 }
+  - id: KO-INS-03
+    kpi: KPI-INS-NB-PREM
+    question: "How much new business premium have we bound this year?"
+    query: { view: SUBMISSION_FUNNEL, metrics: [new_business_premium], timeRange: { ytd: true } }
+    failure_by_layer:
+      silver: wrong        # replayed workbench files double-count bound submissions
+      gold: unverified     # bound premium computed without the conformed agency dimension
+      semantic: ambiguous  # bound premium vs quoted premium not distinguished
+      glossary: ambiguous  # "NB premium" does not resolve
+      context: wrong       # rewrites and reinstatements (BR-INS-016) are included
+      governance: unsafe   # agency commission data reachable in the raw layer
+    declared_delta_pct: { gold: 0, semantic: 23, glossary: 0, context: 23, governance: 0 }
+  - id: KO-INS-04
+    kpi: KPI-INS-QTB
+    question: "What is the quote-to-bind ratio this year?"
+    query: { view: SUBMISSION_FUNNEL, metrics: [quote_to_bind_ratio], timeRange: { ytd: true } }
+    failure_by_layer:
+      silver: wrong        # duplicate submission updates and dirty bind flags
+      gold: unverified     # bound flag not conformed to quoted submissions
+      semantic: wrong      # naive formula divides binds by all submissions, including declines before quote
+      glossary: ambiguous  # "hit ratio" does not resolve to quote-to-bind
+      context: unverified  # the quoted-only denominator (BR-INS-020) is not cited
+      governance: unsafe   # agency-level production reachable without row access
+    declared_delta_pct: { gold: 0, semantic: -17.6, glossary: 0, context: 0, governance: 0 }
+
+# Silver equivalents the compiler uses when the Gold layer is off (05 §1 step 7). column_map maps a Gold column
+# name to the Silver column (or Silver expression) that replaces it. DIM_DATE has no Silver source and stays.
+gold_fallbacks:
+  - gold: CONFORMED_GOLD.FCT_UW_LEDGER
+    silver: CURATED_SILVER.UW_TRANSACTION
+    column_map:
+      ledger_key: txn_id
+      policy_key: policy_id
+      line_key: line_of_business
+      cat_event_key: "coalesce(cat_code, 'NONE')"
+      date_key: "CAST(strftime(txn_date, '%Y%m%d') AS INTEGER)"
+  - gold: CONFORMED_GOLD.DIM_POLICY
+    silver: CURATED_SILVER.INSURANCE_POLICY
+    column_map:
+      policy_key: policy_id
+      in_force: "policy_status = 'In force'"
+      tenure_years: "date_diff('day', inception_date, GOVERNANCE.as_of()) / 365.25"
+  - gold: CONFORMED_GOLD.DIM_LINE
+    silver: CURATED_SILVER.LINE_OF_BUSINESS
+    column_map:
+      line_key: line_name
+      line_of_business: line_name
+  - gold: CONFORMED_GOLD.DIM_CAT_EVENT
+    silver: CURATED_SILVER.CAT_EVENT
+    column_map:
+      cat_event_key: event_code
+  - gold: CONFORMED_GOLD.FCT_CLAIM
+    silver: CURATED_SILVER.CLAIM_HEADER
+    column_map:
+      claim_key: claim_id
+      policy_key: policy_id
+      date_key: "CAST(strftime(loss_date, '%Y%m%d') AS INTEGER)"
+      is_open: "claim_status <> 'Closed' AND case_reserve > 0"
+      is_closed: "claim_status = 'Closed'"
+  - gold: CONFORMED_GOLD.FCT_SUBMISSION
+    silver: CURATED_SILVER.SUBMISSION
+    column_map:
+      submission_key: submission_id
+      agency_key: agency_id
+      date_key: "CAST(strftime(received_date, '%Y%m%d') AS INTEGER)"
+      bound_premium: "CASE WHEN bound THEN quoted_premium ELSE 0 END"
+  - gold: CONFORMED_GOLD.DIM_AGENCY
+    silver: CURATED_SILVER.AGENCY
+    column_map:
+      agency_key: agency_id
+  - gold: CONFORMED_GOLD.FCT_INVOICE
+    silver: CURATED_SILVER.INVOICE
+    column_map:
+      invoice_key: invoice_id
+      policy_key: policy_id
+      date_key: "CAST(strftime(invoice_date, '%Y%m%d') AS INTEGER)"
+      autopay: "pay_method LIKE 'Autopay%'"

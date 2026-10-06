@@ -1,0 +1,34 @@
+# Service and survey DQ rules.
+- id: DQ-INS-055
+  object: CONFORMED_GOLD.FCT_SERVICE_CONTACT
+  column: contact_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per service contact.
+- id: DQ-INS-056
+  object: CONFORMED_GOLD.FCT_SERVICE_CONTACT
+  column: contact_ts
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: Service contacts land from the CRM within a day.
+- id: DQ-INS-057
+  object: CONFORMED_GOLD.FCT_SERVICE_CONTACT
+  column: nps_score
+  dimension: validity
+  assertion: "max <= 10"
+  severity: medium
+  alert_route: steward
+  description: Survey scores are on the 0–10 scale.
+- id: DQ-INS-058
+  object: CONFORMED_GOLD.FCT_SERVICE_CONTACT
+  column: contact_reason
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Billing question, Policy change, Claim status, Coverage question, Complaint, Cancellation request]
+  severity: medium
+  alert_route: steward
+  description: Contact reasons conform to the service taxonomy.

@@ -1,0 +1,83 @@
+# Claims DQ rules.
+- id: DQ-INS-024
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: claim_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per claim after CDC deduplication.
+- id: DQ-INS-025
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: incurred_loss
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every claim carries an incurred amount.
+- id: DQ-INS-026
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: incurred_loss
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: Incurred losses are positive on every reported claim.
+- id: DQ-INS-027
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: paid_loss
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every claim carries paid losses to date.
+- id: DQ-INS-028
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: paid_loss
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Paid losses are never negative.
+- id: DQ-INS-029
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: claim_status
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Open, Reopened, Closed]
+  severity: high
+  alert_route: steward
+  description: Claim status is Open, Reopened or Closed.
+- id: DQ-INS-030
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: claim_status
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every claim carries a status for the open-claims count.
+- id: DQ-INS-031
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: fnol_ts
+  dimension: timeliness
+  assertion: "freshness_min <= 1800"
+  severity: high
+  alert_route: engineering
+  description: First notice of loss from the claims platform lands within hours.
+- id: DQ-INS-032
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: cause_of_loss
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Collision, Comprehensive, Bodily injury, Glass, Water damage, Wind & hail, Fire, Theft, Liability, Cargo, Equipment breakdown, Premises liability, Products liability, Strain or sprain, Slip and fall, Struck by object, Winter storm, Hurricane, Wildfire]
+  severity: medium
+  alert_route: steward
+  description: Causes of loss conform to the claims coding manual.
+- id: DQ-INS-033
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: cycle_days
+  dimension: validity
+  assertion: "min >= 0"
+  severity: medium
+  alert_route: engineering
+  description: Cycle time is never negative.

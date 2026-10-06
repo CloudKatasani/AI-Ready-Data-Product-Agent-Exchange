@@ -1,0 +1,209 @@
+# Sentinel Mutual business rules (synthetic), ported from AI-Ready insurance context.ts BR-001..BR-018 and extended.
+# Rules with an `apply` block are applied by the metric compiler as default filters; the rest are definitions,
+# thresholds and policies cited in answers.
+
+# ── Underwriting result ───────────────────────────────────────────────────────────────────────────
+- id: BR-INS-001
+  domain: Underwriting result
+  text: "The loss ratio excludes catastrophe-coded losses unless explicitly requested; catastrophe losses are reported separately as catastrophe points."
+  kind: filter
+  metric: loss_ratio
+  source_doc: DOC-INS-STAT-GUIDE
+  apply:
+    filter: { dimension: catastrophe_loss, op: "=", value: false }
+    unless_question_mentions: [including catastrophe, including cat, including cats, with catastrophe, all-in loss ratio, all in loss ratio]
+
+- id: BR-INS-002
+  domain: Underwriting result
+  text: "Loss ratios use earned premium, never written premium; incurred losses are paid plus case reserves on claims with a loss date in the period."
+  kind: definition
+  metric: loss_ratio
+  source_doc: DOC-INS-STAT-GUIDE
+
+- id: BR-INS-003
+  domain: Underwriting result
+  text: "The combined ratio is the all-in loss ratio plus the LAE ratio plus the underwriting expense ratio, each on earned premium; below 100% is an underwriting profit."
+  kind: definition
+  metric: combined_ratio
+  source_doc: DOC-INS-STAT-GUIDE
+
+- id: BR-INS-005
+  domain: Underwriting result
+  text: "\"This year\" means accident year to date: losses on claims with a loss date from 1 January against premium earned in the same months."
+  kind: definition
+  metric: incurred_losses
+  source_doc: DOC-INS-STAT-GUIDE
+
+- id: BR-INS-006
+  domain: Underwriting result
+  text: "A catastrophe claim is any claim carrying a code from the catastrophe code list; the code list is maintained by catastrophe risk and closed 30 days after the event ends."
+  kind: definition
+  metric: cat_loss_ratio
+  source_doc: DOC-INS-STAT-GUIDE
+
+- id: BR-INS-007
+  domain: Underwriting result
+  text: "Claim frequency is claims per 100 policy-years of earned exposure, annualised from the exposure months in the period."
+  kind: definition
+  metric: claim_frequency
+  source_doc: DOC-INS-STAT-GUIDE
+
+- id: BR-INS-008
+  domain: Underwriting result
+  text: "The expense ratio is commission and other underwriting expense divided by earned premium; contingent commission accruals are booked in the quarter they are earned."
+  kind: definition
+  metric: expense_ratio
+  source_doc: DOC-INS-STAT-GUIDE
+
+# ── Claims ─────────────────────────────────────────────────────────────────────────────────────────
+- id: BR-INS-004
+  domain: Claims
+  text: "Claim severity is the average incurred loss per claim with a loss date in the period; LAE is excluded and catastrophe claims are excluded unless explicitly requested."
+  kind: filter
+  metric: avg_severity
+  source_doc: DOC-INS-CLAIMS-STD
+  apply:
+    filter: { dimension: catastrophe, op: "=", value: false }
+    unless_question_mentions: [including catastrophe, including cat, including cats, with catastrophe]
+
+- id: BR-INS-009
+  domain: Claims
+  text: "An open claim has status Open or Reopened and a case reserve above zero; claims fully paid and awaiting only a subrogation recovery are not open."
+  kind: definition
+  metric: open_claims
+  source_doc: DOC-INS-CLAIMS-STD
+
+- id: BR-INS-010
+  domain: Claims
+  text: "Claims cycle time runs from first notice of loss to closure and is measured on closed claims only."
+  kind: definition
+  metric: avg_cycle_days
+  source_doc: DOC-INS-CLAIMS-STD
+
+- id: BR-INS-011
+  domain: Claims
+  text: "The subrogation recovery rate divides recoveries by paid losses on subrogation-eligible claims that have closed."
+  kind: definition
+  metric: subrogation_recovery_rate
+  source_doc: DOC-INS-CLAIMS-STD
+
+- id: BR-INS-012
+  domain: Claims
+  text: "Claims with incurred losses of $50,000 or more are large losses; open injury large losses are reviewed quarterly by a claims manager."
+  kind: threshold
+  metric: avg_severity
+  source_doc: DOC-INS-CLAIMS-STD
+
+- id: BR-INS-014
+  domain: Claims
+  text: "An SIU referral is not a finding of fraud. Referral rates are reported in aggregate only; whether a named claimant has been referred is never disclosed."
+  kind: policy
+  metric: fraud_referral_rate
+  source_doc: DOC-INS-CLAIMS-STD
+
+# ── Actuarial & reserving ────────────────────────────────────────────────────────────────────────
+- id: BR-INS-015
+  domain: Reserving
+  text: "Reserve balances come from month-end valuations and are averaged across the valuations in the period, never summed, so a quarter is not counted three times."
+  kind: definition
+  metric: case_reserve_balance
+  source_doc: DOC-INS-RESERVING
+
+- id: BR-INS-017
+  domain: Reserving
+  text: "IBNR is set quarterly by the reserving committee as a factor by line and allocated to open claims in proportion to their case reserve."
+  kind: definition
+  metric: ibnr_reserve
+  source_doc: DOC-INS-RESERVING
+
+- id: BR-INS-018
+  domain: Reserving
+  text: "Reserve adequacy below 95% of the actuarial central indication for any line is escalated to the reserving committee."
+  kind: threshold
+  metric: reserve_adequacy
+  source_doc: DOC-INS-RESERVING
+
+# ── Policyholder & distribution ──────────────────────────────────────────────────────────────────
+- id: BR-INS-013
+  domain: Policyholder
+  text: "A policy in force has status In force: its current term has started and it has not lapsed at renewal or been cancelled mid-term."
+  kind: definition
+  metric: policies_in_force
+  source_doc: DOC-INS-UW-GUIDELINES
+
+- id: BR-INS-019
+  domain: Policyholder
+  text: "Retention is policies renewed divided by policies that reached a renewal date; mid-term cancellations are excluded from the denominator."
+  kind: definition
+  metric: retention_rate
+  source_doc: DOC-INS-UW-GUIDELINES
+
+- id: BR-INS-020
+  domain: Distribution
+  text: "Quote-to-bind is bound submissions divided by quoted submissions, by received date; submissions declined before a quote are excluded."
+  kind: definition
+  metric: quote_to_bind_ratio
+  source_doc: DOC-INS-UW-GUIDELINES
+
+- id: BR-INS-016
+  domain: Distribution
+  text: "New business premium excludes rewrites of existing business and reinstatements unless explicitly requested."
+  kind: filter
+  metric: new_business_premium
+  source_doc: DOC-INS-UW-GUIDELINES
+  apply:
+    filter: { dimension: submission_type, op: "=", value: New business }
+    unless_question_mentions: [including rewrites, including reinstatements, all submission types, rewrites and reinstatements]
+
+- id: BR-INS-021
+  domain: Distribution
+  text: "Agencies averaging more than 3 days from submission to quote are flagged for a quarterly service review with the distribution team."
+  kind: threshold
+  metric: quote_turnaround_days
+  source_doc: DOC-INS-UW-GUIDELINES
+
+- id: BR-INS-022
+  domain: Catastrophe risk
+  text: "Property insured value in hurricane and wildfire zones may not exceed 40% of total in-force property insured value; new property business in those zones is suspended above 38%."
+  kind: threshold
+  source_doc: DOC-INS-UW-GUIDELINES
+
+# ── Billing & service ────────────────────────────────────────────────────────────────────────────
+- id: BR-INS-023
+  domain: Billing
+  text: "Billing delinquency counts invoices more than 30 days past due at month end; a policy is cancelled for non-payment only after the statutory notice period."
+  kind: definition
+  metric: billing_delinquency_rate
+  source_doc: DOC-INS-BILLING-PROC
+
+- id: BR-INS-024
+  domain: Service
+  text: "Net promoter score is the percentage of promoters (9–10) minus the percentage of detractors (0–6) among surveyed contacts."
+  kind: definition
+  metric: nps
+  source_doc: DOC-INS-SERVICE-STD
+
+# ── Governance policies ─────────────────────────────────────────────────────────────────────────────
+- id: BR-INS-025
+  domain: Governance
+  text: "Policyholder and claimant names, addresses, emails, phone numbers, dates of birth and licence numbers are masked for every persona without clearance, in every surface including agent answers."
+  kind: policy
+  source_doc: DOC-INS-DATA-GOVERNANCE
+
+- id: BR-INS-026
+  domain: Governance
+  text: "Regional personas see only rows for their own regions; totals across other regions are not disclosed to them."
+  kind: policy
+  source_doc: DOC-INS-DATA-GOVERNANCE
+
+- id: BR-INS-027
+  domain: Governance
+  text: "Agents answer with aggregates only. Requests for an individual policy's, claim's or policyholder's details are declined and redirected to the servicing process."
+  kind: policy
+  source_doc: DOC-INS-DATA-GOVERNANCE
+
+- id: BR-INS-028
+  domain: Governance
+  text: "Agents never bind, price or decline a risk, decide coverage, settle a claim or set reserves; those decisions belong to named, licensed people."
+  kind: policy
+  source_doc: DOC-INS-DATA-GOVERNANCE

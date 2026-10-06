@@ -1,0 +1,29 @@
+id: DP-INS-006
+name: Loss Reserves
+domain: Actuarial & Reserving
+archetype: AGGREGATE
+initial_status: IN_CERTIFICATION
+seed_stage: 11
+version: 1.0.0-rc.1
+owner: insurance:underwriting-dpo
+steward: insurance:data-steward
+description: Month-end case reserves, allocated IBNR and the actuarial indication per claim, by line, region and accident year.
+purpose: Give actuarial, claims and the Claims Analyst agent a certified reserve view — case, IBNR, carried and adequacy against indication.
+decision: { persona: Chief Actuary, decision: "Which lines need reserve strengthening at the quarterly reserving committee", cadence: Monthly, workaround: "Reserving extracts reconciled to the claims system in a desktop actuarial model", consequence: "Under-reserved long-tail lines surface a year late as adverse development" }
+sample_questions: ["What is our total case reserve balance this month?", "IBNR reserve by line of business", "Reserve adequacy by line of business"]
+semantic_view: LOSS_RESERVES
+output_ports:
+  - { kind: semantic, ref: LOSS_RESERVES }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_INS_006_LOSS_RESERVES }
+  - { kind: agent, ref: AG-INS-001 }
+sla: { freshness_minutes: 1440, availability_pct: 99.5, max_null_rate_pct: 0.5 }
+kpis: [KPI-INS-CASE-RES, KPI-INS-IBNR, KPI-INS-TOTAL-RES, KPI-INS-RES-ADEQ, KPI-INS-AVG-RES]
+upstream: [CONFORMED_GOLD.FCT_RESERVE, CONFORMED_GOLD.DIM_POLICY]
+consumers: [Actuarial, Claims operations, Claims Analyst agent]
+lifecycle_seed: { artifacts: auto }
+certification_script:
+  initial: { gate4: warn, gate6: fail }
+  fixes:
+    - { id: FIX-1, check: semantic.verified_queries, label: "Add 3 verified queries for reserve adequacy, IBNR by accident year and quarterly reserves", effect: { overlay: VERIFIED_QUERY, keys: [VQ-INS-046, VQ-INS-047, VQ-INS-048] } }
+    - { id: FIX-2, check: governance.masking, label: "Attach PII masking to claimant name and phone on the reserve fact", effect: { policy_attach: { policy: MASK_PII, columns: [CONFORMED_GOLD.FCT_RESERVE.claimant_name, CONFORMED_GOLD.FCT_RESERVE.claimant_phone] } } }
+value_case: VC-INS-006

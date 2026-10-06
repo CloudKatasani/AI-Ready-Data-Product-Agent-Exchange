@@ -1,0 +1,25 @@
+id: DP-INS-003
+name: Underwriting Result
+domain: Underwriting Result
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 3.2.1
+owner: insurance:underwriting-dpo
+steward: insurance:data-steward
+description: Earned and written premium, incurred losses, LAE and underwriting expense on one ledger — loss, catastrophe, expense and combined ratios by line, region, state and accident period.
+purpose: Statutory-consistent underwriting result reporting for the board, the rate review and the Underwriting Copilot, with catastrophe losses separated by the code list.
+decision: { persona: Pricing Actuary, decision: "Which lines and regions have a loss ratio above plan and need rate or underwriting action at the next filing", cadence: Quarterly, workaround: "Policy and claims extracts joined by hand each quarter", consequence: "Rate adequacy is assessed on stale, partially reconciled data and catastrophe noise hides attritional trends" }
+sample_questions: ["What was the loss ratio by region last quarter, excluding catastrophe losses?", "Combined ratio this year", "Catastrophe loss ratio by quarter"]
+semantic_view: UNDERWRITING_RESULT
+output_ports:
+  - { kind: semantic, ref: UNDERWRITING_RESULT }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_INS_003_UNDERWRITING_RESULT }
+  - { kind: agent, ref: AG-INS-002 }
+sla: { freshness_minutes: 1440, availability_pct: 99.5, max_null_rate_pct: 0.5 }
+kpis: [KPI-INS-LOSS-RATIO, KPI-INS-COMBINED, KPI-INS-EXPENSE, KPI-INS-LAE, KPI-INS-CAT-LR, KPI-INS-EARNED, KPI-INS-WRITTEN, KPI-INS-INCURRED, KPI-INS-FREQUENCY]
+upstream: [CONFORMED_GOLD.FCT_UW_LEDGER, CONFORMED_GOLD.DIM_POLICY, CONFORMED_GOLD.DIM_LINE, CONFORMED_GOLD.DIM_CAT_EVENT]
+consumers: [Actuarial, Finance, Board reporting, Underwriting Copilot agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-INS-003

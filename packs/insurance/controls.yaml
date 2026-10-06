@@ -1,0 +1,133 @@
+# Control library for Sentinel Mutual (fictional). Regulators and jurisdictions are invented; frameworks are
+# named for the public standards they are modelled on. Ported from the ADPM insurance controls (fair pricing,
+# fair claims handling, reserving lineage, minimisation, retention, sanctions, residency). Illustrative, not
+# legal or regulatory advice.
+jurisdictions:
+  - { id: JUR-SMI-STATE, name: "State insurance supervision", regulator: "Interstate Insurance Supervisory Council (fictional)" }
+  - { id: JUR-SMI-PRIVACY, name: "Consumer data privacy", regulator: "Consumer Data Protection Board (fictional)" }
+  - { id: JUR-SMI-SANCTIONS, name: "Sanctions and financial crime", regulator: "Financial Sanctions Office (fictional)" }
+  - { id: JUR-SMI-CORP, name: "Corporate policy", regulator: "Sentinel Mutual Board Audit & Risk Committee" }
+
+controls:
+  - id: CTL-INS-001
+    name: Statutory loss and expense reporting
+    framework: NAIC Annual Statement-style statutory reporting
+    description: >-
+      Loss, LAE, expense and combined ratios are calculated on earned premium, never written premium, from one
+      certified underwriting ledger. Catastrophe-coded losses are reported separately as catastrophe points. Every
+      reported ratio must trace to a certified product version and metric definition.
+    jurisdiction: JUR-SMI-STATE
+    applies_to: { domains: [underwriting-result] }
+    evidence: Certified product version, metric definition and lineage from the policy and claims sources to the reported ratio.
+    stage: 11
+  - id: CTL-INS-002
+    name: Reserving lineage
+    framework: Actuarial reserving standard (ASOP-style)
+    description: >-
+      Case reserves, IBNR and the actuarial indication are traceable to claim source records at every month-end
+      valuation. Reserve changes above 25% on large losses are reviewed by the reserving committee.
+    jurisdiction: JUR-SMI-STATE
+    applies_to: { domains: [actuarial-reserving, claims-recovery] }
+    evidence: Valuation lineage from FCT_RESERVE to the claims platform and reserving committee minutes citing the product version.
+    stage: 11
+  - id: CTL-INS-003
+    name: Fair claims handling
+    framework: Unfair claims settlement practices model act
+    description: >-
+      Coverage, liability and settlement decisions are made and documented by a named, licensed adjuster with the
+      authority for the amount. Agents may explain claim experience but never decide coverage or settle a claim.
+    jurisdiction: JUR-SMI-STATE
+    applies_to: { domains: [claims-recovery] }
+    evidence: Settlement authority matrix, agent out-of-scope lists and refusal test results.
+    stage: 10
+  - id: CTL-INS-004
+    name: Fair pricing and underwriting
+    framework: Rate and form filing standards
+    description: >-
+      Rating factors are filed, justifiable and free of prohibited discrimination. Binding authority sits with
+      licensed underwriters and appointed agencies; analytical products and agents never bind, price or decline a
+      risk.
+    jurisdiction: JUR-SMI-STATE
+    applies_to: { domains: [underwriting-distribution, policyholder-policy] }
+    evidence: Binding authority register, rate filing references and agent refusal tests for binding and pricing requests.
+    stage: 10
+  - id: CTL-INS-005
+    name: Policyholder and claimant privacy
+    framework: GLBA-style consumer privacy rule
+    description: >-
+      Policyholder and claimant names, addresses, emails, phone numbers and dates of birth are nonpublic personal
+      information. They are masked for every persona without PII clearance and never released in agent answers.
+    jurisdiction: JUR-SMI-PRIVACY
+    applies_to: { classes: [PII], domains: [policyholder-policy, claims-recovery, actuarial-reserving, billing-service] }
+    evidence: Masking policy attachment report for every PII-tagged column and a sample of masked query logs.
+    stage: 6
+  - id: CTL-INS-006
+    name: Driver licence and tax identifier handling
+    framework: Enterprise information security standard
+    description: >-
+      Driver licence and taxpayer identifiers are classified GOV_ID, masked to the last four characters outside
+      underwriting operations and never used as join keys in analytical products.
+    jurisdiction: JUR-SMI-CORP
+    applies_to: { classes: [GOV_ID], domains: [policyholder-policy] }
+    evidence: Masking on DIM_POLICYHOLDER.license_number and CURATED_SILVER.POLICYHOLDER.license_number; access review of underwriting operations roles.
+    stage: 6
+  - id: CTL-INS-007
+    name: Premium payment card protection
+    framework: PCI DSS v4.0
+    description: >-
+      Card numbers on premium payments are stored only in the payment Silver table, shown last-four only via
+      MASK_PCI and never land in Gold facts, data products or agent answers.
+    jurisdiction: JUR-SMI-CORP
+    applies_to: { classes: [PCI], domains: [billing-service] }
+    evidence: Column classification scan showing PCI only in CURATED_SILVER.PAYMENT with masking attached.
+    stage: 6
+  - id: CTL-INS-008
+    name: Personal data minimisation
+    framework: Privacy-by-design standard
+    description: >-
+      Analytical products exclude direct identifiers unless the purpose requires them; where a product carries a
+      claimant or policyholder name for an operational purpose it is tagged and masked before certification.
+    jurisdiction: JUR-SMI-PRIVACY
+    applies_to: { classes: [PII], domains: [claims-recovery, actuarial-reserving] }
+    evidence: Certification check 6 results per product and the list of tagged columns per output port.
+    stage: 11
+  - id: CTL-INS-009
+    name: Sanctions screening
+    framework: Sanctions compliance programme
+    description: >-
+      Parties are screened before bind and before any claim settlement payment; matches are escalated to the
+      compliance officer and payments are held until cleared.
+    jurisdiction: JUR-SMI-SANCTIONS
+    applies_to: { domains: [underwriting-distribution, claims-recovery] }
+    evidence: Screening logs at bind and payment with escalation outcomes.
+    stage: 9
+  - id: CTL-INS-010
+    name: Critical data element ownership
+    framework: Data governance standard (DAMA-style)
+    description: >-
+      Every critical data element used in statutory or reserving reports has a named owner and steward, at least one
+      executable data quality rule and a glossary term before the product that exposes it can be certified.
+    jurisdiction: JUR-SMI-CORP
+    applies_to: { domains: [policyholder-policy, underwriting-distribution, claims-recovery, actuarial-reserving, underwriting-result, billing-service] }
+    evidence: CDE register with owners, linked DQ rules and their latest results.
+    stage: 8
+  - id: CTL-INS-011
+    name: Policy and claim record retention
+    framework: Records retention schedule
+    description: >-
+      Policy records are retained for seven years after expiry and claim files for seven years after closure (longer
+      for open litigation). Platform history is append-only so retained records cannot be silently altered.
+    jurisdiction: JUR-SMI-STATE
+    applies_to: { domains: [policyholder-policy, claims-recovery, billing-service] }
+    evidence: Retention configuration per object and the most recent purge certificate.
+    stage: 9
+  - id: CTL-INS-012
+    name: Data residency
+    framework: Licensed-territory data residency standard
+    description: >-
+      Policyholder data stays in the licensed operating region's platform account; cross-region extracts require a
+      privacy review.
+    jurisdiction: JUR-SMI-PRIVACY
+    applies_to: { domains: [policyholder-policy, billing-service] }
+    evidence: Account and replication configuration and approved cross-region extract register.
+    stage: 9

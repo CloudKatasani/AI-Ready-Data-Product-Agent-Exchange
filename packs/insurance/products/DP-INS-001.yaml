@@ -1,0 +1,25 @@
+id: DP-INS-001
+name: Policyholder 360
+domain: Policyholder & Policy
+archetype: ENTITY_MASTER
+initial_status: CERTIFIED
+seed_stage: 12
+version: 2.1.0
+owner: insurance:underwriting-dpo
+steward: insurance:data-steward
+description: One trusted view of every policy and policyholder — line, region, channel, premium, tenure, renewal outcome and multi-line relationship.
+purpose: Give underwriting, service and marketing one certified policyholder record for retention, cross-sell and agents.
+decision: { persona: Customer Retention Manager, decision: "Which households to contact before renewal to prevent a multi-policy lapse", cadence: Weekly, workaround: "Policy lists exported per line of business and matched on address by hand", consequence: "A household lapses three policies and nobody sees it was one relationship" }
+sample_questions: ["How many policies do we have in force?", "What is our policy retention by region?", "Multi-line rate by region"]
+semantic_view: POLICYHOLDER_360
+output_ports:
+  - { kind: semantic, ref: POLICYHOLDER_360 }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_INS_001_POLICYHOLDER_360 }
+  - { kind: agent, ref: AG-INS-004 }
+sla: { freshness_minutes: 1440, availability_pct: 99.5, max_null_rate_pct: 1.0 }
+kpis: [KPI-INS-PIF, KPI-INS-RETENTION, KPI-INS-AVG-PREM, KPI-INS-TENURE, KPI-INS-MULTILINE]
+upstream: [CONFORMED_GOLD.DIM_POLICY, CONFORMED_GOLD.DIM_POLICYHOLDER]
+consumers: [Policyholder service, Marketing, Retention team, Policyholder & Billing Analyst agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-INS-001
