@@ -33,11 +33,11 @@ function lastResult(messages: Anthropic.MessageParam[]): { result_id: string; co
 const SAIDI_QUERY = { view: 'RELIABILITY', metrics: ['saidi'], dimensions: ['region'], timeRange: { last: { n: 1, unit: 'quarter' } }, orderBy: [{ field: 'saidi', dir: 'desc' }] };
 
 const groundedAgent = (): Turn[] => [
-  () => [use('semantic_query', SAIDI_QUERY)],
+  () => [toolUse('semantic_query', SAIDI_QUERY)],
   (msgs) => {
     const r = lastResult(msgs);
     const [region, value] = r.rows[0] as [string, number];
-    return [use('submit_answer', { kind: 'answer', headline: `${region} had the highest SAIDI last quarter at ${value.toFixed(1)} minutes.`, narrative: 'Major event days are excluded (BR-UTL-012).', chart: { type: 'bar', result_id: r.result_id, x: 'region', y: 'saidi' }, citations: [{ result_id: r.result_id, metric: 'saidi', rule_id: 'BR-UTL-012' }] })];
+    return [toolUse('submit_answer', { kind: 'answer', headline: `${region} had the highest SAIDI last quarter at ${value.toFixed(1)} minutes.`, narrative: 'Major event days are excluded (BR-UTL-012).', chart: { type: 'bar', result_id: r.result_id, x: 'region', y: 'saidi' }, citations: [{ result_id: r.result_id, metric: 'saidi', rule_id: 'BR-UTL-012' }] })];
   },
 ];
 
@@ -62,7 +62,7 @@ describe('live engine (08 §4) with a scripted LLM client', () => {
   });
 
   it('rejects an invented number, allows one repair, and accepts the repaired answer', async () => {
-    const turns: Turn[] = [groundedAgent()[0] as Turn, (m) => [use('submit_answer', { kind: 'answer', headline: 'East was at 99.9 minutes.', narrative: '', citations: [{ result_id: lastResult(m).result_id }] })], (m) => (groundedAgent()[1] as Turn)([...m.slice(0, -2), ...m.slice(-2)])];
+    const turns: Turn[] = [groundedAgent()[0] as Turn, (m) => [toolUse('submit_answer', { kind: 'answer', headline: 'East was at 99.9 minutes.', narrative: '', citations: [{ result_id: lastResult(m).result_id }] })], (m) => (groundedAgent()[1] as Turn)([...m.slice(0, -2), ...m.slice(-2)])];
     const c = fake([turns[0] as Turn, turns[1] as Turn, (msgs) => {
       const firstResultMsg = msgs.find((x) => x.role === 'user' && Array.isArray(x.content) && (x.content as Anthropic.ToolResultBlockParam[]).some((b) => String(b.content).includes('result_id')));
       return (groundedAgent()[1] as Turn)([firstResultMsg as Anthropic.MessageParam]);
@@ -73,7 +73,7 @@ describe('live engine (08 §4) with a scripted LLM client', () => {
   });
 
   it('falls back to the scripted answer (badge + reason) after a second grounding failure — never an error', async () => {
-    const bad: Turn = () => [use('submit_answer', { kind: 'answer', headline: 'SAIDI was 777.7 minutes.', narrative: '', citations: [{ result_id: 'R1' }] })];
+    const bad: Turn = () => [toolUse('submit_answer', { kind: 'answer', headline: 'SAIDI was 777.7 minutes.', narrative: '', citations: [{ result_id: 'R1' }] })];
     const c = fake([groundedAgent()[0] as Turn, bad, bad]);
     const a = await answerQuestion('AG-UTL-002', 'What was SAIDI by region last quarter?', 'auto', await deps(c));
     expect(a.mode).toBe('live_fallback');
@@ -96,7 +96,7 @@ describe('live engine (08 §4) with a scripted LLM client', () => {
     const c = fake(groundedAgent());
     const a = await answerQuestion('AG-UTL-002', 'What was SAIDI by region last quarter?', 'live', await deps(c, 'A'));
     expect(a.result?.rowFiltered).toBe(true);
-    const wrongView = fake([() => [use('semantic_query', { view: 'BILLING_AR', metrics: ['dso_days'] })], () => [use('submit_answer', { kind: 'decline', headline: 'I cannot answer that.', narrative: '', citations: [] })]]);
+    const wrongView = fake([() => [toolUse('semantic_query', { view: 'BILLING_AR', metrics: ['dso_days'] })], () => [toolUse('submit_answer', { kind: 'decline', headline: 'I cannot answer that.', narrative: '', citations: [] })]]);
     const b = await answerQuestion('AG-UTL-002', 'What is DSO?', 'live', await deps(wrongView));
     expect(b.toolCalls?.[0]).toMatchObject({ name: 'semantic_query', ok: false });
   });
