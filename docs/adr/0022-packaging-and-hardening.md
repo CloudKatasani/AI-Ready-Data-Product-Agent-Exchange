@@ -27,7 +27,7 @@ Two things make packaging awkward:
 4. **Postgres** is a local option only: `db:pg:prepare` derives `prisma/postgres/schema.prisma`, then `db:pg:push`. The image and snapshot reset stay SQLite (ADR-0021).
 5. **Hardening**:
    - `sql-safety` refuses `SUMMARIZE`, `DESCRIBE` and `SHOW`, on top of the DDL/DML/file-function deny list.
-   - A 200-payload fuzz suite runs against every QueryService entry point.
+   - A 200-payload fuzz suite runs against the worksheet SQL path.
    - Performance budgets are Vitest tests with generous thresholds (CI noise).
    - Dark mode follows the OS before first paint (no stored preference). Dark tokens pass the axe sweep.
 6. **CI** adds golden and eval checks, knockout deltas, stories (Playwright `stories` project), and a Docker build with a health smoke test that also reports image size.

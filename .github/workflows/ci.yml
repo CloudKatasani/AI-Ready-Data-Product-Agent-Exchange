@@ -29,8 +29,8 @@ jobs:
       # 2. typecheck + eslint (boundaries, no-duckdb-import, determinism) + no-domain-strings
       - run: pnpm typecheck
       - run: pnpm lint
-      # 3. unit + invariants
-      - run: pnpm test
+      # 3. unit + invariants + integration, with the src/lib coverage threshold
+      - run: pnpm test:coverage
       # 4. pack:validate (all packs; builds warehouses at scale M)
       - run: pnpm pack:validate
       # 5. golden answers + agent eval suites, 6. knockout declared deltas

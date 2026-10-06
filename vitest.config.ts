@@ -15,6 +15,8 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/lib/**/*.ts'],
+      // Phase 11 DoD: ≥ 85% of src/lib.
+      thresholds: { lines: 85, statements: 85 },
     },
   },
 });
