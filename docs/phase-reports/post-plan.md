@@ -1,6 +1,6 @@
 # After the build plan: follow-ups
 
-Date: 2026-10-06. Work done after Phase 11, at the user's request. Every item is on `main`. CI run #7 failed on a test-ordering flake in I09: the copied state could already hold the incident the test opens. The test now picks an incident template that is not already open.
+Date: 2026-10-06. Work done after Phase 11, at the user's request. Every item is on `main`. CI run #7 failed on a test-ordering flake in I09: the copied state could already hold the incident the test opens. The test now picks an incident template that is not already open. CI run #8 on `2a6f92e` is green: checks, E2E, a11y, stories, and the Docker image under budget.
 
 | Change | Decision | Verification |
 |---|---|---|
