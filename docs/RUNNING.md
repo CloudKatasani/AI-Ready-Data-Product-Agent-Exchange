@@ -34,6 +34,7 @@ open http://localhost:3000/launch
 | `pnpm knockout:deltas [--pack id] [--update]` | Computes Knockout single-layer deltas through the governed path, or checks them against `knockout.yaml` |
 | `pnpm pack:draft --from utilities --id water --code WTR --company "…" --short ABC` | Pack Drafter, offline mode: a re-skinned **draft** pack (also available in Admin) |
 | `pnpm snowflake:bundle --pack <id> [--out dir]` | Snowflake deploy bundle (ADR-0025): Parquet of every built object plus `deploy.sql` / `verify.sql`. Then `cd data/snowflake/<id> && snowsql -f deploy.sql && snowsql -f verify.sql`, and set `WAREHOUSE_ADAPTER=snowflake` |
+| `pnpm snowflake:golden [--pack id]` | Golden-agreement run against the deployed Snowflake database (needs the `SNOWFLAKE_*` settings). Compares with the committed answers and never updates them. A pack counts as Snowflake-verified when it reports 0 differences |
 | `pnpm lint` · `pnpm typecheck` | ESLint (boundaries, no-DuckDB-import, determinism) plus the domain-string lint; TypeScript |
 | `pnpm test` | Unit, invariant, golden, integration, security and performance suites (Vitest) |
 | `pnpm test:e2e` | Playwright. The `chromium` project (features and axe, light and dark) runs first, then `stories` (6 stories × deep packs), then `presenter` (launch and reset) |

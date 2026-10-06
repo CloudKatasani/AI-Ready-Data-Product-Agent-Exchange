@@ -11,6 +11,13 @@ describe("I09 demo resettable", async () => {
     await import("@/lib/presenter/profiles");
   const { resetDemo, checkpoint } = await import("@/lib/presenter/reset");
   const { breakNow } = await import("@/lib/presenter/operate");
+  // An incident template not already open in the (copied) state: breakNow reuses an open incident.
+  const freshTemplate = async (): Promise<string> => {
+    const open = await db().incident.findMany({ where: { packId: "utilities", state: { not: "RESOLVED" } }, select: { templateId: true } });
+    const t = pack.incidents.find((x) => !open.some((o) => o.templateId === x.id));
+    if (!t) throw new Error("every incident template is already open");
+    return t.id;
+  };
   const pack = getPack("utilities");
   const steward = pack.personas.find((p) => p.archetype === "D")?.id ?? "";
 
@@ -30,7 +37,7 @@ describe("I09 demo resettable", async () => {
           select: { title: true },
         }),
       };
-      await breakNow("utilities", pack.incidents[0]?.id ?? "", steward);
+      await breakNow("utilities", await freshTemplate(), steward);
       await db().persona.updateMany({
         data: { title: "Changed during the demo" },
       });
@@ -74,7 +81,7 @@ describe("I09 demo resettable", async () => {
     expect(await checkpoint(profile.id, "executive-5", "e1")).toBe("taken");
     await withProfileDb(profile.id, async () => {
       const at = await db().incident.count();
-      await breakNow("utilities", pack.incidents[1]?.id ?? "", steward);
+      await breakNow("utilities", await freshTemplate(), steward);
       expect(await db().incident.count()).toBe(at + 1);
       expect(await checkpoint(profile.id, "executive-5", "e1")).toBe(
         "restored",

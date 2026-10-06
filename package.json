@@ -32,6 +32,7 @@
     "knockout:deltas": "tsx scripts/knockout-deltas.ts",
     "pack:draft": "tsx scripts/pack-draft.ts",
     "snowflake:bundle": "tsx scripts/snowflake-bundle.ts",
+    "snowflake:golden": "tsx scripts/golden.ts --snowflake",
     "doctor": "tsx scripts/doctor.ts",
     "demo:fresh": "pnpm warehouse:build --force && pnpm db:setup && pnpm build && pnpm start",
     "db:pg:prepare": "tsx scripts/db-provider.ts && prisma generate --schema prisma/postgres/schema.prisma",

@@ -34,8 +34,11 @@ Status: Accepted (post-Phase 11). The adapter is implemented and mock-tested; it
    - the information-schema name.
 
    Everything else (`SELECT * REPLACE/RENAME`, `DATE_TRUNC('unit', …)`, `COUNT_IF`, `MEDIAN`) means the same in both dialects. Identifiers: tables are created unquoted, and the adapter sets `QUOTED_IDENTIFIERS_IGNORE_CASE` and reports upper-case names in lower case.
-7. **Still deferred (needs an account):**
-   - running the bundle and the golden-agreement test against a real Snowflake;
+7. **Golden agreement.** `pnpm snowflake:golden [--pack id]` replays a pack's golden scenarios through the Snowflake adapter and compares them with the committed DuckDB answers; it never updates them.
+   - Offline, `tests/integration/snowflake-agreement.test.ts` sends the translated SQL to a stand-in warehouse that runs it on DuckDB. DuckDB understands `PERCENTILE_CONT … WITHIN GROUP`, `ABS(HASH())` and `INTERVAL 'n UNIT'`; only the `DATEDIFF` unit is re-quoted.
+   - Every golden answer of all 11 packs is unchanged, so the translation preserves the numbers.
+8. **Still deferred (needs an account):**
+   - running `deploy.sql` and `pnpm snowflake:golden` against a real Snowflake;
    - native Snowflake masking and row-access policies (the governed path applies both itself);
    - the semantic view object;
    - Cortex Search.
@@ -47,5 +50,6 @@ Offline test coverage:
 - **Adapter** (`tests/unit/snowflake.test.ts`), against a mocked SQL API: JWT signature and claims, bindings, async polling, partitions, truncation, type conversion, identifier case, `describe`, errors and token reuse.
 - **Dialect** (`tests/unit/snowflake-dialect.test.ts`): every metric of every pack, in four shapes (over 1,000 compiled queries), plus the incident overlays, comes out free of DuckDB-only constructs.
 - **Bundle** (`tests/integration/snowflake-bundle.test.ts`): row counts equal the warehouse's, every object gets create, put and copy statements, and the output is byte-identical on rebuild.
+- **Agreement** (`tests/integration/snowflake-agreement.test.ts`): golden answers are unchanged through the translated path, for all 11 packs.
 
 Until a real-account run passes, the adapter stays labelled experimental in RUNNING.md and `.env.example`.
