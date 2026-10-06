@@ -28,7 +28,8 @@
     "db:setup": "pnpm db:migrate && pnpm db:seed",
     "demo": "pnpm warehouse:build && pnpm db:setup && pnpm build && pnpm start",
     "postinstall": "prisma generate",
-    "knockout:deltas": "tsx scripts/knockout-deltas.ts"
+    "knockout:deltas": "tsx scripts/knockout-deltas.ts",
+    "pack:draft": "tsx scripts/pack-draft.ts"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

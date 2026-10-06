@@ -17,7 +17,8 @@ export default async function PackLayout({ children, params }: { children: React
   const pack = getPack(packId);
   const persona = await activePersona(pack);
   const profile = await activeProfile(pack);
-  const stories = allStories(pack).map((st) => ({ id: st.id, title: st.title, minutes: st.minutes, steps: st.steps.map((x) => ({ id: x.id, title: x.title, do: x.do, say: x.say, href: x.href, ...(x.checkpoint ? { checkpoint: true } : {}), ...(x.spotlight ? { spotlight: x.spotlight } : {}) })) }));
+  // Draft packs stay out of stories until their golden answers are approved (01 §M13).
+  const stories = (pack.manifest.depth === 'draft' ? [] : allStories(pack)).map((st) => ({ id: st.id, title: st.title, minutes: st.minutes, steps: st.steps.map((x) => ({ id: x.id, title: x.title, do: x.do, say: x.say, href: x.href, ...(x.checkpoint ? { checkpoint: true } : {}), ...(x.spotlight ? { spotlight: x.spotlight } : {}) })) }));
   const asOf = new Intl.DateTimeFormat(pack.manifest.locale, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(`${pack.manifest.asOf}T00:00:00Z`));
   return (
     <AppShell

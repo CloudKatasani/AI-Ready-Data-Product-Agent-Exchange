@@ -2,7 +2,9 @@ import { copy } from '@/copy/en';
 import { getEnv, hasApiKey } from '@/lib/config/env';
 import { getPack, getRubrics, listPackIds } from '@/lib/packs/registry';
 import type { Pack } from '@/lib/packs/schema';
+import { DrafterForm } from '@/components/presenter/drafter-form';
 import { listSnapshots } from '@/lib/presenter/reset';
+import { draftPackAction } from './actions';
 import { activePersona } from '../../_server/session';
 
 const c = copy.admin;
@@ -89,6 +91,12 @@ export default async function AdminPage({ params }: { params: Promise<{ pack: st
           </dl>
         </section>
       </div>
+      <section aria-labelledby="drafter-h" className="flex flex-col gap-2">
+        <h2 id="drafter-h" className="font-semibold">{c.drafter.title}</h2>
+        <p className="text-sm text-muted-foreground">{c.drafter.intro}</p>
+        <DrafterForm action={draftPackAction} sources={packs.filter((p) => p.manifest.depth === 'deep').map((p) => ({ id: p.manifest.id, name: `${p.manifest.name} · ${p.manifest.company.name}` }))} />
+        <p className="text-xs text-muted-foreground">{c.drafter.liveNote}</p>
+      </section>
       <section aria-labelledby="snaps-h">
         <h2 id="snaps-h" className="mb-2 font-semibold">{c.snapshots}</h2>
         {snaps.length === 0 ? (
