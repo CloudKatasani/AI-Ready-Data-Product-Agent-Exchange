@@ -45,7 +45,7 @@ export const SemanticView = z
             naive_expr: z.string().optional(),
             /**
              * Slice-aware alternatives, most granular first: the compiler uses the first entry whose dimension is
-             * grouped by or filtered on (incl. persona row filters), e.g. SAIDI's customers-served denominator.
+             * grouped by or filtered on (incl. persona row filters), e.g. a ratio whose denominator depends on the slice.
              */
             scope_exprs: z.array(z.object({ dimension: SemanticName, expr: z.string() }).strict()).default([]),
           })

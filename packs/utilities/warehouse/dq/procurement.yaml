@@ -1,0 +1,51 @@
+# Procurement DQ rules.
+- id: DQ-UTL-028
+  object: CONFORMED_GOLD.FCT_PO_SPEND
+  column: spend_usd
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every PO line carries spend.
+- id: DQ-UTL-029
+  object: CONFORMED_GOLD.FCT_PO_SPEND
+  column: spend_usd
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: PO line spend is positive; returns are posted as credit notes outside this fact.
+- id: DQ-UTL-030
+  object: CONFORMED_GOLD.FCT_PO_SPEND
+  column: on_contract
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every PO line is flagged on or off contract (spend under contract and maverick spend).
+- id: DQ-UTL-031
+  object: CONFORMED_GOLD.FCT_PO_SPEND
+  column: po_line_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per PO line (duplicate ERP loads double spend).
+- id: DQ-UTL-032
+  object: CONFORMED_GOLD.FCT_PO_SPEND
+  column: category
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Transformers, Poles & crossarms, Meters, Conductor & cable, Fleet, Vegetation services, Substation equipment, IT & software]
+  severity: medium
+  alert_route: steward
+  description: Spend categories conform to the procurement category list.
+- id: DQ-UTL-033
+  object: CURATED_SILVER.SUPPLIER
+  column: tax_id
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^[0-9]{2}-.+$"
+  severity: medium
+  alert_route: steward
+  description: Supplier tax ids follow the registered identifier format checked at due diligence.

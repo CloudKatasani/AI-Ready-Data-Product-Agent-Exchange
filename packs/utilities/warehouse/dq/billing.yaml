@@ -1,0 +1,58 @@
+# Billing & receivables DQ rules.
+- id: DQ-UTL-014
+  object: CONFORMED_GOLD.FCT_BILLING
+  column: billed_amount
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every statement has a billed amount (billed revenue, average bill and DSO weights).
+- id: DQ-UTL-015
+  object: CONFORMED_GOLD.FCT_BILLING
+  column: billed_amount
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Billed amounts are not negative; credits are posted as separate adjustments.
+- id: DQ-UTL-016
+  object: CONFORMED_GOLD.FCT_BILLING
+  column: paid_within_60d_amount
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Amount paid within 60 days is populated (zero when unpaid) for the collections rate.
+- id: DQ-UTL-017
+  object: CONFORMED_GOLD.FCT_BILLING
+  column: paid_within_60d_amount
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Payments applied within the 60-day window are never negative.
+- id: DQ-UTL-018
+  object: CONFORMED_GOLD.FCT_BILLING
+  column: statement_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per billing statement.
+- id: DQ-UTL-019
+  object: CONFORMED_GOLD.FCT_BILLING
+  column: statement_date
+  dimension: timeliness
+  assertion: "freshness_min <= 4320"
+  severity: medium
+  alert_route: engineering
+  description: Statements from the latest billing cycles have arrived (no more than three days behind).
+- id: DQ-UTL-020
+  object: CURATED_SILVER.PAYMENT
+  column: card_number
+  dimension: validity
+  assertion: "regex_rate >= 0.999"
+  pattern: "^[0-9]{4}-[0-9]{4}-.+$"
+  severity: medium
+  alert_route: steward
+  description: Card references are in the tokenised format expected by MASK_PCI.

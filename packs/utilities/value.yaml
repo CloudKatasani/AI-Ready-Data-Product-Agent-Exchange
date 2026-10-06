@@ -1,0 +1,84 @@
+# Value cases per product (marketplace value model). All figures are illustrative and synthetic.
+- id: VC-UTL-001
+  product: DP-UTL-001
+  hypothesis: A single certified customer record lets customer experience target paperless-billing campaigns at low-adoption regions and cut print and postage cost.
+  baseline: "Quarterly CIS extracts reconciled by hand; about 60 analyst hours a quarter; campaigns allocated evenly across regions."
+  benefit_model: "incremental_paperless_customers * annual_print_and_postage_cost + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Incremental paperless enrolments from targeted campaigns", value: 18000, unit: customers, source: "Customer experience campaign pilot, H1 2026" }
+    - { text: "Annual print and postage cost per paper-billed customer", value: 7.8, unit: usd, source: "Billing operations cost model FY26" }
+    - { text: "Analyst hours saved per quarter", value: 50, unit: hours, source: "Customer analytics time study" }
+    - { text: "Fully loaded analyst rate", value: 95, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 159400
+  measured: { value_usd: 131000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-UTL-002
+  product: DP-UTL-002
+  hypothesis: Ranking feeders by customer minutes from one governed SAIDI source directs vegetation and replacement budget to the feeders that drive reliability, avoiding regulatory penalties.
+  baseline: "Analyst-built spreadsheet from OMS exports; about 70 manual minutes per reliability question and quarterly budget set by circuit rotation."
+  benefit_model: "avoided_customer_minutes * regulatory_value_per_customer_minute + questions_per_year * minutes_saved / 60 * loaded_analyst_rate"
+  assumptions:
+    - { text: "Customer minutes avoidable by retargeting budget", value: 2400000, unit: customer_minutes, source: "Reliability engineering study, 2026" }
+    - { text: "Regulatory and reputational value of a customer minute avoided", value: 0.42, unit: usd, source: "Regulatory affairs FY26 model" }
+    - { text: "Manual minutes per reliability question", value: 70, unit: minutes, source: "Analyst time study (n=17)" }
+    - { text: "Reliability questions per year", value: 900, unit: questions, source: "Reliability team request log" }
+  annual_value_usd: 1107750
+  measured: { value_usd: 948000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-UTL-003
+  product: DP-UTL-003
+  hypothesis: Daily read-quality monitoring by feeder and city catches head-end problems within a day, reducing estimated bills, high-bill calls and true-up write-offs.
+  baseline: "Head-end exception reports e-mailed as CSV; problems found two to three weeks later through estimated bills and complaints."
+  benefit_model: "avoided_estimated_bills * cost_per_estimated_bill + avoided_high_bill_calls * cost_per_call"
+  assumptions:
+    - { text: "Estimated bills avoided per year through earlier detection", value: 26000, unit: statements, source: "Meter operations analysis of 2025 incidents" }
+    - { text: "Cost per estimated bill (true-up handling and write-off)", value: 11.5, unit: usd, source: "Billing operations cost model FY26" }
+    - { text: "High-bill calls avoided per year", value: 9000, unit: calls, source: "Contact centre reason-code analysis" }
+    - { text: "Cost per contact-centre call", value: 6.2, unit: usd, source: "Contact centre cost model FY26" }
+  annual_value_usd: 354800
+  measured: { value_usd: 287000, period: "2026-Q1..2026-Q3 annualised", confidence: low }
+- id: VC-UTL-004
+  product: DP-UTL-004
+  hypothesis: Prioritising replacement where poor condition meets high criticality avoids more customer minutes than age-based replacement for the same capital.
+  baseline: "Annual reliability review with manual feeder ranking from EAM exports joined to GIS; about 120 analyst hours a month."
+  benefit_model: "avoided_customer_minutes * regulatory_value_per_customer_minute + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Customer minutes avoidable through condition-based replacement", value: 1500000, unit: customer_minutes, source: "Reliability engineering study, 2026" }
+    - { text: "Regulatory and reputational value of a customer minute avoided", value: 0.42, unit: usd, source: "Regulatory affairs FY26 model" }
+    - { text: "Analyst hours saved per year", value: 960, unit: hours, source: "Asset analytics time study" }
+    - { text: "Fully loaded analyst rate", value: 95, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 721200
+  measured: { value_usd: 512000, period: "2026-Q1..2026-Q3 annualised", confidence: low }
+- id: VC-UTL-005
+  product: DP-UTL-005
+  hypothesis: A certified receivables view with one DSO definition focuses collections outreach on the segments where arrears are growing, reducing bad-debt write-offs.
+  baseline: "Aged-debt report rebuilt from CIS at each month-end; two DSO definitions in circulation; about 40 analyst hours a month."
+  benefit_model: "reduction_in_write_off_rate * annual_billed_revenue + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Reduction in bad-debt write-off rate", value: 0.05, unit: percent_points, source: "Revenue operations target, FY27 plan" }
+    - { text: "Annual billed revenue (synthetic)", value: 1450000000, unit: usd, source: "Synthetic finance summary" }
+    - { text: "Analyst hours saved per year", value: 420, unit: hours, source: "Revenue operations time study" }
+    - { text: "Fully loaded analyst rate", value: 95, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 764900
+  measured: null
+- id: VC-UTL-006
+  product: DP-UTL-006
+  hypothesis: Visible maverick spend by category and supplier moves more spend onto framework contracts, capturing negotiated discounts.
+  baseline: "ERP spend cube refreshed monthly by a contractor; maverick spend reported quarterly with a six-week lag."
+  benefit_model: "spend_moved_onto_contract * average_framework_discount + contractor_cost_avoided"
+  assumptions:
+    - { text: "Annual spend moved from off-contract to framework contracts", value: 14000000, unit: usd, source: "Category management plan FY26" }
+    - { text: "Average framework discount versus spot buying", value: 6.5, unit: percent, source: "Procurement benchmark of 2025 tenders" }
+    - { text: "Contractor reporting cost avoided per year", value: 85000, unit: usd, source: "Procurement operating budget FY26" }
+  annual_value_usd: 995000
+  measured: { value_usd: 812000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-UTL-007
+  product: DP-UTL-007
+  hypothesis: Directing off-cycle trimming to feeders where overdue spans coincide with tree-caused outages avoids more customer minutes than calendar rotation.
+  baseline: "Contractor inspection PDFs cross-checked against outage tickets by hand; crews trim on calendar rotation."
+  benefit_model: "avoided_tree_customer_minutes * regulatory_value_per_customer_minute + avoided_emergency_callouts * cost_per_callout"
+  assumptions:
+    - { text: "Tree-caused customer minutes avoidable through targeted trimming", value: 1100000, unit: customer_minutes, source: "Vegetation programme pilot on hot-spot feeders" }
+    - { text: "Regulatory and reputational value of a customer minute avoided", value: 0.42, unit: usd, source: "Regulatory affairs FY26 model" }
+    - { text: "Emergency tree call-outs avoided per year", value: 140, unit: callouts, source: "Distribution operations call-out log" }
+    - { text: "Cost per emergency tree call-out", value: 3800, unit: usd, source: "Vegetation services framework rates (synthetic)" }
+  annual_value_usd: 994000
+  measured: null

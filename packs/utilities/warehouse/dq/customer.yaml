@@ -1,0 +1,61 @@
+# Customer DQ rules.
+- id: DQ-UTL-042
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: customer_no
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: One row per customer number after CDC deduplication.
+- id: DQ-UTL-043
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: customer_no
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^C[0-9]{9}$"
+  severity: high
+  alert_route: steward
+  description: Customer numbers follow the CIS format.
+- id: DQ-UTL-044
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: customer_no
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every customer row has a customer number.
+- id: DQ-UTL-045
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: email
+  dimension: validity
+  assertion: "regex_rate >= 0.99"
+  pattern: "^[^@ ]+@[^@ ]+[.][a-z]+$"
+  severity: medium
+  alert_route: steward
+  description: Customer emails, where present, are well formed.
+- id: DQ-UTL-046
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: email
+  dimension: completeness
+  assertion: "null_rate <= 0.1"
+  severity: low
+  alert_route: owner
+  description: At least 90% of customers have an email address on file for digital billing.
+- id: DQ-UTL-047
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: rate_class
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [RS-1, RS-TOU, GS-1, GS-2]
+  severity: medium
+  alert_route: steward
+  description: Rate classes conform to the tariff book.
+- id: DQ-UTL-048
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: region
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [North, South, East, West, Central]
+  severity: high
+  alert_route: steward
+  description: Customer region is one of the five service regions (row access policy RAP_REGION).

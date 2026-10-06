@@ -1,0 +1,82 @@
+# Seeded intake requests and demand-board items. REQ-UTL-001 deliberately near-duplicates DP-UTL-002
+# (Distribution Reliability) so the intake duplicate detector fires (AC5.1).
+requests:
+  - id: REQ-UTL-001
+    title: Regional reliability scorecard
+    requester: utilities:ops-manager-north
+    decision: Which feeders in my region get crews and vegetation work first next quarter
+    decider: Regional Operations Manager
+    cadence: Quarterly, with a monthly check-in
+    workaround: OMS outage exports pasted into a spreadsheet and divided by customers served by hand
+    questions:
+      - What was SAIDI by region last quarter?
+      - Which feeders had the most outage minutes?
+      - How does SAIFI compare with our regulatory target?
+      - What share of outage minutes were caused by trees?
+    stakes: Crews and trimming budget go to feeders that are not driving customer minutes, and regional targets are missed
+    freshness: Daily by 07:00
+    status: SUBMITTED
+  - id: REQ-UTL-002
+    title: Payment arrangement effectiveness
+    requester: utilities:coo
+    decision: Whether to extend payment arrangements to more customers in arrears instead of escalating
+    decider: VP Revenue Operations
+    cadence: Monthly
+    workaround: Collections team keeps a manual log of arrangements and checks outcomes in CIS
+    questions:
+      - How many customers in arrears are on a payment arrangement by region?
+      - What share of arrangements are kept for six months?
+      - How much arrears balance is recovered through arrangements versus escalation?
+    stakes: Recoverable arrears age past the point of recovery while protected customers risk escalation in error
+    freshness: Weekly
+    status: IN_TRIAGE
+  - id: REQ-UTL-003
+    title: Storm restoration performance
+    requester: utilities:reliability-analyst
+    decision: How to stage crews and contractors ahead of forecast storms
+    decider: Director of Distribution Operations
+    cadence: Before each forecast major event, plus a post-storm review
+    workaround: Post-storm reviews built from OMS tickets and crew timesheets over several weeks
+    questions:
+      - How long did restoration take on major event days by region?
+      - How did contractor crews compare with internal crews on restoration time?
+      - Which causes drove customer minutes on the last major event day?
+    stakes: Restoration takes longer than it should and the commission questions storm preparedness
+    freshness: Hourly during events
+    status: APPROVED
+  - id: REQ-UTL-004
+    title: EV charging load by feeder
+    requester: utilities:grid-dpo
+    decision: Which feeders need capacity upgrades for residential EV charging growth
+    decider: Director of Distribution Planning
+    cadence: Annually with quarterly refresh
+    workaround: Planning engineers estimate EV load from vehicle registration counts by city
+    questions:
+      - Which feeders show the fastest growth in evening peak demand?
+      - How many premises on each feeder have a load profile consistent with EV charging?
+      - Which of those feeders are already near their rated capacity?
+    stakes: Transformers overload in neighbourhoods with fast EV adoption before upgrades are planned
+    freshness: Weekly
+    status: SUBMITTED
+  - id: REQ-UTL-005
+    title: Outage cause dashboard for the North region
+    requester: utilities:ops-manager-north
+    decision: Which outage causes to target in the North region improvement plan
+    decider: Regional Operations Manager
+    cadence: Monthly
+    workaround: Monthly email from the reliability analyst with a pivot table
+    questions:
+      - Which causes had the most customer minutes interrupted in North this year?
+      - How many tree-caused outages were there in North last quarter?
+      - What is the average restoration time by cause in North?
+    stakes: Improvement effort spent on causes that are not driving North's reliability
+    freshness: Daily
+    status: MERGED
+
+demand_items:
+  - { id: DM-UTL-001, title: EV charging load product, kind: product, description: "Feeder-level evening peak growth and EV-consistent load profiles from AMI intervals for distribution planning.", requested_by: utilities:grid-dpo, votes: 14 }
+  - { id: DM-UTL-002, title: Storm restoration ETA agent, kind: agent, description: "Answers how restoration is progressing during major events and how long similar outages took, from certified reliability data.", requested_by: utilities:reliability-analyst, votes: 11 }
+  - { id: DM-UTL-003, title: Wildfire risk product, kind: product, description: "Combines vegetation risk, overhead exposure and asset condition by span and feeder to prioritise wildfire mitigation.", requested_by: utilities:coo, votes: 9 }
+  - { id: DM-UTL-004, title: Payment arrangement insights, kind: product, description: "Arrangement uptake, adherence and arrears recovered by region and segment, aggregated only.", requested_by: utilities:coo, votes: 7 }
+  - { id: DM-UTL-005, title: Contact reason analyst agent, kind: agent, description: "Explains why customers call and which reasons self-service could remove, once Customer Experience is certified.", requested_by: utilities:customer-steward, votes: 6 }
+  - { id: DM-UTL-006, title: Distributed solar export product, kind: product, description: "Net metering exports and reverse power flow by feeder for hosting capacity studies.", requested_by: utilities:grid-dpo, votes: 4 }

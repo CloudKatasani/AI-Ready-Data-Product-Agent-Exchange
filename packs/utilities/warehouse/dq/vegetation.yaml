@@ -1,0 +1,26 @@
+# Vegetation span DQ rules.
+- id: DQ-UTL-039
+  object: CONFORMED_GOLD.FCT_VEG_SPAN
+  column: last_trim_date
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every span has a last trim date; overdue status and cycle compliance depend on it.
+- id: DQ-UTL-040
+  object: CONFORMED_GOLD.FCT_VEG_SPAN
+  column: cycle_years
+  dimension: validity
+  assertion: "invalid_rate == 0"
+  allowed: [3, 4, 5]
+  severity: medium
+  alert_route: steward
+  description: Trim cycles are three, four or five years per the vegetation programme.
+- id: DQ-UTL-041
+  object: CONFORMED_GOLD.FCT_VEG_SPAN
+  column: inspected_date
+  dimension: timeliness
+  assertion: "freshness_min <= 20160"
+  severity: low
+  alert_route: owner
+  description: Span inspections are being recorded (latest inspection within the last two weeks).

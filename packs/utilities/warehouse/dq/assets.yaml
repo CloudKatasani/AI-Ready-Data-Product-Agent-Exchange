@@ -1,0 +1,42 @@
+# Grid asset and work management DQ rules.
+- id: DQ-UTL-034
+  object: CONFORMED_GOLD.DIM_ASSET
+  column: health_score
+  dimension: completeness
+  assertion: "null_rate <= 0.01"
+  severity: high
+  alert_route: steward
+  description: Assets have a current health index.
+- id: DQ-UTL-035
+  object: CONFORMED_GOLD.DIM_ASSET
+  column: health_score
+  dimension: validity
+  assertion: "max <= 100"
+  severity: high
+  alert_route: steward
+  description: Health index is on the 0–100 scale (upper bound).
+- id: DQ-UTL-036
+  object: CONFORMED_GOLD.DIM_ASSET
+  column: health_score
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Health index is on the 0–100 scale (lower bound).
+- id: DQ-UTL-037
+  object: CONFORMED_GOLD.DIM_ASSET
+  column: asset_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: medium
+  alert_route: engineering
+  description: One row per asset.
+- id: DQ-UTL-038
+  object: CONFORMED_GOLD.FCT_WORK_ORDER
+  column: wo_type
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [PM, CM]
+  severity: medium
+  alert_route: steward
+  description: Work orders are preventive (PM) or corrective (CM).

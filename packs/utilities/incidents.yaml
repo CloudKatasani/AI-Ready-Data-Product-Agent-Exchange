@@ -1,0 +1,67 @@
+# "Break something" templates (05 §2.4). Ported from AI-Ready ext/operate.ts INC-1..INC-5 and retargeted to the
+# Keystone Gold objects. Effects are applied as overlay views in the _INCIDENT schema while an incident is open.
+- id: INC-UTL-LATE-FEED
+  kind: late_feed
+  title: Outage feed six hours late
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_OUTAGE
+  params: { lag_hours: 6 }
+  affects: { products: [DP-UTL-002], agents: [AG-UTL-002, AG-UTL-004] }
+  narrative: >-
+    The CDC extract from the outage management system stalled and no outage events have landed for six hours. The
+    Distribution Reliability product is now behind its 60-minute freshness SLA, so today's SAIDI and SAIFI understate
+    customer minutes and any agent answer about recent reliability is stale.
+  detection: Freshness rule DQ-UTL-007 on FCT_OUTAGE.start_ts fails and the product moves to Degraded.
+  resolution: Restart the OMS extract, backfill the six-hour gap and re-run the DQ rules; the product returns to Healthy.
+- id: INC-UTL-NULL-SPIKE
+  kind: null_spike
+  title: Null spike in AMI read success
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_DAILY_USAGE
+  column: read_success_pct
+  params: { null_pct: 18 }
+  affects: { products: [DP-UTL-003], agents: [AG-UTL-001] }
+  narrative: >-
+    A change to the meter data management export left 18% of the latest daily reads without interval counts, so read
+    success (a critical data element) arrives empty. Read success and estimated-read figures would be overstated or
+    understated depending on which meters are missing.
+  detection: Completeness rule DQ-UTL-021 on read_success_pct fails; the AMI Usage & Read Quality product is Degraded.
+  resolution: Revert the export mapping, reload the affected days and confirm the null rate is back under 0.1%.
+- id: INC-UTL-DUP-LOAD
+  kind: duplicate_load
+  title: Duplicate PO line load
+  severity: SEV3
+  object: CONFORMED_GOLD.FCT_PO_SPEND
+  params: { duplicate_pct: 12 }
+  affects: { products: [DP-UTL-006], agents: [AG-UTL-003] }
+  narrative: >-
+    A replayed ERP batch loaded 12% of PO lines twice. Total spend and maverick spend are inflated while the duplicates
+    remain, and spend-under-contract shares shift by category.
+  detection: Uniqueness rule DQ-UTL-031 on po_line_id fails and the row count jumps against the trailing average.
+  resolution: Delete the replayed batch by load id, re-run deduplication and confirm dup_rate returns to zero.
+- id: INC-UTL-SCHEMA-DRIFT
+  kind: schema_drift
+  title: Billing column renamed upstream
+  severity: SEV1
+  object: CONFORMED_GOLD.FCT_BILLING
+  column: billed_amount
+  params: { rename_to: billed_amt_usd }
+  affects: { products: [DP-UTL-005], agents: [AG-UTL-001] }
+  narrative: >-
+    A billing system release renamed the billed amount column to billed_amt_usd without a contract change. Every
+    receivables metric that depends on billed amount (average bill, collections rate, DSO) fails to compile, so agents
+    decline with an incident banner instead of answering.
+  detection: Metric compilation for BILLING_AR fails and DQ-UTL-014 cannot find its column; the contract check flags a breaking change.
+  resolution: Map billed_amt_usd back to billed_amount in Silver, raise a contract major version with a 30-day notice, and re-run checks.
+- id: INC-UTL-VOLUME
+  kind: volume_anomaly
+  title: Missing days of AMI reads
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_DAILY_USAGE
+  params: { missing_days: 2 }
+  affects: { products: [DP-UTL-003], agents: [AG-UTL-001] }
+  narrative: >-
+    Two daily files from the AMI head-end never arrived, so the most recent two days of meter-days are missing.
+    Consumption and read-quality trends show a false drop at the end of the series.
+  detection: Timeliness rule DQ-UTL-024 on read_date fails and daily meter-day volume drops against the trailing average; the product is Degraded.
+  resolution: Request the missing files from the head-end, load them and confirm daily volumes match the trailing average.

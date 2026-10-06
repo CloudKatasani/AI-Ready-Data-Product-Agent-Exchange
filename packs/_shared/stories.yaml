@@ -1,0 +1,278 @@
+# The six standard demo stories (09 §2). Industry-neutral: every pack-specific object is reached through
+# pack.yaml#story_roles (targets) and {{…}} placeholders resolved per pack. Packs may override cue text by step id.
+- id: executive-5
+  title: Trust the number
+  minutes: 5
+  audience: [executive, business sponsor]
+  doors: [HOME, STRATEGY]
+  steps:
+    - id: e1
+      title: A plain question, a cited answer
+      go: { route: home, persona: E, state: { agentMode: scripted } }
+      targets: [heroScenario]
+      do: ["Point at the headline KPI tiles", "Ask the hero question through the Router", "Point at the citations under the answer"]
+      say: "This is the view {{persona.E.title}} sees every morning at {{company.name}}. Ask a plain question and the answer comes back with its sources — every number is earned."
+      expect: { answerKind: answer, citations: ">=1" }
+      checkpoint: true
+    - id: e2
+      title: Follow the citation
+      go: { route: home, persona: E, state: { agentMode: scripted, panel: trace } }
+      targets: [heroScenario]
+      do: ["Open the trace", "Click a citation", "Show the certification seal and the named owner on the product page"]
+      say: "Every figure links to a certified product, a version, a metric definition and the query that produced it. Someone with a name owns this number."
+      expect: { citationOpens: product, certified: true }
+    - id: e3
+      title: The system knows who you are
+      go: { route: home, persona: A, state: { agentMode: scripted } }
+      targets: [heroScenario]
+      do: ["Switch to the business persona", "Ask the same question", "Point at the row-filter and masking badges"]
+      say: "Same question, asked by {{persona.A.name}}, {{persona.A.title}}. The answer is filtered to what that persona is allowed to see and personal data stays masked — no one had to build a second report."
+      expect: { answerKind: answer, rowFiltered: true }
+    - id: e4
+      title: Why AI-ready matters
+      go: { route: why/knockout, persona: E, state: { kpi: "{{roles.knockoutKpi.id}}" } }
+      targets: [knockoutKpi]
+      do: ["Select the knockout KPI", "Switch off the Context layer", "Point at the jump in the number and the confidence badge"]
+      say: "Take away one layer — the business rules — and {{roles.knockoutKpi.name}} moves by a lot, and the confidence drops to Unsafe. This is what an AI answer looks like without the foundations."
+      expect: { confidence: unsafe, deltaShown: true }
+    - id: e5
+      title: Here is your path
+      go: { route: readiness, persona: E, state: { preset: mid } }
+      do: ["Apply the Mid-migration preset", "Read out the band and the top three gaps", "Open the Roadmap"]
+      say: "Most organisations sit about here. These three gaps are what stand between you and answers you can trust — and here is the roadmap that closes them."
+      expect: { band: shown, gaps: 3 }
+
+- id: business-15
+  title: From raw data to a trusted answer
+  minutes: 15
+  audience: [executive, data leader]
+  doors: [HOME, CONSUME, BUILD, RUN, STRATEGY]
+  steps:
+    - id: b1
+      title: Replay the flow
+      go: { route: platform-map, persona: B, state: { replay: true } }
+      do: ["Press Replay", "Follow one record from Bronze through Silver and Gold to an agent answer"]
+      say: "Nine layers, one record. Watch what has to be true before {{company.name}} can let an agent answer a business question."
+      expect: { layersShown: 9 }
+      checkpoint: true
+    - id: b2
+      title: Raw, cleaned, modelled
+      go: { route: explorer, persona: B, state: { layer: bronze } }
+      do: ["Show dirty Bronze rows (duplicates, mixed case)", "Open the Silver table: deduplicated and conformed", "Open the Gold star and its lineage graph", "Switch to the steward persona to show unmasking"]
+      say: "Bronze is what the source systems send. Silver is cleaned once, for everyone. Gold is modelled for the business. Masking follows the person — {{persona.D.title}} sees what {{persona.B.title}} cannot."
+      expect: { lineageShown: true }
+    - id: b3
+      title: Meaning, defined once
+      go: { route: semantic, persona: B, state: { tab: playground } }
+      do: ["Open the KPI's metric and its glossary term", "Show the business rule applied by default", "Run the metric in the Playground and compare with the KPI tile"]
+      say: "The metric is defined once, linked to an approved glossary term and a business rule. The Playground number is the KPI tile number — because there is only one compiler."
+      expect: { matchesTile: true }
+    - id: b4
+      title: Certify a product
+      go: { route: studio, persona: C, state: { product: "{{roles.certDemoProduct.id}}", stage: 11 } }
+      targets: [certDemoProduct]
+      do: ["Open {{roles.certDemoProduct.name}} at Stage 11", "Run certification checks: two fail or warn", "Apply the suggested fixes and re-run", "Switch to the steward and council personas to reach quorum and certify", "Show v1.0.0 published"]
+      say: "{{roles.certDemoProduct.name}} is nearly ready. The checks find what a reviewer would miss — missing masking, missing verified queries. Agents propose the fixes; people approve the gate."
+      expect: { certified: true, version: "1.0.0" }
+      spotlight: "[data-tour=gate-panel]"
+      checkpoint: true
+    - id: b5
+      title: Request access
+      go: { route: marketplace, persona: A, state: { product: "{{roles.certDemoProduct.id}}" } }
+      targets: [certDemoProduct]
+      do: ["Show the product is Certified but Restricted", "Request access and read the policy preview", "Switch to the steward and approve", "Switch back: access Granted"]
+      say: "{{persona.A.name}} finds the product in the marketplace, sees exactly what the grant would include, and asks. A human approves — the agent never does."
+      expect: { accessStatus: GRANTED }
+    - id: b6
+      title: The answer that was declined now answers
+      go: { route: ask, persona: A, state: { agentMode: scripted } }
+      targets: [certDemoProduct]
+      do: ["Ask the question that was declined earlier", "Point at the citation of the newly certified product"]
+      say: "Earlier this question was politely declined. Now the product is certified and {{persona.A.name}} has access, so the same agent answers — with a citation to {{roles.certDemoProduct.name}}."
+      expect: { answerKind: answer, citesProduct: "{{roles.certDemoProduct.id}}" }
+
+- id: platform-30
+  title: Platform deep-dive
+  minutes: 30
+  audience: [architect, data engineer]
+  doors: [BUILD, RUN, CONSUME]
+  steps:
+    - id: p1
+      title: Under the hood of the warehouse
+      go: { route: explorer, persona: B, state: { tab: ddl } }
+      do: ["Show the DDL for Iceberg tables, Dynamic Tables and streams", "Run a worksheet query", "Point at the policies applied to the result"]
+      say: "Standard warehouse objects, standard SQL. Every query — even a hand-written one — goes through the same governed path, so persona policies apply automatically."
+      expect: { policiesApplied: true }
+    - id: p2
+      title: The semantic view as code
+      go: { route: semantic, persona: C, state: { tab: yaml } }
+      do: ["Export the semantic view YAML", "Open the verified queries", "Show the compiled SQL in the Playground"]
+      say: "The semantic view is a file you can review and version. Verified queries are the questions the business has already signed off."
+      expect: { yamlExported: true }
+    - id: p3
+      title: Live and scripted give the same number
+      go: { route: ask, persona: B, state: { agentMode: live } }
+      targets: [heroScenario]
+      do: ["Ask the hero question in Live mode (if a key is configured)", "Show the tool calls, the MetricQuery JSON and the grounding validator", "Flip to Scripted and ask again"]
+      say: "The model chooses the tools, but it cannot invent a number: the grounding validator rejects any figure that did not come from a tool result. Scripted mode gives the identical number."
+      expect: { answerKind: answer, sameNumberScripted: true }
+    - id: p4
+      title: Break something
+      go: { route: health, persona: C, state: { incident: "{{roles.incidentForStory.id}}" } }
+      targets: [incidentForStory]
+      do: ["Break: {{roles.incidentForStory.title}}", "Show the product turn Degraded", "Ask an affected agent: banner and lower confidence", "Open the blast radius", "Resolve and open the postmortem"]
+      say: "Things break in production. When they do, the agents know: the answer carries a banner and lower confidence instead of a confident wrong number."
+      expect: { productHealth: DEGRADED, agentBanner: true }
+      checkpoint: true
+    - id: p5
+      title: Change with a contract
+      go: { route: impact, persona: C, state: { action: rename_column } }
+      do: ["Rename a Gold column", "Show the blast radius across products and agents", "Show the contract major bump and the 30-day notice plan"]
+      say: "Before anyone changes a column, they see every product, agent and consumer it touches, and the contract tells consumers in advance."
+      expect: { contractBump: major }
+    - id: p6
+      title: What it costs and what it returns
+      go: { route: cost-value, persona: E, state: { tab: what-if } }
+      do: ["Move the what-if levers", "Show per-answer token cost from live answers"]
+      say: "Cost and value side by side, down to the cost of a single answer."
+      expect: { costPerAnswerShown: true }
+    - id: p7
+      title: Your tools, your runbook
+      go: { route: platform-map, persona: C, state: { tab: build-guide } }
+      do: ["Open the Build Guide", "Switch the tooling profile", "Show the regenerated runbook"]
+      say: "The pattern does not depend on one vendor's tools. Switch the tooling and the runbook regenerates."
+      expect: { runbookRegenerated: true }
+    - id: p8
+      title: Take it with you
+      go: { route: studio, persona: C, state: { tab: exports } }
+      do: ["Export the ODCS contract", "Export OpenLineage", "Export the Evidence Pack"]
+      say: "Open standards out: the data contract, the lineage and the evidence pack an auditor would ask for."
+      expect: { exports: 3 }
+
+- id: implementation-15
+  title: From assessment to operating model
+  minutes: 15
+  audience: [delivery lead, transformation office]
+  doors: [STRATEGY]
+  steps:
+    - id: i1
+      title: Where are we today
+      go: { route: readiness, persona: E, state: { preset: mid } }
+      do: ["Apply a readiness preset", "Read out the band and the top gaps"]
+      say: "Start with an honest baseline for {{company.name}}: seven dimensions, one band, and the gaps that matter most."
+      expect: { band: shown }
+      checkpoint: true
+    - id: i2
+      title: Generate the roadmap
+      go: { route: roadmap, persona: E, state: { action: generate } }
+      do: ["Generate the roadmap from the gaps", "Walk the phases and milestones"]
+      say: "The roadmap is generated from the gaps, not from a template."
+      expect: { phases: ">=3" }
+    - id: i3
+      title: Coverage over time
+      go: { route: roadmap, persona: E, state: { view: coverage } }
+      do: ["Open the coverage heatmap", "Press Simulate +4 weeks"]
+      say: "Watch coverage fill in as the plan executes — this is what the next month buys you."
+      expect: { simulated: true }
+    - id: i4
+      title: Who does what
+      go: { route: operating-model, persona: E, state: { tab: raci } }
+      do: ["Open the RACI", "Switch operating model style"]
+      say: "The operating model changes who is accountable, and the RACI follows."
+      expect: { raciShown: true }
+    - id: i5
+      title: What to build next
+      go: { route: portfolio, persona: E, state: { sort: wsjf } }
+      do: ["Rank the portfolio by WSJF", "Apply a human override with a reason"]
+      say: "The scoring proposes an order; a person decides it, and the override is recorded."
+      expect: { overrideRecorded: true }
+    - id: i6
+      title: How mature are we becoming
+      go: { route: readiness, persona: E, state: { tab: maturity } }
+      do: ["Open the maturity view", "Compare today with the target state"]
+      say: "Maturity is measured on the same dimensions we started with, so progress is visible."
+      expect: { maturityShown: true }
+
+- id: factory-10
+  title: Agents are products too
+  minutes: 10
+  audience: [data leader, AI lead]
+  doors: [BUILD, CONSUME]
+  steps:
+    - id: f1
+      title: Start from a decision
+      go: { route: factory, persona: C, state: { step: purpose } }
+      do: ["Pick a purpose from a pack decision", "Select two certified products", "Show the proposed KPI coverage"]
+      say: "An agent starts from a business decision and certified products, not from a prompt. Coverage is proposed from what those products can actually answer."
+      expect: { coverageProposed: true }
+      checkpoint: true
+    - id: f2
+      title: Draft the instructions
+      go: { route: factory, persona: C, state: { step: instructions } }
+      do: ["Let the Agent Designer draft the instructions", "Edit one line by hand"]
+      say: "The designer drafts; {{persona.C.title}} edits and owns the result."
+      expect: { instructionsDrafted: true }
+    - id: f3
+      title: Evaluate before anyone uses it
+      go: { route: factory, persona: C, state: { step: evaluate } }
+      do: ["Run the evaluation", "Show the boundary case that fails", "Add an out-of-scope item and re-run", "Show it pass"]
+      say: "Agents are tested like products: golden questions, boundary cases and adversarial probes. One boundary case fails, so we fix the scope and test again."
+      expect: { evalPassed: true }
+    - id: f4
+      title: The publish gate
+      go: { route: factory, persona: C, state: { step: publish } }
+      targets: [certDemoProduct]
+      do: ["Try binding {{roles.certDemoProduct.name}} while it is not yet certified: blocked", "Remove the binding: the gate passes", "Switch to the steward to approve", "Promote Pilot → Canary 20% → Production"]
+      say: "The gate blocks an agent from depending on anything that is not certified. A human approves the release, and it rolls out in stages."
+      expect: { publishGate: passed, status: PRODUCTION }
+    - id: f5
+      title: Use it
+      go: { route: marketplace, persona: A, state: { view: mesh } }
+      do: ["Ask the new agent a question", "Show it in the Marketplace", "Show it in the Agent Mesh"]
+      say: "The new agent sits in the marketplace next to the data products it depends on, and the mesh shows exactly what it is wired to."
+      expect: { answerKind: answer }
+
+- id: lifecycle-15
+  title: Agents act, humans decide
+  minutes: 15
+  audience: [governance lead, data product owner]
+  doors: [CONSUME, BUILD]
+  steps:
+    - id: l1
+      title: Ask for a product
+      go: { route: request/new, persona: A, state: { wizard: intake } }
+      do: ["Fill in the intake wizard with the decision and questions", "Show the duplicate suggestion", "Submit anyway"]
+      say: "{{persona.A.name}} asks for a product in business words. The system spots a likely duplicate before anyone builds it twice."
+      expect: { duplicateSuggested: true }
+      checkpoint: true
+    - id: l2
+      title: Triage
+      go: { route: portfolio, persona: C, state: { tab: triage } }
+      do: ["Open the request in triage", "Approve it", "Show the new product at Stage 1"]
+      say: "{{persona.C.title}} triages and approves. The product enters a twelve-stage governed lifecycle."
+      expect: { stage: 1 }
+    - id: l3
+      title: Agents do the legwork
+      go: { route: studio, persona: C, state: { autopilot: 3 } }
+      do: ["Run Autopilot to Stage 3", "Show the profiling agent's proposals from real profiling", "Accept one, edit another", "Show the critic agent's comment"]
+      say: "Agents profile the real data and draft the artifacts, with field-level provenance. Every proposal waits for a person."
+      expect: { proposals: ">=1" }
+    - id: l4
+      title: No rubber-stamping
+      go: { route: studio, persona: C, state: { action: submit } }
+      do: ["Try to submit: blocked by unreviewed agent fields", "Review the remaining fields", "Submit and approve the gate"]
+      say: "You cannot submit a stage for review while any agent output is unreviewed. Humans decide — structurally, not by convention."
+      expect: { submitBlocked: true, gateApproved: true }
+    - id: l5
+      title: Change ripples, visibly
+      go: { route: studio, persona: C, state: { product: "{{roles.lifecycleDemoProduct.id}}", stage: 6 } }
+      targets: [lifecycleDemoProduct]
+      do: ["Jump to {{roles.lifecycleDemoProduct.name}} at Stage 6 with open proposals", "Edit the contract", "Show the Stage 5 gate turn STALE"]
+      say: "{{roles.lifecycleDemoProduct.name}} is mid-build. Change the contract and the earlier approval goes stale — nothing silently carries over."
+      expect: { gateStale: true }
+    - id: l6
+      title: The evidence
+      go: { route: audit, persona: D, state: { filter: AGENT } }
+      do: ["Export the Evidence Pack", "Filter the audit stream to agent actions", "Point out that none are approvals"]
+      say: "Here is the full record. Agents drafted, profiled and critiqued — and not one approval in the log came from an agent."
+      expect: { agentApprovals: 0 }

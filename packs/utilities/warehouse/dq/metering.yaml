@@ -1,0 +1,56 @@
+# AMI metering DQ rules.
+- id: DQ-UTL-021
+  object: CONFORMED_GOLD.FCT_DAILY_USAGE
+  column: read_success_pct
+  dimension: completeness
+  assertion: "null_rate <= 0.001"
+  severity: critical
+  alert_route: steward
+  description: Read success is populated for every meter-day.
+- id: DQ-UTL-022
+  object: CONFORMED_GOLD.FCT_DAILY_USAGE
+  column: read_success_pct
+  dimension: validity
+  assertion: "max <= 100"
+  severity: high
+  alert_route: engineering
+  description: Valid intervals never exceed expected intervals, so read success is at most 100%.
+- id: DQ-UTL-023
+  object: CONFORMED_GOLD.FCT_DAILY_USAGE
+  column: read_success_pct
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: medium
+  alert_route: engineering
+  description: Read success is never negative.
+- id: DQ-UTL-024
+  object: CONFORMED_GOLD.FCT_DAILY_USAGE
+  column: read_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: Daily reads are no more than one day behind the reporting date.
+- id: DQ-UTL-025
+  object: CONFORMED_GOLD.FCT_DAILY_USAGE
+  column: kwh
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: medium
+  alert_route: engineering
+  description: Daily consumption is not negative (no net-metering export in this product).
+- id: DQ-UTL-026
+  object: CURATED_SILVER.METER_READ_DAILY
+  column: read_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: Replayed head-end batches are removed; one row per read id.
+- id: DQ-UTL-027
+  object: CONFORMED_GOLD.FCT_DAILY_USAGE
+  dimension: consistency
+  assertion: "row_count >= 1000"
+  severity: high
+  alert_route: engineering
+  description: Daily usage holds a full history of meter-days; a sharp drop indicates a missing head-end file.

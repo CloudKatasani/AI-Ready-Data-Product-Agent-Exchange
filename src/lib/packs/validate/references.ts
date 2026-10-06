@@ -165,7 +165,6 @@ export function checkReferences(c: Checks, pack: Pack, idx: PackIndex): void {
   const A = new Set(idx.agents.keys());
   const K = new Set(idx.kpis.keys());
   const T = new Set(idx.terms.keys());
-  const R = new Set(idx.rules.keys());
   const S = new Set(idx.scenarios.keys());
   const D = new Set(idx.docs.keys());
   const PER = new Set(idx.personas.keys());

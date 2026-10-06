@@ -1,0 +1,107 @@
+# Outage & reliability DQ rules (FCT_OUTAGE, DIM_FEEDER and their Silver sources).
+- id: DQ-UTL-001
+  object: CONFORMED_GOLD.FCT_OUTAGE
+  column: customers_affected
+  dimension: completeness
+  assertion: "null_rate <= 0.005"
+  severity: high
+  alert_route: steward
+  description: Every sustained outage records the customers affected (SAIFI numerator).
+- id: DQ-UTL-002
+  object: CONFORMED_GOLD.FCT_OUTAGE
+  column: customers_affected
+  dimension: accuracy
+  assertion: "min >= 1"
+  severity: medium
+  alert_route: engineering
+  description: An outage affects at least one customer.
+- id: DQ-UTL-003
+  object: CONFORMED_GOLD.FCT_OUTAGE
+  column: duration_min
+  dimension: validity
+  assertion: "min > 5"
+  severity: critical
+  alert_route: steward
+  description: Only sustained interruptions (longer than five minutes) are loaded, per IEEE 1366.
+- id: DQ-UTL-004
+  object: CONFORMED_GOLD.FCT_OUTAGE
+  column: duration_min
+  dimension: accuracy
+  assertion: "max <= 10080"
+  severity: medium
+  alert_route: engineering
+  description: No single outage lasts longer than seven days; longer values indicate a missing restoration time.
+- id: DQ-UTL-005
+  object: CONFORMED_GOLD.FCT_OUTAGE
+  column: major_event_day
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every outage carries a major event day flag so the 2.5-beta exclusion can be applied.
+- id: DQ-UTL-006
+  object: CONFORMED_GOLD.FCT_OUTAGE
+  column: outage_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per outage event after CDC deduplication.
+- id: DQ-UTL-007
+  object: CONFORMED_GOLD.FCT_OUTAGE
+  column: start_ts
+  dimension: timeliness
+  assertion: "freshness_min <= 240"
+  severity: high
+  alert_route: engineering
+  description: The latest outage start is no more than four hours old at the end of the reporting day (OMS feed is on time).
+- id: DQ-UTL-008
+  object: CONFORMED_GOLD.FCT_OUTAGE
+  column: cause_code
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [VEG, EQUIP, ANIMAL, WIND, LIGHTNING, VEHICLE, UNKNOWN]
+  severity: medium
+  alert_route: steward
+  description: Cause codes conform to the reliability standard's cause list.
+- id: DQ-UTL-009
+  object: CONFORMED_GOLD.DIM_FEEDER
+  column: customers_served
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every feeder has customers served — the SAIDI and SAIFI denominator.
+- id: DQ-UTL-010
+  object: CONFORMED_GOLD.DIM_FEEDER
+  column: customers_served
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: Customers served is positive for every in-service feeder.
+- id: DQ-UTL-011
+  object: CONFORMED_GOLD.DIM_FEEDER
+  column: region
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [North, South, East, West, Central]
+  severity: critical
+  alert_route: steward
+  description: Feeder region is one of the five service regions (row access policy RAP_REGION depends on it).
+- id: DQ-UTL-012
+  object: CONFORMED_GOLD.DIM_FEEDER
+  column: feeder_id
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^F-2[0-9]{3}$"
+  severity: low
+  alert_route: engineering
+  description: Feeder ids follow the GIS circuit numbering convention.
+- id: DQ-UTL-013
+  object: CURATED_SILVER.OUTAGE_EVENT
+  dimension: timeliness
+  assertion: "freshness_min <= 1440"
+  severity: medium
+  alert_route: engineering
+  description: The curated outage table has been refreshed within the last day.

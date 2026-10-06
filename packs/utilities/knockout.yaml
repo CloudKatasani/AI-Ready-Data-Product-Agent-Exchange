@@ -1,0 +1,120 @@
+# Knockout (Why AI-Ready): four governed answers and how each degrades when a layer is switched off.
+# declared_delta_pct is computed against the warehouse in Phase 8 and left empty here.
+answers:
+  - id: KO-UTL-01
+    kpi: KPI-UTL-SAIDI
+    question: "What was SAIDI last quarter, excluding major event days?"
+    query: { view: RELIABILITY, metrics: [saidi], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # CDC duplicates and tombstoned outages inflate customer minutes
+      gold: wrong          # no conformed customers-served denominator; feeder-level count used
+      semantic: wrong      # naive formula averages event duration instead of minutes per customer served
+      glossary: ambiguous  # "outage minutes per customer" no longer resolves to SAIDI
+      context: wrong       # major event days (BR-UTL-012) are no longer excluded
+      governance: unsafe   # no certification, row access or lineage on the answer
+    declared_delta_pct: {}
+  - id: KO-UTL-02
+    kpi: KPI-UTL-DSO
+    question: "What was days sales outstanding last quarter?"
+    query: { view: BILLING_AR, metrics: [dso_days], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # duplicate statement updates and deleted statements counted
+      gold: wrong          # no payment join; days to pay approximated from the due date
+      semantic: ambiguous  # finance's countback DSO and the payment-weighted DSO both plausible
+      glossary: ambiguous  # "receivable days" does not resolve to DSO
+      context: wrong       # immature statements inside the 60-day window (BR-UTL-021) included
+      governance: unsafe   # customer emails reachable from the receivables view unmasked
+    declared_delta_pct: {}
+  - id: KO-UTL-03
+    kpi: KPI-UTL-SUC
+    question: "What share of spend was under contract this year?"
+    query: { view: PROCUREMENT, metrics: [spend_under_contract_pct], timeRange: { ytd: true } }
+    failure_by_layer:
+      silver: wrong        # duplicate PO line updates and dirty category strings
+      gold: unverified     # same number from Silver but no certified lineage
+      semantic: ambiguous  # "contract compliance" could mean lines, suppliers or spend
+      glossary: ambiguous  # "contracted spend" no longer maps to the metric
+      context: unverified  # procurement policy definition of maverick spend not cited
+      governance: unsafe   # supplier tax ids and buyer names unmasked
+    declared_delta_pct: {}
+  - id: KO-UTL-04
+    kpi: KPI-UTL-AMI-READ
+    question: "What was the AMI read success rate last month?"
+    query: { view: METERING, metrics: [read_success_rate], timeRange: { last: { n: 1, unit: month } } }
+    failure_by_layer:
+      silver: wrong        # same-day re-reads double count and valid intervals exceed expected
+      gold: unverified     # computed from Silver reads without the certified premise conformance
+      semantic: ambiguous  # read success vs estimated read share not distinguished
+      glossary: ambiguous  # "meter read rate" does not resolve
+      context: unverified  # head-end firmware incident context not available
+      governance: unsafe   # premise-level reads exposed without aggregation or row access
+    declared_delta_pct: {}
+
+# Silver equivalents the compiler uses when the Gold layer is off (05 §1 step 7). column_map maps a Gold column
+# name to the Silver column (or Silver expression) that replaces it. Gold surrogate keys map to natural keys on both
+# sides of a join so relationships still resolve; date_key maps to the same integer expression Gold uses.
+# DIM_DATE is a generated calendar with no Silver source and stays in place.
+gold_fallbacks:
+  - gold: CONFORMED_GOLD.FCT_OUTAGE
+    silver: CURATED_SILVER.OUTAGE_EVENT
+    column_map:
+      outage_key: outage_id
+      feeder_key: feeder_id
+      crew_key: crew_id
+      date_key: "CAST(strftime(outage_date, '%Y%m%d') AS INTEGER)"
+      cause: cause_code
+  - gold: CONFORMED_GOLD.DIM_FEEDER
+    silver: CURATED_SILVER.FEEDER
+    column_map:
+      feeder_key: feeder_id
+      system_customers_served: customers_served
+      region_customers_served: customers_served
+      substation_customers_served: customers_served
+  - gold: CONFORMED_GOLD.DIM_CREW
+    silver: CURATED_SILVER.CREW
+    column_map:
+      crew_key: crew_id
+      crew_type: "CASE WHEN contractor_flag THEN 'Contractor' ELSE 'Internal' END"
+  - gold: CONFORMED_GOLD.FCT_BILLING
+    silver: CURATED_SILVER.BILLING_STATEMENT
+    column_map:
+      statement_key: statement_id
+      customer_key: customer_no
+      date_key: "CAST(strftime(statement_date, '%Y%m%d') AS INTEGER)"
+      estimated: estimated_flag
+      mature: "statement_date <= GOVERNANCE.as_of() - INTERVAL 60 DAY"
+      paid_within_60d_amount: "billed_amount - arrears_amount"
+      days_to_pay: "date_diff('day', statement_date, due_date)"
+  - gold: CONFORMED_GOLD.DIM_CUSTOMER
+    silver: CURATED_SILVER.CUSTOMER
+    column_map:
+      customer_key: customer_no
+      rate_class: rate_code
+      segment: "CASE WHEN rate_code IN ('RS-1', 'RS-TOU') THEN 'Residential' WHEN rate_code = 'GS-1' THEN 'Small business' ELSE 'Commercial & industrial' END"
+      digital_enrolled: paperless
+      churn_risk_score: churn_score
+      full_name: "concat(first_name, ' ', last_name)"
+  - gold: CONFORMED_GOLD.FCT_PO_SPEND
+    silver: CURATED_SILVER.PURCHASE_ORDER_LINE
+    column_map:
+      po_line_key: po_line_id
+      supplier_key: supplier_id
+      date_key: "CAST(strftime(po_date, '%Y%m%d') AS INTEGER)"
+      otif: on_time_in_full
+      received: "receipt_date IS NOT NULL"
+  - gold: CONFORMED_GOLD.DIM_SUPPLIER
+    silver: CURATED_SILVER.SUPPLIER
+    column_map:
+      supplier_key: supplier_id
+      preferred: preferred_flag
+  - gold: CONFORMED_GOLD.FCT_DAILY_USAGE
+    silver: CURATED_SILVER.METER_READ_DAILY
+    column_map:
+      premise_key: meter_id
+      date_key: "CAST(strftime(read_date, '%Y%m%d') AS INTEGER)"
+      read_success_pct: "round(100.0 * intervals_valid / intervals_expected, 3)"
+  - gold: CONFORMED_GOLD.DIM_PREMISE
+    silver: CURATED_SILVER.PREMISE
+    column_map:
+      premise_key: meter_id
+      feeder_key: feeder_id

@@ -34,31 +34,31 @@ export type Scale = z.infer<typeof Scale>;
 export const Semver = z.string().regex(/^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/, 'semantic version (x.y.z)');
 export const IsoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'ISO date (YYYY-MM-DD)');
 
-/** Pack code segment of ids, e.g. `UTL` in `DP-UTL-002`. */
+/** Pack code segment of ids, e.g. `ABC` in `DP-ABC-002`. */
 const CODE = '[A-Z]{2,4}';
 const id = (prefix: string, tail: string, example: string) =>
   z.string().regex(new RegExp(`^${prefix}-${CODE}-${tail}$`), `id like ${example}`);
 
-export const ProductId = id('DP', '\\d{3}', 'DP-UTL-002');
-export const AgentId = id('AG', '\\d{3}', 'AG-UTL-002');
-export const KpiId = id('KPI', '[A-Z0-9-]+', 'KPI-UTL-SAIDI');
-export const TermId = id('GT', '[A-Z0-9-]+', 'GT-UTL-SAIDI');
-export const RuleId = id('BR', '\\d{3}', 'BR-UTL-012');
-export const VerifiedQueryId = id('VQ', '\\d{3}', 'VQ-UTL-049');
-export const ScenarioId = id('SC', '\\d{3}', 'SC-UTL-001');
-export const InstructionId = id('INS', '\\d{3}-[PRGO]', 'INS-UTL-002-P');
-export const DocId = id('DOC', '[A-Z0-9-]+', 'DOC-UTL-RELIABILITY-STD');
-export const DqRuleId = id('DQ', '\\d{3}', 'DQ-UTL-017');
-export const IncidentId = id('INC', '[A-Z0-9-]+', 'INC-UTL-LATE-FEED');
-export const ValueCaseId = id('VC', '\\d{3}', 'VC-UTL-002');
-export const ControlId = id('CTL', '\\d{3}', 'CTL-UTL-001');
-export const PlantId = id('P', '\\d{2}', 'P-UTL-01');
-export const RequestId = id('REQ', '\\d{3}', 'REQ-UTL-001');
-export const DemandId = id('DM', '\\d{3}', 'DM-UTL-001');
-export const KnockoutId = id('KO', '\\d{2}', 'KO-UTL-01');
+export const ProductId = id('DP', '\\d{3}', 'DP-ABC-002');
+export const AgentId = id('AG', '\\d{3}', 'AG-ABC-002');
+export const KpiId = id('KPI', '[A-Z0-9-]+', 'KPI-ABC-NET-MARGIN');
+export const TermId = id('GT', '[A-Z0-9-]+', 'GT-ABC-NET-MARGIN');
+export const RuleId = id('BR', '\\d{3}', 'BR-ABC-012');
+export const VerifiedQueryId = id('VQ', '\\d{3}', 'VQ-ABC-049');
+export const ScenarioId = id('SC', '\\d{3}', 'SC-ABC-001');
+export const InstructionId = id('INS', '\\d{3}-[PRGO]', 'INS-ABC-002-P');
+export const DocId = id('DOC', '[A-Z0-9-]+', 'DOC-ABC-POLICY');
+export const DqRuleId = id('DQ', '\\d{3}', 'DQ-ABC-017');
+export const IncidentId = id('INC', '[A-Z0-9-]+', 'INC-ABC-LATE-FEED');
+export const ValueCaseId = id('VC', '\\d{3}', 'VC-ABC-002');
+export const ControlId = id('CTL', '\\d{3}', 'CTL-ABC-001');
+export const PlantId = id('P', '\\d{2}', 'P-ABC-01');
+export const RequestId = id('REQ', '\\d{3}', 'REQ-ABC-001');
+export const DemandId = id('DM', '\\d{3}', 'DM-ABC-001');
+export const KnockoutId = id('KO', '\\d{2}', 'KO-ABC-01');
 
-/** Persona references are `<packId>:<slug>`, e.g. `utilities:grid-dpo`. */
-export const PersonaRef = z.string().regex(/^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$/, 'persona ref like utilities:grid-dpo');
+/** Persona references are `<packId>:<slug>`, e.g. `acme:product-owner`. */
+export const PersonaRef = z.string().regex(/^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$/, 'persona ref like acme:product-owner');
 
 /** Warehouse identifiers (Snowflake conventions): upper-case schema and object names. */
 export const ObjectName = z.string().regex(/^[A-Z][A-Z0-9_]*$/, 'UPPER_SNAKE object name');
