@@ -24,7 +24,7 @@ export class MemoryLog {
 
 let warehouse: Promise<WarehouseAdapter> | undefined;
 export function testWarehouse(): Promise<WarehouseAdapter> {
-  warehouse ??= openWarehouseReadOnly(process.env.KEYSTONE_TEST_WAREHOUSE ?? join(process.cwd(), 'data', 'test-warehouse', 'utilities.duckdb'));
+  warehouse ??= openWarehouseReadOnly(process.env.KEYSTONE_TEST_WAREHOUSE ?? join(process.cwd(), 'data', 'test-warehouse', 'M', 'utilities.duckdb'));
   return warehouse;
 }
 

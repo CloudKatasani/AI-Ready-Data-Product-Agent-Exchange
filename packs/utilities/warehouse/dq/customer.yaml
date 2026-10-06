@@ -59,3 +59,11 @@
   severity: high
   alert_route: steward
   description: Customer region is one of the five service regions (row access policy RAP_REGION).
+- id: DQ-UTL-049
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: open_date
+  dimension: timeliness
+  assertion: "freshness_min <= 46080"
+  severity: medium
+  alert_route: engineering
+  description: The new-account feed from CIS has delivered within the last month (monthly customer master refresh).

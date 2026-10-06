@@ -10,30 +10,48 @@ function files(dir: string): string[] {
 }
 const SRC = files(join(process.cwd(), 'src')).map((f) => ({ file: relative(process.cwd(), f), text: readFileSync(f, 'utf8') }));
 const DECISIONS = 'src/lib/lifecycle/decisions.ts';
+const writers = (re: RegExp) => SRC.filter((f) => re.test(f.text)).map((f) => f.file);
 
-// CLAUDE.md §4.4 — One approval path. Access requests in Phase 4; gates, certification and publish in Phase 5.
+// CLAUDE.md §4.4 — One approval path: access requests, gates, triage and certification (agent publish: Phase 6).
 describe('I04 one approval path', () => {
   it('only recordDecision() writes Decision rows', () => {
-    const writers = SRC.filter((f) => /\.decision\.(create|createMany|update|upsert)\(/.test(f.text)).map((f) => f.file);
-    expect(writers).toEqual([DECISIONS]);
+    expect(writers(/\.decision\.(create|createMany|update|upsert)\(/)).toEqual([DECISIONS]);
   });
 
   it('recordDecision() is the only code path that sets AccessRequest.status = GRANTED or grants an entitlement by request', () => {
     // Assignments only (`state = 'GRANTED'`, `state: 'GRANTED'`), not comparisons (`=== 'GRANTED'`).
-    const granted = SRC.filter((f) => /state(:|\s*=(?!=))\s*['"]GRANTED['"]/.test(f.text)).map((f) => f.file);
-    expect(granted).toEqual([DECISIONS]);
-    const requestGrants = SRC.filter((f) => /grantedVia:\s*['"]REQUEST['"]/.test(f.text)).map((f) => f.file);
-    expect(requestGrants).toEqual([DECISIONS]);
-    const updates = SRC.filter((f) => /accessRequest\.(update|updateMany|upsert)\(/.test(f.text)).map((f) => f.file);
-    expect(updates).toEqual([DECISIONS]);
+    expect(writers(/state(:|\s*=(?!=))\s*['"]GRANTED['"]/)).toEqual([DECISIONS]);
+    expect(writers(/grantedVia:\s*['"]REQUEST['"]/)).toEqual([DECISIONS]);
+    expect(writers(/accessRequest\.(update|updateMany|upsert)\(/)).toEqual([DECISIONS]);
   });
 
-  it('recordDecision() rejects an agent actor (behaviour covered in tests/integration/access.test.ts)', () => {
+  it('recordDecision() is the only code path that sets Gate.status = APPROVED (or decides a gate)', () => {
+    // Writes of an APPROVED gate (create/update data), and the only caller of the pure evaluator.
+    expect(writers(/\.gate\.(create|update|updateMany|upsert)\(\{[^;]*state:\s*outcome\.state|\.gate\.(create|update|updateMany|upsert)\(\{[^;]*state:\s*'APPROVED'/)).toEqual([DECISIONS]);
+    expect(writers(/evaluateGateOutcome\(/).filter((f) => f !== 'src/lib/lifecycle/gates.ts')).toEqual([DECISIONS]);
+    // Gate updates elsewhere may only submit (IN_REVIEW) or mark STALE.
+    for (const f of SRC.filter((x) => x.file !== DECISIONS && /\.gate\.(update|updateMany)\(/.test(x.text))) {
+      const states = [...f.text.matchAll(/\.gate\.update(?:Many)?\(\{[^)]*state:\s*'([A-Z_]+)'/g)].map((m) => m[1]);
+      expect(states.every((s) => s === 'IN_REVIEW' || s === 'STALE'), `${f.file}: ${states.join(',')}`).toBe(true);
+    }
+  });
+
+  it('recordDecision() is the only code path that sets a product CERTIFIED (or publishes a version)', () => {
+    expect(writers(/status:\s*['"]CERTIFIED['"]|status:\s*statusForStage/)).toEqual([DECISIONS]);
+    expect(writers(/publishedAt:\s*new Date/)).toEqual([DECISIONS]);
+  });
+
+  it('recordDecision() rejects an agent actor at every autonomy level, and autopilot/agents never call it', () => {
     const src = SRC.find((f) => f.file === DECISIONS)?.text ?? '';
     expect(src).toMatch(/actor\.kind === 'AGENT'\) throw new DecisionRefused/);
+    for (const f of ['src/lib/lifecycle/autopilot.ts', 'src/lib/lifecycle/agent-runs.ts']) expect(SRC.find((x) => x.file === f)?.text).not.toMatch(/recordDecision\(/);
+    expect(SRC.filter((f) => f.file.startsWith('src/lib/agents/')).some((f) => /recordDecision/.test(f.text))).toBe(false);
   });
 
-  it.todo('recordDecision() is the only code path that sets Gate.status = APPROVED (source scan + behaviour)');
-  it.todo('recordDecision() is the only code path that sets DataProduct/Agent status to CERTIFIED or PUBLISHED');
-  it.todo('seeds reach approved states only via recordDecision() with a seeded human actor');
+  it('seeds reach approved states only via recordDecision() with a seeded human actor', () => {
+    const seed = SRC.find((f) => f.file === 'src/lib/presenter/seed.ts')?.text ?? '';
+    expect(seed).not.toMatch(/CERTIFIED|APPROVED|GRANTED/);
+    const lifecycleSeed = SRC.find((f) => f.file === 'src/lib/lifecycle/seed.ts')?.text ?? '';
+    expect(lifecycleSeed).toMatch(/recordDecision\(client, pack, \{ subjectType: 'GATE', subjectId: gate\.id, actor: \{ kind: 'HUMAN'/);
+  });
 });

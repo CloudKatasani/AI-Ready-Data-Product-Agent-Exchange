@@ -1,21 +1,43 @@
 import type { PrismaClient } from '@prisma/client';
 import { appendAudit } from '@/lib/db/audit';
 import { runProductQuality } from '@/lib/lifecycle/quality';
+import { seedLifecycle, seedVersion } from '@/lib/lifecycle/seed';
 import { productSensitivity } from '@/lib/marketplace/catalog';
+import { duplicateCandidates } from '@/lib/packs/similarity';
 import type { Pack, Rubrics } from '@/lib/packs/schema';
 import type { QueryService } from '@/lib/query/query-service';
 
 /**
- * Seeds one pack (idempotent: replaces the pack's seeded rows). Phase 4 seeds product and agent records
- * with their pack status (Phase 5 replaces this with lifecycle-driven seeding), demand items and an
- * initial quality snapshot per product computed by the real DQ engine when the warehouse is available.
+ * Seeds one pack (idempotent: replaces the pack's seeded rows): personas, entitlements, agent records,
+ * demand and intake requests, a quality snapshot per product from the real DQ engine, and then drives
+ * every product through the lifecycle engine to its seed stage (status and version are engine outcomes).
+ * Without a built warehouse the lifecycle cannot run its real checks: products stay Draft at Stage 1
+ * (statuses are only ever reached through recordDecision(), invariant I04).
  */
-export async function seedPack(prisma: PrismaClient, pack: Pack, opts: { rubrics?: Rubrics; qs?: QueryService } = {}): Promise<{ personas: number; entitlements: number; products: number; agents: number; snapshots: number }> {
+export async function seedPack(prisma: PrismaClient, pack: Pack, opts: { rubrics?: Rubrics; qs?: QueryService } = {}): Promise<{ personas: number; entitlements: number; products: number; agents: number; snapshots: number; gates: number }> {
   const packId = pack.manifest.id;
   const personaIds = pack.personas.map((p) => p.id);
   const productIds = pack.products.map((p) => p.id);
 
   // Reset this pack's mutable demo state (seeding is a reset; the running app never deletes rows).
+  const gateIds = (await prisma.gate.findMany({ where: { productId: { in: productIds } }, select: { id: true } })).map((g) => g.id);
+  const artifactIds = (await prisma.artifact.findMany({ where: { productId: { in: productIds } }, select: { id: true } })).map((a) => a.id);
+  const versionIds = (await prisma.artifactVersion.findMany({ where: { artifactId: { in: artifactIds } }, select: { id: true } })).map((v) => v.id);
+  await prisma.fieldProvenance.deleteMany({ where: { versionId: { in: versionIds } } });
+  await prisma.gateEvidence.deleteMany({ where: { gateId: { in: gateIds } } });
+  await prisma.artifactVersion.deleteMany({ where: { id: { in: versionIds } } });
+  await prisma.artifact.deleteMany({ where: { id: { in: artifactIds } } });
+  await prisma.gate.deleteMany({ where: { id: { in: gateIds } } });
+  await prisma.stageRun.deleteMany({ where: { productId: { in: productIds } } });
+  await prisma.agentProposal.deleteMany({ where: { productId: { in: productIds } } });
+  await prisma.agentAction.deleteMany({ where: { packId } });
+  await prisma.autopilotRun.deleteMany({ where: { productId: { in: productIds } } });
+  await prisma.certificationCheckResult.deleteMany({ where: { productId: { in: productIds } } });
+  await prisma.appliedFix.deleteMany({ where: { packId } });
+  await prisma.knowledgeOverlay.deleteMany({ where: { packId } });
+  await prisma.task.deleteMany({ where: { packId } });
+  await prisma.comment.deleteMany({ where: { productId: { in: productIds } } });
+  await prisma.productRequest.deleteMany({ where: { packId } });
   await prisma.decision.deleteMany({ where: { packId } });
   await prisma.accessRequest.deleteMany({ where: { packId } });
   await prisma.entitlement.deleteMany({ where: { personaId: { in: personaIds } } });
@@ -48,6 +70,7 @@ export async function seedPack(prisma: PrismaClient, pack: Pack, opts: { rubrics
   await prisma.entitlement.createMany({ data: grants });
 
   const certDemo = pack.manifest.story_roles.certDemoProduct;
+  const lifecycle = Boolean(opts.qs && opts.rubrics);
   await prisma.dataProduct.createMany({
     data: pack.products.map((p) => ({
       id: p.id,
@@ -56,9 +79,9 @@ export async function seedPack(prisma: PrismaClient, pack: Pack, opts: { rubrics
       domain: p.domain,
       archetype: p.archetype,
       tier: 'unrated',
-      status: p.initial_status,
-      currentStage: p.seed_stage,
-      semanticVersion: p.version,
+      status: 'DRAFT',
+      currentStage: 1,
+      semanticVersion: lifecycle ? seedVersion(p) : '0.1.0',
       ownerPersonaId: p.owner,
       stewardPersonaId: p.steward,
       description: p.description,
@@ -92,6 +115,10 @@ export async function seedPack(prisma: PrismaClient, pack: Pack, opts: { rubrics
       snapshots += 1;
     }
   }
+  let gates = 0;
+  if (opts.qs && opts.rubrics) gates = (await seedLifecycle(prisma, pack, opts.rubrics, opts.qs)).gates;
+  await seedIntake(prisma, pack, opts.rubrics);
+
   await appendAudit(prisma, {
     packId,
     actorType: 'SYSTEM',
@@ -99,7 +126,29 @@ export async function seedPack(prisma: PrismaClient, pack: Pack, opts: { rubrics
     action: 'PACK_SEEDED',
     subjectType: 'PACK',
     subjectId: packId,
-    detail: { version: pack.manifest.version, personas: personaIds.length, entitlements: grants.length, products: productIds.length, agents: pack.agents.length, qualitySnapshots: snapshots },
+    detail: { version: pack.manifest.version, personas: personaIds.length, entitlements: grants.length, products: productIds.length, agents: pack.agents.length, qualitySnapshots: snapshots, gatesApproved: gates },
   });
-  return { personas: personaIds.length, entitlements: grants.length, products: productIds.length, agents: pack.agents.length, snapshots };
+  return { personas: personaIds.length, entitlements: grants.length, products: productIds.length, agents: pack.agents.length, snapshots, gates };
+}
+
+/** Seeded intake requests (demand.yaml) with their duplicate candidates computed by the real detector. */
+async function seedIntake(prisma: PrismaClient, pack: Pack, rubrics?: Rubrics): Promise<void> {
+  for (const r of pack.demand.requests) {
+    const dups = rubrics ? duplicateCandidates(pack, rubrics, [r.title, r.decision, ...r.questions].join(' '), [], r.questions).filter((d) => d.kind !== 'demand') : [];
+    await prisma.productRequest.create({
+      data: {
+        reference: r.id,
+        packId: pack.manifest.id,
+        title: r.title,
+        requesterId: r.requester,
+        state: r.status === 'IN_TRIAGE' ? 'TRIAGE' : r.status,
+        decisionJson: JSON.stringify({ decision: r.decision, decider: r.decider, cadence: r.cadence, workaround: r.workaround }),
+        questionsJson: JSON.stringify(r.questions),
+        stakes: r.stakes,
+        freshness: r.freshness,
+        duplicateCandidatesJson: JSON.stringify(dups),
+        slaDueAt: new Date(Date.parse(`${pack.manifest.asOf}T09:00:00Z`) + (rubrics?.intake.triage_sla_hours ?? 72) * 3_600_000),
+      },
+    });
+  }
 }

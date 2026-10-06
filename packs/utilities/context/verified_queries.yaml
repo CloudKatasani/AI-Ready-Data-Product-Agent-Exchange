@@ -342,3 +342,138 @@
   verified_by: utilities:customer-steward
   verified_at: 2026-09-22
   status: pending_fix
+
+# ---------------------------------------------------------------- Phase 5: rubric minimum (≥ 10 per certified view)
+- id: VQ-UTL-055
+  question: "How many assets are there by asset class?"
+  query: { view: ASSET_HEALTH, metrics: [asset_count], dimensions: [asset_class], orderBy: [{ field: asset_count, dir: desc }] }
+  agent: AG-UTL-004
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-10
+- id: VQ-UTL-056
+  question: "Share of assets in poor condition by region"
+  query: { view: ASSET_HEALTH, metrics: [poor_condition_pct], dimensions: [region], orderBy: [{ field: poor_condition_pct, dir: desc }] }
+  agent: AG-UTL-004
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-11
+- id: VQ-UTL-057
+  question: "Which feeders have the most assets in poor condition?"
+  query: { view: ASSET_HEALTH, metrics: [poor_condition_assets], dimensions: [feeder], orderBy: [{ field: poor_condition_assets, dir: desc }] }
+  agent: AG-UTL-004
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-12
+- id: VQ-UTL-058
+  question: "Average asset health by criticality"
+  query: { view: ASSET_HEALTH, metrics: [avg_asset_health], dimensions: [criticality], orderBy: [{ field: avg_asset_health, dir: desc }] }
+  agent: AG-UTL-004
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-13
+- id: VQ-UTL-059
+  question: "Assets by condition band"
+  query: { view: ASSET_HEALTH, metrics: [asset_count], dimensions: [condition_band], orderBy: [{ field: asset_count, dir: desc }] }
+  agent: AG-UTL-004
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-14
+- id: VQ-UTL-060
+  question: "Billed revenue by rate class last quarter"
+  query: { view: BILLING_AR, metrics: [billed_revenue], dimensions: [rate_class], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: billed_revenue, dir: desc }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-15
+- id: VQ-UTL-061
+  question: "Collections rate by region last quarter"
+  query: { view: BILLING_AR, metrics: [collections_rate], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: collections_rate, dir: desc }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-16
+- id: VQ-UTL-062
+  question: "Active customers by segment"
+  query: { view: CUSTOMER_360, metrics: [active_customers], dimensions: [segment], orderBy: [{ field: active_customers, dir: desc }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-17
+- id: VQ-UTL-063
+  question: "Average churn risk by rate class"
+  query: { view: CUSTOMER_360, metrics: [avg_churn_risk], dimensions: [rate_class], orderBy: [{ field: avg_churn_risk, dir: desc }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-18
+- id: VQ-UTL-064
+  question: "Share of customers at high churn risk by region"
+  query: { view: CUSTOMER_360, metrics: [high_churn_risk_pct], dimensions: [region], orderBy: [{ field: high_churn_risk_pct, dir: desc }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-19
+- id: VQ-UTL-065
+  question: "Peak demand by premise type last month"
+  query: { view: METERING, metrics: [peak_demand_kw], dimensions: [premise_type], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: peak_demand_kw, dir: desc }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-20
+- id: VQ-UTL-066
+  question: "Estimated read share by region last month"
+  query: { view: METERING, metrics: [estimated_read_pct], dimensions: [region], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: estimated_read_pct, dir: desc }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-21
+- id: VQ-UTL-067
+  question: "Daily consumption by rate class last quarter"
+  query: { view: METERING, metrics: [daily_kwh], dimensions: [rate_class], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: daily_kwh, dir: desc }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-22
+- id: VQ-UTL-068
+  question: "Read success rate by city last month"
+  query: { view: METERING, metrics: [read_success_rate], dimensions: [city], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: read_success_rate, dir: desc }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-23
+- id: VQ-UTL-069
+  question: "Total spend by category year to date"
+  query: { view: PROCUREMENT, metrics: [total_spend], dimensions: [category], timeRange: { ytd: true }, orderBy: [{ field: total_spend, dir: desc }] }
+  agent: AG-UTL-003
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-24
+- id: VQ-UTL-070
+  question: "Supplier on-time in-full rate by category year to date"
+  query: { view: PROCUREMENT, metrics: [otif_pct], dimensions: [category], timeRange: { ytd: true }, orderBy: [{ field: otif_pct, dir: desc }] }
+  agent: AG-UTL-003
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-25
+- id: VQ-UTL-071
+  question: "Average PO cycle time by category year to date"
+  query: { view: PROCUREMENT, metrics: [po_cycle_days], dimensions: [category], timeRange: { ytd: true }, orderBy: [{ field: po_cycle_days, dir: desc }] }
+  agent: AG-UTL-003
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-26
+- id: VQ-UTL-072
+  question: "PO lines by preferred supplier status year to date"
+  query: { view: PROCUREMENT, metrics: [po_lines], dimensions: [preferred_supplier], timeRange: { ytd: true }, orderBy: [{ field: po_lines, dir: desc }] }
+  agent: AG-UTL-003
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-27
+- id: VQ-UTL-073
+  question: "Share of spans overdue for trimming by region"
+  query: { view: VEGETATION, metrics: [spans_overdue_pct], dimensions: [region], orderBy: [{ field: spans_overdue_pct, dir: desc }] }
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-10
+- id: VQ-UTL-074
+  question: "Trim cycle compliance by cycle length"
+  query: { view: VEGETATION, metrics: [trim_cycle_compliance], dimensions: [cycle_years], orderBy: [{ field: trim_cycle_compliance, dir: desc }] }
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-11
+- id: VQ-UTL-075
+  question: "Average vegetation risk by species"
+  query: { view: VEGETATION, metrics: [avg_veg_risk], dimensions: [species], orderBy: [{ field: avg_veg_risk, dir: desc }] }
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-12
+- id: VQ-UTL-076
+  question: "High-risk spans by feeder"
+  query: { view: VEGETATION, metrics: [high_risk_spans], dimensions: [feeder], orderBy: [{ field: high_risk_spans, dir: desc }] }
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-13
+- id: VQ-UTL-077
+  question: "Spans inspected by region"
+  query: { view: VEGETATION, metrics: [spans_inspected], dimensions: [region], orderBy: [{ field: spans_inspected, dir: desc }] }
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-14

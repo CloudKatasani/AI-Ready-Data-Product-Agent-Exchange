@@ -49,3 +49,11 @@
   severity: medium
   alert_route: steward
   description: Supplier tax ids follow the registered identifier format checked at due diligence.
+- id: DQ-UTL-051
+  object: CONFORMED_GOLD.FCT_PO_SPEND
+  column: po_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: medium
+  alert_route: engineering
+  description: Purchase orders from the ERP are no more than a day behind.

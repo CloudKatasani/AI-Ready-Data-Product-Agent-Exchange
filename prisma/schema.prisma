@@ -1,7 +1,9 @@
 // Keystone app-state model — see docs/build-spec/03-data-model.md.
 // Models arrive phase by phase. Phase 2: Persona, Entitlement, QueryLog, AuditEvent, KnowledgeOverlay.
 // Phase 3: AnswerRecord, AnswerFeedback. Phase 4: DataProduct, Agent, Decision, AccessRequest, DemandItem,
-// DemandVote, QualityRuleResult, QualityScoreSnapshot.
+// DemandVote, QualityRuleResult, QualityScoreSnapshot. Phase 5: lifecycle (StageRun, Gate, GateEvidence,
+// Artifact, ArtifactVersion, FieldProvenance, Comment, Task, ChangeRequest, CertificationCheckResult,
+// AppliedFix), lifecycle agents (AgentAction, AgentProposal, AutopilotRun, AgentSetting), ProductRequest.
 //
 // Prisma does not allow the datasource provider to come from an env var. SQLite is the default;
 // Postgres support (DATABASE_PROVIDER=postgresql) is delivered in Phase 11 (docs/adr/0010-database-provider-switch.md).
@@ -264,4 +266,233 @@ model QualityScoreSnapshot {
   product        DataProduct @relation(fields: [productId], references: [id])
 
   @@index([productId, createdAt])
+}
+
+// ───────── Lifecycle (06) ─────────
+model StageRun {
+  id          String    @id @default(cuid())
+  productId   String
+  stage       Int
+  attempt     Int       @default(1)
+  state       String // NOT_STARTED|IN_PROGRESS|IN_REVIEW|COMPLETE
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  @@index([productId, stage])
+}
+
+model Gate {
+  id                String         @id @default(cuid())
+  productId         String
+  stage             Int
+  state             String // PENDING|IN_REVIEW|APPROVED|REJECTED|STALE
+  quorum            Int
+  requiredRolesJson String
+  vetoRolesJson     String
+  staleReason       String?
+  submittedBy       String?
+  submittedAt       DateTime?
+  updatedAt         DateTime       @updatedAt
+  evidence          GateEvidence[]
+
+  @@unique([productId, stage])
+}
+
+/// Append-only snapshot of the artifact versions a gate decision relied on.
+model GateEvidence {
+  id                String   @id @default(cuid())
+  gateId            String
+  artifactVersionId String
+  artifactType      String
+  contentHash       String
+  createdAt         DateTime @default(now())
+  gate              Gate     @relation(fields: [gateId], references: [id])
+
+  @@index([gateId])
+}
+
+model Artifact {
+  id        String            @id @default(cuid())
+  productId String
+  type      String // registry key
+  stage     Int
+  versions  ArtifactVersion[]
+
+  @@unique([productId, type])
+}
+
+/// Append-only, content-hashed (invariant I06).
+model ArtifactVersion {
+  id          String            @id @default(cuid())
+  artifactId  String
+  version     Int
+  contentJson String
+  contentHash String
+  committedBy String // personaId
+  message     String
+  createdAt   DateTime          @default(now())
+  provenance  FieldProvenance[]
+  artifact    Artifact          @relation(fields: [artifactId], references: [id])
+
+  @@unique([artifactId, version])
+}
+
+model FieldProvenance {
+  id         String          @id @default(cuid())
+  versionId  String
+  fieldPath  String
+  source     String // HUMAN|AGENT
+  agentId    String?
+  acceptedBy String?
+  version    ArtifactVersion @relation(fields: [versionId], references: [id])
+
+  @@index([versionId])
+}
+
+model Comment {
+  id         String    @id @default(cuid())
+  productId  String
+  stage      Int
+  fieldPath  String?
+  authorType String // HUMAN|AGENT
+  authorId   String
+  body       String
+  parentId   String?
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([productId, stage])
+}
+
+model Task {
+  id           String    @id @default(cuid())
+  packId       String
+  productId    String?
+  kind         String // REAPPROVE|REVIEW|FIX
+  title        String
+  assigneeRole String
+  state        String // OPEN|DONE
+  dueAt        DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([packId, state])
+}
+
+model ChangeRequest {
+  id                 String   @id @default(cuid())
+  productId          String
+  severity           String
+  versionBump        String // major|minor|patch
+  affectedStagesJson String
+  description        String
+  state              String
+  createdAt          DateTime @default(now())
+}
+
+model CertificationCheckResult {
+  id          String   @id @default(cuid())
+  productId   String
+  checkId     String
+  status      String // pass|warn|fail
+  detail      String
+  fixApplied  Boolean  @default(false)
+  evaluatedAt DateTime @default(now())
+
+  @@index([productId, checkId])
+}
+
+/// Append-only record of a certification fix applied in the demo (its effects are real state).
+model AppliedFix {
+  id        String   @id @default(cuid())
+  packId    String
+  productId String
+  fixId     String
+  appliedBy String
+  createdAt DateTime @default(now())
+
+  @@unique([packId, productId, fixId])
+}
+
+// ───────── Lifecycle agents (08 §7) ─────────
+/// Append-only (invariant I06).
+model AgentAction {
+  id                 String   @id @default(cuid())
+  packId             String
+  agentId            String
+  productId          String?
+  stage              Int?
+  trigger            String // MANUAL|AUTOPILOT|STAGE_ENTRY|MONITOR
+  scopeJson          String
+  inputHash          String
+  model              String
+  provider           String // anthropic|heuristic
+  tokensIn           Int      @default(0)
+  tokensOut          Int      @default(0)
+  costUsd            Float    @default(0)
+  outputJson         String
+  redactedFieldsJson String   @default("[]")
+  disposition        String // PROPOSED|NO_CHANGE|FAILED
+  createdAt          DateTime @default(now())
+
+  @@index([productId, stage])
+}
+
+model AgentProposal {
+  id           String    @id @default(cuid())
+  actionId     String
+  productId    String
+  stage        Int
+  artifactType String
+  fieldPath    String
+  proposedJson String
+  acceptedJson String?
+  rationale    String
+  state        String // OPEN|ACCEPTED|EDITED|REJECTED
+  decidedBy    String?
+  decidedAt    DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([productId, state])
+}
+
+model AutopilotRun {
+  id        String   @id @default(cuid())
+  productId String
+  mode      String // automated|manual
+  state     String // RUNNING|AWAITING_REVIEW|AWAITING_GATE|COMPLETED|CANCELLED
+  stepsJson String
+  startedBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AgentSetting {
+  id       String @id @default(cuid())
+  packId   String
+  agentId  String
+  autonomy String // L0|L1|L2|L3
+
+  @@unique([packId, agentId])
+}
+
+// ───────── Intake (06 §7) ─────────
+model ProductRequest {
+  id                      String   @id @default(cuid())
+  reference               String   @unique // REQ-UTL-001
+  packId                  String
+  title                   String
+  requesterId             String
+  state                   String // SUBMITTED|TRIAGE|APPROVED|MERGED|DECLINED
+  decisionJson            String
+  questionsJson           String
+  stakes                  String
+  freshness               String
+  duplicateCandidatesJson String
+  mergedIntoId            String?
+  createdProductId        String?
+  declineReason           String?
+  slaDueAt                DateTime
+  createdAt               DateTime @default(now())
+
+  @@index([packId, state])
 }

@@ -1,21 +1,23 @@
 /**
- * recordDecision() — the ONLY code path that approves (invariant I04, ADR-0008). It sets AccessRequest to
- * GRANTED in Phase 4; Gate APPROVED and product/agent CERTIFIED/PUBLISHED join in Phase 5/6. Agents can
+ * recordDecision() — the ONLY code path that approves (invariant I04, ADR-0008): AccessRequest → GRANTED,
+ * Gate → APPROVED (advancing the stage), product → CERTIFIED at gate 11; agent publish joins in Phase 6. Agents can
  * never decide, at any autonomy level. Humans must hold a required role. Policy auto-approval is a
  * SYSTEM decision whose rationale names the policy. Every decision is audited.
  */
 import type { PrismaClient } from '@prisma/client';
 import { appendAudit, type Db } from '@/lib/db/audit';
 import type { Pack, Role } from '@/lib/packs/schema';
+import { type GateVote, evaluateGateOutcome } from './gates';
+import { stageDef, statusForStage } from './stages';
 
 export type DecisionActor = { kind: 'HUMAN'; personaId: string } | { kind: 'SYSTEM'; policyId: string } | { kind: 'AGENT'; agentId: string };
 export type DecisionOutcome = 'APPROVE' | 'REJECT';
 
 export interface DecisionInput {
-  subjectType: 'ACCESS_REQUEST';
+  subjectType: 'ACCESS_REQUEST' | 'GATE' | 'TRIAGE';
   subjectId: string;
   actor: DecisionActor;
-  outcome: DecisionOutcome;
+  outcome: DecisionOutcome | 'VETO';
   rationale: string;
 }
 
@@ -52,6 +54,12 @@ export async function recordDecision(client: PrismaClient, pack: Pack, input: De
 async function decide(prisma: Db, pack: Pack, input: DecisionInput): Promise<DecisionResult> {
   if (input.actor.kind === 'AGENT') throw new DecisionRefused('Agents act, humans decide: an agent cannot approve or reject.');
   if (!input.rationale.trim()) throw new DecisionRefused('A decision needs a rationale.');
+  if (input.subjectType === 'TRIAGE') return decideTriage(prisma, pack, input);
+  return input.subjectType === 'GATE' ? decideGate(prisma, pack, input) : decideAccess(prisma, pack, input);
+}
+
+async function decideAccess(prisma: Db, pack: Pack, input: DecisionInput): Promise<DecisionResult> {
+  if (input.outcome === 'VETO') throw new DecisionRefused('Access requests are approved or rejected.');
   const packId = pack.manifest.id;
   const req = await prisma.accessRequest.findUnique({ where: { id: input.subjectId } });
   if (!req || req.packId !== packId) throw new DecisionRefused('Unknown access request.');
@@ -65,6 +73,7 @@ async function decide(prisma: Db, pack: Pack, input: DecisionInput): Promise<Dec
     roles = [];
     personaId = `${packId}:system`;
   } else {
+    if (input.actor.kind !== 'HUMAN') throw new DecisionRefused('Agents act, humans decide.');
     personaId = input.actor.personaId;
     const persona = pack.personas.find((p) => p.id === personaId);
     if (!persona) throw new DecisionRefused('Unknown persona.');
@@ -112,4 +121,138 @@ async function decide(prisma: Db, pack: Pack, input: DecisionInput): Promise<Dec
     detail: { product: req.productId, agent: req.agentId, requester: req.requesterId, roles, state, rationale: input.rationale },
   });
   return { decisionIds, state };
+}
+
+/** Next semantic version on certification: a release candidate drops its suffix; 0.x becomes 1.0.0. */
+export function publishVersion(current: string): string {
+  const m = /^(\d+)\.(\d+)\.(\d+)(-.+)?$/.exec(current);
+  if (!m) return '1.0.0';
+  const [, major = '0', minor = '0', patch = '0', pre] = m;
+  if (pre) return `${major}.${minor}.${patch}`;
+  return Number(major) < 1 ? '1.0.0' : `${major}.${Number(minor) + 1}.0`;
+}
+
+async function decideGate(prisma: Db, pack: Pack, input: DecisionInput): Promise<DecisionResult> {
+  const packId = pack.manifest.id;
+  if (input.actor.kind !== 'HUMAN') throw new DecisionRefused('Gates are decided by people holding the gate roles.');
+  const gate = await prisma.gate.findUnique({ where: { id: input.subjectId } });
+  if (!gate) throw new DecisionRefused('Unknown gate.');
+  const product = await prisma.dataProduct.findUnique({ where: { id: gate.productId } });
+  if (!product || product.packId !== packId) throw new DecisionRefused('Unknown gate.');
+  if (gate.state !== 'IN_REVIEW') throw new DecisionRefused(`Gate ${gate.stage} is ${gate.state.toLowerCase().replace('_', ' ')}, not in review.`);
+  const def = stageDef(gate.stage).gate;
+  if (!def) throw new DecisionRefused('This stage has no gate.');
+  const personaId = input.actor.personaId;
+  const persona = pack.personas.find((p) => p.id === personaId);
+  if (!persona) throw new DecisionRefused('Unknown persona.');
+  const roles = def.roles.filter((r) => persona.roles.includes(r));
+  if (!roles.length) throw new DecisionRefused(`Gate ${gate.stage} needs one of: ${def.roles.join(', ')}.`);
+  if (input.outcome === 'VETO' && !persona.roles.some((r) => def.veto.includes(r))) throw new DecisionRefused('Only a veto role can veto this gate.');
+
+  const decisionIds: string[] = [];
+  for (const role of roles) {
+    const d = await prisma.decision.create({ data: { packId, subjectType: 'GATE', subjectId: gate.id, gateId: gate.id, personaId, role, outcome: input.outcome, rationale: input.rationale } });
+    decisionIds.push(d.id);
+  }
+  const since = gate.submittedAt ?? new Date(0);
+  const decisions = await prisma.decision.findMany({ where: { subjectType: 'GATE', subjectId: gate.id, createdAt: { gte: since } }, orderBy: { createdAt: 'asc' } });
+  const votes: GateVote[] = decisions.map((d) => ({ personaId: d.personaId, personaRoles: pack.personas.find((p) => p.id === d.personaId)?.roles ?? [], outcome: d.outcome as GateVote['outcome'] }));
+  const outcome = evaluateGateOutcome(def, votes);
+
+  if (outcome.state !== 'IN_REVIEW') {
+    await prisma.gate.update({ where: { id: gate.id }, data: { state: outcome.state, staleReason: null } });
+    const run = await prisma.stageRun.findFirst({ where: { productId: gate.productId, stage: gate.stage }, orderBy: { attempt: 'desc' } });
+    if (outcome.state === 'REJECTED') {
+      if (run && run.state === 'IN_REVIEW') await prisma.stageRun.update({ where: { id: run.id }, data: { state: 'IN_PROGRESS' } });
+    } else if (product.currentStage === gate.stage) {
+      if (run) await prisma.stageRun.update({ where: { id: run.id }, data: { state: 'COMPLETE', completedAt: new Date() } });
+      const next = Math.min(12, gate.stage + 1);
+      const certify = gate.stage === 11;
+      await prisma.dataProduct.update({
+        where: { id: product.id },
+        data: { currentStage: next, status: statusForStage(next), ...(certify ? { semanticVersion: publishVersion(product.semanticVersion), publishedAt: new Date() } : {}) },
+      });
+      if (!(await prisma.stageRun.findFirst({ where: { productId: product.id, stage: next } }))) await prisma.stageRun.create({ data: { productId: product.id, stage: next, state: 'IN_PROGRESS', startedAt: new Date() } });
+      const nextGate = stageDef(next).gate;
+      if (nextGate && next !== gate.stage && !(await prisma.gate.findUnique({ where: { productId_stage: { productId: product.id, stage: next } } }))) {
+        await prisma.gate.create({ data: { productId: product.id, stage: next, state: 'PENDING', quorum: nextGate.quorum, requiredRolesJson: JSON.stringify(nextGate.roles), vetoRolesJson: JSON.stringify(nextGate.veto) } });
+      }
+    } else {
+      // Re-approval of a STALE gate: close the open re-approval tasks.
+      await prisma.task.updateMany({ where: { productId: product.id, kind: 'REAPPROVE', state: 'OPEN', title: { startsWith: `Re-approve gate ${gate.stage} ` } }, data: { state: 'DONE' } });
+    }
+  }
+  await appendAudit(prisma, {
+    packId,
+    actorType: 'HUMAN',
+    actorId: personaId,
+    action: `GATE_${input.outcome}`,
+    subjectType: 'GATE',
+    subjectId: gate.id,
+    detail: { productId: gate.productId, stage: gate.stage, roles, state: outcome.state, approvals: outcome.approvals, missingRoles: outcome.missingRoles, rationale: input.rationale },
+  });
+  return { decisionIds, state: outcome.state };
+}
+
+/** Roles that may triage intake requests (06 §7: Persona C/D). */
+export const TRIAGE_ROLES: Role[] = ['DOMAIN_PRODUCT_OWNER', 'DATA_STEWARD'];
+
+/**
+ * Triage approval/decline of a ProductRequest. Approval creates the Draft product at Stage 1 (the caller
+ * commits its decision register); the product id and record are created here so nothing else can.
+ */
+async function decideTriage(prisma: Db, pack: Pack, input: DecisionInput): Promise<DecisionResult> {
+  const packId = pack.manifest.id;
+  if (input.actor.kind !== 'HUMAN') throw new DecisionRefused('Triage is decided by a product owner or steward.');
+  const personaId = input.actor.personaId;
+  const persona = pack.personas.find((p) => p.id === personaId);
+  const role = TRIAGE_ROLES.find((r) => persona?.roles.includes(r));
+  if (!persona || !role) throw new DecisionRefused(`Triage needs one of: ${TRIAGE_ROLES.join(', ')}.`);
+  const req = await prisma.productRequest.findUnique({ where: { id: input.subjectId } });
+  if (!req || req.packId !== packId) throw new DecisionRefused('Unknown request.');
+  if (!['SUBMITTED', 'TRIAGE'].includes(req.state)) throw new DecisionRefused(`This request is already ${req.state.toLowerCase()}.`);
+  if (input.outcome === 'VETO') throw new DecisionRefused('Triage approves or declines.');
+  const d = await prisma.decision.create({ data: { packId, subjectType: 'TRIAGE', subjectId: req.id, personaId, role, outcome: input.outcome, rationale: input.rationale } });
+  let state = 'DECLINED';
+  if (input.outcome === 'APPROVE') {
+    const n = await prisma.dataProduct.count({ where: { packId, fromPack: false } });
+    const id = `DP-${pack.manifest.code}-${String(101 + n).padStart(3, '0')}`;
+    const decision = JSON.parse(req.decisionJson) as { decision: string; decider: string; cadence: string; workaround: string };
+    const owner = persona.roles.includes('DOMAIN_PRODUCT_OWNER') ? persona.id : (pack.personas.find((p) => p.roles.includes('DOMAIN_PRODUCT_OWNER'))?.id ?? persona.id);
+    await prisma.dataProduct.create({
+      data: {
+        id,
+        packId,
+        name: req.title,
+        domain: 'Intake',
+        archetype: 'CONSUMER_ALIGNED',
+        tier: 'unrated',
+        status: 'DRAFT',
+        currentStage: 1,
+        semanticVersion: '0.1.0',
+        ownerPersonaId: owner,
+        stewardPersonaId: pack.personas.find((p) => p.roles.includes('DATA_STEWARD'))?.id ?? null,
+        description: decision.decision,
+        purpose: `Support the decision: ${decision.decision}`,
+        decisionJson: JSON.stringify({ persona: decision.decider, decision: decision.decision, cadence: decision.cadence, workaround: decision.workaround, consequence: req.stakes }),
+        sampleQuestionsJson: req.questionsJson,
+        semanticView: null,
+        outputPortsJson: JSON.stringify([{ kind: 'sql', ref: `DATA_PRODUCTS.${id.replace(/-/g, '_')}` }]),
+        slaJson: JSON.stringify({ freshness_minutes: 1440, availability_pct: 99, max_null_rate_pct: 1 }),
+        sensitivityJson: '[]',
+        kpiIdsJson: '[]',
+        upstreamJson: '[]',
+        fromPack: false,
+      },
+    });
+    await prisma.stageRun.create({ data: { productId: id, stage: 1, state: 'IN_PROGRESS', startedAt: new Date() } });
+    const g = stageDef(1).gate;
+    if (g) await prisma.gate.create({ data: { productId: id, stage: 1, state: 'PENDING', quorum: g.quorum, requiredRolesJson: JSON.stringify(g.roles), vetoRolesJson: JSON.stringify(g.veto) } });
+    await prisma.productRequest.update({ where: { id: req.id }, data: { state: 'APPROVED', createdProductId: id } });
+    state = 'APPROVED';
+  } else {
+    await prisma.productRequest.update({ where: { id: req.id }, data: { state: 'DECLINED', declineReason: input.rationale } });
+  }
+  await appendAudit(prisma, { packId, actorType: 'HUMAN', actorId: personaId, action: `TRIAGE_${input.outcome}`, subjectType: 'PRODUCT_REQUEST', subjectId: req.id, detail: { reference: req.reference, state, rationale: input.rationale } });
+  return { decisionIds: [d.id], state };
 }

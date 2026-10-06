@@ -15,6 +15,8 @@ const METADATA_SCHEMAS = ['GLOSSARY', 'CONTEXT', 'AGENTS', 'GOVERNANCE'];
 /** Demo-state inputs the policy engine depends on (certification fixes applied; open incidents from Phase 7). */
 export interface PolicyState {
   appliedFixes: string[];
+  /** Live product status/version from the lifecycle (falls back to the pack's initial values). */
+  products?: Record<string, { status: string; version: string }>;
 }
 
 export const EMPTY_STATE: PolicyState = { appliedFixes: [] };

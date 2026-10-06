@@ -8,17 +8,16 @@ import { buildWarehouse, openWarehouseReadOnly } from '../../src/lib/warehouse/b
 export const TEST_DATABASE_URL = 'file:../data/test-app.db';
 
 /**
- * Builds (or reuses, content-hash cached) the warehouses tests need — scale S for integration tests and
- * scale M (the scale golden files are recorded at) — then migrates and seeds a dedicated test app DB.
+ * Builds (or reuses, content-hash cached) the scale-M warehouse — the demo scale and the scale golden
+ * files are recorded at; the seeded lifecycle's real exit criteria (DQ, freshness) hold there — then
+ * migrates and seeds a dedicated test app DB.
  */
 export default async function setup(): Promise<void> {
-  const outDir = join(process.cwd(), 'data', 'test-warehouse');
   const pack = getPack('utilities');
-  await buildWarehouse(pack, { scale: 'S', outDir });
-  process.env.KEYSTONE_TEST_WAREHOUSE = join(outDir, 'utilities.duckdb');
-  const goldenDir = join(outDir, 'M');
+  const goldenDir = join(process.cwd(), 'data', 'test-warehouse', 'M');
   await buildWarehouse(pack, { scale: 'M', outDir: goldenDir });
   process.env.KEYSTONE_GOLDEN_WAREHOUSE_DIR = goldenDir;
+  process.env.KEYSTONE_TEST_WAREHOUSE = join(goldenDir, 'utilities.duckdb');
 
   process.env.DATABASE_URL = TEST_DATABASE_URL;
   // A throwaway file owned by the test run: start from an empty file and apply the migrations.
@@ -27,7 +26,7 @@ export default async function setup(): Promise<void> {
   const { db } = await import('../../src/lib/db');
   const { seedPack } = await import('../../src/lib/presenter/seed');
   const { QueryService } = await import('../../src/lib/query/query-service');
-  const w = await openWarehouseReadOnly(join(outDir, 'utilities.duckdb'));
+  const w = await openWarehouseReadOnly(join(goldenDir, 'utilities.duckdb'));
   const rubrics = getRubrics();
   await seedPack(db(), pack, { rubrics, qs: new QueryService({ pack, rubrics, warehouse: w, log: { write: async () => 'seed' } }) });
   await w.close();

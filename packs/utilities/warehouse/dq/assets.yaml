@@ -40,3 +40,11 @@
   severity: medium
   alert_route: steward
   description: Work orders are preventive (PM) or corrective (CM).
+- id: DQ-UTL-050
+  object: CONFORMED_GOLD.FCT_WORK_ORDER
+  column: completed_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: medium
+  alert_route: engineering
+  description: Work-order completions from the work management system are no more than a day behind.

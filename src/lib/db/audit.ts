@@ -39,3 +39,52 @@ export async function appendAudit(prisma: Db, e: AuditInput): Promise<string> {
   });
   return row.id;
 }
+
+export interface ChainCheck {
+  ok: boolean;
+  events: number;
+  brokenAt?: string;
+}
+
+export interface StoredAuditEvent {
+  id: string;
+  packId: string;
+  actorType: string;
+  actorId: string;
+  action: string;
+  subjectType: string;
+  subjectId: string;
+  detailJson: string;
+  hash: string;
+  prevHash: string | null;
+}
+
+/** Orders events by following prevHash links from the genesis event (null on a fork or a gap). */
+export function chainOrder<E extends StoredAuditEvent>(events: E[]): E[] | null {
+  const byPrev = new Map<string, E[]>();
+  for (const e of events) byPrev.set(e.prevHash ?? '', [...(byPrev.get(e.prevHash ?? '') ?? []), e]);
+  const out: E[] = [];
+  let key = '';
+  for (;;) {
+    const next = byPrev.get(key);
+    if (!next) break;
+    if (next.length > 1) return null;
+    const e = next[0] as E;
+    out.push(e);
+    key = e.hash;
+  }
+  return out.length === events.length ? out : null;
+}
+
+/** Verifies the chain: each hash = sha256(prevHash + canonicalJson(event)) and every event links to its predecessor. */
+export function verifyChain(events: StoredAuditEvent[]): ChainCheck {
+  const ordered = chainOrder(events);
+  if (!ordered) return { ok: false, events: events.length, brokenAt: 'chain links (fork or gap)' };
+  let prev: string | null = null;
+  for (const e of ordered) {
+    const input: AuditInput = { packId: e.packId, actorType: e.actorType as AuditInput['actorType'], actorId: e.actorId, action: e.action, subjectType: e.subjectType, subjectId: e.subjectId, detail: JSON.parse(e.detailJson) as unknown };
+    if (e.prevHash !== prev || auditHash(prev, input) !== e.hash) return { ok: false, events: events.length, brokenAt: e.id };
+    prev = e.hash;
+  }
+  return { ok: true, events: events.length };
+}

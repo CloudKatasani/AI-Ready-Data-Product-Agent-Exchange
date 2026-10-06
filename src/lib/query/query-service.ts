@@ -93,7 +93,8 @@ export class QueryService {
   private sources(productIds: string[]): ResultSource[] {
     return productIds.map((id) => {
       const p = this.deps.pack.products.find((x) => x.id === id);
-      return { productId: id, version: p?.version ?? '0.0.0', certified: p?.initial_status === 'CERTIFIED', health: 'healthy' as const };
+      const live = this.state.products?.[id];
+      return { productId: id, version: live?.version ?? p?.version ?? '0.0.0', certified: (live?.status ?? p?.initial_status) === 'CERTIFIED', health: 'healthy' as const };
     });
   }
 

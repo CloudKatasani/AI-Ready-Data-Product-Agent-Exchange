@@ -8,6 +8,7 @@ import { CompileError } from '@/lib/query/compiler';
 import { warehouseFor, WarehouseMissing } from '@/lib/query/connections';
 import { principalFor } from '@/lib/query/principal';
 import { prismaQueryLog } from '@/lib/query/query-log';
+import { EMPTY_STATE, type PolicyState } from '@/lib/query/policies';
 import { QueryService, SqlRejected } from '@/lib/query/query-service';
 import { type GovernedResult, PolicyDenied, type Principal, type QueryRequest } from '@/lib/query/types';
 
@@ -31,8 +32,19 @@ export async function principalForPersona(packId: string, personaId: string): Pr
   }
 }
 
+/** Live policy inputs: certification fixes applied in this demo (e.g. masking attached at gate 6). */
+export async function policyState(packId: string): Promise<PolicyState> {
+  try {
+    const prisma = db();
+    const [fixes, products] = await Promise.all([prisma.appliedFix.findMany({ where: { packId }, select: { fixId: true } }), prisma.dataProduct.findMany({ where: { packId }, select: { id: true, status: true, semanticVersion: true } })]);
+    return { appliedFixes: fixes.map((f) => f.fixId), products: Object.fromEntries(products.map((p) => [p.id, { status: p.status, version: p.semanticVersion }])) };
+  } catch {
+    return EMPTY_STATE;
+  }
+}
+
 export async function governedService(packId: string): Promise<QueryService> {
-  return new QueryService({ pack: getPack(packId), rubrics: getRubrics(), warehouse: await warehouseFor(packId), log: prismaQueryLog(db()) });
+  return new QueryService({ pack: getPack(packId), rubrics: getRubrics(), warehouse: await warehouseFor(packId), log: prismaQueryLog(db()), state: await policyState(packId) });
 }
 
 /** Catalog metadata for Explorer (objects and columns; no rows). Empty when the warehouse is not built. */
