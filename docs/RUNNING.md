@@ -61,6 +61,7 @@ SESSION_SECRET=… docker compose up                     # http://localhost:3000
 ```
 - The image (278 MB) runs on distroless Node 22 as a non-root user, with no shell, and has a `HEALTHCHECK` on `/api/health`. Debug with `docker logs`; `docker exec sh` is not available.
 - On first start, `/app/data` (the volume) is initialised from the image's seeded template: the app DB, plus warehouses if they were prebuilt.
+- To host on AWS, see [DEPLOY-AWS.md](DEPLOY-AWS.md). The app needs a server: S3 can host only static files such as the leave-behind page.
 
 ## Data and reset
 - `data/` holds the app DB, the per-pack warehouses (read-only at runtime) and `snapshots/`. It is never committed.
