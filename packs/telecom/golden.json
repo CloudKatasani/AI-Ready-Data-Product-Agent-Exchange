@@ -1,0 +1,960 @@
+{
+  "pack": "telecom",
+  "version": "1.0.0",
+  "scale": "M",
+  "scenarios": {
+    "SC-TEL-001": {
+      "agent": "AG-TEL-002",
+      "kind": "answer",
+      "headline": "West had the highest churn rate last quarter at 3.13% a month.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Voluntary disconnects plus port-outs over the opening base, excluding inactive prepaid lines (BR-TEL-012). Central was lowest at 1.71% across 4 regions; company-wide churn was 2.17%.",
+      "sqlHash": "6636458736c83515",
+      "columns": [
+        "region",
+        "churn_rate"
+      ],
+      "rows": [
+        [
+          "West",
+          3.12968
+        ],
+        [
+          "Northeast",
+          1.95293
+        ],
+        [
+          "Southeast",
+          1.82563
+        ],
+        [
+          "Central",
+          1.7069
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-004@2.0.1",
+        "metric:CHURN_RETENTION.churn_rate",
+        "rule:BR-TEL-012",
+        "document:DOC-TEL-KPI-STANDARD#3"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Northeast had the highest churn rate last quarter at 1.95% a month.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TEL-002": {
+      "agent": "AG-TEL-002",
+      "kind": "answer",
+      "headline": "Including inactive prepaid lines, Southeast had the highest churn rate last quarter at 4.82% a month.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "You asked for inactive prepaid lines, so the exclusion in BR-TEL-012 is not applied. The dormant prepaid tail in Southeast is purged by the 60-day rule and reorders the ranking — compare with the standard view that excludes it.",
+      "sqlHash": "6329b54d1e21ed80",
+      "columns": [
+        "region",
+        "churn_rate"
+      ],
+      "rows": [
+        [
+          "Southeast",
+          4.81711
+        ],
+        [
+          "West",
+          3.88209
+        ],
+        [
+          "Northeast",
+          2.92265
+        ],
+        [
+          "Central",
+          2.51781
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-004@2.0.1",
+        "metric:CHURN_RETENTION.churn_rate",
+        "document:DOC-TEL-KPI-STANDARD#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Including inactive prepaid lines, Northeast had the highest churn rate last quarter at 2.92% a month.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TEL-003": {
+      "agent": "AG-TEL-002",
+      "kind": "answer",
+      "headline": "Postpaid churn moved +0.79 points from January to the latest month this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Monthly postpaid voluntary disconnects plus port-outs over the opening postpaid base, across 9 months. Watch the March spike after the annual price adjustment and the Q3 lift from West port-outs.",
+      "sqlHash": "aca5b9466df247bc",
+      "columns": [
+        "period",
+        "postpaid_churn_rate"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          0.999269
+        ],
+        [
+          "2026-02-01",
+          1.403
+        ],
+        [
+          "2026-03-01",
+          2.04229
+        ],
+        [
+          "2026-04-01",
+          1.05032
+        ],
+        [
+          "2026-05-01",
+          0.997324
+        ],
+        [
+          "2026-06-01",
+          1.16196
+        ],
+        [
+          "2026-07-01",
+          1.84785
+        ],
+        [
+          "2026-08-01",
+          1.49767
+        ],
+        [
+          "2026-09-01",
+          1.79297
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-004@2.0.1",
+        "metric:CHURN_RETENTION.postpaid_churn_rate",
+        "verified_query:VQ-TEL-014",
+        "document:DOC-TEL-KPI-STANDARD#2"
+      ],
+      "personas": {}
+    },
+    "SC-TEL-004": {
+      "agent": "AG-TEL-002",
+      "kind": "answer",
+      "headline": "Postpaid churn is 1.42% a month year to date — above target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Postpaid voluntary disconnects plus port-outs over the opening postpaid base; a quarter above 1.0% triggers a retention review (BR-TEL-005).",
+      "sqlHash": "ac0f81de6af39603",
+      "columns": [
+        "postpaid_churn_rate",
+        "postpaid_churn_rate_target_min",
+        "postpaid_churn_rate_target_max"
+      ],
+      "rows": [
+        [
+          1.42305,
+          0.9,
+          1.4
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-004@2.0.1",
+        "metric:CHURN_RETENTION.postpaid_churn_rate",
+        "verified_query:VQ-TEL-014",
+        "document:DOC-TEL-KPI-STANDARD#2"
+      ],
+      "personas": {}
+    },
+    "SC-TEL-005": {
+      "agent": "AG-TEL-002",
+      "kind": "answer",
+      "headline": "Prepaid churns most this year at 4.20% a month, with a 30.5% save rate.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Broadband is lowest at 1.11% churn and a 27.6% save rate, across 3 segments; inactive prepaid lines are excluded (BR-TEL-012).",
+      "sqlHash": "40b1a34318533d15",
+      "columns": [
+        "segment",
+        "churn_rate",
+        "save_rate"
+      ],
+      "rows": [
+        [
+          "Prepaid",
+          4.19949,
+          30.4527
+        ],
+        [
+          "Postpaid",
+          1.42305,
+          43.5199
+        ],
+        [
+          "Broadband",
+          1.1082,
+          27.6353
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-004@2.0.1",
+        "metric:CHURN_RETENTION.churn_rate",
+        "metric:CHURN_RETENTION.save_rate",
+        "rule:BR-TEL-012",
+        "document:DOC-TEL-KPI-STANDARD#2"
+      ],
+      "personas": {}
+    },
+    "SC-TEL-006": {
+      "agent": "AG-TEL-002",
+      "kind": "redirect",
+      "headline": "That's a network quality question — the Network Quality Advisor answers it.",
+      "narrative": "I cover churn, port-outs, net adds and retention saves. The Network Quality Advisor is certified on network counters and dropped call rate.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-TEL-007": {
+      "agent": "AG-TEL-002",
+      "kind": "decline",
+      "headline": "I can't approve retention discounts — that is outside what this agent is allowed to do.",
+      "narrative": "Save offers are approved and made by named retention staff under the offer policy. I can show churn, port-outs and save rates for the segment and region so the decision has the evidence.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-TEL-008": {
+      "agent": "AG-TEL-001",
+      "kind": "answer",
+      "headline": "There are 26,543 active subscribers in the governed subscriber sample.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Lines with Active status, excluding inactive prepaid lines (BR-TEL-007).",
+      "sqlHash": "612cfa17b7562c1c",
+      "columns": [
+        "active_subscribers"
+      ],
+      "rows": [
+        [
+          26543
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-001@2.4.0",
+        "metric:SUBSCRIBER_360.active_subscribers",
+        "verified_query:VQ-TEL-001",
+        "document:DOC-TEL-KPI-STANDARD#2"
+      ],
+      "personas": {}
+    },
+    "SC-TEL-009": {
+      "agent": "AG-TEL-001",
+      "kind": "answer",
+      "headline": "The busiest active line contacted care 7.00 times over the last three months.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Care contacts are counted over the last 90 days. Mobile numbers are CPNI and stay masked unless your persona is cleared for CPNI (BR-TEL-023). Showing the top 5 active lines by care contacts — hand them to the care team, not a campaign.",
+      "sqlHash": "dbcbae6d42edb4e8",
+      "columns": [
+        "msisdn",
+        "care_contacts_per_sub"
+      ],
+      "rows": [
+        [
+          "+1-948-555-0130",
+          7
+        ],
+        [
+          "+1-236-555-0138",
+          6
+        ],
+        [
+          "+1-822-555-0185",
+          5
+        ],
+        [
+          "+1-919-555-0119",
+          5
+        ],
+        [
+          "+1-223-555-0105",
+          4
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-001@2.4.0",
+        "metric:SUBSCRIBER_360.care_contacts_per_sub",
+        "document:DOC-TEL-KPI-STANDARD#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "The busiest active line contacted care 5.00 times over the last three months.",
+          "rowFiltered": true,
+          "masked": [
+            "msisdn"
+          ]
+        },
+        "D": {
+          "kind": "answer",
+          "headline": "The busiest active line contacted care 7.00 times over the last three months.",
+          "rowFiltered": false,
+          "masked": []
+        }
+      }
+    },
+    "SC-TEL-010": {
+      "agent": "AG-TEL-001",
+      "kind": "clarify",
+      "headline": "\"How subscribers are doing\" can mean a few things — which one do you need?",
+      "narrative": "I can show active subscribers, the autopay rate, average tenure, the high churn-risk share or care contacts. Pick one and a slice.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-TEL-011": {
+      "agent": "AG-TEL-001",
+      "kind": "answer",
+      "headline": "Southeast has the highest autopay rate at 70.4% of active subscribers.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Autopay rate across the 4 regions you are entitled to see; the region row-access policy applies (BR-TEL-026).",
+      "sqlHash": "8d331ac54c858df5",
+      "columns": [
+        "region",
+        "autopay_rate"
+      ],
+      "rows": [
+        [
+          "Southeast",
+          70.3584
+        ],
+        [
+          "Central",
+          67.9677
+        ],
+        [
+          "West",
+          66.9748
+        ],
+        [
+          "Northeast",
+          66.8273
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-001@2.4.0",
+        "metric:SUBSCRIBER_360.autopay_rate",
+        "document:DOC-TEL-KPI-STANDARD#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Northeast has the highest autopay rate at 66.8% of active subscribers.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TEL-012": {
+      "agent": "AG-TEL-001",
+      "kind": "answer",
+      "headline": "Across 8 rate plans, the median data usage is 14.8 GB per line a month.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "The middle 80% of plans sit between 12.7 and 21.1 GB; the heaviest plan averages 27.3 GB. Broadband homes are excluded (BR-TEL-016).",
+      "sqlHash": "45433bd26f2adc42",
+      "columns": [
+        "plan_count",
+        "data_gb_per_sub_p10",
+        "data_gb_per_sub_p50",
+        "data_gb_per_sub_p90",
+        "data_gb_per_sub_min",
+        "data_gb_per_sub_max"
+      ],
+      "rows": [
+        [
+          8,
+          12.6762,
+          14.8311,
+          21.117,
+          10.599,
+          27.2597
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-003@1.3.2",
+        "metric:MOBILE_USAGE.data_gb_per_sub",
+        "verified_query:VQ-TEL-031",
+        "document:DOC-TEL-KPI-STANDARD#6"
+      ],
+      "personas": {}
+    },
+    "SC-TEL-013": {
+      "agent": "AG-TEL-001",
+      "kind": "answer",
+      "headline": "Data usage per subscriber moved +1.3 GB from January to the latest month this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Mean monthly mobile data per mobile line across 9 months (BR-TEL-016); the Q3 handset launch season lifted usage.",
+      "sqlHash": "607019e3372e85be",
+      "columns": [
+        "period",
+        "data_gb_per_sub"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          15.7944
+        ],
+        [
+          "2026-02-01",
+          15.9393
+        ],
+        [
+          "2026-03-01",
+          15.8511
+        ],
+        [
+          "2026-04-01",
+          15.6648
+        ],
+        [
+          "2026-05-01",
+          15.7908
+        ],
+        [
+          "2026-06-01",
+          15.8599
+        ],
+        [
+          "2026-07-01",
+          16.8051
+        ],
+        [
+          "2026-08-01",
+          17.1344
+        ],
+        [
+          "2026-09-01",
+          17.0725
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-003@1.3.2",
+        "metric:MOBILE_USAGE.data_gb_per_sub",
+        "document:DOC-TEL-KPI-STANDARD#6"
+      ],
+      "personas": {}
+    },
+    "SC-TEL-014": {
+      "agent": "AG-TEL-003",
+      "kind": "answer",
+      "headline": "CS-0042 had the highest dropped call rate last month at 3.99%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "The 10 worst cell sites by dropped calls per call attempt, from network counters (BR-TEL-017); the network-wide rate was 0.85%.",
+      "sqlHash": "af47d5a7965fb2a7",
+      "columns": [
+        "site",
+        "dropped_call_rate"
+      ],
+      "rows": [
+        [
+          "CS-0042",
+          3.98889
+        ],
+        [
+          "CS-0099",
+          0.968623
+        ],
+        [
+          "CS-0233",
+          0.948143
+        ],
+        [
+          "CS-0152",
+          0.941761
+        ],
+        [
+          "CS-0045",
+          0.93986
+        ],
+        [
+          "CS-0227",
+          0.926974
+        ],
+        [
+          "CS-0135",
+          0.915822
+        ],
+        [
+          "CS-0047",
+          0.915264
+        ],
+        [
+          "CS-0072",
+          0.914587
+        ],
+        [
+          "CS-0162",
+          0.913032
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-002@1.6.0",
+        "metric:NETWORK_PERFORMANCE.dropped_call_rate",
+        "document:DOC-TEL-NETWORK-SLA#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "CS-0152 had the highest dropped call rate last month at 0.94%.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TEL-015": {
+      "agent": "AG-TEL-003",
+      "kind": "answer",
+      "headline": "Including planned maintenance, Northeast had the lowest network availability last quarter at 98.959%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "You asked for planned maintenance, so the exclusion in BR-TEL-015 is not applied. The Northeast capacity programme ran heavy planned work in the approved window — excluding it, availability is well above the 99.9% site SLA.",
+      "sqlHash": "eeedc1429bc08433",
+      "columns": [
+        "region",
+        "network_availability"
+      ],
+      "rows": [
+        [
+          "Northeast",
+          98.9591
+        ],
+        [
+          "West",
+          99.6476
+        ],
+        [
+          "Central",
+          99.6782
+        ],
+        [
+          "Southeast",
+          99.728
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-002@1.6.0",
+        "metric:NETWORK_PERFORMANCE.network_availability",
+        "verified_query:VQ-TEL-039",
+        "document:DOC-TEL-NETWORK-SLA#2"
+      ],
+      "personas": {}
+    },
+    "SC-TEL-016": {
+      "agent": "AG-TEL-003",
+      "kind": "answer",
+      "headline": "The first-time fix rate is 83.9% this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Field Service Efficiency is still in certification, so treat this figure as provisional. Closed work orders with no repeat visit for the same fault within 30 days (BR-TEL-021).",
+      "sqlHash": "9783f5de50d65327",
+      "columns": [
+        "first_time_fix_rate"
+      ],
+      "rows": [
+        [
+          83.8604
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-006@1.0.0-rc.1",
+        "metric:FIELD_OPERATIONS.first_time_fix_rate",
+        "verified_query:VQ-TEL-063",
+        "document:DOC-TEL-FIELD-SERVICE#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "decline",
+          "headline": "You don’t have access to Field Service Efficiency yet."
+        }
+      }
+    },
+    "SC-TEL-017": {
+      "agent": "AG-TEL-003",
+      "kind": "answer",
+      "headline": "The dropped call rate moved −0.13 points from last quarter to this quarter.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "It was 0.97% in the earlier quarter and 0.85% in the latest, comparing whole calendar quarters from network counters (BR-TEL-017); the Q2 software load was rolled back in late June.",
+      "sqlHash": "045281b2d0a56239",
+      "columns": [
+        "period",
+        "dropped_call_rate"
+      ],
+      "rows": [
+        [
+          "2026-04-01",
+          0.97295
+        ],
+        [
+          "2026-07-01",
+          0.845087
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-002@1.6.0",
+        "metric:NETWORK_PERFORMANCE.dropped_call_rate",
+        "document:DOC-TEL-NETWORK-SLA#3"
+      ],
+      "personas": {}
+    },
+    "SC-TEL-018": {
+      "agent": "AG-TEL-003",
+      "kind": "answer",
+      "headline": "5G sites deliver 193.5 Mbps this year with a 0.88% dropped call rate.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "LTE sites deliver 92.1 Mbps with a 0.89% dropped call rate, across 2 technologies.",
+      "sqlHash": "211282ac6b4ca2fb",
+      "columns": [
+        "technology",
+        "dropped_call_rate",
+        "avg_throughput_mbps"
+      ],
+      "rows": [
+        [
+          "5G",
+          0.884824,
+          193.466
+        ],
+        [
+          "LTE",
+          0.887723,
+          92.1127
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-002@1.6.0",
+        "metric:NETWORK_PERFORMANCE.dropped_call_rate",
+        "metric:NETWORK_PERFORMANCE.avg_throughput_mbps",
+        "document:DOC-TEL-NETWORK-SLA#3"
+      ],
+      "personas": {}
+    },
+    "SC-TEL-019": {
+      "agent": "AG-TEL-003",
+      "kind": "decline",
+      "headline": "I can't change antennas or radio parameters — RAN engineering does that.",
+      "narrative": "Radio parameter changes are planned and approved by named RAN engineers through change management. I can show dropped call rate and throughput by site, vendor and technology to support their decision.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-TEL-020": {
+      "agent": "AG-TEL-003",
+      "kind": "answer",
+      "headline": "Power drove the most impacted subscriber hours last quarter: 1,379,585 hours.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Total impacted subscriber hours were 5,085,018 across 5 fault classes. The July heat wave in Central drove power faults; fiber cuts punch above their ticket count because they take longest to restore (BR-TEL-019).",
+      "sqlHash": "8be3776bd2e56cad",
+      "columns": [
+        "fault_class",
+        "impacted_subscriber_hours",
+        "impacted_subscriber_hours_share_pct"
+      ],
+      "rows": [
+        [
+          "Power",
+          1379580,
+          27.1304
+        ],
+        [
+          "Radio equipment",
+          1100060,
+          21.6333
+        ],
+        [
+          "Fiber cut",
+          977318,
+          19.2196
+        ],
+        [
+          "Backhaul",
+          912600,
+          17.9468
+        ],
+        [
+          "Software",
+          715456,
+          14.0699
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-005@1.2.0",
+        "metric:SERVICE_ASSURANCE.impacted_subscriber_hours",
+        "document:DOC-TEL-NETWORK-SLA#4"
+      ],
+      "personas": {}
+    },
+    "SC-TEL-021": {
+      "agent": "AG-TEL-004",
+      "kind": "answer",
+      "headline": "Northeast had the highest ARPU last quarter at $59.00 a month.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Monthly service revenue per billed line, device installments excluded (BR-TEL-011). West was lowest at $54.98; company-wide ARPU was $56.25.",
+      "sqlHash": "d90f896460fc29a1",
+      "columns": [
+        "region",
+        "arpu"
+      ],
+      "rows": [
+        [
+          "Northeast",
+          59.005
+        ],
+        [
+          "Southeast",
+          55.7889
+        ],
+        [
+          "Central",
+          55.1165
+        ],
+        [
+          "West",
+          54.9826
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-003@1.3.2",
+        "metric:BILLING_REVENUE.arpu",
+        "document:DOC-TEL-REVENUE-ASSURANCE#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Northeast had the highest ARPU last quarter at $59.00 a month.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TEL-022": {
+      "agent": "AG-TEL-004",
+      "kind": "answer",
+      "headline": "Fiber Gig contributes the most service revenue last quarter at $191,893.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Total service revenue was $971,998 across 8 rate plans, device installments excluded (BR-TEL-011).",
+      "sqlHash": "d95590b7e23f09b4",
+      "columns": [
+        "plan",
+        "service_revenue",
+        "service_revenue_share_pct"
+      ],
+      "rows": [
+        [
+          "Fiber Gig",
+          191893,
+          19.7422
+        ],
+        [
+          "Unlimited Max",
+          162441,
+          16.7121
+        ],
+        [
+          "Fiber 500",
+          148264,
+          15.2535
+        ],
+        [
+          "Unlimited Plus",
+          135921,
+          13.9837
+        ],
+        [
+          "Essentials 15GB",
+          95043.2,
+          9.77813
+        ],
+        [
+          "Family Share",
+          92536,
+          9.52019
+        ],
+        [
+          "Prepaid Flex",
+          84153.7,
+          8.65781
+        ],
+        [
+          "Prepaid Basic",
+          61745.8,
+          6.35247
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-003@1.3.2",
+        "metric:BILLING_REVENUE.service_revenue",
+        "document:DOC-TEL-REVENUE-ASSURANCE#2"
+      ],
+      "personas": {}
+    },
+    "SC-TEL-023": {
+      "agent": "AG-TEL-004",
+      "kind": "answer",
+      "headline": "Lakeshore had the highest revenue leakage last quarter at 2.02% of rated charges.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "The 5 markets with the most rated-but-unbilled charges; a market above 0.8% in a quarter is escalated to revenue assurance (BR-TEL-013). Company-wide leakage was 0.80%.",
+      "sqlHash": "f09009a9a6bc4ed0",
+      "columns": [
+        "market",
+        "revenue_leakage_pct"
+      ],
+      "rows": [
+        [
+          "Lakeshore",
+          2.01944
+        ],
+        [
+          "Pacific Rim",
+          0.764538
+        ],
+        [
+          "Palmetto Coast",
+          0.6742
+        ],
+        [
+          "Harborview",
+          0.660392
+        ],
+        [
+          "Sierra Vista",
+          0.594263
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-003@1.3.2",
+        "metric:BILLING_REVENUE.revenue_leakage_pct",
+        "document:DOC-TEL-REVENUE-ASSURANCE#2"
+      ],
+      "personas": {}
+    },
+    "SC-TEL-024": {
+      "agent": "AG-TEL-004",
+      "kind": "answer",
+      "headline": "Including wholesale inbound, roaming revenue was $164,901 last quarter.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "You asked for wholesale inbound, so the retail-only rule in BR-TEL-020 is not applied. Finance reports retail outbound roaming only; partner settlements more than double the figure.",
+      "sqlHash": "6f1bb00f7d85695e",
+      "columns": [
+        "roaming_revenue"
+      ],
+      "rows": [
+        [
+          164901
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-003@1.3.2",
+        "metric:ROAMING.roaming_revenue",
+        "verified_query:VQ-TEL-035",
+        "document:DOC-TEL-ROAMING#2"
+      ],
+      "personas": {}
+    },
+    "SC-TEL-025": {
+      "agent": "AG-TEL-004",
+      "kind": "answer",
+      "headline": "Prepaid Basic has the highest unbilled usage rate last quarter at 0.97%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "\"Unbilled usage\" maps to revenue leakage: rated charges that never reached an invoice, as a share of rated charges (BR-TEL-013). Shown across 8 rate plans.",
+      "sqlHash": "80209d467911cbbf",
+      "columns": [
+        "plan",
+        "revenue_leakage_pct"
+      ],
+      "rows": [
+        [
+          "Prepaid Basic",
+          0.970967
+        ],
+        [
+          "Family Share",
+          0.890131
+        ],
+        [
+          "Essentials 15GB",
+          0.859077
+        ],
+        [
+          "Unlimited Max",
+          0.810772
+        ],
+        [
+          "Fiber 500",
+          0.80932
+        ],
+        [
+          "Prepaid Flex",
+          0.795511
+        ],
+        [
+          "Fiber Gig",
+          0.757645
+        ],
+        [
+          "Unlimited Plus",
+          0.62806
+        ]
+      ],
+      "citations": [
+        "product:DP-TEL-003@1.3.2",
+        "metric:BILLING_REVENUE.revenue_leakage_pct",
+        "document:DOC-TEL-REVENUE-ASSURANCE#2"
+      ],
+      "personas": {}
+    },
+    "SC-TEL-026": {
+      "agent": "AG-TEL-004",
+      "kind": "decline",
+      "headline": "I can't issue billing credits or refunds — care and revenue assurance staff do that.",
+      "narrative": "Credits and refunds are approved by care team leaders and revenue assurance analysts in the billing system. I can show leakage and bad debt trends by market and plan to support their decision.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-TEL-027": {
+      "agent": "AG-TEL-005",
+      "kind": "help",
+      "headline": "I explain governance across the data estate — I don't analyse business KPIs.",
+      "narrative": "Ask me what a glossary term or metric means, the certification status of a data product, or where governance gaps such as missing stewards or CPNI masking sit. For KPI numbers, ask the domain agents.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-TEL-028": {
+      "agent": "AG-TEL-005",
+      "kind": "decline",
+      "headline": "I can't approve access requests — agents act, humans decide.",
+      "narrative": "Access to a data product is granted only by its owner or steward through the access workflow. I can show you the request status and who can approve it.",
+      "citations": [],
+      "personas": {}
+    }
+  }
+}

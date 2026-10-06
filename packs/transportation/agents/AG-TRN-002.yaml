@@ -1,0 +1,36 @@
+id: AG-TRN-002
+name: Fleet & Safety Analyst
+domain: Fleet & Assets
+status: PRODUCTION
+owner: transportation:ops-dpo
+on_call: Fleet Asset Data Ops
+avatar: { icon: gauge, hue: 150 }
+capability: "Answers questions on asset utilisation, empty miles, fuel economy and revenue per truck, and on crash rates, hours-of-service violations and driver turnover."
+personas_served: [Director of Fleet, Network Planning Analyst, VP Safety & Driver Recruiting]
+out_of_scope: ["equipment repositioning or dispatch instructions", "disciplinary action against a driver", "driver pay or settlement changes", "maintenance scheduling for a tractor"]
+products:
+  - { id: DP-TRN-002, columns: "*" }
+  - { id: DP-TRN-003, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [FLEET_UTILISATION, DRIVER_SAFETY], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-TRN-FLEET-STANDARD, DOC-TRN-DRIVER-SAFETY, DOC-TRN-DATA-GOVERNANCE] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-TRN-UTIL, grains: [month, quarter], slices: [region, home_terminal, equipment_type, tractor_make, model_year_band], depth: rank_drivers }
+  - { kpi: KPI-TRN-EMPTY, grains: [month, quarter], slices: [region, home_terminal, equipment_type], depth: explain }
+  - { kpi: KPI-TRN-MPG, grains: [month, quarter], slices: [region, equipment_type, tractor_make, model_year_band], depth: explain }
+  - { kpi: KPI-TRN-REV-TRUCK, grains: [month, quarter], slices: [region, home_terminal, equipment_type], depth: trend }
+  - { kpi: KPI-TRN-SAFETY-RATE, grains: [month, quarter], slices: [region, driver_type, tenure_band], depth: explain }
+  - { kpi: KPI-TRN-PREVENTABLE, grains: [month, quarter], slices: [region, driver_type, tenure_band], depth: value }
+  - { kpi: KPI-TRN-TURNOVER, grains: [month, quarter], slices: [region, driver_type, tenure_band], depth: rank_drivers }
+instructions: [INS-TRN-002-P, INS-TRN-002-R, INS-TRN-002-G, INS-TRN-002-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: masked, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.05, p95_latency_ms: 5000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-TRN-010, SC-TRN-011, SC-TRN-012, SC-TRN-013, SC-TRN-014, SC-TRN-015, SC-TRN-016, SC-TRN-017, SC-TRN-018, SC-TRN-019, SC-TRN-020]
+quality_fix:
+  feedback_question: "How much bobtailing did we do last quarter?"
+  fix: { type: synonym, payload: { term: bobtail miles, synonyms: [bobtail, bobtailing, running bobtail], maps_to: { kind: metric, ref: empty_miles_pct } } }
+  eval_before_pct: 88
+  eval_after_pct: 94

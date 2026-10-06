@@ -1,0 +1,45 @@
+# Value cases per product (marketplace value model). All figures are illustrative and synthetic.
+- id: VC-TCH-001
+  product: DP-TCH-001
+  hypothesis: One certified ARR and retention source ends the month-end spreadsheet rebuild and lets customer success act on contraction risk a quarter earlier.
+  baseline: "Finance rebuilds the ARR waterfall from billing exports every month-end; about 60 analyst hours a month and two restatements a year."
+  benefit_model: "analyst_hours_saved * loaded_analyst_rate + arr_saved_by_earlier_retention_plays"
+  assumptions:
+    - { text: "Analyst hours saved per year", value: 720, unit: hours, source: "Finance time study, H1 2026" }
+    - { text: "Fully loaded analyst rate", value: 110, unit: usd_per_hour, source: "Finance planning rates FY26" }
+    - { text: "ARR retained through earlier retention plays", value: 650000, unit: usd, source: "Customer success pilot on at-risk cohort, 2026" }
+  annual_value_usd: 729200
+  measured: { value_usd: 601000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-TCH-002
+  product: DP-TCH-002
+  hypothesis: Win rate and bookings without renewals, by lead source, move pipeline-generation budget to the channels that actually close.
+  baseline: "Revenue operations reconcile CRM exports before every forecast call; about 40 hours a month; budget split by last year's mix."
+  benefit_model: "incremental_bookings_from_reallocation * gross_margin + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Incremental new bookings from reallocating 10% of pipeline budget", value: 900000, unit: usd, source: "Revenue operations scenario model FY26" }
+    - { text: "Subscription gross margin", value: 0.78, unit: ratio, source: "FY26 financial plan" }
+    - { text: "Analyst hours saved per year", value: 480, unit: hours, source: "Revenue operations time study" }
+    - { text: "Fully loaded analyst rate", value: 110, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 754800
+  measured: { value_usd: 512000, period: "2026-Q1..2026-Q3 annualised", confidence: low }
+- id: VC-TCH-003
+  product: DP-TCH-003
+  hypothesis: Seat utilisation and feature adoption by account, read before renewal, let customer success run adoption plays that prevent seat contraction.
+  baseline: "Quarterly manual cohort pull by product analytics, roughly a week per adoption review; contraction discovered at renewal."
+  benefit_model: "renewal_risk_identified_early * average_contract_value * intervention_success_rate"
+  assumptions:
+    - { text: "Accounts flagged early per year", value: 140, unit: accounts, source: "Customer success at-risk list, 2026" }
+    - { text: "Average annual contract value", value: 28400, unit: usd, source: "Finance FY26 model" }
+    - { text: "Intervention success rate on flagged accounts", value: 0.18, unit: ratio, source: "Customer success study (n=210)" }
+  annual_value_usd: 715680
+  measured: { value_usd: 588000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-TCH-004
+  product: DP-TCH-004
+  hypothesis: SLA attainment by priority and region, joined to accounts, lets support leadership add capacity before Enterprise customers escalate.
+  baseline: "Helpdesk dashboards exported weekly and joined to CRM accounts by hand; SLA breaches found through escalations."
+  benefit_model: "avoided_escalations * cost_per_escalation + arr_protected_from_service_credits"
+  assumptions:
+    - { text: "Escalations avoided per year", value: 60, unit: escalations, source: "Support operations review, 2026" }
+    - { text: "Cost per escalation (management time and credits)", value: 4200, unit: usd, source: "Support cost model FY26" }
+  annual_value_usd: 252000
+  measured: null

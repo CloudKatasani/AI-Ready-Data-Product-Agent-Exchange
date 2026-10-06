@@ -1,0 +1,84 @@
+# Revenue & retention DQ rules (ARR & Retention, DP-TCH-001).
+- id: DQ-TCH-001
+  object: CONFORMED_GOLD.FCT_ARR_MONTHLY
+  column: arr_usd
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every account-month has an ARR value (zero when nothing is active).
+- id: DQ-TCH-002
+  object: CONFORMED_GOLD.FCT_ARR_MONTHLY
+  column: arr_usd
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: critical
+  alert_route: steward
+  description: ARR is never negative; seat reductions are netted within the account.
+- id: DQ-TCH-003
+  object: CONFORMED_GOLD.FCT_ARR_MONTHLY
+  column: arr_12m_ago_usd
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: high
+  alert_route: steward
+  description: The twelve-month lookback is populated (zero for accounts that were not paying).
+- id: DQ-TCH-004
+  object: CONFORMED_GOLD.FCT_ARR_MONTHLY
+  column: revenue_stream
+  dimension: validity
+  assertion: "invalid_rate == 0"
+  allowed: [Subscription, Professional services]
+  severity: critical
+  alert_route: steward
+  description: Revenue stream is Subscription or Professional services — the split BR-TCH-001 depends on.
+- id: DQ-TCH-005
+  object: CONFORMED_GOLD.FCT_ARR_MONTHLY
+  column: arr_key
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per account, month end and revenue stream.
+- id: DQ-TCH-006
+  object: CONFORMED_GOLD.FCT_ARR_MONTHLY
+  column: month_end
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: The latest month end is loaded within a day of month close.
+- id: DQ-TCH-007
+  object: CONFORMED_GOLD.DIM_ACCOUNT
+  column: account_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: One row per account after CDC deduplication.
+- id: DQ-TCH-008
+  object: CONFORMED_GOLD.DIM_ACCOUNT
+  column: account_id
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^ACC-[0-9]{5}$"
+  severity: high
+  alert_route: steward
+  description: Account ids follow the CRM format.
+- id: DQ-TCH-009
+  object: CONFORMED_GOLD.DIM_ACCOUNT
+  column: region
+  dimension: validity
+  assertion: "invalid_rate == 0"
+  allowed: [North America, EMEA, APAC, LATAM]
+  severity: critical
+  alert_route: steward
+  description: Region is one of the four sales regions after conformance (row access depends on it).
+- id: DQ-TCH-010
+  object: CONFORMED_GOLD.DIM_ACCOUNT
+  column: plan_tier
+  dimension: completeness
+  assertion: "null_rate <= 0.001"
+  severity: medium
+  alert_route: owner
+  description: Every account has a plan tier from its base subscription.

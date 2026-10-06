@@ -1,0 +1,83 @@
+# Driver roster, safety event and driver-month DQ rules.
+- id: DQ-TRN-025
+  object: CONFORMED_GOLD.FCT_DRIVER_MONTH
+  column: miles
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every driver-month carries miles (safety rate denominator), zero when the driver did not drive.
+- id: DQ-TRN-026
+  object: CONFORMED_GOLD.FCT_DRIVER_MONTH
+  column: miles
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Driver miles are never negative.
+- id: DQ-TRN-027
+  object: CONFORMED_GOLD.FCT_DRIVER_MONTH
+  column: recordable_crashes
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every driver-month carries a recordable crash count (safety incident rate).
+- id: DQ-TRN-028
+  object: CONFORMED_GOLD.FCT_DRIVER_MONTH
+  column: recordable_crashes
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Crash counts are never negative.
+- id: DQ-TRN-029
+  object: CONFORMED_GOLD.DIM_DRIVER
+  column: driver_type
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Company, Owner-operator]
+  severity: critical
+  alert_route: steward
+  description: Driver type is Company or Owner-operator (BR-TRN-010 depends on it).
+- id: DQ-TRN-030
+  object: CONFORMED_GOLD.DIM_DRIVER
+  column: driver_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per driver.
+- id: DQ-TRN-031
+  object: CONFORMED_GOLD.DIM_DRIVER
+  column: hire_date
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: high
+  alert_route: steward
+  description: Every driver has a hire date (headcount and tenure).
+- id: DQ-TRN-032
+  object: CURATED_SILVER.SAFETY_EVENT
+  dimension: timeliness
+  assertion: "freshness_min <= 1440"
+  severity: high
+  alert_route: engineering
+  description: Safety events reach the curated register within a day (CTL-TRN-004).
+- id: DQ-TRN-033
+  object: CURATED_SILVER.SAFETY_EVENT
+  column: event_type
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Hard-brake alert, Speeding alert, Hours-of-service violation, Roadside inspection violation, Crash]
+  severity: medium
+  alert_route: steward
+  description: Event types conform to the safety register taxonomy.
+- id: DQ-TRN-034
+  object: CURATED_SILVER.DRIVER_ROSTER
+  column: cdl_number
+  dimension: validity
+  assertion: "regex_rate >= 0.999"
+  pattern: "^CDL-D-[0-9]{5}$"
+  severity: medium
+  alert_route: steward
+  description: Licence numbers are in the format expected by MASK_GOV_ID.

@@ -1,0 +1,84 @@
+# Network counter and cell site DQ rules.
+- id: DQ-TEL-036
+  object: CONFORMED_GOLD.FCT_NETWORK_DAILY
+  column: kpi_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: 'One row per site-day of counters (replayed OSS files are removed).'
+- id: DQ-TEL-037
+  object: CONFORMED_GOLD.FCT_NETWORK_DAILY
+  column: dropped_calls
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: 'Dropped calls are populated on every site-day (dropped call rate depends on it).'
+- id: DQ-TEL-038
+  object: CONFORMED_GOLD.FCT_NETWORK_DAILY
+  column: dropped_calls
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: 'Dropped calls are never negative.'
+- id: DQ-TEL-039
+  object: CONFORMED_GOLD.FCT_NETWORK_DAILY
+  column: downtime_min
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: 'Downtime is populated on every site-day (zero when in service).'
+- id: DQ-TEL-040
+  object: CONFORMED_GOLD.FCT_NETWORK_DAILY
+  column: downtime_min
+  dimension: accuracy
+  assertion: "max <= 1440"
+  severity: high
+  alert_route: steward
+  description: 'Downtime never exceeds the minutes in a day.'
+- id: DQ-TEL-041
+  object: CONFORMED_GOLD.FCT_NETWORK_DAILY
+  column: outage_type
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [None, Unplanned outage, Planned maintenance]
+  severity: high
+  alert_route: steward
+  description: 'Outage types conform: None, Unplanned outage or Planned maintenance (BR-TEL-015 depends on it).'
+- id: DQ-TEL-042
+  object: CONFORMED_GOLD.FCT_NETWORK_DAILY
+  column: kpi_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: 'OSS counters are current to the end of the reporting day.'
+- id: DQ-TEL-043
+  object: CONFORMED_GOLD.DIM_CELL_SITE
+  column: region
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Northeast, Southeast, Central, West]
+  severity: critical
+  alert_route: steward
+  description: 'Cell site region is one of the four operating regions (row access policy RAP_REGION depends on it).'
+- id: DQ-TEL-044
+  object: CONFORMED_GOLD.DIM_CELL_SITE
+  column: site_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: 'One row per cell site.'
+- id: DQ-TEL-045
+  object: CONFORMED_GOLD.DIM_CELL_SITE
+  column: technology
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [5G, LTE]
+  severity: medium
+  alert_route: steward
+  description: 'Technology is 5G or LTE.'

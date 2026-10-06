@@ -1,0 +1,38 @@
+id: AG-TCH-002
+name: Customer Health Analyst
+domain: Product Engagement
+status: PRODUCTION
+owner: technology:data-product-owner
+on_call: Customer Data Ops
+avatar: { icon: activity, hue: 160 }
+capability: "Answers questions on daily active users, stickiness, seat utilisation, uptime, feature adoption, support response SLAs and customer satisfaction."
+personas_served: [VP Customer Success, VP Customer Support, Head of Product]
+out_of_scope: ["changing entitlements or licences", "individual user behaviour tracking", "incident root cause engineering", "customer outreach or campaign execution"]
+products:
+  - { id: DP-TCH-003, columns: "*" }
+  - { id: DP-TCH-004, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [PRODUCT_USAGE, FEATURE_ADOPTION, SUPPORT_EXPERIENCE], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-TCH-SUPPORT-SLA, DOC-TCH-REVENUE-POLICY, DOC-TCH-DATA-GOVERNANCE] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+  - { tool: request_access_link }
+kpi_coverage:
+  - { kpi: KPI-TCH-DAU, grains: [day, week, month], slices: [region, segment, plan_tier, industry], depth: trend }
+  - { kpi: KPI-TCH-STICKINESS, grains: [week, month], slices: [region, segment, plan_tier], depth: explain }
+  - { kpi: KPI-TCH-SEAT-UTIL, grains: [month], slices: [region, segment, plan_tier, account], depth: explain }
+  - { kpi: KPI-TCH-UPTIME, grains: [day, week, month], slices: [region, plan_tier], depth: trend }
+  - { kpi: KPI-TCH-FEATURE-ADOPTION, grains: [], slices: [feature, feature_category, plan_tier, region, segment], depth: rank_drivers }
+  - { kpi: KPI-TCH-FIRST-RESPONSE, grains: [week, month], slices: [region, priority, channel, category], depth: explain }
+  - { kpi: KPI-TCH-SLA, grains: [month], slices: [region, priority, channel], depth: explain }
+  - { kpi: KPI-TCH-CSAT, grains: [month], slices: [region, channel, category, priority], depth: explain }
+instructions: [INS-TCH-002-P, INS-TCH-002-R, INS-TCH-002-G, INS-TCH-002-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: masked, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-TCH-011, SC-TCH-012, SC-TCH-013, SC-TCH-014, SC-TCH-015, SC-TCH-016, SC-TCH-017, SC-TCH-018, SC-TCH-019, SC-TCH-020]
+quality_fix:
+  feedback_question: "How habit-forming is the product for our users?"
+  fix: { type: synonym, payload: { term: habit-forming, synonyms: [habit forming, how habitual], maps_to: { kind: metric, ref: stickiness_pct } } }
+  eval_before_pct: 88
+  eval_after_pct: 94

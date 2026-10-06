@@ -1,0 +1,71 @@
+name: BILLING_REVENUE
+description: Invoice-level service revenue, ARPU, rating-to-billing leakage, payment speed and bad debt
+tables:
+  - { alias: b, fqn: CONFORMED_GOLD.FCT_BILLING, pk: invoice_key }
+  - { alias: p, fqn: CONFORMED_GOLD.DIM_PLAN, pk: plan_key }
+  - { alias: m, fqn: CONFORMED_GOLD.DIM_MARKET, pk: market_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: b.plan_key, to: p.plan_key }
+  - { from: b.market_key, to: m.market_key }
+  - { from: b.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: m.region, label: Region, synonyms: [territory, operating region], term: GT-TEL-REGION }
+  - { name: market, expr: m.market_name, label: Market, synonyms: [metro, market area], term: GT-TEL-MARKET }
+  - { name: segment, expr: b.segment, label: Segment, synonyms: [line type, customer segment, payment type], term: GT-TEL-SEGMENT }
+  - { name: plan, expr: p.plan_name, label: Rate plan, synonyms: [plan, tariff, price plan], term: GT-TEL-RATE-PLAN }
+  - { name: pay_method, expr: b.pay_method, label: Payment method, synonyms: [payment channel, how customers pay] }
+time_dimensions:
+  - { name: invoice_month, expr: d.date, default: true }
+facts:
+  - { name: service_revenue_amount, expr: b.service_revenue }
+  - { name: device_installment, expr: b.device_installment }
+metrics:
+  - name: arpu
+    label: ARPU
+    expr: SUM(b.service_revenue) / NULLIF(COUNT(*), 0)
+    unit: USD
+    decimals: 2
+    direction: higher_is_better
+    synonyms: [average revenue per user, average revenue per subscriber, revenue per line, average monthly bill]
+    term: GT-TEL-ARPU
+    description: Average monthly service revenue per billed line (device installments excluded)
+    naive_expr: AVG(b.total_billed)
+  - name: service_revenue
+    label: Service revenue
+    expr: SUM(b.service_revenue)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [billed service revenue, service revenues, billed revenue]
+    term: GT-TEL-SERVICE-REVENUE
+    description: Billed plan, overage and retail roaming charges in the governed invoice sample (device installments excluded)
+    naive_expr: SUM(b.total_billed)
+  - name: revenue_leakage_pct
+    label: Revenue leakage
+    expr: 100.0 * SUM(b.leakage_amount) / NULLIF(SUM(b.rated_amount), 0)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [leakage rate, rating to billing leakage, billing leakage, revenue leakage rate]
+    term: GT-TEL-LEAKAGE
+    description: Rated charges that never reached an invoice as a share of rated charges
+  - name: bad_debt_ratio
+    label: Bad debt ratio
+    expr: 100.0 * SUM(b.written_off_amount) / NULLIF(SUM(b.total_billed), 0)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [bad debt, write-off rate, bad debt rate, uncollectible rate]
+    term: GT-TEL-BAD-DEBT
+    description: Billed amounts written off as uncollectible as a share of total billed
+  - name: avg_days_to_pay
+    label: Days to pay
+    expr: AVG(b.days_to_pay)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [average days to pay, payment days, collection days]
+    term: GT-TEL-DAYS-TO-PAY
+    description: Mean days from invoice to payment for paid invoices
+products: [DP-TEL-003]

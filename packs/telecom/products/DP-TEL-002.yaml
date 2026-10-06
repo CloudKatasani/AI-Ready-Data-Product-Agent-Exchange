@@ -1,0 +1,25 @@
+id: DP-TEL-002
+name: Network Performance
+domain: Network Performance
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 1.6.0
+owner: telecom:network-dpo
+steward: telecom:data-steward
+description: Daily cell-site counters — call attempts, drops, setup failures, downtime, planned maintenance, traffic and throughput — with market, region, technology and vendor.
+purpose: Network operations reviews, regulatory quality-of-service reporting and capacity planning by site, market and region.
+decision: { persona: VP Network Operations, decision: "Which sites and markets get optimisation and capacity investment next quarter", cadence: Quarterly, workaround: "OSS performance exports joined manually to a planning spreadsheet", consequence: "Capital goes to sites that are congested but carry few subscribers, and QoS figures cannot be reproduced for the regulator" }
+sample_questions: ["Compare the dropped call rate this quarter with last quarter", "Which 10 cell sites had the highest dropped call rate last month?", "Network availability by region this year"]
+semantic_view: NETWORK_PERFORMANCE
+output_ports:
+  - { kind: semantic, ref: NETWORK_PERFORMANCE }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_TEL_002_NETWORK_PERFORMANCE }
+  - { kind: agent, ref: AG-TEL-003 }
+sla: { freshness_minutes: 60, availability_pct: 99.9, max_null_rate_pct: 0.5 }
+kpis: [KPI-TEL-DCR, KPI-TEL-AVAIL, KPI-TEL-CSSR, KPI-TEL-THROUGHPUT, KPI-TEL-TRAFFIC]
+upstream: [CONFORMED_GOLD.FCT_NETWORK_DAILY, CONFORMED_GOLD.DIM_CELL_SITE]
+consumers: [Network operations centre, RAN engineering, Regulatory reporting, Network Quality Advisor agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-TEL-002

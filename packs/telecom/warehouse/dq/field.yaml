@@ -1,0 +1,42 @@
+# Field work order DQ rules.
+- id: DQ-TEL-051
+  object: CONFORMED_GOLD.FCT_WORK_ORDER
+  column: wo_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: 'One row per work order.'
+- id: DQ-TEL-052
+  object: CONFORMED_GOLD.FCT_WORK_ORDER
+  column: first_time_fix
+  dimension: completeness
+  assertion: "null_rate <= 0.1"
+  severity: critical
+  alert_route: steward
+  description: 'First-time fix is recorded for every closed work order (open orders have none yet).'
+- id: DQ-TEL-053
+  object: CONFORMED_GOLD.FCT_WORK_ORDER
+  column: wo_type
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [New install, Fiber activation, Broadband repair, Network site repair]
+  severity: high
+  alert_route: steward
+  description: 'Work order types conform to the field service catalogue.'
+- id: DQ-TEL-054
+  object: CONFORMED_GOLD.FCT_WORK_ORDER
+  column: hours_to_resolve
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: medium
+  alert_route: steward
+  description: 'Resolution hours are never negative.'
+- id: DQ-TEL-055
+  object: CONFORMED_GOLD.FCT_WORK_ORDER
+  column: opened_ts
+  dimension: timeliness
+  assertion: "freshness_min <= 1440"
+  severity: high
+  alert_route: engineering
+  description: 'The field service feed is current to the end of the reporting day.'

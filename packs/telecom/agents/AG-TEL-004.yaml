@@ -1,0 +1,29 @@
+id: AG-TEL-004
+name: Revenue Assurance Copilot
+domain: Billing & Revenue Assurance
+status: PRODUCTION
+owner: telecom:network-dpo
+on_call: Revenue Assurance
+avatar: { icon: receipt, hue: 140 }
+capability: "Answers questions on ARPU, service revenue, rating-to-billing leakage, bad debt, days to pay and roaming revenue."
+personas_served: [Head of Revenue Assurance, Finance Business Partner, Credit & Collections Manager]
+out_of_scope: ["issuing billing credits or refunds", "individual invoice lookups", "changing prices or tariffs", "collections actions on an account"]
+products:
+  - { id: DP-TEL-003, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [BILLING_REVENUE, ROAMING], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-TEL-REVENUE-ASSURANCE, DOC-TEL-ROAMING, DOC-TEL-CREDIT-COLLECTIONS] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-TEL-ARPU, grains: [month, quarter, year], slices: [region, market, segment, plan], depth: rank_drivers }
+  - { kpi: KPI-TEL-SERVICE-REV, grains: [month, quarter, year], slices: [region, market, segment, plan], depth: rank_drivers }
+  - { kpi: KPI-TEL-LEAKAGE, grains: [month, quarter], slices: [region, market, plan], depth: rank_drivers }
+  - { kpi: KPI-TEL-BAD-DEBT, grains: [month, quarter], slices: [region, segment, pay_method], depth: explain }
+  - { kpi: KPI-TEL-DAYS-TO-PAY, grains: [month, quarter], slices: [region, segment, pay_method], depth: explain }
+  - { kpi: KPI-TEL-ROAMING, grains: [month, quarter], slices: [region, partner_zone, market], depth: trend }
+instructions: [INS-TEL-004-P, INS-TEL-004-R, INS-TEL-004-G, INS-TEL-004-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.05, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-TEL-021, SC-TEL-022, SC-TEL-023, SC-TEL-024, SC-TEL-025, SC-TEL-026]

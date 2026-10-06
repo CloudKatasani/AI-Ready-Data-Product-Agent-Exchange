@@ -1,0 +1,144 @@
+# Subscriber and market DQ rules.
+- id: DQ-TEL-001
+  object: CONFORMED_GOLD.DIM_SUBSCRIBER
+  column: subscriber_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: 'One row per subscriber id after CDC deduplication.'
+- id: DQ-TEL-002
+  object: CONFORMED_GOLD.DIM_SUBSCRIBER
+  column: subscriber_id
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^SB[0-9]{8}$"
+  severity: high
+  alert_route: steward
+  description: 'Subscriber ids follow the CRM format.'
+- id: DQ-TEL-003
+  object: CONFORMED_GOLD.DIM_SUBSCRIBER
+  column: subscriber_id
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: 'Every subscriber row has a subscriber id.'
+- id: DQ-TEL-004
+  object: CONFORMED_GOLD.DIM_SUBSCRIBER
+  column: region
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Northeast, Southeast, Central, West]
+  severity: critical
+  alert_route: steward
+  description: 'Subscriber region is one of the four operating regions (row access policy RAP_REGION depends on it).'
+- id: DQ-TEL-005
+  object: CONFORMED_GOLD.DIM_SUBSCRIBER
+  column: region
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: 'Every subscriber is assigned to a region.'
+- id: DQ-TEL-006
+  object: CONFORMED_GOLD.DIM_SUBSCRIBER
+  column: status
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Active, Disconnected]
+  severity: high
+  alert_route: steward
+  description: 'Subscriber status is Active or Disconnected.'
+- id: DQ-TEL-007
+  object: CONFORMED_GOLD.DIM_SUBSCRIBER
+  column: status
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: 'Every subscriber has a status (active-subscriber metrics depend on it).'
+- id: DQ-TEL-008
+  object: CONFORMED_GOLD.DIM_SUBSCRIBER
+  column: segment
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Postpaid, Prepaid, Broadband]
+  severity: critical
+  alert_route: steward
+  description: 'Segment is Postpaid, Prepaid or Broadband.'
+- id: DQ-TEL-009
+  object: CONFORMED_GOLD.DIM_SUBSCRIBER
+  column: segment
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: 'Every subscriber carries a segment from its rate plan.'
+- id: DQ-TEL-010
+  object: CONFORMED_GOLD.DIM_SUBSCRIBER
+  column: email
+  dimension: validity
+  assertion: "regex_rate >= 0.99"
+  pattern: "^[^@ ]+@[^@ ]+[.][a-z]+$"
+  severity: medium
+  alert_route: steward
+  description: 'Subscriber emails, where present, are well formed.'
+- id: DQ-TEL-011
+  object: CONFORMED_GOLD.DIM_SUBSCRIBER
+  column: email
+  dimension: completeness
+  assertion: "null_rate <= 0.12"
+  severity: low
+  alert_route: owner
+  description: 'At least 88% of subscribers have an email address on file for e-bills.'
+- id: DQ-TEL-012
+  object: CONFORMED_GOLD.DIM_SUBSCRIBER
+  column: churn_propensity
+  dimension: accuracy
+  assertion: "min >= 1"
+  severity: medium
+  alert_route: steward
+  description: 'Churn propensity scores are on the 1–99 scale.'
+- id: DQ-TEL-013
+  object: CONFORMED_GOLD.DIM_SUBSCRIBER
+  column: activation_date
+  dimension: timeliness
+  assertion: "freshness_min <= 46080"
+  severity: medium
+  alert_route: engineering
+  description: 'The new-line feed from CRM has delivered within the last month.'
+- id: DQ-TEL-014
+  object: CONFORMED_GOLD.DIM_SUBSCRIBER
+  column: msisdn
+  dimension: validity
+  assertion: "regex_rate >= 0.999"
+  pattern: "^[+]1-[0-9]{3}-555-[0-9]{4}$"
+  severity: medium
+  alert_route: steward
+  description: 'MSISDNs are in the E.164-style format expected by MASK_MSISDN.'
+- id: DQ-TEL-015
+  object: CONFORMED_GOLD.DIM_MARKET
+  column: region
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Northeast, Southeast, Central, West]
+  severity: critical
+  alert_route: steward
+  description: 'Market region is one of the four operating regions (row access policy RAP_REGION depends on it).'
+- id: DQ-TEL-016
+  object: CONFORMED_GOLD.DIM_MARKET
+  column: region
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: 'Every market is assigned to a region.'
+- id: DQ-TEL-017
+  object: CONFORMED_GOLD.DIM_MARKET
+  column: market_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: 'One row per market.'

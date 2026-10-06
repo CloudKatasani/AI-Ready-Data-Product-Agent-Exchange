@@ -1,0 +1,109 @@
+# Load, delivery outcome and terminal DQ rules.
+- id: DQ-TRN-001
+  object: CONFORMED_GOLD.FCT_LOAD
+  column: on_time
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every load carries an on-time flag (on-time delivery).
+- id: DQ-TRN-002
+  object: CONFORMED_GOLD.FCT_LOAD
+  column: customer_caused_delay
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every load carries a customer-caused delay flag so BR-TRN-002 can be applied.
+- id: DQ-TRN-003
+  object: CONFORMED_GOLD.FCT_LOAD
+  column: delay_cause
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Carrier, Customer, Weather]
+  severity: medium
+  alert_route: steward
+  description: Delay causes conform to Carrier, Customer and Weather.
+- id: DQ-TRN-004
+  object: CONFORMED_GOLD.FCT_LOAD
+  column: delay_minutes
+  dimension: validity
+  assertion: "min >= 0"
+  severity: high
+  alert_route: engineering
+  description: Delay minutes are never negative; early deliveries are recorded as zero.
+- id: DQ-TRN-005
+  object: CONFORMED_GOLD.FCT_LOAD
+  column: dwell_hours
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every load has a dwell time from the gate events (dwell and detention).
+- id: DQ-TRN-006
+  object: CONFORMED_GOLD.FCT_LOAD
+  column: dwell_hours
+  dimension: accuracy
+  assertion: "max <= 72"
+  severity: medium
+  alert_route: engineering
+  description: No load dwells more than 72 hours; longer values indicate a missing gate-out event.
+- id: DQ-TRN-007
+  object: CONFORMED_GOLD.FCT_LOAD
+  column: load_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per load after CDC deduplication.
+- id: DQ-TRN-008
+  object: CONFORMED_GOLD.FCT_LOAD
+  column: pickup_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: Loads are no more than one day behind the reporting date.
+- id: DQ-TRN-009
+  object: CONFORMED_GOLD.FCT_LOAD
+  column: service_level
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Standard, Appointment, Expedited]
+  severity: medium
+  alert_route: steward
+  description: Service levels conform to Standard, Appointment and Expedited.
+- id: DQ-TRN-010
+  object: CONFORMED_GOLD.DIM_TERMINAL
+  column: region
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Northeast, Southeast, Central, Mountain, West]
+  severity: critical
+  alert_route: steward
+  description: Terminal region is one of the five operating regions (row access policy RAP_REGION depends on it).
+- id: DQ-TRN-011
+  object: CONFORMED_GOLD.DIM_TERMINAL
+  column: terminal_id
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^T-[0-9]{2}$"
+  severity: low
+  alert_route: engineering
+  description: Terminal ids follow the facility master numbering convention.
+- id: DQ-TRN-012
+  object: CURATED_SILVER.SHIPMENT_LOAD
+  dimension: timeliness
+  assertion: "freshness_min <= 1440"
+  severity: medium
+  alert_route: engineering
+  description: The curated loads have been refreshed within the last day.
+- id: DQ-TRN-013
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: segment
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Retail, Food & beverage, Manufacturing, Building materials, Automotive, Paper & packaging]
+  severity: medium
+  alert_route: steward
+  description: Shipper segments conform to the six commercial segments.

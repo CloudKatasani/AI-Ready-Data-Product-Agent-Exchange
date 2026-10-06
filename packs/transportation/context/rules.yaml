@@ -1,0 +1,129 @@
+# Meridian Freight Lines business rules (synthetic). Rules with an `apply` block are applied by the metric
+# compiler as default filters; the rest are definitions, thresholds and policies cited in answers.
+
+# ── Shipments & service ──────────────────────────────────────────────────────────────────────────────
+- id: BR-TRN-001
+  domain: Service
+  text: "A load is on time when it is delivered inside the appointment window agreed with the consignee; any delivery after the window closes is late, however small the delay. There is no grace period."
+  kind: definition
+  metric: on_time_delivery_pct
+  source_doc: DOC-TRN-SERVICE-STANDARD
+- id: BR-TRN-002
+  domain: Service
+  text: "On-time delivery excludes loads whose delay was caused by the customer (freight not ready, appointment refused or rescheduled, consignee closed) unless the question explicitly asks to include customer-caused delays."
+  kind: filter
+  metric: on_time_delivery_pct
+  source_doc: DOC-TRN-SERVICE-STANDARD
+  apply:
+    filter: { dimension: customer_caused_delay, op: "=", value: false }
+    unless_question_mentions: [including customer-caused delays, including customer caused delays, including customer delays, all delays, all late loads, contract view including customer delays]
+- id: BR-TRN-003
+  domain: Service
+  text: "Dwell time is measured on live loads only; drop-and-hook loads swap a pre-loaded trailer and have no live dwell, so including them understates dwell. Include them only when the question asks for all load types."
+  kind: filter
+  metric: avg_dwell_hours
+  source_doc: DOC-TRN-SERVICE-STANDARD
+  apply:
+    filter: { dimension: load_type, op: "=", value: Live }
+    unless_question_mentions: [including drop and hook, all load types, drop and hook included]
+- id: BR-TRN-004
+  domain: Service
+  text: "Shippers get two free hours at pickup and delivery on live loads; detention is billed at 65 dollars an hour for every hour beyond that and is reported as accessorial revenue."
+  kind: definition
+  metric: avg_dwell_hours
+  source_doc: DOC-TRN-SERVICE-STANDARD
+- id: BR-TRN-005
+  domain: Service
+  text: "A terminal whose on-time delivery falls below 90% for a quarter, or whose live-load dwell averages more than three hours, is escalated to the regional operations manager for a dock review."
+  kind: threshold
+  metric: on_time_delivery_pct
+  source_doc: DOC-TRN-SERVICE-STANDARD
+- id: BR-TRN-012
+  domain: Service
+  text: "A service exception is logged for damage, refusal, misroute or shortage; lateness alone is not an exception and is measured by on-time delivery."
+  kind: definition
+  metric: exception_rate_pct
+  source_doc: DOC-TRN-SERVICE-STANDARD
+
+# ── Fleet & assets ───────────────────────────────────────────────────────────────────────────────────
+- id: BR-TRN-006
+  domain: Fleet
+  text: "Asset utilisation is measured on in-service tractor-days; days a tractor spends in the shop for planned maintenance or repair are excluded unless the question explicitly asks to include shop days."
+  kind: filter
+  metric: asset_utilisation_pct
+  source_doc: DOC-TRN-FLEET-STANDARD
+  apply:
+    filter: { dimension: in_service, op: "=", value: true }
+    unless_question_mentions: [including shop days, including maintenance days, including days in the shop, all tractor days]
+- id: BR-TRN-007
+  domain: Fleet
+  text: "Empty miles are miles driven without revenue freight between a delivery and the next pickup; bobtail miles (tractor without a trailer) count as empty miles. Empty miles are reported as a share of all miles driven."
+  kind: definition
+  metric: empty_miles_pct
+  source_doc: DOC-TRN-FLEET-STANDARD
+- id: BR-TRN-008
+  domain: Fleet
+  text: "Fuel economy is total miles divided by total gallons for the fleet or slice; it is never an average of tractor-level miles per gallon."
+  kind: definition
+  metric: fuel_mpg
+  source_doc: DOC-TRN-FLEET-STANDARD
+- id: BR-TRN-009
+  domain: Fleet
+  text: "Revenue per truck per week divides linehaul revenue by the number of tractors with telematics activity in the period and by the number of weeks in the period."
+  kind: definition
+  metric: revenue_per_truck_week
+  source_doc: DOC-TRN-FLEET-STANDARD
+
+# ── Drivers & safety ─────────────────────────────────────────────────────────────────────────────────
+- id: BR-TRN-010
+  domain: Safety
+  text: "Driver turnover is reported for company drivers only unless the question explicitly asks to include owner-operators; owner-operators are independent businesses whose lease terminations are tracked separately."
+  kind: filter
+  metric: driver_turnover_pct
+  source_doc: DOC-TRN-DRIVER-SAFETY
+  apply:
+    filter: { dimension: driver_type, op: "=", value: Company }
+    unless_question_mentions: [including owner-operators, including owner operators, all drivers, company and owner-operator]
+- id: BR-TRN-011
+  domain: Safety
+  text: "The safety incident rate counts DOT-recordable crashes only — an injury, a fatality or a vehicle towed from the scene — per million miles; telematics alerts, inspection findings and non-recordable crashes are excluded."
+  kind: definition
+  metric: safety_incident_rate
+  source_doc: DOC-TRN-DRIVER-SAFETY
+- id: BR-TRN-013
+  domain: Safety
+  text: "A region whose recordable crash rate exceeds 2.0 per million miles over 12 months gets a safety stand-down and route review within 30 days."
+  kind: threshold
+  metric: safety_incident_rate
+  source_doc: DOC-TRN-DRIVER-SAFETY
+- id: BR-TRN-014
+  domain: Safety
+  text: "Driver-level safety data may be used for coaching by the safety team only; agents never rank, recommend or take action against an individual driver."
+  kind: policy
+  source_doc: DOC-TRN-DRIVER-SAFETY
+
+# ── Freight finance ──────────────────────────────────────────────────────────────────────────────────
+- id: BR-TRN-015
+  domain: Finance
+  text: "Cost per mile divides operating, fuel and accessorial cost by total miles — loaded plus empty — so empty repositioning is paid for in the measure."
+  kind: definition
+  metric: cost_per_mile
+  source_doc: DOC-TRN-FREIGHT-FINANCE
+- id: BR-TRN-016
+  domain: Finance
+  text: "Operating ratio is operating cost, including cargo claims at reserve, as a percentage of total revenue including fuel surcharge and detention."
+  kind: definition
+  metric: operating_ratio_pct
+  source_doc: DOC-TRN-FREIGHT-FINANCE
+- id: BR-TRN-017
+  domain: Finance
+  text: "The claims ratio counts paid and open cargo claims at their reserve amount and excludes denied claims; claims are attributed to the pickup period of the load they relate to."
+  kind: definition
+  metric: claims_ratio_pct
+  source_doc: DOC-TRN-FREIGHT-FINANCE
+- id: BR-TRN-018
+  domain: Finance
+  text: "Revenue is linehaul plus fuel surcharge plus billed detention, recognised on the pickup date of the load."
+  kind: definition
+  metric: freight_revenue
+  source_doc: DOC-TRN-FREIGHT-FINANCE

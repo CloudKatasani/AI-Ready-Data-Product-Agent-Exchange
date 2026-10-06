@@ -1,0 +1,30 @@
+id: AG-TEL-002
+name: Churn Sentinel
+domain: Churn & Retention
+status: PRODUCTION
+owner: telecom:retention-analyst
+on_call: Retention Analytics
+avatar: { icon: user-minus, hue: 12 }
+capability: "Answers questions on churn, postpaid churn, port-outs, gross and net adds and retention save rates, and explains what is driving churn movement."
+personas_served: [Retention Manager, Regional Commercial Director, Chief Customer & Operations Officer]
+out_of_scope: ["approving retention discounts", "individual subscriber lookups", "outbound contact campaigns", "plan change requests"]
+products:
+  - { id: DP-TEL-004, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [CHURN_RETENTION], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-TEL-KPI-STANDARD, DOC-TEL-DATA-GOVERNANCE] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+  - { tool: request_access_link }
+kpi_coverage:
+  - { kpi: KPI-TEL-CHURN, grains: [month, quarter, year], slices: [region, market, segment, plan], depth: rank_drivers }
+  - { kpi: KPI-TEL-PP-CHURN, grains: [month, quarter], slices: [region, market, plan], depth: rank_drivers }
+  - { kpi: KPI-TEL-NET-ADDS, grains: [month, quarter], slices: [region, segment, plan], depth: trend }
+  - { kpi: KPI-TEL-GROSS-ADDS, grains: [month, quarter], slices: [region, segment, plan], depth: trend }
+  - { kpi: KPI-TEL-PORT-OUT, grains: [month, quarter], slices: [region, market, plan], depth: explain }
+  - { kpi: KPI-TEL-SAVE, grains: [month, quarter], slices: [segment, region, plan], depth: explain }
+instructions: [INS-TEL-002-P, INS-TEL-002-R, INS-TEL-002-G, INS-TEL-002-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-TEL-001, SC-TEL-002, SC-TEL-003, SC-TEL-004, SC-TEL-005, SC-TEL-006, SC-TEL-007]

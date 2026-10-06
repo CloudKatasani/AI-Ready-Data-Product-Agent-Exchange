@@ -1,0 +1,54 @@
+# "Break something" templates (05 §2.4). Effects are applied as query-time overlays while an incident is open.
+- id: INC-TCH-LATE-FEED
+  kind: late_feed
+  title: Product telemetry feed a day late
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_PRODUCT_USAGE
+  column: usage_date
+  params: { lag_hours: 30 }
+  affects: { products: [DP-TCH-003], agents: [AG-TCH-002] }
+  narrative: >-
+    The nightly telemetry roll-up job failed after a schema change in the event pipeline, so the latest tenant-days
+    have not landed. Product Usage & Adoption is behind its two-hour freshness SLA: daily active users and uptime for
+    the last day are missing, and any answer about recent engagement understates it.
+  detection: Freshness rule DQ-TCH-021 on FCT_PRODUCT_USAGE.usage_date fails and the product moves to Degraded.
+  resolution: Re-run the roll-up for the missing days, confirm tenant-day volumes match the trailing average and re-run the DQ rules.
+- id: INC-TCH-DUP-LOAD
+  kind: duplicate_load
+  title: Duplicate CRM opportunity sync
+  severity: SEV3
+  object: CONFORMED_GOLD.FCT_OPPORTUNITY
+  params: { duplicate_pct: 12 }
+  affects: { products: [DP-TCH-002], agents: [AG-TCH-001] }
+  narrative: >-
+    A retried CRM sync replayed 12% of opportunities. Bookings and open pipeline are inflated while the duplicates
+    remain, and win rate shifts because duplicated won and lost deals do not cancel out by region.
+  detection: Uniqueness rule DQ-TCH-011 on opportunity_id fails and the opportunity row count jumps against the trailing average.
+  resolution: Remove the replayed batch by sync id, re-run deduplication and confirm dup_rate returns to zero.
+- id: INC-TCH-NULL-SPIKE
+  kind: null_spike
+  title: Null spike in ticket first-response times
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_SUPPORT_TICKET
+  column: first_response_minutes
+  params: { null_pct: 20 }
+  affects: { products: [DP-TCH-004], agents: [AG-TCH-002] }
+  narrative: >-
+    A helpdesk API change stopped returning the first-reply timestamp for chat tickets, so a fifth of tickets arrive
+    without a first-response time. First response looks faster than it is and SLA attainment is unreliable.
+  detection: Completeness rule DQ-TCH-025 on first_response_minutes fails; Support Experience is Degraded.
+  resolution: Map the new first-reply field in the helpdesk extract, backfill the affected tickets and confirm the null rate is zero.
+- id: INC-TCH-SCHEMA-DRIFT
+  kind: schema_drift
+  title: ARR column renamed upstream
+  severity: SEV1
+  object: CONFORMED_GOLD.FCT_ARR_MONTHLY
+  column: arr_usd
+  params: { rename_to: arr_amount_usd }
+  affects: { products: [DP-TCH-001], agents: [AG-TCH-001] }
+  narrative: >-
+    A billing platform release renamed the ARR amount to arr_amount_usd without a contract change. Every ARR and
+    retention metric fails to compile, so the Revenue Retention Analyst declines with an incident banner instead of
+    answering with a wrong number.
+  detection: Metric compilation for REVENUE_RETENTION fails and DQ-TCH-001 cannot find its column; the contract check flags a breaking change.
+  resolution: Map arr_amount_usd back to arr_usd in Silver, raise a contract major version with a 30-day notice and re-run checks.

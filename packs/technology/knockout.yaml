@@ -1,0 +1,94 @@
+# Knockout (Why AI-Ready): four governed answers and how each degrades when a layer is switched off.
+# declared_delta_pct is computed through the real knockout query path at scale M (pnpm knockout:deltas --update).
+answers:
+  - id: KO-TCH-01
+    kpi: KPI-TCH-ARR
+    question: "What was ARR at the end of last month?"
+    query: { view: REVENUE_RETENTION, metrics: [arr], timeRange: { last: { n: 1, unit: month } } }
+    failure_by_layer:
+      silver: wrong        # duplicate subscription updates and dirty plan strings in the billing feed
+      gold: unverified     # no month-end ARR snapshot; the number cannot be traced to a certified model
+      semantic: wrong      # naive formula sums every line instead of month-end recurring ARR
+      glossary: ambiguous  # "run rate" no longer resolves to ARR (bookings? billings? ARR?)
+      context: wrong       # one-time professional services (BR-TCH-001) are counted as ARR
+      governance: unsafe   # no certification, row access or lineage on the board number
+    declared_delta_pct: { silver: 0, gold: 0, semantic: 9.9, glossary: 0, context: 9.9, governance: 0 }
+  - id: KO-TCH-02
+    kpi: KPI-TCH-WIN-RATE
+    question: "What was our win rate last quarter?"
+    query: { view: GTM_PIPELINE, metrics: [win_rate_pct], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # CDC duplicates and dirty opportunity types let renewals slip through
+      gold: unverified     # computed from Silver opportunities without the conformed account join
+      semantic: wrong      # naive formula divides wins by every opportunity, including open ones
+      glossary: ambiguous  # "close rate" does not resolve to win rate
+      context: wrong       # renewals (BR-TCH-005) included — they close at ~80% and flatter the rate
+      governance: unsafe   # sales rep names reachable unmasked
+    declared_delta_pct: { silver: 1.7, gold: 0, semantic: 46, glossary: 0, context: 46, governance: 0 }
+  - id: KO-TCH-03
+    kpi: KPI-TCH-DAU
+    question: "How many daily active users did we have last quarter?"
+    query: { view: PRODUCT_USAGE, metrics: [avg_daily_active_users], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # duplicate telemetry rows and late re-sends double count users
+      gold: wrong          # trial and offboarding tenants are not removed (paying customers only)
+      semantic: wrong      # naive formula sums users across days instead of averaging per day
+      glossary: ambiguous  # "actives" could mean daily, weekly or monthly
+      context: unverified  # the paying-customers definition (BR-TCH-007) is not cited
+      governance: unsafe   # tenant-level telemetry exposed without aggregation or row access
+    declared_delta_pct: { silver: 25.2, gold: 21.3, semantic: 9100, glossary: 0, context: 0, governance: 0 }
+  - id: KO-TCH-04
+    kpi: KPI-TCH-SLA
+    question: "What was SLA attainment last quarter?"
+    query: { view: SUPPORT_EXPERIENCE, metrics: [sla_attainment_pct], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # duplicate ticket updates and unconformed priorities
+      gold: unverified     # SLA targets applied outside the certified model
+      semantic: ambiguous  # response SLA vs resolution SLA not distinguished
+      glossary: ambiguous  # "SLA hit rate" does not resolve
+      context: wrong       # merged duplicates (BR-TCH-010) counted as SLA misses
+      governance: unsafe   # contact emails reachable from the support view unmasked
+    declared_delta_pct: { gold: 0, semantic: -4.4, glossary: 0, context: -4.4, governance: 0 }
+
+# Silver equivalents the compiler uses when the Gold layer is off (05 §1 step 7). column_map maps a Gold column
+# name to the Silver column (or Silver expression) that replaces it. Gold surrogate keys map to natural keys on
+# both sides of a join; date_key maps to the same integer expression Gold uses. FCT_ARR_MONTHLY is a modelled
+# month-end snapshot with no Silver equivalent and DIM_DATE is a generated calendar: both stay in place.
+gold_fallbacks:
+  - gold: CONFORMED_GOLD.DIM_ACCOUNT
+    silver: CURATED_SILVER.CUSTOMER_ACCOUNT
+    column_map:
+      account_key: account_id
+  - gold: CONFORMED_GOLD.FCT_OPPORTUNITY
+    silver: CURATED_SILVER.SALES_OPPORTUNITY
+    column_map:
+      opportunity_key: opportunity_id
+      account_key: account_id
+      date_key: "CAST(strftime(close_date, '%Y%m%d') AS INTEGER)"
+      is_closed: "close_date <= GOVERNANCE.as_of()"
+      is_won: "is_won AND close_date <= GOVERNANCE.as_of()"
+      cycle_days: "CASE WHEN is_won AND close_date <= GOVERNANCE.as_of() THEN date_diff('day', created_date, close_date) END"
+      sales_rep: rep_id
+  - gold: CONFORMED_GOLD.FCT_PRODUCT_USAGE
+    silver: CURATED_SILVER.USAGE_DAILY
+    column_map:
+      usage_key: usage_id
+      account_key: account_id
+      date_key: "CAST(strftime(usage_date, '%Y%m%d') AS INTEGER)"
+      scheduled_minutes: "1440"
+  - gold: CONFORMED_GOLD.FCT_SUPPORT_TICKET
+    silver: CURATED_SILVER.SUPPORT_TICKET
+    column_map:
+      ticket_key: ticket_id
+      account_key: account_id
+      contact_key: contact_id
+      date_key: "CAST(strftime(CAST(created_ts AS DATE), '%Y%m%d') AS INTEGER)"
+      sla_target_minutes: "CASE priority WHEN 'P1' THEN 30 WHEN 'P2' THEN 120 WHEN 'P3' THEN 480 ELSE 1440 END"
+      sla_met: "first_response_minutes <= CASE priority WHEN 'P1' THEN 30 WHEN 'P2' THEN 120 WHEN 'P3' THEN 480 ELSE 1440 END"
+      csat_satisfied: "CASE WHEN csat_score IS NULL THEN NULL ELSE csat_score >= 4 END"
+  - gold: CONFORMED_GOLD.DIM_CONTACT
+    silver: CURATED_SILVER.ACCOUNT_CONTACT
+    column_map:
+      contact_key: contact_id
+      account_key: account_id
+      full_name: "concat(first_name, ' ', last_name)"

@@ -1,0 +1,90 @@
+sensitivity_classes:
+  - { class: PII, description: "Personal information about subscribers, contacts or employees (names, emails, addresses, dates of birth)" }
+  - { class: CPNI, description: "Customer proprietary network information — MSISDNs joined to usage, numbers called, serving location and services used" }
+  - { class: PCI, description: "Payment card data (primary account numbers captured on payments)" }
+
+masking_policies:
+  - { id: MASK_PII, class: PII, macro: mask_pii, description: "Replace personal data with ••• unless the persona is cleared for PII" }
+  - { id: MASK_EMAIL, class: PII, macro: mask_email, description: "Hash the local part of email addresses" }
+  - { id: MASK_PHONE, class: PII, macro: mask_phone, description: "Show only the last four digits of contact phone numbers" }
+  - { id: MASK_MSISDN, class: CPNI, macro: mask_phone, description: "Show only the last four digits of a subscriber's MSISDN unless cleared for CPNI" }
+  - { id: MASK_CPNI, class: CPNI, macro: mask_redact, description: "Redact usage detail (numbers called, serving cell) unless the persona is cleared for CPNI" }
+  - { id: MASK_PCI, class: PCI, macro: mask_pci, description: "Show only the last four digits of card numbers" }
+
+row_access_policies:
+  - id: RAP_REGION
+    dimension: region
+    description: "Regional personas see only rows for their own region (via the market, subscriber or cell site region)"
+    bindings:
+      - { object: CONFORMED_GOLD.DIM_MARKET, column: region }
+      - { object: CONFORMED_GOLD.DIM_SUBSCRIBER, column: region }
+      - { object: CONFORMED_GOLD.DIM_CELL_SITE, column: region }
+      - { object: CURATED_SILVER.MARKET, column: region }
+      - { object: CURATED_SILVER.SUBSCRIBER, column: region }
+      - { object: CURATED_SILVER.CELL_SITE, column: region }
+
+column_tags:
+  # Subscriber PII and CPNI — masked for every persona without clearance.
+  - { column: CONFORMED_GOLD.DIM_SUBSCRIBER.first_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_SUBSCRIBER.last_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_SUBSCRIBER.full_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_SUBSCRIBER.email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CONFORMED_GOLD.DIM_SUBSCRIBER.msisdn, classes: [CPNI], masking: MASK_MSISDN }
+  - { column: CONFORMED_GOLD.DIM_SUBSCRIBER.street_address, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_SUBSCRIBER.date_of_birth, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.FCT_MONTHLY_USAGE.top_called_number, classes: [CPNI], masking: MASK_CPNI }
+  - { column: CONFORMED_GOLD.FCT_MONTHLY_USAGE.serving_site_id, classes: [CPNI], masking: MASK_CPNI }
+  - { column: CONFORMED_GOLD.FCT_WORK_ORDER.technician_name, classes: [PII], masking: MASK_PII }
+  # Certification demo (DP-TEL-006 gate 6): customer contact phone and service address are not masked until FIX-2.
+  - { column: CONFORMED_GOLD.FCT_WORK_ORDER.customer_phone, classes: [PII], masking: MASK_PII, mask_pending_fix: FIX-2 }
+  - { column: CONFORMED_GOLD.FCT_WORK_ORDER.service_address, classes: [PII], masking: MASK_PII, mask_pending_fix: FIX-2 }
+  - { column: CONFORMED_GOLD.FCT_NPS_RESPONSE.verbatim, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.SUBSCRIBER.first_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.SUBSCRIBER.last_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.SUBSCRIBER.email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.SUBSCRIBER.msisdn, classes: [CPNI], masking: MASK_MSISDN }
+  - { column: CURATED_SILVER.SUBSCRIBER.street_address, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.SUBSCRIBER.date_of_birth, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.USAGE_MONTHLY.top_called_number, classes: [CPNI], masking: MASK_CPNI }
+  - { column: CURATED_SILVER.USAGE_MONTHLY.serving_site_id, classes: [CPNI], masking: MASK_CPNI }
+  - { column: CURATED_SILVER.PAYMENT.card_number, classes: [PCI], masking: MASK_PCI }
+  - { column: CURATED_SILVER.TECHNICIAN.tech_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.WORK_ORDER.customer_phone, classes: [PII], masking: MASK_PHONE }
+  - { column: CURATED_SILVER.WORK_ORDER.service_address, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.CARE_CONTACT.agent_notes, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.NPS_RESPONSE.verbatim, classes: [PII], masking: MASK_PII }
+  # Critical data elements (each has DQ rules in warehouse/dq).
+  - { column: CONFORMED_GOLD.DIM_SUBSCRIBER.subscriber_id, cde: true }
+  - { column: CONFORMED_GOLD.DIM_SUBSCRIBER.region, cde: true }
+  - { column: CONFORMED_GOLD.DIM_SUBSCRIBER.status, cde: true }
+  - { column: CONFORMED_GOLD.DIM_SUBSCRIBER.segment, cde: true }
+  - { column: CONFORMED_GOLD.DIM_MARKET.region, cde: true }
+  - { column: CONFORMED_GOLD.DIM_CELL_SITE.region, cde: true }
+  - { column: CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY.movement, cde: true }
+  - { column: CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY.prepaid_inactive, cde: true }
+  - { column: CONFORMED_GOLD.FCT_BILLING.service_revenue, cde: true }
+  - { column: CONFORMED_GOLD.FCT_BILLING.leakage_amount, cde: true }
+  - { column: CONFORMED_GOLD.FCT_NETWORK_DAILY.dropped_calls, cde: true }
+  - { column: CONFORMED_GOLD.FCT_NETWORK_DAILY.downtime_min, cde: true }
+  - { column: CONFORMED_GOLD.FCT_NETWORK_FAULT.restore_hours, cde: true }
+  - { column: CONFORMED_GOLD.FCT_WORK_ORDER.first_time_fix, cde: true }
+
+grants:
+  - persona: telecom:regional-director-northeast
+    products: [DP-TEL-001, DP-TEL-002, DP-TEL-003, DP-TEL-004]
+    agents: [AG-TEL-001, AG-TEL-002, AG-TEL-004]
+  - persona: telecom:retention-analyst
+    products: [DP-TEL-001, DP-TEL-003, DP-TEL-004, DP-TEL-007]
+    agents: [AG-TEL-001, AG-TEL-002, AG-TEL-004]
+  - persona: telecom:network-dpo
+    products: [DP-TEL-002, DP-TEL-003, DP-TEL-005, DP-TEL-006, DP-TEL-007]
+    agents: [AG-TEL-003, AG-TEL-004]
+  - persona: telecom:data-steward
+    products: [DP-TEL-001, DP-TEL-002, DP-TEL-003, DP-TEL-004, DP-TEL-005, DP-TEL-006, DP-TEL-007, DP-TEL-008]
+    agents: [AG-TEL-001, AG-TEL-002, AG-TEL-003, AG-TEL-004, AG-TEL-005]
+  - persona: telecom:cco
+    # Aggregates only (archetype E): sees every headline KPI tile, never row-level data.
+    products: [DP-TEL-001, DP-TEL-002, DP-TEL-003, DP-TEL-004, DP-TEL-005, DP-TEL-006]
+    agents: [AG-TEL-001, AG-TEL-002, AG-TEL-003, AG-TEL-004]
+
+public_products: []

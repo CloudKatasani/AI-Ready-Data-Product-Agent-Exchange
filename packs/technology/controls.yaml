@@ -1,0 +1,59 @@
+# Control library for Cobalt Cloud Software (fictional). Regulators and jurisdictions are invented;
+# frameworks are named for the public standards they are modelled on. Illustrative, not legal advice.
+jurisdictions:
+  - { id: JUR-CCS-US, name: "United States customers", regulator: "Harbourview State Privacy Agency (CCPA-style)" }
+  - { id: JUR-CCS-EU, name: "European Economic Area customers", regulator: "Lead supervisory authority (GDPR-style)" }
+  - { id: JUR-CCS-CORP, name: "Corporate policy", regulator: "Cobalt Audit Committee" }
+
+controls:
+  - id: CTL-TCH-001
+    name: Recurring revenue reporting
+    framework: SOX-style ICFR and ASC 606-style revenue recognition
+    description: >-
+      ARR, net and gross revenue retention and logo churn reported to the board and investors come from one certified
+      product with a versioned metric definition. One-time professional services are reported separately and never
+      included in ARR.
+    jurisdiction: JUR-CCS-CORP
+    applies_to: { domains: [revenue] }
+    evidence: Certified product version, metric definitions and a month-end reconciliation of ARR to the subscription ledger.
+    stage: 11
+  - id: CTL-TCH-002
+    name: Customer contact personal data
+    framework: GDPR-style and CCPA-style privacy law
+    description: >-
+      Names, emails and phone numbers of customer contacts and sales staff are personal data. They are masked for every
+      persona without PII clearance and are never released to agents or analytical outputs.
+    jurisdiction: JUR-CCS-EU
+    applies_to: { classes: [PII], domains: [customer-support, go-to-market] }
+    evidence: Masking policy attachment report for every PII-tagged column and a sample of masked query logs.
+    stage: 6
+  - id: CTL-TCH-003
+    name: Service availability reporting
+    framework: SOC 2-style availability criteria
+    description: >-
+      Platform uptime published to customers is computed from tenant-level downtime minutes against scheduled minutes,
+      excluding announced maintenance windows, from one certified product.
+    jurisdiction: JUR-CCS-CORP
+    applies_to: { domains: [product-engagement] }
+    evidence: Uptime metric definition, lineage from tenant telemetry and the monthly availability report sign-off.
+    stage: 11
+  - id: CTL-TCH-004
+    name: Support SLA commitments
+    framework: Customer contract SLA schedule
+    description: >-
+      First-response SLAs by ticket priority are contractual for Scale and Enterprise plans; attainment is measured on
+      tickets created in the period, excluding merged duplicates, and reported quarterly to customers on request.
+    jurisdiction: JUR-CCS-US
+    applies_to: { domains: [customer-support] }
+    evidence: SLA attainment report with ticket-level lineage and the approved SLA schedule version.
+    stage: 9
+  - id: CTL-TCH-005
+    name: Usage telemetry minimisation
+    framework: Privacy by design (GDPR-style Article 25)
+    description: >-
+      Product telemetry is aggregated to tenant-day and account-feature level before it reaches analytics; individual
+      user behaviour is never analysed without a recorded consent basis.
+    jurisdiction: JUR-CCS-EU
+    applies_to: { domains: [product-engagement] }
+    evidence: Telemetry schema review showing no user-level identifiers in Silver or Gold objects.
+    stage: 5

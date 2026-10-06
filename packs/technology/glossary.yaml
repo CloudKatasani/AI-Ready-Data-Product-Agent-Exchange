@@ -1,0 +1,389 @@
+# Cobalt Cloud Software business glossary (synthetic). Converted from the Marketplace TCH KPI manifests
+# (NRR, activation, adoption, error rate) and extended with SaaS revenue, go-to-market and support terms.
+
+- id: GT-TCH-ARR
+  name: "Annual recurring revenue"
+  definition: "The annualised value of all active recurring subscription lines at month end, net of seat reductions and excluding one-time services."
+  formula: "Sum of active recurring line amounts at month end (average of month ends for longer windows)"
+  domain: Revenue
+  owner: technology:cfo
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: true
+  synonyms: [annualized recurring revenue, subscription run rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ARR_MONTHLY.arr_usd]
+    metrics: [arr, avg_arr_per_customer]
+
+- id: GT-TCH-NRR
+  name: "Net revenue retention"
+  definition: "ARR today from the accounts that were paying twelve months earlier, divided by their ARR then; includes expansion, contraction and churn, excludes new logos."
+  formula: "Σ ARR(now) for accounts with ARR 12 months ago ÷ Σ ARR(12 months ago)"
+  domain: Revenue
+  owner: technology:cfo
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: true
+  synonyms: [net dollar retention, net retention rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ARR_MONTHLY.arr_12m_ago_usd, CONFORMED_GOLD.FCT_ARR_MONTHLY.arr_usd]
+    metrics: [nrr_pct]
+
+- id: GT-TCH-GRR
+  name: "Gross revenue retention"
+  definition: "Share of the ARR from twelve months earlier that is still retained, with each account capped at its starting ARR so that expansion cannot offset losses."
+  formula: "Σ min(ARR now, ARR 12 months ago) ÷ Σ ARR 12 months ago"
+  domain: Revenue
+  owner: technology:cfo
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: true
+  synonyms: [gross dollar retention, gross retention rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ARR_MONTHLY.arr_12m_ago_usd]
+    metrics: [grr_pct]
+
+- id: GT-TCH-LOGO-CHURN
+  name: "Logo churn"
+  definition: "Accounts that paid twelve months earlier and now have no subscription ARR, as a share of accounts that paid then; churned ARR is the ARR those accounts took with them."
+  formula: "Accounts with ARR 12 months ago and zero ARR now ÷ accounts with ARR 12 months ago"
+  domain: Revenue
+  owner: technology:cfo
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: true
+  synonyms: [customer churn, logo attrition]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ARR_MONTHLY.churned_arr_usd]
+    metrics: [logo_churn_pct, churned_arr]
+
+- id: GT-TCH-EXPANSION-ARR
+  name: "Expansion ARR"
+  definition: "Increase in ARR on accounts that were already paying the month before — seat expansions and module cross-sells."
+  formula: "Σ max(ARR this month − ARR last month, 0) for accounts paying last month"
+  domain: Revenue
+  owner: technology:cfo
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: false
+  synonyms: [upsell, expansion revenue]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ARR_MONTHLY.expansion_arr_usd]
+    metrics: [expansion_arr]
+
+- id: GT-TCH-NEW-LOGO-ARR
+  name: "New logo ARR"
+  definition: "ARR from accounts that started paying during the period."
+  domain: Revenue
+  owner: technology:cfo
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: false
+  synonyms: [new customer arr]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ARR_MONTHLY.new_arr_usd]
+    metrics: [new_logo_arr]
+
+- id: GT-TCH-PAYING-CUSTOMER
+  name: "Paying customer"
+  definition: "An account with subscription ARR greater than zero at month end. Trial, cancelled and services-only accounts are not paying customers."
+  domain: Revenue
+  owner: technology:cfo
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: false
+  synonyms: [paying account]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_ACCOUNT.customer_status]
+    metrics: [paying_customers, avg_arr_per_customer]
+
+- id: GT-TCH-REVENUE-STREAM
+  name: "Revenue stream"
+  definition: "Whether revenue is recurring Subscription revenue or one-time Professional services (implementation, training, migrations). Only Subscription counts toward ARR."
+  domain: Revenue
+  owner: technology:cfo
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: true
+  synonyms: [one-time services, professional services revenue]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ARR_MONTHLY.revenue_stream]
+    metrics: []
+
+- id: GT-TCH-ACCOUNT
+  name: "Account"
+  definition: "A business that holds or held a Cobalt subscription; the unit of ARR, retention and adoption reporting."
+  domain: Revenue
+  owner: technology:cfo
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: true
+  synonyms: [customer account, tenant]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_ACCOUNT.account_id]
+    metrics: []
+
+- id: GT-TCH-REGION
+  name: "Sales region"
+  definition: "The sales region an account is managed from: North America, EMEA, APAC or LATAM. Regional row access is applied on this attribute."
+  domain: Revenue
+  owner: technology:cfo
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: true
+  synonyms: [geo, sales territory]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_ACCOUNT.region]
+    metrics: []
+
+- id: GT-TCH-SEGMENT
+  name: "Segment"
+  definition: "Go-to-market segment by company size: Enterprise (2,000+ employees), Mid-Market (200–1,999) and SMB (under 200)."
+  domain: Go-to-market
+  owner: technology:data-product-owner
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: false
+  synonyms: [market segment, company size band]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_ACCOUNT.segment]
+    metrics: []
+
+- id: GT-TCH-PLAN-TIER
+  name: "Plan tier"
+  definition: "The commercial edition an account subscribes to — Starter, Growth, Scale or Enterprise — which sets its commercial terms and the features it is entitled to."
+  domain: Revenue
+  owner: technology:cfo
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: false
+  synonyms: [edition, pricing tier]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_ACCOUNT.plan_tier]
+    metrics: []
+
+- id: GT-TCH-OPPORTUNITY-TYPE
+  name: "Opportunity type"
+  definition: "Whether an opportunity is New business, Expansion of an existing account, or a Renewal. Renewals are retention, not bookings."
+  domain: Go-to-market
+  owner: technology:data-product-owner
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: true
+  synonyms: [deal type]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_OPPORTUNITY.opp_type]
+    metrics: []
+
+- id: GT-TCH-WIN-RATE
+  name: "Win rate"
+  definition: "Won opportunities as a share of opportunities closed (won or lost) in the period, new business and expansion only."
+  formula: "Won ÷ (won + lost), renewals excluded"
+  domain: Go-to-market
+  owner: technology:data-product-owner
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: true
+  synonyms: [close rate, win ratio]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_OPPORTUNITY.is_won, CONFORMED_GOLD.FCT_OPPORTUNITY.is_closed]
+    metrics: [win_rate_pct]
+
+- id: GT-TCH-BOOKINGS
+  name: "Bookings"
+  definition: "Annual contract value of won new-business and expansion opportunities closed in the period."
+  domain: Go-to-market
+  owner: technology:data-product-owner
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: true
+  synonyms: [new bookings, booked arr]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_OPPORTUNITY.amount_usd]
+    metrics: [bookings_usd, opportunities_won]
+
+- id: GT-TCH-DEAL-SIZE
+  name: "Average deal size"
+  definition: "Mean annual contract value of won opportunities."
+  domain: Go-to-market
+  owner: technology:data-product-owner
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: false
+  synonyms: [average contract value]
+  mappings:
+    columns: []
+    metrics: [avg_deal_size]
+
+- id: GT-TCH-SALES-CYCLE
+  name: "Sales cycle"
+  definition: "Days from opportunity creation to close for won opportunities."
+  domain: Go-to-market
+  owner: technology:data-product-owner
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: false
+  synonyms: [sales cycle length]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_OPPORTUNITY.cycle_days]
+    metrics: [sales_cycle_days]
+
+- id: GT-TCH-PIPELINE
+  name: "Open pipeline"
+  definition: "Amount of open opportunities expected to close in a period, by expected close date."
+  domain: Go-to-market
+  owner: technology:data-product-owner
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: false
+  synonyms: [pipeline value]
+  mappings:
+    columns: []
+    metrics: [open_pipeline_usd]
+
+- id: GT-TCH-DAU
+  name: "Daily active users"
+  definition: "Distinct users with at least one qualifying action in a tenant-day, averaged per day across paying tenants."
+  domain: Product engagement
+  owner: technology:data-product-owner
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: true
+  synonyms: [daily actives]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PRODUCT_USAGE.daily_active_users]
+    metrics: [avg_daily_active_users]
+
+- id: GT-TCH-STICKINESS
+  name: "Stickiness"
+  definition: "Daily active users as a share of thirty-day monthly active users — how habitual the product is."
+  formula: "Σ DAU ÷ Σ MAU"
+  domain: Product engagement
+  owner: technology:data-product-owner
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: false
+  synonyms: [dau over mau]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PRODUCT_USAGE.monthly_active_users]
+    metrics: [stickiness_pct]
+
+- id: GT-TCH-SEAT-UTILISATION
+  name: "Seat utilisation"
+  definition: "Monthly active users as a share of licensed seats; low utilisation ahead of renewal signals contraction risk."
+  formula: "Σ MAU ÷ Σ licensed seats"
+  domain: Product engagement
+  owner: technology:data-product-owner
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: false
+  synonyms: [seat usage rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PRODUCT_USAGE.seats_licensed]
+    metrics: [seat_utilisation_pct]
+
+- id: GT-TCH-UPTIME
+  name: "Uptime"
+  definition: "Share of scheduled tenant minutes the platform was available, excluding announced maintenance; committed at 99.9% per quarter."
+  formula: "1 − downtime minutes ÷ scheduled minutes"
+  domain: Product engagement
+  owner: technology:data-product-owner
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: true
+  synonyms: [platform availability]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PRODUCT_USAGE.downtime_minutes]
+    metrics: [uptime_pct]
+
+- id: GT-TCH-FEATURE-ADOPTION
+  name: "Feature adoption"
+  definition: "Share of entitled active accounts that used a feature at least once in the last thirty days."
+  formula: "Entitled accounts with events in 30 days ÷ entitled accounts"
+  domain: Product engagement
+  owner: technology:data-product-owner
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: false
+  synonyms: [feature usage rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_FEATURE_ADOPTION.adopted, CONFORMED_GOLD.FCT_FEATURE_ADOPTION.entitled]
+    metrics: [feature_adoption_pct, adopting_accounts]
+
+- id: GT-TCH-SUPPORT-TICKET
+  name: "Support ticket"
+  definition: "A request for help raised by an account contact through email, web portal, chat or phone. A ticket merged into another as a duplicate keeps status Merged and is excluded from response metrics."
+  domain: Customer support
+  owner: technology:data-product-owner
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: false
+  synonyms: [support case]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUPPORT_TICKET.ticket_id, CONFORMED_GOLD.FCT_SUPPORT_TICKET.ticket_status]
+    metrics: [tickets_opened]
+
+- id: GT-TCH-TICKET-PRIORITY
+  name: "Ticket priority"
+  definition: "Urgency of a ticket from P1 (platform down for the account) to P4 (question or minor request); sets the first-response SLA."
+  domain: Customer support
+  owner: technology:data-product-owner
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: false
+  synonyms: [ticket severity]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUPPORT_TICKET.priority]
+    metrics: []
+
+- id: GT-TCH-FIRST-RESPONSE
+  name: "First response time"
+  definition: "Elapsed time from ticket creation to the first response from a support agent (automated acknowledgements do not count)."
+  domain: Customer support
+  owner: technology:data-product-owner
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: true
+  synonyms: [time to first response, first reply time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUPPORT_TICKET.first_response_minutes]
+    metrics: [avg_first_response_hours]
+
+- id: GT-TCH-SLA-ATTAINMENT
+  name: "SLA attainment"
+  definition: "Share of tickets whose first response met the SLA target for their priority (P1 30 min, P2 2 h, P3 8 h, P4 24 h)."
+  domain: Customer support
+  owner: technology:data-product-owner
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: true
+  synonyms: [sla compliance]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUPPORT_TICKET.sla_met]
+    metrics: [sla_attainment_pct]
+
+- id: GT-TCH-CSAT
+  name: "Customer satisfaction (CSAT)"
+  definition: "Share of post-resolution survey responses that rate the support experience 4 or 5 out of 5."
+  domain: Customer support
+  owner: technology:data-product-owner
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: false
+  synonyms: [satisfaction score]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUPPORT_TICKET.csat_score]
+    metrics: [csat_pct]
+
+- id: GT-TCH-RESOLUTION-TIME
+  name: "Resolution time"
+  definition: "Hours from ticket creation to resolution."
+  domain: Customer support
+  owner: technology:data-product-owner
+  steward: technology:revenue-steward
+  status: APPROVED
+  cde: false
+  synonyms: [time to resolution]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUPPORT_TICKET.resolution_hours]
+    metrics: [avg_resolution_hours]

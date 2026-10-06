@@ -1,0 +1,82 @@
+# Value cases per product (marketplace value model). All figures are illustrative and synthetic.
+- id: VC-TEL-001
+  product: DP-TEL-001
+  hypothesis: One certified subscriber record lets marketing target autopay and contract-renewal campaigns at the right markets and stops households receiving uncoordinated offers.
+  baseline: "Line-level CRM extracts deduplicated by hand each month; about 90 analyst hours a month; campaigns allocated evenly across markets."
+  benefit_model: "additional_autopay_enrolments * annual_collection_saving + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Additional autopay enrolments per year from targeted campaigns", value: 42000, unit: subscribers, source: "Consumer marketing pilot, H1 2026" }
+    - { text: "Annual collections and bad debt saving per autopay enrolment", value: 14, unit: usd, source: "Credit & collections cost model FY26" }
+    - { text: "Analyst hours saved per year", value: 1080, unit: hours, source: "Subscriber analytics time study" }
+    - { text: "Fully loaded analyst rate", value: 105, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 701400
+  measured: { value_usd: 588000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-TEL-002
+  product: DP-TEL-002
+  hypothesis: Certified site counters let network operations target optimisation at the sites and vendors that drive dropped calls, and reproduce QoS figures for the regulator without a fire drill.
+  baseline: "OSS exports joined to planning spreadsheets weekly; regulator QoS returns rebuilt by hand each quarter."
+  benefit_model: "churn_avoided_from_fewer_drops * annual_margin_per_line + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Lines retained per year from faster dropped-call fixes", value: 6800, unit: lines, source: "Network experience churn study, 2026" }
+    - { text: "Annual margin per retained line", value: 310, unit: usd, source: "Finance margin model FY26" }
+    - { text: "Analyst hours saved per year", value: 900, unit: hours, source: "Network analytics time study" }
+    - { text: "Fully loaded analyst rate", value: 105, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 2202500
+  measured: { value_usd: 1715000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-TEL-003
+  product: DP-TEL-003
+  hypothesis: Invoice-level reconciliation of rated and billed charges finds leakage within a bill cycle instead of a quarter later, and one ARPU definition ends the finance-versus-marketing argument.
+  baseline: "Rating and billing extracts reconciled in a desktop database after every bill cycle; leakage found about 75 days late."
+  benefit_model: "leakage_recovered + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Leakage recovered per year by earlier detection", value: 2400000, unit: usd, source: "Revenue assurance back-test of 2025 incidents" }
+    - { text: "Analyst hours saved per year", value: 1200, unit: hours, source: "Revenue assurance time study" }
+    - { text: "Fully loaded analyst rate", value: 105, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 2526000
+  measured: { value_usd: 2040000, period: "2026-Q1..2026-Q3 annualised", confidence: high }
+- id: VC-TEL-004
+  product: DP-TEL-004
+  hypothesis: A certified churn view with port-outs by region lets retention move save-offer capacity to the region a competitor is attacking within weeks, not a quarter.
+  baseline: "A churn score list and a finance churn number that never agree; save offers allocated evenly."
+  benefit_model: "additional_saves * annual_margin_per_line + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Additional lines saved per year through targeted save offers", value: 9200, unit: lines, source: "Retention pilot, Q2 2026" }
+    - { text: "Annual margin per saved line", value: 280, unit: usd, source: "Finance margin model FY26" }
+    - { text: "Analyst hours saved per year", value: 640, unit: hours, source: "Retention analytics time study" }
+    - { text: "Fully loaded analyst rate", value: 105, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 2643200
+  measured: { value_usd: 2110000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-TEL-005
+  product: DP-TEL-005
+  hypothesis: Ranking faults by impacted subscriber hours points root-cause programmes and standby crews at fiber cuts and power faults, cutting customer impact.
+  baseline: "Weekly consolidation of alarm and ticket exports; crews prioritised by ticket count."
+  benefit_model: "impacted_subscriber_hours_avoided * cost_per_impacted_hour + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Impacted subscriber hours avoided per year", value: 1900000, unit: hours, source: "Service assurance root-cause programme plan" }
+    - { text: "Cost per impacted subscriber hour (credits, care contacts, churn)", value: 0.45, unit: usd, source: "Customer impact cost model FY26" }
+    - { text: "Analyst hours saved per year", value: 520, unit: hours, source: "Service assurance time study" }
+    - { text: "Fully loaded analyst rate", value: 105, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 909600
+  measured: { value_usd: 702000, period: "2026-Q1..2026-Q3 annualised", confidence: low }
+- id: VC-TEL-006
+  product: DP-TEL-006
+  hypothesis: A certified first-time fix and truck roll view moves broadband repairs to remote diagnostics and multi-skill crews, cutting repeat visits and dispatch cost.
+  baseline: "Scheduling tool exports reconciled weekly; repeat visits found from complaints."
+  benefit_model: "truck_rolls_avoided * cost_per_truck_roll + repeat_visits_avoided * cost_per_truck_roll"
+  assumptions:
+    - { text: "Truck rolls avoided per year through remote diagnostics", value: 21000, unit: visits, source: "Field operations pilot, 2026" }
+    - { text: "Repeat visits avoided per year through better first-time fix", value: 9500, unit: visits, source: "Field operations pilot, 2026" }
+    - { text: "Fully loaded cost per truck roll", value: 95, unit: usd, source: "Field operations cost model FY26" }
+  annual_value_usd: 2897500
+  measured: null
+- id: VC-TEL-007
+  product: DP-TEL-007
+  hypothesis: Linking NPS by touchpoint to plan and market finds the journeys that create detractors before they become port-outs.
+  baseline: "Survey platform dashboards with no link to plan, market or churn; detractor follow-up handled ad hoc."
+  benefit_model: "detractors_recovered * churn_reduction * annual_margin_per_line"
+  assumptions:
+    - { text: "Detractors recovered per year through closed-loop follow-up", value: 18000, unit: subscribers, source: "Customer experience roadmap FY27" }
+    - { text: "Churn reduction among recovered detractors", value: 0.12, unit: share, source: "NPS-churn linkage study, 2026" }
+    - { text: "Annual margin per retained line", value: 280, unit: usd, source: "Finance margin model FY26" }
+  annual_value_usd: 604800
+  measured: null

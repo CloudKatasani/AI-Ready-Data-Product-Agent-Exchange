@@ -1,0 +1,376 @@
+# KPIs with target bands, calibrated against the scale-M warehouse (AI-Ready telecom kpis.ts + Marketplace KPI manifests).
+# `window` is evaluated relative to pack asOf; `last n unit` = the n most recent complete units (ADR-0011).
+- id: KPI-TEL-ACTIVE
+  name: Active subscribers
+  definition: "Lines with Active status, excluding inactive prepaid lines, in the governed subscriber sample"
+  formula: "count of lines with status Active that are not inactive prepaid"
+  unit: "subscribers"
+  direction: target_band
+  target: { min: 24000, max: 29000 }
+  window: {}
+  term: GT-TEL-ACTIVE-SUBSCRIBER
+  metric: active_subscribers
+  products: [DP-TEL-001]
+- id: KPI-TEL-AUTOPAY
+  name: Autopay enrolment
+  definition: "Share of active subscribers paying by automatic payment"
+  formula: "active subscribers on autopay ÷ active subscribers"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 65, max: 80 }
+  window: {}
+  term: GT-TEL-AUTOPAY
+  metric: autopay_rate
+  products: [DP-TEL-001]
+- id: KPI-TEL-TENURE
+  name: Average subscriber tenure
+  definition: "Mean months since activation for active subscribers"
+  formula: "Σ tenure months ÷ active subscribers"
+  unit: "months"
+  direction: higher_is_better
+  target: { min: 50, max: 72 }
+  window: {}
+  term: GT-TEL-TENURE
+  metric: avg_tenure_months
+  products: [DP-TEL-001]
+- id: KPI-TEL-OOC
+  name: Out-of-contract share
+  definition: "Share of active postpaid subscribers with no device agreement or term commitment remaining"
+  formula: "active postpaid out of contract ÷ active postpaid"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 40, max: 60 }
+  window: {}
+  term: GT-TEL-OUT-OF-CONTRACT
+  metric: out_of_contract_pct
+  products: [DP-TEL-001]
+- id: KPI-TEL-HIGH-RISK
+  name: High churn-risk share
+  definition: "Share of active subscribers with a churn propensity score of 70 or above"
+  formula: "active subscribers scoring ≥ 70 ÷ active subscribers"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 3, max: 8 }
+  window: {}
+  term: GT-TEL-CHURN-PROPENSITY
+  metric: high_churn_risk_pct
+  products: [DP-TEL-001]
+- id: KPI-TEL-CARE
+  name: Care contacts per subscriber
+  definition: "Mean customer care contacts in the last 90 days per active subscriber"
+  formula: "care contacts in 90 days ÷ active subscribers"
+  unit: "contacts"
+  direction: lower_is_better
+  target: { min: 0.2, max: 0.35 }
+  window: {}
+  term: GT-TEL-CARE-CONTACT
+  metric: care_contacts_per_sub
+  products: [DP-TEL-001]
+- id: KPI-TEL-CHURN
+  name: Churn rate
+  definition: "Monthly voluntary disconnects plus port-outs over the opening base, excluding inactive prepaid lines"
+  formula: "(voluntary disconnects + port-outs) ÷ opening base; plan migrations and inactive prepaid excluded"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 1.4, max: 2.0 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-CHURN
+  metric: churn_rate
+  products: [DP-TEL-004]
+- id: KPI-TEL-PP-CHURN
+  name: Postpaid churn rate
+  definition: "Monthly postpaid voluntary disconnects plus port-outs over the opening postpaid base"
+  formula: "postpaid (voluntary + port-outs) ÷ postpaid opening base"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 0.9, max: 1.4 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-POSTPAID-CHURN
+  metric: postpaid_churn_rate
+  products: [DP-TEL-004]
+- id: KPI-TEL-NET-ADDS
+  name: Net adds
+  definition: "Gross adds minus all disconnects in the governed line sample"
+  formula: "gross adds − (voluntary + port-outs + involuntary)"
+  unit: "lines"
+  direction: higher_is_better
+  target: { min: 0, max: 300 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-NET-ADDS
+  metric: net_adds
+  products: [DP-TEL-004]
+- id: KPI-TEL-GROSS-ADDS
+  name: Gross adds
+  definition: "New lines connected in the governed line sample, including port-ins"
+  formula: "Σ gross adds"
+  unit: "lines"
+  direction: higher_is_better
+  target: { min: 850, max: 1100 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-GROSS-ADDS
+  metric: gross_adds
+  products: [DP-TEL-004]
+- id: KPI-TEL-PORT-OUT
+  name: Port-out share of churn
+  definition: "Port-outs to another carrier as a share of churn"
+  formula: "port-outs ÷ (voluntary disconnects + port-outs)"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 35, max: 50 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-PORT-OUT
+  metric: port_out_share
+  products: [DP-TEL-004]
+- id: KPI-TEL-SAVE
+  name: Save rate
+  definition: "Retention save offers accepted as a share of offers made"
+  formula: "offers accepted ÷ offers made"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 30, max: 45 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-SAVE-RATE
+  metric: save_rate
+  products: [DP-TEL-004]
+- id: KPI-TEL-ARPU
+  name: ARPU
+  definition: "Average monthly service revenue per billed line, device installments excluded"
+  formula: "Σ service revenue ÷ billed line-months"
+  unit: "USD"
+  direction: higher_is_better
+  target: { min: 52, max: 60 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-ARPU
+  metric: arpu
+  products: [DP-TEL-003]
+- id: KPI-TEL-SERVICE-REV
+  name: Service revenue
+  definition: "Billed plan, overage and retail roaming charges in the governed invoice sample"
+  formula: "Σ (rated − leakage), device installments excluded"
+  unit: "USD"
+  direction: higher_is_better
+  target: { min: 900000, max: 1050000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-SERVICE-REVENUE
+  metric: service_revenue
+  products: [DP-TEL-003]
+- id: KPI-TEL-LEAKAGE
+  name: Revenue leakage
+  definition: "Rated charges that never reached an invoice as a share of rated charges"
+  formula: "Σ leakage ÷ Σ rated amount"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 0.3, max: 0.8 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-LEAKAGE
+  metric: revenue_leakage_pct
+  products: [DP-TEL-003]
+- id: KPI-TEL-BAD-DEBT
+  name: Bad debt ratio
+  definition: "Billed amounts written off as uncollectible as a share of total billed"
+  formula: "Σ written off ÷ Σ total billed"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 1.0, max: 2.5 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-BAD-DEBT
+  metric: bad_debt_ratio
+  products: [DP-TEL-003]
+- id: KPI-TEL-DAYS-TO-PAY
+  name: Days to pay
+  definition: "Mean days from invoice to payment for paid invoices"
+  formula: "mean(payment date − invoice date)"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 6, max: 12 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-DAYS-TO-PAY
+  metric: avg_days_to_pay
+  products: [DP-TEL-003]
+- id: KPI-TEL-DATA-USAGE
+  name: Data usage per subscriber
+  definition: "Mean monthly mobile data per mobile line with usage"
+  formula: "Σ data GB ÷ mobile line-months with usage"
+  unit: "GB"
+  direction: target_band
+  target: { min: 14, max: 20 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-DATA-USAGE
+  metric: data_gb_per_sub
+  products: [DP-TEL-003]
+- id: KPI-TEL-MOU
+  name: Minutes of use per subscriber
+  definition: "Mean monthly voice minutes per mobile line with usage"
+  formula: "Σ voice minutes ÷ mobile line-months with usage"
+  unit: "minutes"
+  direction: target_band
+  target: { min: 330, max: 450 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-MOU
+  metric: voice_min_per_sub
+  products: [DP-TEL-003]
+- id: KPI-TEL-ROAMING
+  name: Roaming revenue
+  definition: "Retail outbound roaming revenue in the governed roaming sample (wholesale inbound excluded)"
+  formula: "Σ retail outbound roaming revenue"
+  unit: "USD"
+  direction: higher_is_better
+  target: { min: 65000, max: 95000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-ROAMING-REVENUE
+  metric: roaming_revenue
+  products: [DP-TEL-003]
+- id: KPI-TEL-DCR
+  name: Dropped call rate
+  definition: "Dropped calls as a share of call attempts, from network counters"
+  formula: "Σ dropped calls ÷ Σ call attempts"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 0.6, max: 0.85 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-DCR
+  metric: dropped_call_rate
+  products: [DP-TEL-002]
+- id: KPI-TEL-AVAIL
+  name: Network availability
+  definition: "Share of scheduled site-minutes in service, planned maintenance excluded"
+  formula: "100 − Σ downtime ÷ Σ scheduled minutes"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 99.9, max: 99.99 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-AVAILABILITY
+  metric: network_availability
+  products: [DP-TEL-002]
+- id: KPI-TEL-CSSR
+  name: Call setup success rate
+  definition: "Share of call attempts set up successfully"
+  formula: "100 − Σ setup failures ÷ Σ call attempts"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 98.8, max: 99.6 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-CSSR
+  metric: call_setup_success_rate
+  products: [DP-TEL-002]
+- id: KPI-TEL-THROUGHPUT
+  name: Downlink throughput
+  definition: "Mean user downlink throughput across site-days"
+  formula: "mean of site-day throughput"
+  unit: "Mbps"
+  direction: higher_is_better
+  target: { min: 120, max: 160 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-THROUGHPUT
+  metric: avg_throughput_mbps
+  products: [DP-TEL-002]
+- id: KPI-TEL-TRAFFIC
+  name: Mobile data traffic
+  definition: "Data carried by the sampled site-days"
+  formula: "Σ site data TB"
+  unit: "TB"
+  direction: target_band
+  target: { min: 18000, max: 24000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-TRAFFIC
+  metric: data_traffic_tb
+  products: [DP-TEL-002]
+- id: KPI-TEL-MTTR
+  name: Fault repair time
+  definition: "Mean hours from fault raise to service restoration, restored faults only"
+  formula: "mean(restored − raised) in hours"
+  unit: "hours"
+  direction: lower_is_better
+  target: { min: 3, max: 4.5 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-MTTR
+  metric: mttr_hours
+  products: [DP-TEL-005]
+- id: KPI-TEL-IMPACT-HRS
+  name: Impacted subscriber hours
+  definition: "Impacted subscribers multiplied by restoration hours, summed over faults"
+  formula: "Σ impacted subscribers × restore hours"
+  unit: "hours"
+  direction: lower_is_better
+  target: { min: 4500000, max: 6000000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-IMPACT-HOURS
+  metric: impacted_subscriber_hours
+  products: [DP-TEL-005]
+- id: KPI-TEL-RESTORE-SLA
+  name: Faults restored within SLA
+  definition: "Share of restored faults brought back within four hours"
+  formula: "faults restored ≤ 4 h ÷ restored faults"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 65, max: 80 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TEL-FAULT-SLA
+  metric: restored_within_sla_pct
+  products: [DP-TEL-005]
+- id: KPI-TEL-FTF
+  name: First-time fix rate
+  definition: "Share of closed work orders fixed on the first visit"
+  formula: "first-time fixes ÷ closed work orders"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 80, max: 90 }
+  window: { ytd: true }
+  term: GT-TEL-FTF
+  metric: first_time_fix_rate
+  products: [DP-TEL-006]
+- id: KPI-TEL-TRUCK-ROLLS
+  name: Truck rolls
+  definition: "Work orders that needed a technician on site, in the governed work order sample"
+  formula: "Σ work orders with a truck roll"
+  unit: "visits"
+  direction: lower_is_better
+  target: { min: 7000, max: 8200 }
+  window: { ytd: true }
+  term: GT-TEL-TRUCK-ROLL
+  metric: truck_rolls
+  products: [DP-TEL-006]
+- id: KPI-TEL-RESOLVE-HRS
+  name: Hours to resolve
+  definition: "Mean hours from opening to closing a work order"
+  formula: "mean(closed − opened) in hours"
+  unit: "hours"
+  direction: lower_is_better
+  target: { min: 4, max: 6 }
+  window: { ytd: true }
+  term: GT-TEL-WORK-ORDER
+  metric: avg_hours_to_resolve
+  products: [DP-TEL-006]
+- id: KPI-TEL-APPT
+  name: Appointments met
+  definition: "Share of work orders where the technician arrived inside the appointment window"
+  formula: "appointments met ÷ work orders"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 88, max: 95 }
+  window: { ytd: true }
+  term: GT-TEL-APPOINTMENT
+  metric: appointment_met_rate
+  products: [DP-TEL-006]
+- id: KPI-TEL-FIBER-LEAD
+  name: Fiber activation lead time
+  definition: "Mean days from fiber order to service activation"
+  formula: "mean(activation date − order date)"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 8, max: 11 }
+  window: { ytd: true }
+  term: GT-TEL-FIBER-ACTIVATION
+  metric: fiber_activation_days
+  products: [DP-TEL-006]
+- id: KPI-TEL-NPS
+  name: NPS
+  definition: "Percentage of promoters minus percentage of detractors"
+  formula: "% promoters (9–10) − % detractors (0–6)"
+  unit: "points"
+  direction: higher_is_better
+  target: { min: 5, max: 20 }
+  window: { ytd: true }
+  term: GT-TEL-NPS
+  metric: nps
+  products: [DP-TEL-007]

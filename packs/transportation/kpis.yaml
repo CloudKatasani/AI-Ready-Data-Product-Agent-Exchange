@@ -1,0 +1,177 @@
+# KPIs with target bands, calibrated against the scale-M warehouse (Marketplace TRN KPI manifests KPI-OTD-056,
+# KPI-CPM-057, KPI-DWELL-058, KPI-ASSETUTIL-059, KPI-EXCRATE-060, KPI-FRTMARGIN-088 and the carrier KPIs a
+# truckload operator reports: empty miles, fuel economy, revenue per truck, crash rate, driver turnover).
+# `window` is evaluated relative to pack asOf; `last n unit` = the n most recent complete units (ADR-0011).
+
+# ── Shipments & service ──────────────────────────────────────────────────────────────────────────────
+- id: KPI-TRN-OTD
+  name: On-time delivery
+  definition: "Share of delivered loads that arrived inside the appointment window, excluding customer-caused delays"
+  formula: "loads delivered on time ÷ loads delivered, customer-caused delays excluded (BR-TRN-002)"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 92, max: 96 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TRN-OTD
+  metric: on_time_delivery_pct
+  products: [DP-TRN-001]
+- id: KPI-TRN-DWELL
+  name: Average dwell time
+  definition: "Average hours at the origin between gate-in and gate-out on live loads"
+  formula: "mean of gate-out − gate-in hours, live loads only (BR-TRN-003)"
+  unit: "hours"
+  direction: lower_is_better
+  target: { min: 2.0, max: 2.6 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TRN-DWELL
+  metric: avg_dwell_hours
+  products: [DP-TRN-001]
+- id: KPI-TRN-EXCEPTION
+  name: Exception rate
+  definition: "Share of loads with a logged service exception"
+  formula: "loads with an exception ÷ loads"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 2.5, max: 3.5 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TRN-EXCEPTION
+  metric: exception_rate_pct
+  products: [DP-TRN-001]
+- id: KPI-TRN-LOADS
+  name: Loads delivered
+  definition: "Loads picked up and delivered in the quarter"
+  formula: "count of loads"
+  unit: "loads"
+  direction: higher_is_better
+  target: { min: 7500, max: 9500 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TRN-LOAD
+  metric: loads_delivered
+  products: [DP-TRN-001]
+
+# ── Fleet & assets ───────────────────────────────────────────────────────────────────────────────────
+- id: KPI-TRN-UTIL
+  name: Asset utilisation
+  definition: "Revenue-earning hours as a share of available hours on in-service tractor-days"
+  formula: "Σ revenue hours ÷ Σ available hours, in-service days only (BR-TRN-006)"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 72, max: 80 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TRN-UTILISATION
+  metric: asset_utilisation_pct
+  products: [DP-TRN-002]
+- id: KPI-TRN-EMPTY
+  name: Empty miles percentage
+  definition: "Empty (deadhead) miles as a share of all miles driven"
+  formula: "Σ empty miles ÷ Σ total miles"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 11, max: 15 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TRN-EMPTY-MILES
+  metric: empty_miles_pct
+  products: [DP-TRN-002]
+- id: KPI-TRN-MPG
+  name: Fuel economy
+  definition: "Miles per gallon across the fleet, year to date"
+  formula: "Σ total miles ÷ Σ gallons"
+  unit: "mpg"
+  direction: higher_is_better
+  target: { min: 6.3, max: 7.0 }
+  window: { ytd: true }
+  term: GT-TRN-MPG
+  metric: fuel_mpg
+  products: [DP-TRN-002]
+- id: KPI-TRN-REV-TRUCK
+  name: Revenue per truck per week
+  definition: "Linehaul revenue per active tractor per week"
+  formula: "Σ revenue ÷ active tractors ÷ weeks in period"
+  unit: "USD"
+  direction: higher_is_better
+  target: { min: 3200, max: 3800 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TRN-REV-TRUCK-WEEK
+  metric: revenue_per_truck_week
+  products: [DP-TRN-002]
+
+# ── Drivers & safety ─────────────────────────────────────────────────────────────────────────────────
+- id: KPI-TRN-SAFETY-RATE
+  name: Safety incident rate
+  definition: "DOT-recordable crashes per million miles over the last 12 months"
+  formula: "recordable crashes × 1,000,000 ÷ miles driven"
+  unit: "per million miles"
+  direction: lower_is_better
+  target: { min: 0.9, max: 1.5 }
+  window: { last: { n: 12, unit: month } }
+  term: GT-TRN-SAFETY-RATE
+  metric: safety_incident_rate
+  products: [DP-TRN-003]
+- id: KPI-TRN-PREVENTABLE
+  name: Preventable crash rate
+  definition: "Preventable recordable crashes per million miles over the last 12 months"
+  formula: "preventable recordable crashes × 1,000,000 ÷ miles driven"
+  unit: "per million miles"
+  direction: lower_is_better
+  target: { min: 0.5, max: 1.0 }
+  window: { last: { n: 12, unit: month } }
+  term: GT-TRN-PREVENTABLE
+  metric: preventable_crash_rate
+  products: [DP-TRN-003]
+- id: KPI-TRN-TURNOVER
+  name: Driver turnover
+  definition: "Annualised company-driver separations as a share of average headcount over the last 12 months"
+  formula: "separations × 12 ÷ driver-months employed, company drivers only (BR-TRN-010)"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 55, max: 75 }
+  window: { last: { n: 12, unit: month } }
+  term: GT-TRN-TURNOVER
+  metric: driver_turnover_pct
+  products: [DP-TRN-003]
+
+# ── Freight finance ──────────────────────────────────────────────────────────────────────────────────
+- id: KPI-TRN-OR
+  name: Operating ratio
+  definition: "Operating cost including cargo claims as a share of revenue, year to date"
+  formula: "(operating + fuel + accessorial cost + claim cost) ÷ revenue"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 90, max: 94 }
+  window: { ytd: true }
+  term: GT-TRN-OR
+  metric: operating_ratio_pct
+  products: [DP-TRN-004]
+- id: KPI-TRN-CPM
+  name: Cost per mile
+  definition: "Operating, fuel and accessorial cost per total mile, year to date"
+  formula: "Σ total cost ÷ Σ (loaded + empty) miles"
+  unit: "USD per mile"
+  direction: lower_is_better
+  target: { min: 2.40, max: 2.60 }
+  window: { ytd: true }
+  term: GT-TRN-CPM
+  metric: cost_per_mile
+  products: [DP-TRN-004]
+- id: KPI-TRN-RPM
+  name: Revenue per loaded mile
+  definition: "Revenue including fuel surcharge per loaded mile, year to date"
+  formula: "Σ revenue ÷ Σ loaded miles"
+  unit: "USD per mile"
+  direction: higher_is_better
+  target: { min: 3.0, max: 3.3 }
+  window: { ytd: true }
+  term: GT-TRN-RPM
+  metric: revenue_per_loaded_mile
+  products: [DP-TRN-004]
+- id: KPI-TRN-CLAIMS
+  name: Claims ratio
+  definition: "Paid and open cargo claims as a share of revenue, year to date"
+  formula: "Σ claim cost (paid + open) ÷ Σ revenue"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 0.8, max: 1.2 }
+  window: { ytd: true }
+  term: GT-TRN-CLAIMS
+  metric: claims_ratio_pct
+  products: [DP-TRN-004]

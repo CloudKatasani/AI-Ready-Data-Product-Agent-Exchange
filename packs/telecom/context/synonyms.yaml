@@ -1,0 +1,144 @@
+# Altair Communications synonyms (synthetic): telecom jargon → governed metric, dimension, value or glossary term.
+# Ported from the AI-Ready telecom synonym list and extended with network, field and revenue assurance jargon.
+
+# ── Churn & retention ───────────────────────────────────────────────────────────────────────────────
+- term: Churn rate
+  synonyms: [churners, lines lost, customer churn, customer attrition]
+  maps_to: { kind: metric, ref: churn_rate }
+- term: Postpaid churn rate
+  synonyms: [contract line churn, postpaid losses, postpaid disconnects]
+  maps_to: { kind: metric, ref: postpaid_churn_rate }
+- term: Net adds
+  synonyms: [base growth, net subscriber additions, net line adds]
+  maps_to: { kind: metric, ref: net_adds }
+- term: Gross adds
+  synonyms: [new activations, connections added, sales volume]
+  maps_to: { kind: metric, ref: gross_adds }
+- term: Port-out share of churn
+  synonyms: [ported out, losses to competitors, number ports out]
+  maps_to: { kind: metric, ref: port_out_share }
+- term: Save rate
+  synonyms: [retention saves, save offers accepted, saved lines]
+  maps_to: { kind: metric, ref: save_rate }
+- term: Inactive prepaid line
+  synonyms: [dormant lines, no top-up lines, inactive prepaid lines]
+  maps_to: { kind: dimension, ref: prepaid_inactive }
+- term: Prepaid
+  synonyms: [pay as you go, payg, prepay]
+  maps_to: { kind: value, ref: segment=Prepaid }
+- term: Postpaid
+  synonyms: [contract lines, bill pay lines]
+  maps_to: { kind: value, ref: segment=Postpaid }
+- term: Broadband
+  synonyms: [home internet, fiber broadband, fibre broadband]
+  maps_to: { kind: value, ref: segment=Broadband }
+- term: Plan migration
+  synonyms: [plan change, plan upgrade, plan downgrade]
+  maps_to: { kind: term, ref: GT-TEL-PLAN-MIGRATION }
+
+# ── Subscriber ──────────────────────────────────────────────────────────────────────────────────────
+- term: Active subscribers
+  synonyms: [lines in service, live lines, active connections]
+  maps_to: { kind: metric, ref: active_subscribers }
+- term: Autopay rate
+  synonyms: [automatic payment rate, recurring payment share, direct debit share]
+  maps_to: { kind: metric, ref: autopay_rate }
+- term: Average tenure
+  synonyms: [how long subscribers stay, length of relationship]
+  maps_to: { kind: metric, ref: avg_tenure_months }
+- term: Out-of-contract share
+  synonyms: [off contract, contract expired share]
+  maps_to: { kind: metric, ref: out_of_contract_pct }
+- term: High churn-risk share
+  synonyms: [likely to churn, at risk base, churn score above 70]
+  maps_to: { kind: metric, ref: high_churn_risk_pct }
+- term: Care contacts per subscriber
+  synonyms: [call-in rate, care call rate, contacts per line]
+  maps_to: { kind: metric, ref: care_contacts_per_sub }
+- term: Rate plan
+  synonyms: [package, bundle, plan type]
+  maps_to: { kind: dimension, ref: plan }
+
+# ── Billing, revenue & usage ────────────────────────────────────────────────────────────────────────
+- term: ARPU
+  synonyms: [revenue per user, average spend per line, monthly spend per line]
+  maps_to: { kind: metric, ref: arpu }
+- term: Service revenue
+  synonyms: [recurring revenue, service billings, top line revenue]
+  maps_to: { kind: metric, ref: service_revenue }
+- term: Revenue leakage
+  synonyms: [unbilled usage, unbilled usage rate, rated but not billed, billing loss]
+  maps_to: { kind: metric, ref: revenue_leakage_pct }
+- term: Bad debt ratio
+  synonyms: [write-offs, uncollectibles, credit losses]
+  maps_to: { kind: metric, ref: bad_debt_ratio }
+- term: Days to pay
+  synonyms: [payment speed, how fast customers pay]
+  maps_to: { kind: metric, ref: avg_days_to_pay }
+- term: Roaming revenue
+  synonyms: [travel revenue, day pass revenue, international roaming revenue]
+  maps_to: { kind: metric, ref: roaming_revenue }
+- term: Wholesale inbound
+  synonyms: [inbound roamers, visiting roamers, wholesale roaming]
+  maps_to: { kind: value, ref: direction=Inbound wholesale }
+- term: Data usage per subscriber
+  synonyms: [gb per line, data per subscriber, mobile data usage]
+  maps_to: { kind: metric, ref: data_gb_per_sub }
+- term: Minutes of use per subscriber
+  synonyms: [talk time, call minutes]
+  maps_to: { kind: metric, ref: voice_min_per_sub }
+
+# ── Network & service assurance ─────────────────────────────────────────────────────────────────────
+- term: Dropped call rate
+  synonyms: [drop rate, lost calls, abnormal call releases]
+  maps_to: { kind: metric, ref: dropped_call_rate }
+- term: Network availability
+  synonyms: [service availability, site uptime, network up time]
+  maps_to: { kind: metric, ref: network_availability }
+- term: Call setup success rate
+  synonyms: [call completion, setup rate, call accessibility]
+  maps_to: { kind: metric, ref: call_setup_success_rate }
+- term: Downlink throughput
+  synonyms: [internet speed, download speeds, mbps delivered]
+  maps_to: { kind: metric, ref: avg_throughput_mbps }
+- term: Mobile data traffic
+  synonyms: [terabytes carried, data carried]
+  maps_to: { kind: metric, ref: data_traffic_tb }
+- term: 5G
+  synonyms: [5g sites, new radio, five g]
+  maps_to: { kind: value, ref: technology=5G }
+- term: LTE
+  synonyms: [4g, 4g lte, lte sites]
+  maps_to: { kind: value, ref: technology=LTE }
+- term: Planned maintenance
+  synonyms: [maintenance windows, scheduled works]
+  maps_to: { kind: dimension, ref: planned_maintenance }
+- term: Mean time to restore
+  synonyms: [time to fix faults, outage duration, restore time]
+  maps_to: { kind: metric, ref: mttr_hours }
+- term: Impacted subscriber hours
+  synonyms: [outage impact, customer hours lost]
+  maps_to: { kind: metric, ref: impacted_subscriber_hours }
+- term: Fiber cut
+  synonyms: [fibre cut, cable cut, backhoe fade]
+  maps_to: { kind: value, ref: fault_class=Fiber cut }
+
+# ── Field operations & experience ───────────────────────────────────────────────────────────────────
+- term: First-time fix rate
+  synonyms: [right first time, single visit resolution, no repeat visit]
+  maps_to: { kind: metric, ref: first_time_fix_rate }
+- term: Truck rolls
+  synonyms: [site visits, technician visits, rolls]
+  maps_to: { kind: metric, ref: truck_rolls }
+- term: Fiber activation lead time
+  synonyms: [install lead time, time to connect, connection lead time]
+  maps_to: { kind: metric, ref: fiber_activation_days }
+- term: Appointments met
+  synonyms: [kept appointments, appointment hit rate]
+  maps_to: { kind: metric, ref: appointment_met_rate }
+- term: Fiber activation
+  synonyms: [fibre activation, fiber install, fibre install]
+  maps_to: { kind: value, ref: wo_type=Fiber activation }
+- term: NPS
+  synonyms: [likelihood to recommend, recommend score]
+  maps_to: { kind: metric, ref: nps }

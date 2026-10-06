@@ -114,7 +114,8 @@ export async function buildWarehouse(pack: Pack, opts: BuildOptions): Promise<Bu
   }
 
   mkdirSync(opts.path ? join(finalPath, '..') : opts.outDir, { recursive: true });
-  const tmp = opts.path ?? `${finalPath}.building`;
+  // Per-process temp file: concurrent builders (test setup, validator, CLI) must not clobber each other.
+  const tmp = opts.path ?? `${finalPath}.building-${process.pid}`;
   for (const p of [tmp, `${tmp}.wal`]) rmSync(p, { force: true });
 
   const timings: Record<string, number> = {};
@@ -134,9 +135,12 @@ export async function buildWarehouse(pack: Pack, opts: BuildOptions): Promise<Bu
       checksums = await tableChecksums(w);
     });
     await w.exec('CHECKPOINT');
-  } finally {
+  } catch (e) {
     await w.close();
+    if (!opts.path) for (const p of [tmp, `${tmp}.wal`]) rmSync(p, { force: true });
+    throw e;
   }
+  await w.close();
 
   const result: BuildResult = {
     packId: id,

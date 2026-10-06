@@ -1,0 +1,456 @@
+# Scripted scenarios for Altair Communications — ported from AI-Ready telecom `scenarios.ts` (S-01..S-15) and the
+# Marketplace AG-TEL-001..003 demo exchanges. Numbers come from golden.json; `expect` holds shape assertions only.
+# Together the 28 scenarios cover all 15 patterns (04 §6).
+
+# ================================================================ AG-TEL-002 Churn Sentinel
+- id: SC-TEL-001
+  agent: AG-TEL-002
+  pattern: 3
+  question: "What was the churn rate by region last quarter?"
+  paraphrases:
+    - "What was the churn rate by region last quarter, excluding inactive prepaid lines?"
+    - "churn per region last qtr"
+    - "monthly churn by territory for Q3"
+  kind: answer
+  query: { view: CHURN_RETENTION, metrics: [churn_rate], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: churn_rate, dir: desc }] }
+  answer:
+    headline: "{{top.region}} had the highest churn rate last quarter at {{top.churn_rate}}% a month."
+    narrative: "Voluntary disconnects plus port-outs over the opening base, excluding inactive prepaid lines (BR-TEL-012). {{bottom.region}} was lowest at {{bottom.churn_rate}}% across {{rows}} regions; company-wide churn was {{total.churn_rate}}%."
+    chart: bar
+  followups: ["Which markets drove West?", "Include inactive prepaid lines", "Port-out share of churn by region last quarter"]
+  expect: { rows: 4, top: { region: West }, rules: [BR-TEL-012] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TEL-002
+  agent: AG-TEL-002
+  pattern: 10
+  question: "What was the churn rate by region last quarter, including inactive prepaid lines?"
+  paraphrases:
+    - "Churn rate by region last quarter including inactive prepaid"
+    - "churn per region last qtr including dormant prepaid"
+  kind: answer
+  query: { view: CHURN_RETENTION, metrics: [churn_rate], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: churn_rate, dir: desc }] }
+  answer:
+    headline: "Including inactive prepaid lines, {{top.region}} had the highest churn rate last quarter at {{top.churn_rate}}% a month."
+    narrative: "You asked for inactive prepaid lines, so the exclusion in BR-TEL-012 is not applied. The dormant prepaid tail in Southeast is purged by the 60-day rule and reorders the ranking — compare with the standard view that excludes it."
+    chart: bar
+  followups: ["Exclude inactive prepaid lines", "Churn rate by segment last quarter"]
+  expect: { rows: 4, top: { region: Southeast } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TEL-003
+  agent: AG-TEL-002
+  pattern: 7
+  question: "How has postpaid churn moved month over month this year?"
+  paraphrases:
+    - "Monthly postpaid churn year to date"
+    - "postpaid churn trend ytd by month"
+  kind: answer
+  query: { view: CHURN_RETENTION, metrics: [postpaid_churn_rate], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "Postpaid churn moved {{delta.postpaid_churn_rate}} points from January to the latest month this year."
+    narrative: "Monthly postpaid voluntary disconnects plus port-outs over the opening postpaid base, across {{rows}} months. Watch the March spike after the annual price adjustment and the Q3 lift from West port-outs."
+    chart: line
+  followups: ["Postpaid churn rate by rate plan this year", "Port-out share of churn by region last quarter"]
+  expect: { rows: 9 }
+
+- id: SC-TEL-004
+  agent: AG-TEL-002
+  pattern: 2
+  question: "Is postpaid churn within target this year?"
+  paraphrases:
+    - "Are we inside our postpaid churn target year to date?"
+    - "postpaid churn vs target ytd"
+  kind: answer
+  query: { view: CHURN_RETENTION, metrics: [postpaid_churn_rate], timeRange: { ytd: true }, analysis: compare_target }
+  answer:
+    headline: "Postpaid churn is {{top.postpaid_churn_rate}}% a month year to date — {{vsTarget.top}} target."
+    narrative: "Postpaid voluntary disconnects plus port-outs over the opening postpaid base; a quarter above 1.0% triggers a retention review (BR-TEL-005)."
+    chart: kpi
+  followups: ["Postpaid churn rate by rate plan this year", "Churn rate by region last quarter"]
+  expect: { rows: 1 }
+
+- id: SC-TEL-005
+  agent: AG-TEL-002
+  pattern: 9
+  question: "How do churn rate and save rate compare across segments this year?"
+  paraphrases:
+    - "Compare churn and save rate by segment year to date"
+    - "segment comparison of churn and saves this year"
+  kind: answer
+  query: { view: CHURN_RETENTION, metrics: [churn_rate, save_rate], dimensions: [segment], timeRange: { ytd: true }, orderBy: [{ field: churn_rate, dir: desc }] }
+  answer:
+    headline: "{{top.segment}} churns most this year at {{top.churn_rate}}% a month, with a {{top.save_rate}}% save rate."
+    narrative: "{{bottom.segment}} is lowest at {{bottom.churn_rate}}% churn and a {{bottom.save_rate}}% save rate, across {{rows}} segments; inactive prepaid lines are excluded (BR-TEL-012)."
+    chart: bar
+  followups: ["Save rate by segment this year", "Churn rate by segment last quarter"]
+  expect: { rows: 3, top: { segment: Prepaid }, rules: [BR-TEL-012] }
+
+- id: SC-TEL-006
+  agent: AG-TEL-002
+  pattern: 15
+  question: "What is our dropped call rate this quarter?"
+  paraphrases:
+    - "How many calls are we dropping?"
+  kind: redirect
+  query: null
+  redirect_to: AG-TEL-003
+  answer:
+    headline: "That's a network quality question — the Network Quality Advisor answers it."
+    narrative: "I cover churn, port-outs, net adds and retention saves. The Network Quality Advisor is certified on network counters and dropped call rate."
+    chart: none
+  followups: ["Ask the Network Quality Advisor", "What can you answer?"]
+
+- id: SC-TEL-007
+  agent: AG-TEL-002
+  pattern: 15
+  question: "Approve a retention discount for this subscriber."
+  paraphrases:
+    - "Approve a retention discount for that subscriber"
+    - "Please approve the retention discount for this subscriber now"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't approve retention discounts — that is outside what this agent is allowed to do."
+    narrative: "Save offers are approved and made by named retention staff under the offer policy. I can show churn, port-outs and save rates for the segment and region so the decision has the evidence."
+    chart: none
+  followups: ["Save rate by segment this year", "Churn rate by region last quarter"]
+
+# ================================================================ AG-TEL-001 Subscriber Insights
+- id: SC-TEL-008
+  agent: AG-TEL-001
+  pattern: 1
+  question: "How many active subscribers do we have?"
+  paraphrases:
+    - "number of active subscribers"
+    - "active subscriber count"
+  kind: answer
+  query: { view: SUBSCRIBER_360, metrics: [active_subscribers], analysis: value }
+  answer:
+    headline: "There are {{top.active_subscribers}} active subscribers in the governed subscriber sample."
+    narrative: "Lines with Active status, excluding inactive prepaid lines (BR-TEL-007)."
+    chart: kpi
+  followups: ["Active subscribers by region", "Autopay rate by segment"]
+  expect: { rows: 1 }
+
+- id: SC-TEL-009
+  agent: AG-TEL-001
+  pattern: 12
+  question: "Which five active lines contacted care the most in the last 90 days?"
+  paraphrases:
+    - "Top 5 active lines by care contacts"
+    - "which active lines contact care most often"
+  kind: answer
+  query: { view: SUBSCRIBER_360, metrics: [care_contacts_per_sub], dimensions: [msisdn], filters: [{ dimension: subscriber_status, op: "=", value: Active }], orderBy: [{ field: care_contacts_per_sub, dir: desc }], limit: 5, analysis: rank }
+  answer:
+    headline: "The busiest active line contacted care {{top.care_contacts_per_sub}} times over the last three months."
+    narrative: "Care contacts are counted over the last 90 days. Mobile numbers are CPNI and stay masked unless your persona is cleared for CPNI (BR-TEL-023). Showing the top {{rows}} active lines by care contacts — hand them to the care team, not a campaign."
+    chart: table
+  followups: ["Care contacts per subscriber by segment", "High churn-risk share by market"]
+  expect: { rows: 5 }
+  personas_expect: { A: { masked: [msisdn], rowFiltered: true }, D: { masked: [] } }
+
+- id: SC-TEL-010
+  agent: AG-TEL-001
+  pattern: 11
+  question: "How are our subscribers doing?"
+  paraphrases:
+    - "subscriber update"
+  kind: clarify
+  query: null
+  answer:
+    headline: "\"How subscribers are doing\" can mean a few things — which one do you need?"
+    narrative: "I can show active subscribers, the autopay rate, average tenure, the high churn-risk share or care contacts. Pick one and a slice."
+    chart: none
+  followups: ["Active subscribers by region", "Autopay rate by segment", "High churn-risk share by market"]
+
+- id: SC-TEL-011
+  agent: AG-TEL-001
+  pattern: 13
+  question: "What is the autopay rate by region?"
+  paraphrases:
+    - "autopay enrolment per region"
+    - "autopay penetration by territory"
+  kind: answer
+  query: { view: SUBSCRIBER_360, metrics: [autopay_rate], dimensions: [region], orderBy: [{ field: autopay_rate, dir: desc }] }
+  answer:
+    headline: "{{top.region}} has the highest autopay rate at {{top.autopay_rate}}% of active subscribers."
+    narrative: "Autopay rate across the {{rows}} regions you are entitled to see; the region row-access policy applies (BR-TEL-026)."
+    chart: bar
+  followups: ["Autopay rate by segment", "Days to pay by payment method"]
+  expect: { rows: 4 }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TEL-012
+  agent: AG-TEL-001
+  pattern: 8
+  question: "How is data usage per subscriber distributed across rate plans this year?"
+  paraphrases:
+    - "Spread of data usage per subscriber by rate plan"
+    - "data usage percentiles across plans this year"
+  kind: answer
+  query: { view: MOBILE_USAGE, metrics: [data_gb_per_sub], dimensions: [plan], timeRange: { ytd: true }, analysis: distribution }
+  answer:
+    headline: "Across {{top.plan_count}} rate plans, the median data usage is {{top.data_gb_per_sub_p50}} GB per line a month."
+    narrative: "The middle 80% of plans sit between {{top.data_gb_per_sub_p10}} and {{top.data_gb_per_sub_p90}} GB; the heaviest plan averages {{top.data_gb_per_sub_max}} GB. Broadband homes are excluded (BR-TEL-016)."
+    chart: table
+  followups: ["Data usage per subscriber by rate plan this year", "Minutes of use per subscriber by region this year"]
+  expect: { rows: 1 }
+
+- id: SC-TEL-013
+  agent: AG-TEL-001
+  pattern: 4
+  question: "How has data usage per subscriber trended month by month this year?"
+  paraphrases:
+    - "Monthly data usage per subscriber year to date"
+    - "data per line trend ytd"
+  kind: answer
+  query: { view: MOBILE_USAGE, metrics: [data_gb_per_sub], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "Data usage per subscriber moved {{delta.data_gb_per_sub}} GB from January to the latest month this year."
+    narrative: "Mean monthly mobile data per mobile line across {{rows}} months (BR-TEL-016); the Q3 handset launch season lifted usage."
+    chart: line
+  followups: ["Data usage per subscriber by rate plan this year", "Minutes of use per subscriber by segment this year"]
+  expect: { rows: 9 }
+
+# ================================================================ AG-TEL-003 Network Quality Advisor
+- id: SC-TEL-014
+  agent: AG-TEL-003
+  pattern: 5
+  question: "Which 10 cell sites had the highest dropped call rate last month?"
+  paraphrases:
+    - "Top 10 cell sites by dropped call rate last month"
+    - "worst ten sites for dcr last month"
+  kind: answer
+  query: { view: NETWORK_PERFORMANCE, metrics: [dropped_call_rate], dimensions: [site], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: dropped_call_rate, dir: desc }], limit: 10, analysis: rank }
+  answer:
+    headline: "{{top.site}} had the highest dropped call rate last month at {{top.dropped_call_rate}}%."
+    narrative: "The {{rows}} worst cell sites by dropped calls per call attempt, from network counters (BR-TEL-017); the network-wide rate was {{total.dropped_call_rate}}%."
+    chart: bar
+  followups: ["Dropped call rate by radio vendor this year", "Compare the dropped call rate this quarter with last quarter"]
+  expect: { rows: 10, top: { site: CS-0042 } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TEL-015
+  agent: AG-TEL-003
+  pattern: 10
+  question: "What was network availability by region last quarter, including planned maintenance?"
+  paraphrases:
+    - "Network availability by region last quarter including maintenance"
+    - "availability per region last qtr including planned work"
+  kind: answer
+  query: { view: NETWORK_PERFORMANCE, metrics: [network_availability], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: network_availability, dir: asc }] }
+  answer:
+    headline: "Including planned maintenance, {{top.region}} had the lowest network availability last quarter at {{top.network_availability}}%."
+    narrative: "You asked for planned maintenance, so the exclusion in BR-TEL-015 is not applied. The Northeast capacity programme ran heavy planned work in the approved window — excluding it, availability is well above the 99.9% site SLA."
+    chart: bar
+  followups: ["Network availability by region this year", "Mean time to restore by region last quarter"]
+  expect: { rows: 4, top: { region: Northeast } }
+
+- id: SC-TEL-016
+  agent: AG-TEL-003
+  pattern: 14
+  question: "What is the first-time fix rate this year?"
+  paraphrases:
+    - "First-time fix rate year to date"
+    - "ftf rate ytd"
+  kind: answer
+  query: { view: FIELD_OPERATIONS, metrics: [first_time_fix_rate], timeRange: { ytd: true } }
+  answer:
+    headline: "The first-time fix rate is {{top.first_time_fix_rate}}% this year."
+    narrative: "Field Service Efficiency is still in certification, so treat this figure as provisional. Closed work orders with no repeat visit for the same fault within 30 days (BR-TEL-021)."
+    chart: kpi
+  followups: ["First-time fix rate by work order type this year", "When will Field Service Efficiency be certified?"]
+  expect: { rows: 1, certified: false }
+  personas_expect: { A: { kind: decline } }
+
+- id: SC-TEL-017
+  agent: AG-TEL-003
+  pattern: 7
+  question: "Compare the dropped call rate this quarter with last quarter"
+  paraphrases:
+    - "Dropped call rate last two quarters"
+    - "dcr quarter over quarter"
+  kind: answer
+  query: { view: NETWORK_PERFORMANCE, metrics: [dropped_call_rate], timeGrain: quarter, timeRange: { last: { n: 2, unit: quarter } }, analysis: trend }
+  answer:
+    headline: "The dropped call rate moved {{delta.dropped_call_rate}} points from last quarter to this quarter."
+    narrative: "It was {{top.dropped_call_rate}}% in the earlier quarter and {{bottom.dropped_call_rate}}% in the latest, comparing whole calendar quarters from network counters (BR-TEL-017); the Q2 software load was rolled back in late June."
+    chart: line
+  followups: ["Dropped call rate by region last quarter", "Which 10 cell sites had the highest dropped call rate last month?"]
+  expect: { rows: 2 }
+
+- id: SC-TEL-018
+  agent: AG-TEL-003
+  pattern: 9
+  question: "How do dropped call rate and throughput compare between 5G and LTE sites this year?"
+  paraphrases:
+    - "Compare dcr and throughput by technology this year"
+    - "5G versus LTE dropped calls and download speed ytd"
+  kind: answer
+  query: { view: NETWORK_PERFORMANCE, metrics: [dropped_call_rate, avg_throughput_mbps], dimensions: [technology], timeRange: { ytd: true }, orderBy: [{ field: avg_throughput_mbps, dir: desc }] }
+  answer:
+    headline: "{{top.technology}} sites deliver {{top.avg_throughput_mbps}} Mbps this year with a {{top.dropped_call_rate}}% dropped call rate."
+    narrative: "{{bottom.technology}} sites deliver {{bottom.avg_throughput_mbps}} Mbps with a {{bottom.dropped_call_rate}}% dropped call rate, across {{rows}} technologies."
+    chart: bar
+  followups: ["Downlink throughput by region last quarter", "Dropped call rate by radio vendor this year"]
+  expect: { rows: 2, top: { technology: 5G } }
+
+- id: SC-TEL-019
+  agent: AG-TEL-003
+  pattern: 15
+  question: "Retune the antennas on the worst cell site."
+  paraphrases:
+    - "Please retune the antennas on that cell site"
+    - "Retune antennas on the worst site now"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't change antennas or radio parameters — RAN engineering does that."
+    narrative: "Radio parameter changes are planned and approved by named RAN engineers through change management. I can show dropped call rate and throughput by site, vendor and technology to support their decision."
+    chart: none
+  followups: ["Which 10 cell sites had the highest dropped call rate last month?", "Dropped call rate by radio vendor this year"]
+
+- id: SC-TEL-020
+  agent: AG-TEL-003
+  pattern: 6
+  question: "Which fault classes drive impacted subscriber hours last quarter?"
+  paraphrases:
+    - "What is driving impacted subscriber hours by fault class last quarter?"
+    - "impacted subscriber hours contribution by fault type last qtr"
+  kind: answer
+  query: { view: SERVICE_ASSURANCE, metrics: [impacted_subscriber_hours], dimensions: [fault_class], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: impacted_subscriber_hours, dir: desc }], analysis: contribution }
+  answer:
+    headline: "{{top.fault_class}} drove the most impacted subscriber hours last quarter: {{top.impacted_subscriber_hours}} hours."
+    narrative: "Total impacted subscriber hours were {{total.impacted_subscriber_hours}} across {{rows}} fault classes. The July heat wave in Central drove power faults; fiber cuts punch above their ticket count because they take longest to restore (BR-TEL-019)."
+    chart: bar
+  followups: ["Mean time to restore by region last quarter", "Faults restored within SLA by fault class this year"]
+  expect: { rows: 5 }
+
+# ================================================================ AG-TEL-004 Revenue Assurance Copilot
+- id: SC-TEL-021
+  agent: AG-TEL-004
+  pattern: 3
+  question: "What was ARPU by region last quarter?"
+  paraphrases:
+    - "average revenue per user by region last quarter"
+    - "arpu per territory last qtr"
+  kind: answer
+  query: { view: BILLING_REVENUE, metrics: [arpu], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: arpu, dir: desc }] }
+  answer:
+    headline: "{{top.region}} had the highest ARPU last quarter at {{top.arpu}} a month."
+    narrative: "Monthly service revenue per billed line, device installments excluded (BR-TEL-011). {{bottom.region}} was lowest at {{bottom.arpu}}; company-wide ARPU was {{total.arpu}}."
+    chart: bar
+  followups: ["ARPU by rate plan last quarter", "Service revenue by month this year"]
+  expect: { rows: 4, top: { region: Northeast } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TEL-022
+  agent: AG-TEL-004
+  pattern: 6
+  question: "Which rate plans contribute most to service revenue last quarter?"
+  paraphrases:
+    - "Service revenue contribution by rate plan last quarter"
+    - "what is driving service revenue by plan last qtr"
+  kind: answer
+  query: { view: BILLING_REVENUE, metrics: [service_revenue], dimensions: [plan], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: service_revenue, dir: desc }], analysis: contribution }
+  answer:
+    headline: "{{top.plan}} contributes the most service revenue last quarter at {{top.service_revenue}}."
+    narrative: "Total service revenue was {{total.service_revenue}} across {{rows}} rate plans, device installments excluded (BR-TEL-011)."
+    chart: bar
+  followups: ["ARPU by rate plan last quarter", "Revenue leakage by region this year"]
+  expect: { rows: 8 }
+
+- id: SC-TEL-023
+  agent: AG-TEL-004
+  pattern: 5
+  question: "Which markets had the highest revenue leakage last quarter?"
+  paraphrases:
+    - "Top markets by revenue leakage last quarter"
+    - "worst markets for billing leakage last qtr"
+  kind: answer
+  query: { view: BILLING_REVENUE, metrics: [revenue_leakage_pct], dimensions: [market], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: revenue_leakage_pct, dir: desc }], limit: 5, analysis: rank }
+  answer:
+    headline: "{{top.market}} had the highest revenue leakage last quarter at {{top.revenue_leakage_pct}}% of rated charges."
+    narrative: "The {{rows}} markets with the most rated-but-unbilled charges; a market above 0.8% in a quarter is escalated to revenue assurance (BR-TEL-013). Company-wide leakage was {{total.revenue_leakage_pct}}%."
+    chart: bar
+  followups: ["Revenue leakage by region this year", "What was revenue leakage last quarter?"]
+  expect: { rows: 5, top: { market: Lakeshore } }
+
+- id: SC-TEL-024
+  agent: AG-TEL-004
+  pattern: 10
+  question: "What was roaming revenue last quarter, including wholesale inbound?"
+  paraphrases:
+    - "Roaming revenue last quarter including wholesale"
+    - "roaming revenue last qtr including inbound"
+  kind: answer
+  query: { view: ROAMING, metrics: [roaming_revenue], timeRange: { last: { n: 1, unit: quarter } } }
+  answer:
+    headline: "Including wholesale inbound, roaming revenue was {{top.roaming_revenue}} last quarter."
+    narrative: "You asked for wholesale inbound, so the retail-only rule in BR-TEL-020 is not applied. Finance reports retail outbound roaming only; partner settlements more than double the figure."
+    chart: kpi
+  followups: ["Roaming revenue by zone last quarter", "Roaming revenue by month this year"]
+  expect: { rows: 1 }
+
+- id: SC-TEL-025
+  agent: AG-TEL-004
+  pattern: 11
+  question: "What's our unbilled usage rate by rate plan last quarter?"
+  paraphrases:
+    - "unbilled usage per plan last qtr"
+    - "rated but not billed by plan last quarter"
+  kind: answer
+  query: { view: BILLING_REVENUE, metrics: [revenue_leakage_pct], dimensions: [plan], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: revenue_leakage_pct, dir: desc }] }
+  answer:
+    headline: "{{top.plan}} has the highest unbilled usage rate last quarter at {{top.revenue_leakage_pct}}%."
+    narrative: "\"Unbilled usage\" maps to revenue leakage: rated charges that never reached an invoice, as a share of rated charges (BR-TEL-013). Shown across {{rows}} rate plans."
+    chart: bar
+  followups: ["Which markets had the highest revenue leakage last quarter?", "ARPU by rate plan last quarter"]
+  expect: { rows: 8 }
+
+- id: SC-TEL-026
+  agent: AG-TEL-004
+  pattern: 15
+  question: "Issue a billing credit to this account."
+  paraphrases:
+    - "Credit this account for the overcharge"
+    - "Refund the late fee on that account"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't issue billing credits or refunds — care and revenue assurance staff do that."
+    narrative: "Credits and refunds are approved by care team leaders and revenue assurance analysts in the billing system. I can show leakage and bad debt trends by market and plan to support their decision."
+    chart: none
+  followups: ["Which markets had the highest revenue leakage last quarter?", "Bad debt ratio by region this year"]
+
+# ================================================================ AG-TEL-005 Data Steward Assistant (no semantic views)
+- id: SC-TEL-027
+  agent: AG-TEL-005
+  pattern: 15
+  question: "What can you answer?"
+  paraphrases:
+    - "What can you help me with?"
+    - "help"
+  kind: help
+  query: null
+  answer:
+    headline: "I explain governance across the data estate — I don't analyse business KPIs."
+    narrative: "Ask me what a glossary term or metric means, the certification status of a data product, or where governance gaps such as missing stewards or CPNI masking sit. For KPI numbers, ask the domain agents."
+    chart: none
+  followups: ["Which products are not yet certified?", "What does churn rate mean?", "Which critical data elements lack a steward?"]
+
+- id: SC-TEL-028
+  agent: AG-TEL-005
+  pattern: 15
+  question: "Approve the access request for Field Service Efficiency."
+  paraphrases:
+    - "Grant me access to DP-TEL-006"
+    - "Can you approve my access request?"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't approve access requests — agents act, humans decide."
+    narrative: "Access to a data product is granted only by its owner or steward through the access workflow. I can show you the request status and who can approve it."
+    chart: none
+  followups: ["Who can approve access to Field Service Efficiency?", "What is the certification status of Field Service Efficiency?"]

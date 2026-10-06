@@ -1,0 +1,25 @@
+id: DP-TEL-001
+name: Subscriber 360
+domain: Subscriber & Accounts
+archetype: ENTITY_MASTER
+initial_status: CERTIFIED
+seed_stage: 12
+version: 2.4.0
+owner: telecom:retention-analyst
+steward: telecom:data-steward
+description: One trusted record per mobile line and broadband home — market, rate plan, status, autopay, tenure, contract state, churn propensity and recent care contacts.
+purpose: Give marketing, care and subscriber analytics one certified subscriber record for reporting, campaigns and agents.
+decision: { persona: Head of Consumer Marketing, decision: "Which markets and segments get the next autopay and contract-renewal campaign", cadence: Monthly, workaround: "Line-level CRM extracts deduplicated by phone number in spreadsheets", consequence: "A household with four lines gets four uncoordinated offers while out-of-contract exposure goes unseen" }
+sample_questions: ["How many active subscribers do we have?", "What is the autopay rate by region?", "High churn-risk share by market"]
+semantic_view: SUBSCRIBER_360
+output_ports:
+  - { kind: semantic, ref: SUBSCRIBER_360 }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_TEL_001_SUBSCRIBER_360 }
+  - { kind: agent, ref: AG-TEL-001 }
+sla: { freshness_minutes: 1440, availability_pct: 99.5, max_null_rate_pct: 1.0 }
+kpis: [KPI-TEL-ACTIVE, KPI-TEL-AUTOPAY, KPI-TEL-TENURE, KPI-TEL-OOC, KPI-TEL-HIGH-RISK, KPI-TEL-CARE]
+upstream: [CONFORMED_GOLD.DIM_SUBSCRIBER]
+consumers: [Consumer marketing, Customer care, Retention, Subscriber Insights agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-TEL-001

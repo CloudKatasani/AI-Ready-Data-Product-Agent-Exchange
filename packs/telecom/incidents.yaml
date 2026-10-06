@@ -1,0 +1,67 @@
+# "Break something" templates (05 §2.4). Ported from AI-Ready telecom ext/operate.ts INC-1..INC-5 and retargeted to
+# the Altair Gold objects. Effects are applied as overlay views in the _INCIDENT schema while an incident is open.
+- id: INC-TEL-LATE-FEED
+  kind: late_feed
+  title: OSS performance counters six hours late
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_NETWORK_DAILY
+  column: kpi_date
+  params: { lag_hours: 6 }
+  affects: { products: [DP-TEL-002], agents: [AG-TEL-003] }
+  narrative: >-
+    The OSS performance-management export stalled and no cell-site counters have landed for six hours. Network
+    Performance is now behind its 60-minute freshness SLA, so today's dropped call rate and availability are missing
+    the latest site-days and any agent answer about recent network quality is stale.
+  detection: Freshness rule DQ-TEL-042 on FCT_NETWORK_DAILY.kpi_date fails and the product moves to Degraded.
+  resolution: Restart the OSS export, backfill the six-hour gap and re-run the DQ rules; the product returns to Healthy.
+- id: INC-TEL-NULL-SPIKE
+  kind: null_spike
+  title: Null spike in billed service revenue
+  severity: SEV1
+  object: CONFORMED_GOLD.FCT_BILLING
+  column: service_revenue
+  params: { null_pct: 15 }
+  affects: { products: [DP-TEL-003], agents: [AG-TEL-004] }
+  narrative: >-
+    A billing extract change left 15% of invoices without service revenue, so ARPU, service revenue and leakage are
+    computed over a partial bill run. Service revenue is a critical data element feeding the investor KPI sheet.
+  detection: Completeness rule DQ-TEL-025 on service_revenue fails; Billing & Revenue Assurance is Degraded.
+  resolution: Revert the extract mapping, reload the affected bill cycle and confirm the null rate is back to zero.
+- id: INC-TEL-DUP-LOAD
+  kind: duplicate_load
+  title: Duplicate base movement load
+  severity: SEV3
+  object: CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY
+  params: { duplicate_pct: 10 }
+  affects: { products: [DP-TEL-004], agents: [AG-TEL-002] }
+  narrative: >-
+    A replayed BSS lifecycle batch loaded 10% of line-months twice. Gross adds, disconnects and net adds are inflated
+    while the duplicates remain, and the board churn pack would overstate base movement.
+  detection: Uniqueness rule DQ-TEL-018 on line_month_id fails and the row count jumps against the trailing average.
+  resolution: Delete the replayed batch by load id, re-run deduplication and confirm dup_rate returns to zero.
+- id: INC-TEL-SCHEMA-DRIFT
+  kind: schema_drift
+  title: First-time fix column renamed upstream
+  severity: SEV1
+  object: CONFORMED_GOLD.FCT_WORK_ORDER
+  column: first_time_fix
+  params: { rename_to: ftf_ind }
+  affects: { products: [DP-TEL-006], agents: [AG-TEL-003] }
+  narrative: >-
+    A field service platform release renamed the first-time fix flag to ftf_ind without a contract change. Every
+    first-time fix metric fails to compile, so the Network Quality Advisor declines with an incident banner instead of
+    answering.
+  detection: Metric compilation for FIELD_OPERATIONS fails and DQ-TEL-052 cannot find its column; the contract check flags a breaking change.
+  resolution: Map ftf_ind back to first_time_fix in Silver, raise a contract major version with a 30-day notice, and re-run checks.
+- id: INC-TEL-VOLUME
+  kind: volume_anomaly
+  title: Missing days of NPS survey responses
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_NPS_RESPONSE
+  params: { missing_days: 3 }
+  affects: { products: [DP-TEL-007], agents: [] }
+  narrative: >-
+    Three days of survey responses never arrived from the survey platform, so the most recent NPS is computed on a
+    partial sample and touchpoint volumes show a false drop at the end of the series.
+  detection: Timeliness rule DQ-TEL-059 on survey_date fails and daily response volume drops against the trailing average.
+  resolution: Replay the survey platform export for the missing days and confirm daily volumes match the trailing average.

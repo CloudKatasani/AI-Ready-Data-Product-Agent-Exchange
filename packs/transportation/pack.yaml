@@ -1,0 +1,46 @@
+id: transportation
+name: Transportation & Logistics
+version: 1.0.0
+depth: standard
+code: TRN
+industry: Truckload freight carrier
+company:
+  name: Meridian Freight Lines
+  short: MFL
+  hq: Brennick
+  description: Asset-based truckload carrier running 600 tractors from 24 terminals for 400 shippers across five operating regions
+database: MFL_AI_PLATFORM
+locale: en-US
+currency: USD
+asOf: 2026-09-30
+seed: 20261010
+regions: [Northeast, Southeast, Central, Mountain, West]
+overridable:
+  regions: true
+  companyName: true
+  terms: [terminal, load, tractor]
+home:
+  heroQuestion: "What was on-time delivery by region last quarter?"
+  heroAgent: AG-TRN-001
+  headlineKpis: [KPI-TRN-OTD, KPI-TRN-UTIL, KPI-TRN-CPM, KPI-TRN-SAFETY-RATE]
+  theatreScenarios: [SC-TRN-001, SC-TRN-002, SC-TRN-008]
+icon: truck
+hook: Delivery, fleet, driver and freight cost data — governed for AI
+story_roles:
+  heroScenario: SC-TRN-001
+  certDemoProduct: DP-TRN-004
+  lifecycleDemoProduct: DP-TRN-004
+  incidentForStory: INC-TRN-LATE-FEED
+  knockoutKpi: KPI-TRN-OTD
+  qualityFixAgent: AG-TRN-002
+lint_terms:
+  - Meridian Freight
+  - Brennick
+  - truckload
+  - tractor
+  - deadhead
+  - dwell
+  - detention
+  - reefer
+  - flatbed
+  - shipper

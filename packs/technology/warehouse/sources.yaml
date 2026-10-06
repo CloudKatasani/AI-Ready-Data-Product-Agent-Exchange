@@ -1,0 +1,273 @@
+# Bronze source tables for Cobalt Cloud Software (CCS_AI_PLATFORM).
+# Converted from the Marketplace TCH products (DP-TCH-001 product usage, DP-TCH-002 service reliability) and
+# extended with CRM, billing and helpdesk sources. Account, subscription and telemetry tables are full
+# populations at every scale so ARR, retention and usage KPIs stay calibrated; opportunities, contacts and
+# tickets keep the same row counts too (the pack is small enough to build in a few seconds at any scale).
+#
+# Telemetry tables are tenant-day and account-feature panels: `batch_row` is the loader's row sequence, so
+# row i belongs to subscription i mod 1,500 and day/feature i div 1,500 (fk dist: sequential).
+tables:
+  - name: CRM_ACCOUNT
+    system: CRM
+    description: Business accounts from the CRM with firmographics and the date they first signed
+    key: account_id
+    rows: { S: 1500, M: 1500, L: 1500 }
+    loaded_at_from: land_date
+    cdc_noise: { duplicate_updates_pct: 4, dirty_strings_pct: 5 }
+    columns:
+      - { name: account_id, type: VARCHAR, gen: { seq: { prefix: "ACC-", pad: 5 } } }
+      - { name: account_name, type: VARCHAR, gen: { company: true } }
+      - { name: region, type: VARCHAR, gen: { choice: { values: [North America, EMEA, APAC, LATAM], weights: [46, 30, 16, 8] } } }
+      - { name: employee_count, type: INTEGER, gen: { lognormal: { mu: 5.6, sigma: 1.45, min: 5, max: 60000 } } }
+      - { name: segment, type: VARCHAR, gen: { formula: "if(employee_count >= 2000, 'Enterprise', if(employee_count >= 200, 'Mid-Market', 'SMB'))" } }
+      - { name: industry_vertical, type: VARCHAR, gen: { choice: { values: [Financial services, Healthcare, Retail, Manufacturing, Public sector, Technology, Media], weights: [18, 14, 14, 16, 8, 20, 10] } } }
+      - { name: acquisition_channel, type: VARCHAR, gen: { choice: { values: [Outbound, Inbound, Partner, Self-serve], weights: [30, 34, 18, 18] } } }
+      - { name: land_date, type: DATE, gen: { date: { from: "2019-01-01", to: "2026-08-31", seasonality: { month: [0.8, 0.9, 1.1, 0.8, 0.9, 1.1, 0.8, 0.9, 1.2, 0.9, 1.0, 1.6] } } } }
+      - { name: health_score, type: DOUBLE, description: "Customer success health score (0-100) maintained by the account's CSM", gen: { normal: { mean: 72, sd: 14, min: 15, max: 100, decimals: 1 } } }
+    plant:
+      - id: P-TCH-18
+        description: "SMB accounts are less healthy (self-serve onboarding, no CSM) — they use fewer of their seats"
+        where: { segment: SMB }
+        adjust: { health_score: { multiply: 0.82 } }
+
+  - name: CRM_SALES_REP
+    system: CRM
+    description: Account executives and their sales teams
+    key: rep_id
+    rows: { S: 60, M: 60, L: 60 }
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 5 }
+    columns:
+      - { name: rep_id, type: VARCHAR, gen: { seq: { prefix: "REP-", pad: 3 } } }
+      - { name: rep_name, type: VARCHAR, gen: { person: full }, tags: [PII] }
+      - { name: home_region, type: VARCHAR, gen: { choice: { values: [North America, EMEA, APAC, LATAM], weights: [44, 30, 17, 9] } } }
+      - { name: sales_team, type: VARCHAR, gen: { choice: { values: [Enterprise, Commercial, Velocity], weights: [30, 40, 30] } } }
+      - { name: hire_date, type: DATE, gen: { date: { from: "2016-01-01", to: "2026-06-30" } } }
+
+  - name: CRM_CONTACT
+    system: CRM
+    description: Named contacts at each account (admins, developers, sponsors) who raise support tickets
+    key: contact_id
+    rows: { S: 6000, M: 6000, L: 6000 }
+    cdc_noise: { duplicate_updates_pct: 4, dirty_strings_pct: 6 }
+    columns:
+      - { name: contact_id, type: VARCHAR, gen: { seq: { prefix: "CON-", pad: 6 } } }
+      - { name: account_id, type: VARCHAR, gen: { fk: { table: CRM_ACCOUNT, column: account_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: account_id, parent_column: region } }, dirty: false }
+      - { name: first_name, type: VARCHAR, gen: { person: first }, tags: [PII] }
+      - { name: last_name, type: VARCHAR, gen: { person: last }, tags: [PII] }
+      - { name: email, type: VARCHAR, gen: { email: { first: first_name, last: last_name, domain: example.com } }, tags: [PII], null_pct: 3 }
+      - { name: phone, type: VARCHAR, gen: { phone: true }, tags: [PII], null_pct: 20 }
+      - { name: job_title, type: VARCHAR, gen: { choice: { values: [Workspace admin, Developer, IT manager, Finance, Executive sponsor, Team lead], weights: [26, 20, 18, 8, 8, 20] } } }
+      - { name: is_primary, type: BOOLEAN, gen: { bernoulli: 0.25 } }
+
+  - name: BILL_SUBSCRIPTION
+    system: Subscription billing
+    description: Base platform subscriptions — one per account; the end date is the cancellation date (null while active)
+    key: subscription_id
+    rows: { S: 1500, M: 1500, L: 1500 }
+    loaded_at_from: start_date
+    cdc_noise: { duplicate_updates_pct: 5, dirty_strings_pct: 4 }
+    columns:
+      - { name: subscription_id, type: VARCHAR, gen: { seq: { prefix: "SUB-", pad: 6 } } }
+      - { name: account_id, type: VARCHAR, gen: { fk: { table: CRM_ACCOUNT, column: account_id, dist: sequential } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: account_id, parent_column: region } }, dirty: false }
+      - { name: segment, type: VARCHAR, gen: { derive_from: { fk_column: account_id, parent_column: segment } }, dirty: false }
+      - { name: account_employees, type: INTEGER, gen: { derive_from: { fk_column: account_id, parent_column: employee_count } } }
+      - { name: account_health, type: DOUBLE, gen: { derive_from: { fk_column: account_id, parent_column: health_score } } }
+      - { name: start_date, type: DATE, gen: { derive_from: { fk_column: account_id, parent_column: land_date } } }
+      - { name: end_date, type: DATE, gen: { date_offset: { from_column: start_date, days: { min: 300, max: 5200 }, clamp_to_as_of: true } } }
+      - { name: plan_tier, type: VARCHAR, gen: { formula: "if(segment == 'Enterprise', 'Enterprise', if(account_employees >= 800, 'Scale', if(account_employees >= 60, 'Growth', 'Starter')))" } }
+      - { name: seats, type: INTEGER, gen: { formula: "account_employees * 0.3", min: 5, max: 2500 } }
+      - { name: seat_rate_usd, type: DOUBLE, gen: { formula: "if(plan_tier == 'Enterprise', 420, if(plan_tier == 'Scale', 360, if(plan_tier == 'Growth', 300, 240)))" } }
+      - { name: arr_usd, type: DOUBLE, gen: { formula: "seats * seat_rate_usd", decimals: 2 } }
+      - { name: billing_frequency, type: VARCHAR, gen: { choice: { values: [Annual, Quarterly, Monthly], weights: [70, 15, 15] } } }
+      - { name: auto_renew, type: BOOLEAN, gen: { bernoulli: 0.6 } }
+    plant:
+      - id: P-TCH-01
+        description: "A cluster of EMEA SMB cancellations in Q3 2026 (a competitor's low-cost bundle) lifts EMEA logo churn"
+        where: { region: EMEA, segment: SMB }
+        adjust: { end_date: { set: 20680, pct: 20 } }
+      - id: P-TCH-17
+        description: "Enterprise customers renew on multi-year terms — far fewer Enterprise cancellations"
+        where: { segment: Enterprise }
+        adjust: { end_date: { add: 1500, pct: 60 } }
+
+  - name: BILL_ADDON_LINE
+    system: Subscription billing
+    description: Add-on lines on a subscription — seat expansions, module cross-sells, seat reductions and one-time professional services
+    key: line_id
+    rows: { S: 13000, M: 13000, L: 13000 }
+    loaded_at_from: start_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.3, dirty_strings_pct: 4, late_arrivals_pct: 1 }
+    columns:
+      - { name: line_id, type: VARCHAR, gen: { seq: { prefix: "ADD-", pad: 6 } } }
+      - { name: subscription_id, type: VARCHAR, gen: { fk: { table: BILL_SUBSCRIPTION, column: subscription_id } } }
+      - { name: account_id, type: VARCHAR, gen: { derive_from: { fk_column: subscription_id, parent_column: account_id } } }
+      - { name: segment, type: VARCHAR, gen: { derive_from: { fk_column: subscription_id, parent_column: segment } }, dirty: false }
+      - { name: base_arr_usd, type: DOUBLE, gen: { derive_from: { fk_column: subscription_id, parent_column: arr_usd } } }
+      - { name: base_start_date, type: DATE, gen: { derive_from: { fk_column: subscription_id, parent_column: start_date } } }
+      - { name: start_date, type: DATE, gen: { date_offset: { from_column: base_start_date, days: { min: 45, max: 2600 }, clamp_to_as_of: true } } }
+      - { name: line_type, type: VARCHAR, gen: { choice: { values: [Seat expansion, Module cross-sell, Seat reduction, Professional services], weights: [46, 28, 9, 17] } } }
+      - { name: product_family, type: VARCHAR, gen: { choice: { values: [Core Platform, Analytics, Security, Integrations, AI Assistant], weights: [34, 20, 16, 18, 12] } } }
+      - { name: charge_type, type: VARCHAR, gen: { formula: "if(line_type == 'Professional services', 'One-time', 'Recurring')" } }
+      - { name: uplift_pct, type: DOUBLE, gen: { uniform: { min: 8, max: 50, decimals: 1 } } }
+      - { name: amount_usd, type: DOUBLE, gen: { formula: "base_arr_usd * uplift_pct / 100 * if(line_type == 'Seat reduction', -0.8, 1)", decimals: 2 } }
+      - { name: end_date, type: DATE, gen: { date_offset: { from_column: start_date, days: { min: 60, max: 150 } } } }
+    plant:
+      - id: P-TCH-02
+        description: "Enterprise accounts expanded fast over the last eighteen months (enterprise-wide rollouts) — Enterprise leads net revenue retention"
+        where: { segment: Enterprise, line_type: { in: [Seat expansion, Module cross-sell] } }
+        window: { column: start_date, from: "2025-04-01", to: "2026-09-30" }
+        adjust: { amount_usd: { multiply: 2.6 } }
+      - id: P-TCH-03
+        description: "Large implementation projects sold in Q3 2026 — one-time services that inflate ARR if they are not excluded"
+        where: { line_type: Professional services }
+        window: { column: start_date, from: "2026-06-15", to: "2026-09-30" }
+        adjust: { amount_usd: { multiply: 15.0 } }
+
+  - name: CRM_OPPORTUNITY
+    system: CRM
+    description: Sales opportunities (new business, expansion, renewal) with amount, stage and close date
+    key: opportunity_id
+    rows: { S: 12000, M: 12000, L: 12000 }
+    loaded_at_from: created_date
+    cdc_noise: { duplicate_updates_pct: 6, deletes_pct: 0.5, dirty_strings_pct: 4, late_arrivals_pct: 1 }
+    columns:
+      - { name: opportunity_id, type: VARCHAR, gen: { seq: { prefix: "OPP-", pad: 7 } } }
+      - { name: account_id, type: VARCHAR, gen: { fk: { table: CRM_ACCOUNT, column: account_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: account_id, parent_column: region } }, dirty: false }
+      - { name: account_employees, type: INTEGER, gen: { derive_from: { fk_column: account_id, parent_column: employee_count } } }
+      - { name: rep_id, type: VARCHAR, gen: { fk: { table: CRM_SALES_REP, column: rep_id, dist: zipf, s: 0.6 } } }
+      - { name: opp_type, type: VARCHAR, gen: { choice: { values: [New business, Expansion, Renewal], weights: [46, 34, 20] } } }
+      - { name: lead_source, type: VARCHAR, gen: { choice: { values: [Outbound, Inbound, Partner, Event], weights: [34, 36, 18, 12] } } }
+      - { name: created_date, type: DATE, gen: { date: { from: "2024-01-01", to: asOf } } }
+      - { name: close_date, type: DATE, gen: { date_offset: { from_column: created_date, days: { min: 14, max: 200 } } } }
+      - { name: seat_share_pct, type: DOUBLE, gen: { uniform: { min: 4, max: 30, decimals: 1 } } }
+      - { name: amount_usd, type: DOUBLE, gen: { formula: "max(1500, account_employees * seat_share_pct / 100 * 340)", max: 2500000, decimals: 2 } }
+      - { name: is_won, type: BOOLEAN, gen: { bernoulli: 0.24 } }
+      - { name: open_stage, type: VARCHAR, gen: { choice: { values: [Discovery, Solution design, Proposal, Negotiation], weights: [34, 28, 22, 16] } } }
+    plant:
+      - id: P-TCH-04
+        description: "Renewals close at a much higher rate than new business — including them flatters win rate"
+        where: { opp_type: Renewal }
+        adjust: { is_won: { set: true, pct: 82 } }
+      - id: P-TCH-05
+        description: "Partner-sourced deals win more often"
+        where: { lead_source: Partner }
+        adjust: { is_won: { set: true, pct: 10 } }
+      - id: P-TCH-06
+        description: "EMEA win rate dips in Q3 2026 as deals are lost to a discounting competitor"
+        where: { region: EMEA }
+        window: { column: close_date, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { is_won: { set: false, pct: 40 } }
+
+  - name: TELEMETRY_USAGE_DAILY
+    system: Product telemetry
+    description: Tenant-day roll-up of product telemetry for Q3 2026 — monthly and daily active users, licensed seats and downtime minutes
+    key: usage_id
+    rows: { S: 138000, M: 138000, L: 138000 }
+    loaded_at_from: usage_date
+    cdc_noise: { duplicate_updates_pct: 3, late_arrivals_pct: 2 }
+    columns:
+      - { name: usage_id, type: VARCHAR, gen: { seq: { prefix: "USG-", pad: 7 } } }
+      - { name: batch_row, type: INTEGER, gen: { seq: { start: 0 } } }
+      - { name: subscription_id, type: VARCHAR, gen: { fk: { table: BILL_SUBSCRIPTION, column: subscription_id, dist: sequential } } }
+      - { name: account_id, type: VARCHAR, gen: { derive_from: { fk_column: subscription_id, parent_column: account_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: subscription_id, parent_column: region } }, dirty: false }
+      - { name: plan_tier, type: VARCHAR, gen: { derive_from: { fk_column: subscription_id, parent_column: plan_tier } }, dirty: false }
+      - { name: seats_licensed, type: INTEGER, gen: { derive_from: { fk_column: subscription_id, parent_column: seats } } }
+      - { name: account_health, type: DOUBLE, gen: { derive_from: { fk_column: subscription_id, parent_column: account_health } } }
+      - { name: day_index, type: INTEGER, gen: { formula: "floor(batch_row / 1500)" } }
+      - { name: usage_date, type: DATE, gen: { formula: "20635 + day_index" } }
+      - { name: daily_jitter, type: DOUBLE, gen: { uniform: { min: 0.0, max: 0.2, decimals: 3 } } }
+      - { name: active_seat_share, type: DOUBLE, gen: { formula: "account_health / 100 * 0.8 + daily_jitter", min: 0.05, max: 0.98, decimals: 3 } }
+      - { name: monthly_active_users, type: INTEGER, gen: { formula: "round(seats_licensed * active_seat_share)" } }
+      - { name: daily_share, type: DOUBLE, gen: { uniform: { min: 0.22, max: 0.52, decimals: 3 } } }
+      - { name: daily_active_users, type: INTEGER, gen: { formula: "round(monthly_active_users * daily_share)" } }
+      - { name: downtime_minutes, type: INTEGER, gen: { choice: { values: [0, 2, 6, 15, 40], weights: [95.5, 2.5, 1.2, 0.6, 0.2] } } }
+    plant:
+      - id: P-TCH-07
+        description: "Habit is strongest on the Enterprise plan (daily active users per monthly active user)"
+        where: { plan_tier: Enterprise }
+        adjust: { daily_active_users: { multiply: 1.25 } }
+      - id: P-TCH-08
+        description: "EMEA pod outage on 2026-08-12 — about two hours of downtime for every EMEA tenant"
+        where: { region: EMEA }
+        window: { column: usage_date, from: "2026-08-12", to: "2026-08-12" }
+        adjust: { downtime_minutes: { set: 118 } }
+      - id: P-TCH-09
+        description: "The 2026-09-08 release regressed the editor; daily active users dip for a week"
+        window: { column: usage_date, from: "2026-09-08", to: "2026-09-14" }
+        adjust: { daily_active_users: { multiply: 0.82 } }
+
+  - name: TELEMETRY_FEATURE_USAGE
+    system: Product telemetry
+    description: Thirty-day feature usage per account and feature (ten instrumented features), as of the latest telemetry batch
+    key: feature_usage_id
+    rows: { S: 15000, M: 15000, L: 15000 }
+    loaded_at_from: last_event_date
+    cdc_noise: { duplicate_updates_pct: 3 }
+    columns:
+      - { name: feature_usage_id, type: VARCHAR, gen: { seq: { prefix: "FTU-", pad: 6 } } }
+      - { name: batch_row, type: INTEGER, gen: { seq: { start: 0 } } }
+      - { name: subscription_id, type: VARCHAR, gen: { fk: { table: BILL_SUBSCRIPTION, column: subscription_id, dist: sequential } } }
+      - { name: account_id, type: VARCHAR, gen: { derive_from: { fk_column: subscription_id, parent_column: account_id } } }
+      - { name: plan_tier, type: VARCHAR, gen: { derive_from: { fk_column: subscription_id, parent_column: plan_tier } }, dirty: false }
+      - { name: feature_no, type: INTEGER, gen: { formula: "floor(batch_row / 1500) + 1" } }
+      - { name: feature_code, type: VARCHAR, gen: { formula: "if(feature_no < 10, 'FT-0' + feature_no, 'FT-' + feature_no)" } }
+      - { name: events_30d, type: INTEGER, gen: { choice: { values: [0, 1, 3, 8, 20, 60], weights: [30, 8, 14, 20, 16, 12] } } }
+      - { name: last_event_date, type: DATE, gen: { date: { from: "2026-08-15", to: asOf } } }
+    plant:
+      - id: P-TCH-10
+        description: "Dashboards (FT-01) is used by almost every account"
+        where: { feature_code: FT-01 }
+        adjust: { events_30d: { set: 40, pct: 70 } }
+      - id: P-TCH-11
+        description: "AI Assistant (FT-09), launched in March 2026, has the lowest adoption among entitled accounts"
+        where: { feature_code: FT-09 }
+        adjust: { events_30d: { set: 0, pct: 62 } }
+      - id: P-TCH-12
+        description: "Audit log export (FT-10) is rarely used outside regulated accounts"
+        where: { feature_code: FT-10 }
+        adjust: { events_30d: { set: 0, pct: 40 } }
+
+  - name: HELPDESK_TICKET
+    system: Helpdesk
+    description: Support tickets raised by account contacts, with priority, first response and resolution
+    key: ticket_id
+    rows: { S: 30000, M: 30000, L: 30000 }
+    loaded_at_from: created_ts
+    cdc_noise: { duplicate_updates_pct: 5, deletes_pct: 0.3, dirty_strings_pct: 5, late_arrivals_pct: 1 }
+    columns:
+      - { name: ticket_id, type: VARCHAR, gen: { seq: { prefix: "TKT-", pad: 7 } } }
+      - { name: contact_id, type: VARCHAR, gen: { fk: { table: CRM_CONTACT, column: contact_id } } }
+      - { name: account_id, type: VARCHAR, gen: { derive_from: { fk_column: contact_id, parent_column: account_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: contact_id, parent_column: region } }, dirty: false }
+      - { name: created_ts, type: TIMESTAMP, gen: { datetime: { from: "2025-10-01", to: asOf, business_hours: true } } }
+      - { name: priority, type: VARCHAR, gen: { choice: { values: [P1, P2, P3, P4], weights: [3, 14, 48, 35] } } }
+      - { name: channel, type: VARCHAR, gen: { choice: { values: [Email, Web portal, Chat, Phone], weights: [34, 30, 24, 12] } } }
+      - { name: category, type: VARCHAR, gen: { choice: { values: [How-to, Bug, Billing, Integration, Access & SSO, Performance], weights: [30, 22, 12, 14, 12, 10] } } }
+      - { name: status, type: VARCHAR, gen: { choice: { values: [Solved, Closed, Open, Merged], weights: [52, 30, 10, 8] } } }
+      - { name: queue_minutes, type: DOUBLE, gen: { lognormal: { mu: 4.6, sigma: 0.75, min: 1, max: 4000, decimals: 1 } } }
+      - { name: first_response_minutes, type: INTEGER, gen: { formula: "queue_minutes * if(priority == 'P1', 0.12, if(priority == 'P2', 0.45, if(priority == 'P3', 1.0, 2.2)))", min: 1 } }
+      - { name: resolution_hours, type: DOUBLE, gen: { lognormal: { mu: 2.7, sigma: 1.0, min: 0.2, max: 900, decimals: 1 } } }
+      - { name: csat_score, type: INTEGER, gen: { choice: { values: [1, 2, 3, 4, 5], weights: [5, 7, 14, 32, 42] } }, null_pct: 62 }
+      - { name: subject, type: VARCHAR, gen: { template: "{category} request via {channel}" } }
+    plant:
+      - id: P-TCH-13
+        description: "APAC first responses slow down in August 2026 (holiday staffing gap)"
+        where: { region: APAC }
+        window: { column: created_ts, from: "2026-08-01", to: "2026-08-31" }
+        adjust: { first_response_minutes: { multiply: 2.4 } }
+      - id: P-TCH-14
+        description: "Bug tickets surge for two weeks after the 2026-09-08 release"
+        window: { column: created_ts, from: "2026-09-08", to: "2026-09-21" }
+        adjust: { category: { set: Bug, pct: 30 } }
+      - id: P-TCH-15
+        description: "Duplicate tickets merged during the release surge (excluded from response metrics by BR-TCH-010)"
+        window: { column: created_ts, from: "2026-09-08", to: "2026-09-21" }
+        adjust: { status: { set: Merged, pct: 12 } }
+      - id: P-TCH-16
+        description: "Merged duplicates sit unanswered until they are merged, so their first-response times are long"
+        where: { status: Merged }
+        adjust: { first_response_minutes: { multiply: 5 } }

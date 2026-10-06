@@ -1,0 +1,98 @@
+# Knockout (Why AI-Ready): four governed answers and how each degrades when a layer is switched off.
+# declared_delta_pct is computed through the real knockout query path at scale M (pnpm knockout:deltas --update).
+answers:
+  - id: KO-TRN-01
+    kpi: KPI-TRN-OTD
+    question: "What was on-time delivery last quarter?"
+    query: { view: DELIVERY_SERVICE, metrics: [on_time_delivery_pct], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: unverified   # raw CDC feed: duplicates cancel out in the ratio, but nothing reconciles or deduplicates it
+      gold: unverified     # same number from Silver, without certified lineage or the conformed terminal region
+      semantic: wrong      # naive formula counts loads within an hour of the window as on time and drops BR-TRN-002 — the two errors happen to offset
+      glossary: ambiguous  # "OTD" no longer resolves to the contract definition
+      context: wrong       # customer-caused delays (BR-TRN-002) are no longer excluded
+      governance: unsafe   # no certification, row access or lineage on the answer
+    declared_delta_pct: { silver: 0, gold: 0, semantic: 0.1, glossary: 0, context: -3.2, governance: 0 }
+  - id: KO-TRN-02
+    kpi: KPI-TRN-UTIL
+    question: "What was asset utilisation last quarter?"
+    query: { view: FLEET_UTILISATION, metrics: [asset_utilisation_pct], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: unverified   # raw telematics feed with same-day re-sends; the ratio hides them but nothing reconciles the feed
+      gold: unverified     # same number from Silver, without the certified tractor-to-terminal conformance
+      semantic: wrong      # naive formula averages daily ratios instead of summing hours
+      glossary: ambiguous  # "utilization" vs "utilisation" vs "seat utilisation" not reconciled
+      context: wrong       # shop days (BR-TRN-006) are no longer excluded
+      governance: unsafe   # tractor-level rows exposed without row access
+    declared_delta_pct: { silver: 0, gold: 0, semantic: -7, glossary: 0, context: -7, governance: 0 }
+  - id: KO-TRN-03
+    kpi: KPI-TRN-CPM
+    question: "What was cost per mile this year?"
+    query: { view: FREIGHT_ECONOMICS, metrics: [cost_per_mile], timeRange: { ytd: true } }
+    failure_by_layer:
+      silver: unverified   # duplicate load updates inflate cost and miles equally, so the ratio hides them
+      gold: unverified     # same number from Silver but no certified lineage
+      semantic: wrong      # naive formula divides by loaded miles only, hiding empty repositioning
+      glossary: ambiguous  # "CPM" could mean cost per mile or cost per thousand
+      context: unverified  # the cost-per-mile definition (BR-TRN-015) is not cited
+      governance: unsafe   # shipper contact emails reachable from the freight view unmasked
+    declared_delta_pct: { silver: 0, gold: 0, semantic: 14, glossary: 0, context: 0, governance: 0 }
+  - id: KO-TRN-04
+    kpi: KPI-TRN-TURNOVER
+    question: "What was driver turnover over the last 12 months?"
+    query: { view: DRIVER_SAFETY, metrics: [driver_turnover_pct], timeRange: { last: { n: 12, unit: month } } }
+    failure_by_layer:
+      silver: unverified   # no driver-month grain in Silver; the Gold aggregate stays in place
+      gold: unverified     # the driver-month fact has no Silver equivalent, so lineage cannot be re-verified
+      semantic: wrong      # naive formula divides separations by distinct drivers, not headcount months
+      glossary: ambiguous  # "churn" could mean shipper churn or driver churn
+      context: wrong       # owner-operators (BR-TRN-010) are no longer excluded
+      governance: unsafe   # driver names reachable without masking
+    declared_delta_pct: { silver: 0, gold: 0, semantic: -60, glossary: 0, context: 10.5, governance: 0 }
+
+# Silver equivalents the compiler uses when the Gold layer is off (05 §1 step 7). column_map maps a Gold column
+# name to the Silver column (or Silver expression) that replaces it. Gold surrogate keys map to natural keys on both
+# sides of a join so relationships still resolve; date_key maps to the same integer expression Gold uses.
+# DIM_DATE is a generated calendar and FCT_DRIVER_MONTH a Gold-only aggregate; both stay in place.
+gold_fallbacks:
+  - gold: CONFORMED_GOLD.FCT_LOAD
+    silver: CURATED_SILVER.SHIPMENT_LOAD
+    column_map:
+      load_key: load_id
+      customer_key: customer_id
+      terminal_key: origin_terminal_id
+      tractor_key: tractor_id
+      driver_key: driver_id
+      date_key: "CAST(strftime(pickup_date, '%Y%m%d') AS INTEGER)"
+      delivered_late: "delay_minutes > 0"
+      on_time: "delay_minutes <= 0"
+      customer_caused_delay: "delay_minutes > 0 AND delay_cause = 'Customer'"
+      total_miles: "loaded_miles + empty_miles"
+      revenue: "linehaul_revenue + fuel_surcharge + CASE WHEN load_type = 'Live' THEN greatest(dwell_hours - 2, 0) * 65 ELSE 0 END"
+      total_cost: "operating_cost + fuel_cost + accessorial_cost"
+      claim_cost: "0"
+  - gold: CONFORMED_GOLD.DIM_TERMINAL
+    silver: CURATED_SILVER.TERMINAL
+    column_map:
+      terminal_key: terminal_id
+  - gold: CONFORMED_GOLD.DIM_CUSTOMER
+    silver: CURATED_SILVER.SHIPPER
+    column_map:
+      customer_key: customer_id
+      contact_name: "concat(contact_first_name, ' ', contact_last_name)"
+  - gold: CONFORMED_GOLD.FCT_FLEET_DAY
+    silver: CURATED_SILVER.FLEET_DAY
+    column_map:
+      fleet_day_key: fleet_day_id
+      tractor_key: tractor_id
+      terminal_key: "(SELECT x.home_terminal_id FROM (SELECT tractor_id AS tid, home_terminal_id FROM CURATED_SILVER.TRACTOR) x WHERE x.tid = tractor_id)"
+      driver_key: driver_id
+      date_key: "CAST(strftime(activity_date, '%Y%m%d') AS INTEGER)"
+      in_service: "revenue_hours > 0"
+      total_miles: "loaded_miles + empty_miles"
+  - gold: CONFORMED_GOLD.DIM_TRACTOR
+    silver: CURATED_SILVER.TRACTOR
+    column_map:
+      tractor_key: tractor_id
+      terminal_key: home_terminal_id
+      model_year_band: "CASE WHEN model_year >= 2024 THEN '2024 and newer' WHEN model_year >= 2021 THEN '2021 to 2023' ELSE '2020 and older' END"

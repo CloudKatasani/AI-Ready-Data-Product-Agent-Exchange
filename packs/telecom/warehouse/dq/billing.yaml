@@ -1,0 +1,100 @@
+# Billing, payment, usage and roaming DQ rules.
+- id: DQ-TEL-024
+  object: CONFORMED_GOLD.FCT_BILLING
+  column: invoice_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: 'One row per invoice (replayed bill runs are removed).'
+- id: DQ-TEL-025
+  object: CONFORMED_GOLD.FCT_BILLING
+  column: service_revenue
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: 'Every invoice carries service revenue (ARPU and leakage depend on it).'
+- id: DQ-TEL-026
+  object: CONFORMED_GOLD.FCT_BILLING
+  column: service_revenue
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: 'Service revenue is never negative; credits are separate adjustments.'
+- id: DQ-TEL-027
+  object: CONFORMED_GOLD.FCT_BILLING
+  column: leakage_amount
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: 'Leakage is populated on every invoice (zero when rated equals billed).'
+- id: DQ-TEL-028
+  object: CONFORMED_GOLD.FCT_BILLING
+  column: leakage_amount
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: 'Leakage is never negative.'
+- id: DQ-TEL-029
+  object: CONFORMED_GOLD.FCT_BILLING
+  column: pay_method
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Autopay, Card, Cash, Bank transfer, Unpaid]
+  severity: medium
+  alert_route: steward
+  description: 'Payment methods conform to the billing catalogue.'
+- id: DQ-TEL-030
+  object: CONFORMED_GOLD.FCT_BILLING
+  column: month_end
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: 'The latest bill cycle has loaded.'
+- id: DQ-TEL-031
+  object: CURATED_SILVER.PAYMENT
+  column: card_number
+  dimension: validity
+  assertion: "regex_rate >= 0.999"
+  pattern: "^[0-9]{4}-[0-9]{4}-.+$"
+  severity: medium
+  alert_route: steward
+  description: 'Card numbers are in the tokenised format expected by MASK_PCI.'
+- id: DQ-TEL-032
+  object: CONFORMED_GOLD.FCT_MONTHLY_USAGE
+  column: data_gb
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: medium
+  alert_route: steward
+  description: 'Data usage is never negative.'
+- id: DQ-TEL-033
+  object: CONFORMED_GOLD.FCT_MONTHLY_USAGE
+  column: month_end
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: medium
+  alert_route: engineering
+  description: 'Mediated usage is current to the latest month-end.'
+- id: DQ-TEL-034
+  object: CONFORMED_GOLD.FCT_ROAMING
+  column: direction
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Outbound retail, Inbound wholesale]
+  severity: high
+  alert_route: steward
+  description: 'Roaming direction is Outbound retail or Inbound wholesale (BR-TEL-020 filters on it).'
+- id: DQ-TEL-035
+  object: CONFORMED_GOLD.FCT_ROAMING
+  column: event_date
+  dimension: timeliness
+  assertion: "freshness_min <= 11520"
+  severity: medium
+  alert_route: engineering
+  description: 'TAP files are no more than a week behind.'

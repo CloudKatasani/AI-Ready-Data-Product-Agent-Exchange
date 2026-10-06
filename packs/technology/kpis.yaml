@@ -1,0 +1,211 @@
+# KPIs with target bands, calibrated against the scale-M warehouse (Marketplace TCH KPI manifests + SaaS revenue KPIs).
+# `window` is evaluated relative to pack asOf; `last n unit` = the n most recent complete units (ADR-0011).
+- id: KPI-TCH-ARR
+  name: ARR
+  definition: "Annual recurring revenue at the latest month end, subscription revenue only"
+  formula: "sum of active recurring subscription lines at month end (one-time services excluded)"
+  unit: "USD"
+  direction: higher_is_better
+  target: { min: 190000000, max: 220000000 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-TCH-ARR
+  metric: arr
+  products: [DP-TCH-001]
+- id: KPI-TCH-NRR
+  name: Net revenue retention
+  definition: "Trailing-twelve-month net revenue retention, averaged over the quarter's month ends"
+  formula: "ARR now from accounts paying 12 months ago ÷ their ARR then"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 105, max: 115 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TCH-NRR
+  metric: nrr_pct
+  products: [DP-TCH-001]
+- id: KPI-TCH-GRR
+  name: Gross revenue retention
+  definition: "Trailing-twelve-month gross revenue retention (expansion excluded)"
+  formula: "Σ min(ARR now, ARR 12 months ago) ÷ Σ ARR 12 months ago"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 88, max: 94 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TCH-GRR
+  metric: grr_pct
+  products: [DP-TCH-001]
+- id: KPI-TCH-LOGO-CHURN
+  name: Logo churn
+  definition: "Share of accounts paying twelve months earlier that now pay nothing"
+  formula: "churned accounts ÷ accounts paying 12 months ago"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 5, max: 10 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TCH-LOGO-CHURN
+  metric: logo_churn_pct
+  products: [DP-TCH-001]
+- id: KPI-TCH-EXPANSION
+  name: Expansion ARR
+  definition: "ARR added by seat expansions and cross-sells on existing customers in the quarter"
+  formula: "Σ month-over-month ARR increases on paying accounts"
+  unit: "USD"
+  direction: higher_is_better
+  target: { min: 7000000, max: 10000000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TCH-EXPANSION-ARR
+  metric: expansion_arr
+  products: [DP-TCH-001]
+- id: KPI-TCH-CUSTOMERS
+  name: Paying customers
+  definition: "Accounts with subscription ARR at the latest month end"
+  formula: "count of accounts with ARR > 0"
+  unit: "accounts"
+  direction: higher_is_better
+  target: { min: 1100, max: 1250 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-TCH-PAYING-CUSTOMER
+  metric: paying_customers
+  products: [DP-TCH-001]
+- id: KPI-TCH-WIN-RATE
+  name: Win rate
+  definition: "Won new-business and expansion opportunities as a share of those closed in the quarter"
+  formula: "won ÷ (won + lost), renewals excluded"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 20, max: 28 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TCH-WIN-RATE
+  metric: win_rate_pct
+  products: [DP-TCH-002]
+- id: KPI-TCH-BOOKINGS
+  name: New bookings
+  definition: "Annual contract value of won new-business and expansion opportunities in the quarter"
+  formula: "Σ amount of won opportunities, renewals excluded"
+  unit: "USD"
+  direction: higher_is_better
+  target: { min: 7500000, max: 10000000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TCH-BOOKINGS
+  metric: bookings_usd
+  products: [DP-TCH-002]
+- id: KPI-TCH-DEAL-SIZE
+  name: Average deal size
+  definition: "Mean annual contract value of won opportunities in the quarter"
+  formula: "Σ won amount ÷ won opportunities"
+  unit: "USD"
+  direction: higher_is_better
+  target: { min: 35000, max: 50000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TCH-DEAL-SIZE
+  metric: avg_deal_size
+  products: [DP-TCH-002]
+- id: KPI-TCH-SALES-CYCLE
+  name: Sales cycle
+  definition: "Mean days from creation to close for won opportunities in the quarter"
+  formula: "Σ (close date − created date) ÷ won opportunities"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 90, max: 110 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TCH-SALES-CYCLE
+  metric: sales_cycle_days
+  products: [DP-TCH-002]
+- id: KPI-TCH-PIPELINE
+  name: Open pipeline
+  definition: "Open opportunity amount expected to close next quarter (Q4 2026)"
+  formula: "Σ amount of open opportunities by expected close date"
+  unit: "USD"
+  direction: higher_is_better
+  target: { min: 30000000, max: 40000000 }
+  window: { from: "2026-10-01", to: "2026-12-31" }
+  term: GT-TCH-PIPELINE
+  metric: open_pipeline_usd
+  products: [DP-TCH-002]
+- id: KPI-TCH-DAU
+  name: Daily active users
+  definition: "Average distinct users active per day across paying tenants in the quarter"
+  formula: "Σ daily active users ÷ days"
+  unit: "users"
+  direction: higher_is_better
+  target: { min: 65000, max: 80000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TCH-DAU
+  metric: avg_daily_active_users
+  products: [DP-TCH-003]
+- id: KPI-TCH-STICKINESS
+  name: DAU/MAU stickiness
+  definition: "Daily active users as a share of monthly active users in the quarter"
+  formula: "Σ DAU ÷ Σ MAU"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 35, max: 45 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TCH-STICKINESS
+  metric: stickiness_pct
+  products: [DP-TCH-003]
+- id: KPI-TCH-SEAT-UTIL
+  name: Seat utilisation
+  definition: "Monthly active users as a share of licensed seats in the quarter"
+  formula: "Σ MAU ÷ Σ licensed seats"
+  unit: "%"
+  direction: target_band
+  target: { min: 65, max: 80 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TCH-SEAT-UTILISATION
+  metric: seat_utilisation_pct
+  products: [DP-TCH-003]
+- id: KPI-TCH-UPTIME
+  name: Uptime
+  definition: "Platform availability across paying tenants in the quarter (customer commitment 99.9%)"
+  formula: "1 − downtime minutes ÷ scheduled minutes"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 99.9, max: 100 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TCH-UPTIME
+  metric: uptime_pct
+  products: [DP-TCH-003]
+- id: KPI-TCH-FEATURE-ADOPTION
+  name: Feature adoption
+  definition: "Share of entitled active accounts using each feature in the last thirty days (all features)"
+  formula: "entitled accounts with events ÷ entitled accounts"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 65, max: 75 }
+  window: {}
+  term: GT-TCH-FEATURE-ADOPTION
+  metric: feature_adoption_pct
+  products: [DP-TCH-003]
+- id: KPI-TCH-FIRST-RESPONSE
+  name: First response time
+  definition: "Mean hours to first agent response on tickets created in the quarter (merged duplicates excluded)"
+  formula: "Σ first-response minutes ÷ tickets ÷ 60"
+  unit: "hours"
+  direction: lower_is_better
+  target: { min: 2, max: 4 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TCH-FIRST-RESPONSE
+  metric: avg_first_response_hours
+  products: [DP-TCH-004]
+- id: KPI-TCH-SLA
+  name: SLA attainment
+  definition: "Share of tickets created in the quarter whose first response met the SLA for their priority"
+  formula: "tickets meeting SLA ÷ tickets"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 95, max: 99 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TCH-SLA-ATTAINMENT
+  metric: sla_attainment_pct
+  products: [DP-TCH-004]
+- id: KPI-TCH-CSAT
+  name: CSAT
+  definition: "Share of support survey responses rating 4 or 5 in the quarter"
+  formula: "responses rated 4–5 ÷ responses"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 70, max: 80 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-TCH-CSAT
+  metric: csat_pct
+  products: [DP-TCH-004]

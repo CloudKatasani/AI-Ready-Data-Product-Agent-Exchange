@@ -1,0 +1,81 @@
+name: CHURN_RETENTION
+description: Monthly base movements — churn, port-outs, gross and net adds and retention save offers by region, market, segment and rate plan
+tables:
+  - { alias: s, fqn: CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY, pk: line_month_key }
+  - { alias: p, fqn: CONFORMED_GOLD.DIM_PLAN, pk: plan_key }
+  - { alias: m, fqn: CONFORMED_GOLD.DIM_MARKET, pk: market_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: s.plan_key, to: p.plan_key }
+  - { from: s.market_key, to: m.market_key }
+  - { from: s.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: m.region, label: Region, synonyms: [territory, operating region], term: GT-TEL-REGION }
+  - { name: market, expr: m.market_name, label: Market, synonyms: [metro, market area], term: GT-TEL-MARKET }
+  - { name: segment, expr: s.segment, label: Segment, synonyms: [line type, customer segment, payment type], term: GT-TEL-SEGMENT }
+  - { name: plan, expr: p.plan_name, label: Rate plan, synonyms: [plan, tariff, price plan], term: GT-TEL-RATE-PLAN }
+  - { name: movement, expr: s.movement, label: Movement type, synonyms: [disconnect type, base movement, disconnect reason], term: GT-TEL-VOLUNTARY-DISCONNECT }
+  - { name: prepaid_inactive, expr: s.prepaid_inactive, label: Inactive prepaid line, synonyms: [dormant prepaid, inactive prepaid flag], term: GT-TEL-INACTIVE-PREPAID }
+time_dimensions:
+  - { name: month_end, expr: d.date, default: true }
+facts:
+  - { name: net_add_delta, expr: s.net_add_delta }
+metrics:
+  - name: churn_rate
+    label: Churn rate
+    expr: 100.0 * SUM(CASE WHEN s.churned THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN s.opening_base THEN 1 ELSE 0 END), 0)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [churn, monthly churn, blended churn, attrition rate, disconnect rate]
+    term: GT-TEL-CHURN
+    description: Monthly voluntary disconnects plus port-outs as a share of the opening base (plan migrations excluded)
+    default_filters: [ { rule: BR-TEL-012 } ]
+    naive_expr: 100.0 * AVG(CASE WHEN s.movement IN ('Voluntary disconnect', 'Port-out', 'Involuntary disconnect', 'Plan migration') THEN 1 ELSE 0 END)
+  - name: postpaid_churn_rate
+    label: Postpaid churn rate
+    expr: 100.0 * SUM(CASE WHEN s.segment = 'Postpaid' AND s.churned THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN s.segment = 'Postpaid' AND s.opening_base THEN 1 ELSE 0 END), 0)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [postpaid churn, contract churn, postpaid attrition]
+    term: GT-TEL-POSTPAID-CHURN
+    description: Monthly postpaid voluntary disconnects plus port-outs as a share of the opening postpaid base
+  - name: net_adds
+    label: Net adds
+    expr: SUM(s.net_add_delta)
+    unit: lines
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [net additions, net line growth, net subscriber growth]
+    term: GT-TEL-NET-ADDS
+    description: Gross adds minus all disconnects (voluntary, port-out and involuntary) in the governed line sample
+  - name: gross_adds
+    label: Gross adds
+    expr: SUM(CASE WHEN s.gross_add THEN 1 ELSE 0 END)
+    unit: lines
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [gross additions, new lines, activations, new connections]
+    term: GT-TEL-GROSS-ADDS
+    description: New lines connected in the period, including port-ins, in the governed line sample
+  - name: port_out_share
+    label: Port-out share of churn
+    expr: 100.0 * SUM(CASE WHEN s.port_out THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN s.churned THEN 1 ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [port-out share, port out share, competitive losses, ported out share]
+    term: GT-TEL-PORT-OUT
+    description: Port-outs to another carrier as a share of churn (voluntary disconnects plus port-outs)
+    default_filters: [ { rule: BR-TEL-012 } ]
+  - name: save_rate
+    label: Save rate
+    expr: 100.0 * SUM(CASE WHEN s.save_offer_accepted THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN s.save_offer_made THEN 1 ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [save offer acceptance, retention offer take-up, offer acceptance rate, saves]
+    term: GT-TEL-SAVE-RATE
+    description: Retention save offers accepted as a share of save offers made
+products: [DP-TEL-004]

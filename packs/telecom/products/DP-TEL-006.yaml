@@ -1,0 +1,29 @@
+id: DP-TEL-006
+name: Field Service Efficiency
+domain: Field Operations
+archetype: AGGREGATE
+initial_status: IN_CERTIFICATION
+seed_stage: 11
+version: 1.0.0-rc.1
+owner: telecom:network-dpo
+steward: telecom:data-steward
+description: Installs, fiber activations, broadband repairs and network site repairs with truck rolls, first-time fix, hours to resolve, appointments met and fiber activation lead time.
+purpose: Give field operations and the Network Quality Advisor a certified view of first-time fix, truck rolls and fiber activation lead time.
+decision: { persona: Head of Field Operations, decision: "Which job types and markets get remote-diagnostics investment and multi-skill training next quarter", cadence: Monthly, workaround: "A scheduling tool with no first-visit history, exported weekly to spreadsheets", consequence: "Jobs are revisited, appointment commitments are missed and fiber activations slip past the ten-day promise" }
+sample_questions: ["What is the first-time fix rate this year?", "Truck rolls by work order type last quarter", "Fiber activation lead time by region"]
+semantic_view: FIELD_OPERATIONS
+output_ports:
+  - { kind: semantic, ref: FIELD_OPERATIONS }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_TEL_006_FIELD_OPERATIONS }
+  - { kind: agent, ref: AG-TEL-003 }
+sla: { freshness_minutes: 60, availability_pct: 99.5, max_null_rate_pct: 1.0 }
+kpis: [KPI-TEL-FTF, KPI-TEL-TRUCK-ROLLS, KPI-TEL-RESOLVE-HRS, KPI-TEL-APPT, KPI-TEL-FIBER-LEAD]
+upstream: [CONFORMED_GOLD.FCT_WORK_ORDER, CONFORMED_GOLD.DIM_MARKET]
+consumers: [Field operations, Network Quality Advisor agent]
+lifecycle_seed: { artifacts: auto }
+certification_script:
+  initial: { gate4: warn, gate6: fail }
+  fixes:
+    - { id: FIX-1, check: semantic.verified_queries, label: "Add 3 verified queries for fiber activation lead time and appointments met", effect: { overlay: VERIFIED_QUERY, keys: [VQ-TEL-067, VQ-TEL-068, VQ-TEL-069] } }
+    - { id: FIX-2, check: governance.masking, label: "Attach PII masking to customer contact phone and service address", effect: { policy_attach: { policy: MASK_PII, columns: [CONFORMED_GOLD.FCT_WORK_ORDER.customer_phone, CONFORMED_GOLD.FCT_WORK_ORDER.service_address] } } }
+value_case: VC-TEL-006

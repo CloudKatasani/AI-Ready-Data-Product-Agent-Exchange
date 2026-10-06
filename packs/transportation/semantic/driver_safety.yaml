@@ -1,0 +1,61 @@
+name: DRIVER_SAFETY
+description: Driver-month safety and retention — crash rates per million miles, hours-of-service violations and annualised driver turnover by region, driver type and tenure
+tables:
+  - { alias: m, fqn: CONFORMED_GOLD.FCT_DRIVER_MONTH, pk: driver_month_key }
+  - { alias: dr, fqn: CONFORMED_GOLD.DIM_DRIVER, pk: driver_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: m.driver_key, to: dr.driver_key }
+  - { from: m.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: dr.region, label: Region, synonyms: [operating region, territory, area, home region], term: GT-TRN-REGION }
+  - { name: driver_type, expr: dr.driver_type, label: Driver type, synonyms: [company or owner operator, owner operators, company drivers], term: GT-TRN-DRIVER-TYPE }
+  - { name: tenure_band, expr: dr.tenure_band, label: Tenure band, synonyms: [tenure, length of service, years of service] }
+  - { name: driver_status, expr: dr.status, label: Driver status, synonyms: [employment status, active or separated] }
+  - { name: driver_name, expr: dr.full_name, label: Driver name, synonyms: [driver, drivers, which drivers, names] }
+time_dimensions:
+  - { name: activity_month, expr: d.date, default: true }
+facts:
+  - { name: miles, expr: m.miles, description: Miles driven in the month }
+  - { name: recordable_crashes, expr: m.recordable_crashes, description: DOT-recordable crashes in the month }
+metrics:
+  - name: safety_incident_rate
+    label: Safety incident rate
+    expr: 1000000.0 * SUM(m.recordable_crashes) / SUM(m.miles)
+    unit: per million miles
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [crash rate, accident rate, recordable crash rate, safety incidents per million miles, dot recordable rate]
+    term: GT-TRN-SAFETY-RATE
+    description: DOT-recordable crashes per million miles driven
+    naive_expr: 1000000.0 * SUM(m.safety_events) / SUM(m.miles)
+  - name: preventable_crash_rate
+    label: Preventable crash rate
+    expr: 1000000.0 * SUM(m.preventable_crashes) / SUM(m.miles)
+    unit: per million miles
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [preventable accident rate, preventable accidents, preventable crashes]
+    term: GT-TRN-PREVENTABLE
+    description: Crashes judged preventable by the safety review board, per million miles driven
+  - name: hos_violations
+    label: Hours-of-service violations
+    expr: SUM(m.hos_violations)
+    unit: violations
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [hos violations, hours of service violations, log violations, eld violations]
+    term: GT-TRN-HOS
+    description: Hours-of-service violations recorded by the ELD or at roadside
+  - name: driver_turnover_pct
+    label: Driver turnover
+    expr: 1200.0 * SUM(CASE WHEN m.separated THEN 1 ELSE 0 END) / SUM(CASE WHEN m.employed THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [turnover, driver churn, attrition, driver attrition, annualised turnover, churn rate]
+    term: GT-TRN-TURNOVER
+    description: Annualised separations as a share of average driver headcount, company drivers unless asked
+    default_filters: [ { rule: BR-TRN-010 } ]
+    naive_expr: 100.0 * SUM(CASE WHEN m.separated THEN 1 ELSE 0 END) / COUNT(DISTINCT m.driver_key)
+products: [DP-TRN-003]

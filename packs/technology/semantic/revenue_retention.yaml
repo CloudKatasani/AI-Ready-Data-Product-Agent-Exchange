@@ -1,0 +1,115 @@
+name: REVENUE_RETENTION
+description: Month-end ARR, net and gross revenue retention, logo churn and ARR movements by account attributes
+tables:
+  - { alias: f, fqn: CONFORMED_GOLD.FCT_ARR_MONTHLY, pk: arr_key }
+  - { alias: a, fqn: CONFORMED_GOLD.DIM_ACCOUNT, pk: account_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: f.account_key, to: a.account_key }
+  - { from: f.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: a.region, label: Region, synonyms: [geo, sales region], term: GT-TCH-REGION }
+  - { name: segment, expr: a.segment, label: Segment, synonyms: [market segment, company size], term: GT-TCH-SEGMENT }
+  - { name: plan_tier, expr: a.plan_tier, label: Plan tier, synonyms: [plan, edition, pricing tier], term: GT-TCH-PLAN-TIER }
+  - { name: industry, expr: a.industry, label: Industry, synonyms: [vertical, industry vertical] }
+  - { name: acquisition_channel, expr: a.acquisition_channel, label: Acquisition channel, synonyms: [source channel, how we acquired] }
+  - { name: revenue_stream, expr: f.revenue_stream, label: Revenue stream, synonyms: [revenue type, charge type], term: GT-TCH-REVENUE-STREAM }
+time_dimensions:
+  - { name: month_end, expr: d.date, default: true }
+facts:
+  - { name: arr_usd, expr: f.arr_usd }
+  - { name: arr_12m_ago_usd, expr: f.arr_12m_ago_usd }
+metrics:
+  - name: arr
+    label: ARR
+    expr: SUM(f.arr_usd) / COUNT(DISTINCT f.month_end)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [annual recurring revenue, recurring revenue, annualized recurring revenue]
+    term: GT-TCH-ARR
+    description: Month-end annual recurring revenue; for windows longer than a month, the average of the month-end values
+    default_filters: [ { rule: BR-TCH-001 } ]
+    naive_expr: SUM(f.arr_usd)
+  - name: nrr_pct
+    label: Net revenue retention
+    expr: 100.0 * SUM(CASE WHEN f.arr_12m_ago_usd > 0 THEN f.arr_usd ELSE 0 END) / NULLIF(SUM(f.arr_12m_ago_usd), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [nrr, net dollar retention, ndr, net retention]
+    term: GT-TCH-NRR
+    description: ARR today from accounts that had ARR twelve months earlier, divided by their ARR then (expansion and contraction included)
+    default_filters: [ { rule: BR-TCH-001 } ]
+    naive_expr: 100.0 * SUM(f.arr_usd) / NULLIF(SUM(f.arr_12m_ago_usd), 0)
+  - name: grr_pct
+    label: Gross revenue retention
+    expr: 100.0 * SUM(LEAST(f.arr_usd, f.arr_12m_ago_usd)) / NULLIF(SUM(f.arr_12m_ago_usd), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [grr, gross dollar retention, gross retention]
+    term: GT-TCH-GRR
+    description: Share of ARR from twelve months earlier still retained, capped at the starting ARR (expansion excluded)
+    default_filters: [ { rule: BR-TCH-001 } ]
+  - name: logo_churn_pct
+    label: Logo churn
+    expr: 100.0 * SUM(CASE WHEN f.arr_12m_ago_usd > 0 AND f.arr_usd = 0 THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN f.arr_12m_ago_usd > 0 THEN 1 ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [logo churn rate, customer churn rate, logo attrition]
+    term: GT-TCH-LOGO-CHURN
+    description: Share of accounts paying twelve months earlier that now pay nothing (trailing twelve months)
+    default_filters: [ { rule: BR-TCH-001 } ]
+  - name: expansion_arr
+    label: Expansion ARR
+    expr: SUM(f.expansion_arr_usd)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [upsell arr, expansion revenue, net new expansion]
+    term: GT-TCH-EXPANSION-ARR
+    description: Month-over-month ARR increases on existing paying accounts, summed over the period
+    default_filters: [ { rule: BR-TCH-001 } ]
+  - name: churned_arr
+    label: Churned ARR
+    expr: SUM(f.churned_arr_usd)
+    unit: USD
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [lost arr, cancelled arr]
+    term: GT-TCH-LOGO-CHURN
+    description: ARR lost from accounts whose ARR fell to zero during the period
+    default_filters: [ { rule: BR-TCH-001 } ]
+  - name: new_logo_arr
+    label: New logo ARR
+    expr: SUM(f.new_arr_usd)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [new customer arr, new business arr landed]
+    term: GT-TCH-NEW-LOGO-ARR
+    description: ARR from accounts that started paying during the period
+    default_filters: [ { rule: BR-TCH-001 } ]
+  - name: paying_customers
+    label: Paying customers
+    expr: 1.0 * SUM(CASE WHEN f.arr_usd > 0 THEN 1 ELSE 0 END) / COUNT(DISTINCT f.month_end)
+    unit: accounts
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [paying accounts, customer count, number of customers]
+    term: GT-TCH-PAYING-CUSTOMER
+    description: Accounts with subscription ARR at month end (averaged across month ends in the period)
+    default_filters: [ { rule: BR-TCH-001 } ]
+  - name: avg_arr_per_customer
+    label: Average ARR per customer
+    expr: SUM(f.arr_usd) / NULLIF(SUM(CASE WHEN f.arr_usd > 0 THEN 1 ELSE 0 END), 0)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [arpa, average revenue per account, acv per customer]
+    term: GT-TCH-PAYING-CUSTOMER
+    description: Month-end ARR divided by paying customers
+    default_filters: [ { rule: BR-TCH-001 } ]
+products: [DP-TCH-001]

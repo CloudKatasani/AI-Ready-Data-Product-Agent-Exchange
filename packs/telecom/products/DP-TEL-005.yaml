@@ -1,0 +1,25 @@
+id: DP-TEL-005
+name: Network Fault & Restoration
+domain: Service Assurance
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 1.2.0
+owner: telecom:network-dpo
+steward: telecom:data-steward
+description: Network fault tickets with fault class, severity, restoration time, the four-hour restoration SLA and impacted subscriber hours by site, market and region.
+purpose: Prioritise restoration crews and root-cause programmes by subscriber impact rather than ticket count.
+decision: { persona: Director of Service Assurance, decision: "Which fault classes and regions get root-cause programmes and standby crews", cadence: Monthly, workaround: "Weekly consolidation of alarm and ticket exports across three tools", consequence: "Crews chase ticket counts while long fiber-cut restorations drive most of the subscriber impact" }
+sample_questions: ["Mean time to restore by region last quarter", "Which fault classes drive impacted subscriber hours last quarter?", "Faults restored within SLA by fault class this year"]
+semantic_view: SERVICE_ASSURANCE
+output_ports:
+  - { kind: semantic, ref: SERVICE_ASSURANCE }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_TEL_005_SERVICE_ASSURANCE }
+  - { kind: agent, ref: AG-TEL-003 }
+sla: { freshness_minutes: 15, availability_pct: 99.9, max_null_rate_pct: 0.5 }
+kpis: [KPI-TEL-MTTR, KPI-TEL-IMPACT-HRS, KPI-TEL-RESTORE-SLA]
+upstream: [CONFORMED_GOLD.FCT_NETWORK_FAULT, CONFORMED_GOLD.DIM_CELL_SITE]
+consumers: [Network operations centre, Field operations, Network Quality Advisor agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-TEL-005

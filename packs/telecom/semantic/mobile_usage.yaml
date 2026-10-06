@@ -1,0 +1,42 @@
+name: MOBILE_USAGE
+description: Mediated mobile data and voice usage per line-month by plan, segment and region
+tables:
+  - { alias: u, fqn: CONFORMED_GOLD.FCT_MONTHLY_USAGE, pk: usage_key }
+  - { alias: p, fqn: CONFORMED_GOLD.DIM_PLAN, pk: plan_key }
+  - { alias: m, fqn: CONFORMED_GOLD.DIM_MARKET, pk: market_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: u.plan_key, to: p.plan_key }
+  - { from: u.market_key, to: m.market_key }
+  - { from: u.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: m.region, label: Region, synonyms: [territory, operating region], term: GT-TEL-REGION }
+  - { name: market, expr: m.market_name, label: Market, synonyms: [metro, market area], term: GT-TEL-MARKET }
+  - { name: plan, expr: p.plan_name, label: Rate plan, synonyms: [plan, tariff, price plan], term: GT-TEL-RATE-PLAN }
+  - { name: segment, expr: p.segment, label: Segment, synonyms: [line type, customer segment, payment type], term: GT-TEL-SEGMENT }
+  - { name: lob, expr: p.lob, label: Line of business, synonyms: [mobile or broadband, service line] }
+time_dimensions:
+  - { name: usage_month, expr: d.date, default: true }
+facts:
+  - { name: data_gb, expr: u.data_gb }
+metrics:
+  - name: data_gb_per_sub
+    label: Data usage per subscriber
+    expr: AVG(CASE WHEN p.lob = 'Mobile' THEN u.data_gb END)
+    unit: GB
+    decimals: 1
+    direction: neutral
+    synonyms: [data usage, data per line, gigabytes per subscriber, data consumption]
+    term: GT-TEL-DATA-USAGE
+    description: Mean monthly mobile data per mobile line with usage (broadband homes excluded)
+    naive_expr: AVG(u.data_gb)
+  - name: voice_min_per_sub
+    label: Minutes of use per subscriber
+    expr: AVG(CASE WHEN p.lob = 'Mobile' THEN u.voice_min END)
+    unit: minutes
+    decimals: 0
+    direction: neutral
+    synonyms: [minutes of use, mou, voice minutes, voice usage]
+    term: GT-TEL-MOU
+    description: Mean monthly voice minutes per mobile line with usage
+products: [DP-TEL-003]

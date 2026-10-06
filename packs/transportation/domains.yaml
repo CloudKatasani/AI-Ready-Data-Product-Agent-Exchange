@@ -1,0 +1,49 @@
+# Domains, conformed backbone entities and links for Meridian Freight Lines (no ADPM predecessor pack exists for
+# transportation; modelled on the ADPM domain/backbone structure and the Marketplace TRN product entities).
+# Owners are persona refs; golden sources are Gold objects in MFL_AI_PLATFORM.
+domains:
+  - id: shipments-service
+    name: Shipments & Service
+    description: Loads from tender to delivery — shippers, origin terminals, service levels, dwell, delivery outcome and exceptions.
+    owner: transportation:ops-dpo
+    entities: [Shipper, Terminal, Load]
+  - id: fleet-assets
+    name: Fleet & Assets
+    description: Tractors and their daily telematics — available and revenue hours, loaded and empty miles, fuel and revenue.
+    owner: transportation:ops-dpo
+    entities: [Tractor, Fleet day]
+  - id: drivers-safety
+    name: Drivers & Safety
+    description: The driver roster, hiring and separations, and safety events from telematics alerts, roadside inspections and the crash register.
+    owner: transportation:data-steward
+    entities: [Driver, Safety event, Driver month]
+  - id: freight-finance
+    name: Freight Finance
+    description: Load economics — linehaul, fuel surcharge and detention revenue against operating, fuel and accessorial cost, and cargo claims.
+    owner: transportation:coo
+    entities: [Load economics, Cargo claim]
+
+backbone:
+  entities:
+    - { name: Shipper, description: "A customer that tenders freight to Meridian, with segment, contract type and logistics contact", key: customer_id, domain: shipments-service, golden_source: CONFORMED_GOLD.DIM_CUSTOMER }
+    - { name: Terminal, description: "A terminal, cross-dock or drop yard that loads originate from and tractors are domiciled at", key: terminal_id, domain: shipments-service, golden_source: CONFORMED_GOLD.DIM_TERMINAL }
+    - { name: Load, description: "One truckload shipment from pickup to delivery, with miles, dwell and delivery outcome", key: load_id, domain: shipments-service, golden_source: CONFORMED_GOLD.FCT_LOAD }
+    - { name: Tractor, description: "A power unit with equipment type, make, model year and home terminal", key: tractor_id, domain: fleet-assets, golden_source: CONFORMED_GOLD.DIM_TRACTOR }
+    - { name: Fleet day, description: "One tractor's telematics day: available and revenue hours, miles, fuel and revenue", key: fleet_day_id, domain: fleet-assets, golden_source: CONFORMED_GOLD.FCT_FLEET_DAY }
+    - { name: Driver, description: "A company driver or owner-operator with home terminal, hire date and separation date", key: driver_id, domain: drivers-safety, golden_source: CONFORMED_GOLD.DIM_DRIVER }
+    - { name: Safety event, description: "A telematics alert, hours-of-service or inspection violation, or crash", key: event_id, domain: drivers-safety, golden_source: CURATED_SILVER.SAFETY_EVENT }
+    - { name: Driver month, description: "One driver's month: miles, safety events, employment and separation", key: driver_month_key, domain: drivers-safety, golden_source: CONFORMED_GOLD.FCT_DRIVER_MONTH }
+    - { name: Load economics, description: "Revenue, cost and claim cost of a load", key: load_id, domain: freight-finance, golden_source: CONFORMED_GOLD.FCT_LOAD }
+    - { name: Cargo claim, description: "A shipper's claim for damage, shortage, temperature excursion or loss on a load", key: claim_id, domain: freight-finance, golden_source: CURATED_SILVER.CARGO_CLAIM }
+  links:
+    - { from: Shipper, to: Load, cardinality: 1:N, via: customer_id }
+    - { from: Terminal, to: Load, cardinality: 1:N, via: origin_terminal_id }
+    - { from: Terminal, to: Tractor, cardinality: 1:N, via: home_terminal_id }
+    - { from: Terminal, to: Driver, cardinality: 1:N, via: home_terminal_id }
+    - { from: Tractor, to: Load, cardinality: 1:N, via: tractor_id }
+    - { from: Tractor, to: Fleet day, cardinality: 1:N, via: tractor_id }
+    - { from: Driver, to: Load, cardinality: 1:N, via: driver_id }
+    - { from: Driver, to: Safety event, cardinality: 1:N, via: driver_id }
+    - { from: Driver, to: Driver month, cardinality: 1:N, via: driver_id }
+    - { from: Load, to: Load economics, cardinality: 1:1, via: load_id }
+    - { from: Load, to: Cargo claim, cardinality: 1:N, via: load_id }

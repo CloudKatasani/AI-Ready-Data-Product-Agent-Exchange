@@ -1,0 +1,34 @@
+name: FEATURE_ADOPTION
+description: Thirty-day feature adoption among entitled active customers, by feature, plan tier and region
+tables:
+  - { alias: f, fqn: CONFORMED_GOLD.FCT_FEATURE_ADOPTION, pk: feature_adoption_key }
+  - { alias: a, fqn: CONFORMED_GOLD.DIM_ACCOUNT, pk: account_key }
+relationships:
+  - { from: f.account_key, to: a.account_key }
+dimensions:
+  - { name: feature, expr: f.feature_name, label: Feature, synonyms: [capability, module feature] }
+  - { name: feature_category, expr: f.feature_category, label: Feature category, synonyms: [feature area] }
+  - { name: plan_tier, expr: a.plan_tier, label: Plan tier, synonyms: [plan, edition, pricing tier], term: GT-TCH-PLAN-TIER }
+  - { name: region, expr: a.region, label: Region, synonyms: [geo, sales region], term: GT-TCH-REGION }
+  - { name: segment, expr: a.segment, label: Segment, synonyms: [market segment, company size], term: GT-TCH-SEGMENT }
+metrics:
+  - name: feature_adoption_pct
+    label: Feature adoption
+    expr: 100.0 * SUM(CASE WHEN f.entitled AND f.adopted THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN f.entitled THEN 1 ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [feature adoption rate, feature usage rate, adoption rate]
+    term: GT-TCH-FEATURE-ADOPTION
+    description: Share of entitled active accounts that used the feature in the last thirty days
+    naive_expr: 100.0 * AVG(CASE WHEN f.adopted THEN 1 ELSE 0 END)
+  - name: adopting_accounts
+    label: Adopting accounts
+    expr: COUNT(DISTINCT CASE WHEN f.entitled AND f.adopted THEN f.account_key END)
+    unit: accounts
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [accounts using the feature, adopters]
+    term: GT-TCH-FEATURE-ADOPTION
+    description: Entitled active accounts that used the feature in the last thirty days
+products: [DP-TCH-003]

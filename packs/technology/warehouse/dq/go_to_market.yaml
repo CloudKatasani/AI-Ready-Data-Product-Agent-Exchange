@@ -1,0 +1,51 @@
+# Go-to-market DQ rules (Pipeline & Bookings, DP-TCH-002).
+- id: DQ-TCH-011
+  object: CONFORMED_GOLD.FCT_OPPORTUNITY
+  column: opportunity_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: critical
+  alert_route: engineering
+  description: One row per opportunity after CDC deduplication.
+- id: DQ-TCH-012
+  object: CONFORMED_GOLD.FCT_OPPORTUNITY
+  column: amount_usd
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every opportunity has an amount (bookings, deal size and pipeline depend on it).
+- id: DQ-TCH-013
+  object: CONFORMED_GOLD.FCT_OPPORTUNITY
+  column: amount_usd
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Opportunity amounts are not negative.
+- id: DQ-TCH-014
+  object: CONFORMED_GOLD.FCT_OPPORTUNITY
+  column: opp_type
+  dimension: validity
+  assertion: "invalid_rate == 0"
+  allowed: [New business, Expansion, Renewal]
+  severity: critical
+  alert_route: steward
+  description: Opportunity type is conformed — BR-TCH-005 excludes renewals by value.
+- id: DQ-TCH-015
+  object: CONFORMED_GOLD.FCT_OPPORTUNITY
+  column: stage
+  dimension: validity
+  assertion: "invalid_rate == 0"
+  allowed: [Discovery, Solution design, Proposal, Negotiation, Closed won, Closed lost]
+  severity: medium
+  alert_route: owner
+  description: Stage is one of the playbook stages.
+- id: DQ-TCH-016
+  object: CONFORMED_GOLD.FCT_OPPORTUNITY
+  column: created_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: Opportunities created yesterday have arrived from the CRM.

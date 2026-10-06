@@ -1,0 +1,27 @@
+id: DP-TEL-003
+name: Billing & Revenue Assurance
+domain: Billing & Revenue Assurance
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 1.3.2
+owner: telecom:network-dpo
+steward: telecom:data-steward
+description: Invoice-level rated and billed charges, service revenue, ARPU, leakage, payments and bad debt — with mediated usage and roaming views from the same reconciled source.
+purpose: Revenue assurance, ARPU reporting, collections and usage analytics from one reconciled billing source.
+decision: { persona: Head of Revenue Assurance, decision: "Which markets and rating streams to investigate for leakage this month", cadence: Monthly, workaround: "Rating and billing extracts reconciled in a desktop database after every bill cycle", consequence: "Unbilled usage is found a quarter late, after the credit window has closed" }
+sample_questions: ["What was ARPU by region last quarter?", "Which markets had the highest revenue leakage last quarter?", "Bad debt ratio by payment method this year"]
+semantic_view: BILLING_REVENUE
+output_ports:
+  - { kind: semantic, ref: BILLING_REVENUE }
+  - { kind: semantic, ref: MOBILE_USAGE }
+  - { kind: semantic, ref: ROAMING }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_TEL_003_BILLING_REVENUE }
+  - { kind: agent, ref: AG-TEL-004 }
+sla: { freshness_minutes: 1440, availability_pct: 99.5, max_null_rate_pct: 0.5 }
+kpis: [KPI-TEL-ARPU, KPI-TEL-SERVICE-REV, KPI-TEL-LEAKAGE, KPI-TEL-BAD-DEBT, KPI-TEL-DAYS-TO-PAY, KPI-TEL-DATA-USAGE, KPI-TEL-MOU, KPI-TEL-ROAMING]
+upstream: [CONFORMED_GOLD.FCT_BILLING, CONFORMED_GOLD.FCT_MONTHLY_USAGE, CONFORMED_GOLD.FCT_ROAMING, CONFORMED_GOLD.DIM_PLAN, CONFORMED_GOLD.DIM_MARKET]
+consumers: [Revenue assurance, Finance, Credit & collections, Revenue Assurance Copilot agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-TEL-003

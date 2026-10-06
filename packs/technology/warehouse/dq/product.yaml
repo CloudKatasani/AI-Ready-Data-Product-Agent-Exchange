@@ -1,0 +1,58 @@
+# Product engagement DQ rules (Product Usage & Adoption, DP-TCH-003).
+- id: DQ-TCH-017
+  object: CONFORMED_GOLD.FCT_PRODUCT_USAGE
+  column: daily_active_users
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every tenant-day has a daily active user count.
+- id: DQ-TCH-018
+  object: CONFORMED_GOLD.FCT_PRODUCT_USAGE
+  column: daily_active_users
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Daily active users are never negative.
+- id: DQ-TCH-019
+  object: CONFORMED_GOLD.FCT_PRODUCT_USAGE
+  column: downtime_minutes
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Downtime minutes are populated (zero on a clean day) for uptime.
+- id: DQ-TCH-020
+  object: CONFORMED_GOLD.FCT_PRODUCT_USAGE
+  column: downtime_minutes
+  dimension: validity
+  assertion: "max <= 1440"
+  severity: high
+  alert_route: engineering
+  description: A tenant-day cannot have more downtime than scheduled minutes.
+- id: DQ-TCH-021
+  object: CONFORMED_GOLD.FCT_PRODUCT_USAGE
+  column: usage_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: Yesterday's telemetry batch has landed.
+- id: DQ-TCH-022
+  object: CONFORMED_GOLD.FCT_FEATURE_ADOPTION
+  column: feature_code
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^FT-[0-9]{2}$"
+  severity: medium
+  alert_route: owner
+  description: Feature codes match the product catalogue format.
+- id: DQ-TCH-023
+  object: CONFORMED_GOLD.FCT_FEATURE_ADOPTION
+  column: last_event_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: medium
+  alert_route: engineering
+  description: The thirty-day feature usage snapshot is current.

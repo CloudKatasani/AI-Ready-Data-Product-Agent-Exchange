@@ -1,0 +1,429 @@
+# Verified queries — curated question -> MetricQuery pairs, ported from AI-Ready telecom `context.ts` (VQ-001..048)
+# and the Marketplace AG-TEL demo exchanges. Every query compiles through compileMetricQuery() on the named view.
+# FIELD_OPERATIONS deliberately has only 7 active entries: the DP-TEL-006 certification story (gate 4) activates
+# the three fiber activation and appointment queries (pending_fix) via FIX-1.
+
+# ---------------------------------------------------------------- SUBSCRIBER_360
+- id: VQ-TEL-001
+  question: "How many active subscribers do we have?"
+  query: { view: SUBSCRIBER_360, metrics: [active_subscribers] }
+  agent: AG-TEL-001
+  verified_by: telecom:data-steward
+  verified_at: 2026-06-01
+- id: VQ-TEL-002
+  question: "Active subscribers by region"
+  query: { view: SUBSCRIBER_360, metrics: [active_subscribers], dimensions: [region], orderBy: [{ field: active_subscribers, dir: desc }] }
+  agent: AG-TEL-001
+  verified_by: telecom:data-steward
+  verified_at: 2026-06-02
+- id: VQ-TEL-003
+  question: "What is the autopay rate by segment?"
+  query: { view: SUBSCRIBER_360, metrics: [autopay_rate], dimensions: [segment], orderBy: [{ field: autopay_rate, dir: desc }] }
+  agent: AG-TEL-001
+  verified_by: telecom:data-steward
+  verified_at: 2026-06-03
+- id: VQ-TEL-004
+  question: "Autopay rate by market"
+  query: { view: SUBSCRIBER_360, metrics: [autopay_rate], dimensions: [market], orderBy: [{ field: autopay_rate, dir: desc }] }
+  agent: AG-TEL-001
+  verified_by: telecom:data-steward
+  verified_at: 2026-06-04
+- id: VQ-TEL-005
+  question: "Average tenure by rate plan"
+  query: { view: SUBSCRIBER_360, metrics: [avg_tenure_months], dimensions: [plan], orderBy: [{ field: avg_tenure_months, dir: desc }] }
+  agent: AG-TEL-001
+  verified_by: telecom:data-steward
+  verified_at: 2026-06-05
+- id: VQ-TEL-006
+  question: "What is the out-of-contract share by region?"
+  query: { view: SUBSCRIBER_360, metrics: [out_of_contract_pct], dimensions: [region], orderBy: [{ field: out_of_contract_pct, dir: desc }] }
+  agent: AG-TEL-001
+  verified_by: telecom:data-steward
+  verified_at: 2026-06-06
+- id: VQ-TEL-007
+  question: "High churn-risk share by market"
+  query: { view: SUBSCRIBER_360, metrics: [high_churn_risk_pct], dimensions: [market], orderBy: [{ field: high_churn_risk_pct, dir: desc }] }
+  agent: AG-TEL-001
+  verified_by: telecom:data-steward
+  verified_at: 2026-06-07
+- id: VQ-TEL-008
+  question: "High churn-risk share by tenure band"
+  query: { view: SUBSCRIBER_360, metrics: [high_churn_risk_pct], dimensions: [tenure_band], orderBy: [{ field: high_churn_risk_pct, dir: desc }] }
+  agent: AG-TEL-001
+  verified_by: telecom:data-steward
+  verified_at: 2026-06-08
+- id: VQ-TEL-009
+  question: "Care contacts per subscriber by segment"
+  query: { view: SUBSCRIBER_360, metrics: [care_contacts_per_sub], dimensions: [segment], orderBy: [{ field: care_contacts_per_sub, dir: desc }] }
+  agent: AG-TEL-001
+  verified_by: telecom:data-steward
+  verified_at: 2026-06-09
+- id: VQ-TEL-010
+  question: "Active subscribers by tenure band"
+  query: { view: SUBSCRIBER_360, metrics: [active_subscribers], dimensions: [tenure_band], orderBy: [{ field: active_subscribers, dir: desc }] }
+  agent: AG-TEL-001
+  verified_by: telecom:data-steward
+  verified_at: 2026-06-10
+# ---------------------------------------------------------------- CHURN_RETENTION
+- id: VQ-TEL-011
+  question: "What was the churn rate last quarter?"
+  query: { view: CHURN_RETENTION, metrics: [churn_rate], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-TEL-002
+  verified_by: telecom:retention-analyst
+  verified_at: 2026-06-11
+- id: VQ-TEL-012
+  question: "Churn rate by segment last quarter"
+  query: { view: CHURN_RETENTION, metrics: [churn_rate], dimensions: [segment], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: churn_rate, dir: desc }] }
+  agent: AG-TEL-002
+  verified_by: telecom:retention-analyst
+  verified_at: 2026-06-12
+- id: VQ-TEL-013
+  question: "Churn rate by market last quarter"
+  query: { view: CHURN_RETENTION, metrics: [churn_rate], dimensions: [market], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: churn_rate, dir: desc }] }
+  agent: AG-TEL-002
+  verified_by: telecom:retention-analyst
+  verified_at: 2026-06-13
+- id: VQ-TEL-014
+  question: "Postpaid churn rate by quarter this year"
+  query: { view: CHURN_RETENTION, metrics: [postpaid_churn_rate], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TEL-002
+  verified_by: telecom:retention-analyst
+  verified_at: 2026-06-14
+- id: VQ-TEL-015
+  question: "Postpaid churn rate by rate plan this year"
+  query: { view: CHURN_RETENTION, metrics: [postpaid_churn_rate], dimensions: [plan], timeRange: { ytd: true }, orderBy: [{ field: postpaid_churn_rate, dir: desc }] }
+  agent: AG-TEL-002
+  verified_by: telecom:retention-analyst
+  verified_at: 2026-06-15
+- id: VQ-TEL-016
+  question: "Net adds by month this year"
+  query: { view: CHURN_RETENTION, metrics: [net_adds], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TEL-002
+  verified_by: telecom:retention-analyst
+  verified_at: 2026-06-16
+- id: VQ-TEL-017
+  question: "Net adds by segment last quarter"
+  query: { view: CHURN_RETENTION, metrics: [net_adds], dimensions: [segment], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: net_adds, dir: desc }] }
+  agent: AG-TEL-002
+  verified_by: telecom:retention-analyst
+  verified_at: 2026-06-17
+- id: VQ-TEL-018
+  question: "Gross adds by region last quarter"
+  query: { view: CHURN_RETENTION, metrics: [gross_adds], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: gross_adds, dir: desc }] }
+  agent: AG-TEL-002
+  verified_by: telecom:retention-analyst
+  verified_at: 2026-06-18
+- id: VQ-TEL-019
+  question: "Port-out share of churn by region last quarter"
+  query: { view: CHURN_RETENTION, metrics: [port_out_share], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: port_out_share, dir: desc }] }
+  agent: AG-TEL-002
+  verified_by: telecom:retention-analyst
+  verified_at: 2026-06-19
+- id: VQ-TEL-020
+  question: "Save rate by segment this year"
+  query: { view: CHURN_RETENTION, metrics: [save_rate], dimensions: [segment], timeRange: { ytd: true }, orderBy: [{ field: save_rate, dir: desc }] }
+  agent: AG-TEL-002
+  verified_by: telecom:retention-analyst
+  verified_at: 2026-06-20
+# ---------------------------------------------------------------- BILLING_REVENUE
+- id: VQ-TEL-021
+  question: "What was ARPU last quarter?"
+  query: { view: BILLING_REVENUE, metrics: [arpu], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-TEL-004
+  verified_by: telecom:network-dpo
+  verified_at: 2026-06-21
+- id: VQ-TEL-022
+  question: "ARPU by segment last quarter"
+  query: { view: BILLING_REVENUE, metrics: [arpu], dimensions: [segment], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: arpu, dir: desc }] }
+  agent: AG-TEL-004
+  verified_by: telecom:network-dpo
+  verified_at: 2026-06-22
+- id: VQ-TEL-023
+  question: "ARPU by rate plan last quarter"
+  query: { view: BILLING_REVENUE, metrics: [arpu], dimensions: [plan], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: arpu, dir: desc }] }
+  agent: AG-TEL-004
+  verified_by: telecom:network-dpo
+  verified_at: 2026-06-23
+- id: VQ-TEL-024
+  question: "Service revenue by month this year"
+  query: { view: BILLING_REVENUE, metrics: [service_revenue], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TEL-004
+  verified_by: telecom:network-dpo
+  verified_at: 2026-06-24
+- id: VQ-TEL-025
+  question: "Service revenue by region last quarter"
+  query: { view: BILLING_REVENUE, metrics: [service_revenue], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: service_revenue, dir: desc }] }
+  agent: AG-TEL-004
+  verified_by: telecom:network-dpo
+  verified_at: 2026-06-25
+- id: VQ-TEL-026
+  question: "What was revenue leakage last quarter?"
+  query: { view: BILLING_REVENUE, metrics: [revenue_leakage_pct], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-TEL-004
+  verified_by: telecom:network-dpo
+  verified_at: 2026-06-26
+- id: VQ-TEL-027
+  question: "Revenue leakage by region this year"
+  query: { view: BILLING_REVENUE, metrics: [revenue_leakage_pct], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: revenue_leakage_pct, dir: desc }] }
+  agent: AG-TEL-004
+  verified_by: telecom:network-dpo
+  verified_at: 2026-06-27
+- id: VQ-TEL-028
+  question: "Bad debt ratio by region this year"
+  query: { view: BILLING_REVENUE, metrics: [bad_debt_ratio], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: bad_debt_ratio, dir: desc }] }
+  agent: AG-TEL-004
+  verified_by: telecom:network-dpo
+  verified_at: 2026-06-28
+- id: VQ-TEL-029
+  question: "Bad debt ratio by payment method this year"
+  query: { view: BILLING_REVENUE, metrics: [bad_debt_ratio], dimensions: [pay_method], timeRange: { ytd: true }, orderBy: [{ field: bad_debt_ratio, dir: desc }] }
+  agent: AG-TEL-004
+  verified_by: telecom:network-dpo
+  verified_at: 2026-06-29
+- id: VQ-TEL-030
+  question: "Days to pay by payment method this year"
+  query: { view: BILLING_REVENUE, metrics: [avg_days_to_pay], dimensions: [pay_method], timeRange: { ytd: true }, orderBy: [{ field: avg_days_to_pay, dir: desc }] }
+  agent: AG-TEL-004
+  verified_by: telecom:network-dpo
+  verified_at: 2026-06-30
+# ---------------------------------------------------------------- MOBILE_USAGE
+- id: VQ-TEL-031
+  question: "Data usage per subscriber by rate plan this year"
+  query: { view: MOBILE_USAGE, metrics: [data_gb_per_sub], dimensions: [plan], timeRange: { ytd: true }, orderBy: [{ field: data_gb_per_sub, dir: desc }] }
+  agent: AG-TEL-001
+  verified_by: telecom:data-steward
+  verified_at: 2026-07-01
+- id: VQ-TEL-032
+  question: "Minutes of use per subscriber by region this year"
+  query: { view: MOBILE_USAGE, metrics: [voice_min_per_sub], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: voice_min_per_sub, dir: desc }] }
+  agent: AG-TEL-001
+  verified_by: telecom:data-steward
+  verified_at: 2026-07-02
+- id: VQ-TEL-033
+  question: "Minutes of use per subscriber by segment this year"
+  query: { view: MOBILE_USAGE, metrics: [voice_min_per_sub], dimensions: [segment], timeRange: { ytd: true }, orderBy: [{ field: voice_min_per_sub, dir: desc }] }
+  agent: AG-TEL-001
+  verified_by: telecom:data-steward
+  verified_at: 2026-07-03
+# ---------------------------------------------------------------- ROAMING
+- id: VQ-TEL-034
+  question: "Roaming revenue by zone last quarter"
+  query: { view: ROAMING, metrics: [roaming_revenue], dimensions: [partner_zone], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: roaming_revenue, dir: desc }] }
+  agent: AG-TEL-004
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-04
+- id: VQ-TEL-035
+  question: "Roaming revenue by month this year"
+  query: { view: ROAMING, metrics: [roaming_revenue], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TEL-004
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-05
+- id: VQ-TEL-036
+  question: "Roaming data by region this year"
+  query: { view: ROAMING, metrics: [roaming_data_gb], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: roaming_data_gb, dir: desc }] }
+  agent: AG-TEL-004
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-06
+# ---------------------------------------------------------------- NETWORK_PERFORMANCE
+- id: VQ-TEL-037
+  question: "Dropped call rate by region last quarter"
+  query: { view: NETWORK_PERFORMANCE, metrics: [dropped_call_rate], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: dropped_call_rate, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-07
+- id: VQ-TEL-038
+  question: "Dropped call rate by radio vendor this year"
+  query: { view: NETWORK_PERFORMANCE, metrics: [dropped_call_rate], dimensions: [vendor], timeRange: { ytd: true }, orderBy: [{ field: dropped_call_rate, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-08
+- id: VQ-TEL-039
+  question: "Network availability by region this year"
+  query: { view: NETWORK_PERFORMANCE, metrics: [network_availability], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: network_availability, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-09
+- id: VQ-TEL-040
+  question: "Network availability by market last month"
+  query: { view: NETWORK_PERFORMANCE, metrics: [network_availability], dimensions: [market], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: network_availability, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-10
+- id: VQ-TEL-041
+  question: "Call setup success rate by radio vendor this year"
+  query: { view: NETWORK_PERFORMANCE, metrics: [call_setup_success_rate], dimensions: [vendor], timeRange: { ytd: true }, orderBy: [{ field: call_setup_success_rate, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-11
+- id: VQ-TEL-042
+  question: "Call setup success rate by region last quarter"
+  query: { view: NETWORK_PERFORMANCE, metrics: [call_setup_success_rate], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: call_setup_success_rate, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-12
+- id: VQ-TEL-043
+  question: "Downlink throughput by region last quarter"
+  query: { view: NETWORK_PERFORMANCE, metrics: [avg_throughput_mbps], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_throughput_mbps, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-13
+- id: VQ-TEL-044
+  question: "Mobile data traffic by month this year"
+  query: { view: NETWORK_PERFORMANCE, metrics: [data_traffic_tb], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-14
+- id: VQ-TEL-045
+  question: "Mobile data traffic by technology last quarter"
+  query: { view: NETWORK_PERFORMANCE, metrics: [data_traffic_tb], dimensions: [technology], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: data_traffic_tb, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-15
+- id: VQ-TEL-046
+  question: "Dropped call rate by site class last quarter"
+  query: { view: NETWORK_PERFORMANCE, metrics: [dropped_call_rate], dimensions: [site_class], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: dropped_call_rate, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-16
+# ---------------------------------------------------------------- SERVICE_ASSURANCE
+- id: VQ-TEL-047
+  question: "How many network faults were raised last quarter?"
+  query: { view: SERVICE_ASSURANCE, metrics: [faults_raised], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-17
+- id: VQ-TEL-048
+  question: "Network faults by fault class this year"
+  query: { view: SERVICE_ASSURANCE, metrics: [faults_raised], dimensions: [fault_class], timeRange: { ytd: true }, orderBy: [{ field: faults_raised, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-18
+- id: VQ-TEL-049
+  question: "Mean time to restore by region last quarter"
+  query: { view: SERVICE_ASSURANCE, metrics: [mttr_hours], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: mttr_hours, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-19
+- id: VQ-TEL-050
+  question: "Mean time to restore by severity this year"
+  query: { view: SERVICE_ASSURANCE, metrics: [mttr_hours], dimensions: [severity], timeRange: { ytd: true }, orderBy: [{ field: mttr_hours, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-20
+- id: VQ-TEL-051
+  question: "Mean time to restore by month this year"
+  query: { view: SERVICE_ASSURANCE, metrics: [mttr_hours], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-21
+- id: VQ-TEL-052
+  question: "Impacted subscriber hours by region last quarter"
+  query: { view: SERVICE_ASSURANCE, metrics: [impacted_subscriber_hours], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: impacted_subscriber_hours, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-22
+- id: VQ-TEL-053
+  question: "Impacted subscriber hours by month this year"
+  query: { view: SERVICE_ASSURANCE, metrics: [impacted_subscriber_hours], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-23
+- id: VQ-TEL-054
+  question: "Faults restored within SLA by fault class this year"
+  query: { view: SERVICE_ASSURANCE, metrics: [restored_within_sla_pct], dimensions: [fault_class], timeRange: { ytd: true }, orderBy: [{ field: restored_within_sla_pct, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-24
+- id: VQ-TEL-055
+  question: "Faults restored within SLA by region last quarter"
+  query: { view: SERVICE_ASSURANCE, metrics: [restored_within_sla_pct], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: restored_within_sla_pct, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-25
+- id: VQ-TEL-056
+  question: "Network faults by severity last quarter"
+  query: { view: SERVICE_ASSURANCE, metrics: [faults_raised], dimensions: [severity], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: faults_raised, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-26
+# ---------------------------------------------------------------- FIELD_OPERATIONS
+- id: VQ-TEL-057
+  question: "First-time fix rate by work order type this year"
+  query: { view: FIELD_OPERATIONS, metrics: [first_time_fix_rate], dimensions: [wo_type], timeRange: { ytd: true }, orderBy: [{ field: first_time_fix_rate, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-27
+- id: VQ-TEL-058
+  question: "First-time fix rate by technician skill this year"
+  query: { view: FIELD_OPERATIONS, metrics: [first_time_fix_rate], dimensions: [technician_skill], timeRange: { ytd: true }, orderBy: [{ field: first_time_fix_rate, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-28
+- id: VQ-TEL-059
+  question: "Truck rolls by work order type last quarter"
+  query: { view: FIELD_OPERATIONS, metrics: [truck_rolls], dimensions: [wo_type], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: truck_rolls, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-29
+- id: VQ-TEL-060
+  question: "Truck rolls by region this year"
+  query: { view: FIELD_OPERATIONS, metrics: [truck_rolls], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: truck_rolls, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-30
+- id: VQ-TEL-061
+  question: "Hours to resolve by work order type this year"
+  query: { view: FIELD_OPERATIONS, metrics: [avg_hours_to_resolve], dimensions: [wo_type], timeRange: { ytd: true }, orderBy: [{ field: avg_hours_to_resolve, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-07-31
+- id: VQ-TEL-062
+  question: "Appointments met by region this year"
+  query: { view: FIELD_OPERATIONS, metrics: [appointment_met_rate], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: appointment_met_rate, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-08-01
+- id: VQ-TEL-063
+  question: "First-time fix rate by month this year"
+  query: { view: FIELD_OPERATIONS, metrics: [first_time_fix_rate], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-08-02
+# ---------------------------------------------------------------- CUSTOMER_EXPERIENCE
+- id: VQ-TEL-064
+  question: "NPS by touchpoint this year"
+  query: { view: CUSTOMER_EXPERIENCE, metrics: [nps], dimensions: [touchpoint], timeRange: { ytd: true }, orderBy: [{ field: nps, dir: desc }] }
+  verified_by: telecom:retention-analyst
+  verified_at: 2026-08-03
+- id: VQ-TEL-065
+  question: "NPS by region last quarter"
+  query: { view: CUSTOMER_EXPERIENCE, metrics: [nps], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: nps, dir: desc }] }
+  verified_by: telecom:retention-analyst
+  verified_at: 2026-08-04
+- id: VQ-TEL-066
+  question: "Detractor share by market this year"
+  query: { view: CUSTOMER_EXPERIENCE, metrics: [detractor_pct], dimensions: [market], timeRange: { ytd: true }, orderBy: [{ field: detractor_pct, dir: desc }] }
+  verified_by: telecom:retention-analyst
+  verified_at: 2026-08-05
+# ---------------------------------------------------------------- FIELD_OPERATIONS (pending FIX-1)
+- id: VQ-TEL-067
+  question: "Fiber activation lead time by region last quarter"
+  query: { view: FIELD_OPERATIONS, metrics: [fiber_activation_days], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: fiber_activation_days, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-08-06
+  status: pending_fix
+- id: VQ-TEL-068
+  question: "Fiber activation lead time by month this year"
+  query: { view: FIELD_OPERATIONS, metrics: [fiber_activation_days], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-08-07
+  status: pending_fix
+- id: VQ-TEL-069
+  question: "Appointments met by work order type this year"
+  query: { view: FIELD_OPERATIONS, metrics: [appointment_met_rate], dimensions: [wo_type], timeRange: { ytd: true }, orderBy: [{ field: appointment_met_rate, dir: desc }] }
+  agent: AG-TEL-003
+  verified_by: telecom:network-dpo
+  verified_at: 2026-08-08
+  status: pending_fix

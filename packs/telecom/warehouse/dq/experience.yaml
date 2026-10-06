@@ -1,0 +1,34 @@
+# NPS survey DQ rules.
+- id: DQ-TEL-056
+  object: CONFORMED_GOLD.FCT_NPS_RESPONSE
+  column: response_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: 'One row per survey response.'
+- id: DQ-TEL-057
+  object: CONFORMED_GOLD.FCT_NPS_RESPONSE
+  column: score
+  dimension: accuracy
+  assertion: "max <= 10"
+  severity: high
+  alert_route: steward
+  description: 'NPS scores are on the 0–10 scale.'
+- id: DQ-TEL-058
+  object: CONFORMED_GOLD.FCT_NPS_RESPONSE
+  column: touchpoint
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Relationship, Care interaction, Install, Repair, Store visit]
+  severity: medium
+  alert_route: steward
+  description: 'Touchpoints conform to the survey programme.'
+- id: DQ-TEL-059
+  object: CONFORMED_GOLD.FCT_NPS_RESPONSE
+  column: survey_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: medium
+  alert_route: engineering
+  description: 'Survey responses are no more than a day behind.'

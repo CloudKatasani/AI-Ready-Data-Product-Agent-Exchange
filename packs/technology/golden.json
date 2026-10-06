@@ -1,0 +1,742 @@
+{
+  "pack": "technology",
+  "version": "1.0.0",
+  "scale": "M",
+  "scenarios": {
+    "SC-TCH-001": {
+      "agent": "AG-TCH-001",
+      "kind": "answer",
+      "headline": "North America carries the most ARR at $93,210,637 at the end of last month.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "One-time professional services are excluded (BR-TCH-001). LATAM is smallest at $21,528,126; total ARR across 4 regions is $202,852,918.",
+      "sqlHash": "b71e8d09c2e1eba2",
+      "columns": [
+        "region",
+        "arr"
+      ],
+      "rows": [
+        [
+          "North America",
+          93210600
+        ],
+        [
+          "EMEA",
+          60847200
+        ],
+        [
+          "APAC",
+          27267000
+        ],
+        [
+          "LATAM",
+          21528100
+        ]
+      ],
+      "citations": [
+        "product:DP-TCH-001@2.4.0",
+        "metric:REVENUE_RETENTION.arr",
+        "rule:BR-TCH-001",
+        "document:DOC-TCH-REVENUE-POLICY#3"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "EMEA carries the most ARR at $60,847,163 at the end of last month.",
+          "rowFiltered": true,
+          "masked": []
+        },
+        "E": {
+          "kind": "answer",
+          "headline": "North America carries the most ARR at $93,210,637 at the end of last month.",
+          "rowFiltered": false,
+          "masked": []
+        }
+      }
+    },
+    "SC-TCH-002": {
+      "agent": "AG-TCH-001",
+      "kind": "answer",
+      "headline": "Including one-time services, North America shows $103,129,314 — this is not the governed ARR figure.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "You asked to include one-time services, so the exclusion in BR-TCH-001 is not applied. Large Q3 implementation projects inflate every region; compare with the standard view that excludes them.",
+      "sqlHash": "cf989472061f87c5",
+      "columns": [
+        "region",
+        "arr"
+      ],
+      "rows": [
+        [
+          "North America",
+          103129000
+        ],
+        [
+          "EMEA",
+          69912800
+        ],
+        [
+          "APAC",
+          27899300
+        ],
+        [
+          "LATAM",
+          21964500
+        ]
+      ],
+      "citations": [
+        "product:DP-TCH-001@2.4.0",
+        "metric:REVENUE_RETENTION.arr",
+        "document:DOC-TCH-REVENUE-POLICY#3"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Including one-time services, EMEA shows $69,912,847 — this is not the governed ARR figure.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TCH-003": {
+      "agent": "AG-TCH-001",
+      "kind": "answer",
+      "headline": "Enterprise leads net revenue retention at 119.1% last quarter.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "SMB trails at 97.8% net and 86.3% gross retention. Retention uses the trailing twelve-month cohort of paying accounts, subscription revenue only (BR-TCH-001).",
+      "sqlHash": "ac56e3b015393787",
+      "columns": [
+        "segment",
+        "nrr_pct",
+        "grr_pct"
+      ],
+      "rows": [
+        [
+          "Enterprise",
+          119.082,
+          93.0804
+        ],
+        [
+          "Mid-Market",
+          107.138,
+          92.7589
+        ],
+        [
+          "SMB",
+          97.7801,
+          86.2858
+        ]
+      ],
+      "citations": [
+        "product:DP-TCH-001@2.4.0",
+        "metric:REVENUE_RETENTION.nrr_pct",
+        "metric:REVENUE_RETENTION.grr_pct",
+        "rule:BR-TCH-001",
+        "document:DOC-TCH-REVENUE-POLICY#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Enterprise leads net revenue retention at 111.4% last quarter.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TCH-004": {
+      "agent": "AG-TCH-001",
+      "kind": "answer",
+      "headline": "Net revenue retention is 117.2% year to date — better than target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Trailing twelve-month NRR at each of the 9 month ends this year, subscription revenue only (BR-TCH-001). It moved −8.0 points from January to September.",
+      "sqlHash": "fbdcf1e7bef664c8",
+      "columns": [
+        "period",
+        "nrr_pct"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          121.505
+        ],
+        [
+          "2026-02-01",
+          121.56
+        ],
+        [
+          "2026-03-01",
+          121.006
+        ],
+        [
+          "2026-04-01",
+          118.84
+        ],
+        [
+          "2026-05-01",
+          116.552
+        ],
+        [
+          "2026-06-01",
+          115.504
+        ],
+        [
+          "2026-07-01",
+          114.589
+        ],
+        [
+          "2026-08-01",
+          113.521
+        ],
+        [
+          "2026-09-01",
+          113.462
+        ]
+      ],
+      "citations": [
+        "product:DP-TCH-001@2.4.0",
+        "metric:REVENUE_RETENTION.nrr_pct",
+        "rule:BR-TCH-001",
+        "verified_query:VQ-TCH-004",
+        "document:DOC-TCH-REVENUE-POLICY#5"
+      ],
+      "personas": {}
+    },
+    "SC-TCH-005": {
+      "agent": "AG-TCH-001",
+      "kind": "answer",
+      "headline": "Logo churn was 9.6% last quarter — within the target band.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Share of accounts paying twelve months earlier that now pay nothing. Seat reductions count as contraction, not churn (BR-TCH-004).",
+      "sqlHash": "7cf3f8c48d978c9a",
+      "columns": [
+        "logo_churn_pct",
+        "logo_churn_pct_target_min",
+        "logo_churn_pct_target_max"
+      ],
+      "rows": [
+        [
+          9.62753,
+          5,
+          10
+        ]
+      ],
+      "citations": [
+        "product:DP-TCH-001@2.4.0",
+        "metric:REVENUE_RETENTION.logo_churn_pct",
+        "rule:BR-TCH-001",
+        "document:DOC-TCH-REVENUE-POLICY#5"
+      ],
+      "personas": {}
+    },
+    "SC-TCH-006": {
+      "agent": "AG-TCH-001",
+      "kind": "answer",
+      "headline": "The top sales rep booked $725,893 of new business and expansion last quarter.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Rep names are masked unless your persona is cleared for PII. Showing the top 5 reps; renewals are excluded from bookings (BR-TCH-005).",
+      "sqlHash": "e8e932682f483d45",
+      "columns": [
+        "sales_rep",
+        "bookings_usd"
+      ],
+      "rows": [
+        [
+          "Nancy Wright",
+          725893
+        ],
+        [
+          "John Walker",
+          639677
+        ],
+        [
+          "Mark Scott",
+          426061
+        ],
+        [
+          "Sandra Flores",
+          419417
+        ],
+        [
+          "Jennifer Clark",
+          381109
+        ]
+      ],
+      "citations": [
+        "product:DP-TCH-002@1.6.0",
+        "metric:GTM_PIPELINE.bookings_usd",
+        "rule:BR-TCH-005",
+        "document:DOC-TCH-REVENUE-POLICY#3"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "The top sales rep booked $252,309 of new business and expansion last quarter.",
+          "rowFiltered": true,
+          "masked": [
+            "sales_rep"
+          ]
+        },
+        "D": {
+          "kind": "answer",
+          "headline": "The top sales rep booked $725,893 of new business and expansion last quarter.",
+          "rowFiltered": false,
+          "masked": []
+        }
+      }
+    },
+    "SC-TCH-007": {
+      "agent": "AG-TCH-001",
+      "kind": "answer",
+      "headline": "Win rate moved −6.1 points from the first to the latest quarter this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Won as a share of closed new-business and expansion opportunities for each of the 3 quarters; renewals are excluded (BR-TCH-005).",
+      "sqlHash": "d571d34d476c280d",
+      "columns": [
+        "period",
+        "win_rate_pct"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          28.6585
+        ],
+        [
+          "2026-04-01",
+          23.6571
+        ],
+        [
+          "2026-07-01",
+          22.5195
+        ]
+      ],
+      "citations": [
+        "product:DP-TCH-002@1.6.0",
+        "metric:GTM_PIPELINE.win_rate_pct",
+        "rule:BR-TCH-005",
+        "verified_query:VQ-TCH-032",
+        "document:DOC-TCH-SALES-PLAYBOOK#2"
+      ],
+      "personas": {}
+    },
+    "SC-TCH-008": {
+      "agent": "AG-TCH-001",
+      "kind": "answer",
+      "headline": "Enterprise drove 64.8% of expansion ARR last quarter ($5,399,754).",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Expansion ARR is month-over-month growth on accounts already paying. Total expansion was $8,338,197 across 3 segments.",
+      "sqlHash": "52441eef4228e695",
+      "columns": [
+        "segment",
+        "expansion_arr",
+        "expansion_arr_share_pct"
+      ],
+      "rows": [
+        [
+          "Enterprise",
+          5399750,
+          64.7593
+        ],
+        [
+          "Mid-Market",
+          2715650,
+          32.5688
+        ],
+        [
+          "SMB",
+          222789,
+          2.67191
+        ]
+      ],
+      "citations": [
+        "product:DP-TCH-001@2.4.0",
+        "metric:REVENUE_RETENTION.expansion_arr",
+        "rule:BR-TCH-001",
+        "document:DOC-TCH-REVENUE-POLICY#2"
+      ],
+      "personas": {}
+    },
+    "SC-TCH-009": {
+      "agent": "AG-TCH-001",
+      "kind": "decline",
+      "headline": "I can't approve discounts — pricing decisions are made by people in deal desk.",
+      "narrative": "Discount and pricing approvals go through deal desk and the regional VP. I can show win rate, deal size or net revenue retention for the segment so the approver has the evidence.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-TCH-010": {
+      "agent": "AG-TCH-001",
+      "kind": "redirect",
+      "headline": "That's a product engagement question — the Customer Health Analyst answers it.",
+      "narrative": "I cover ARR, retention and pipeline. The Customer Health Analyst is certified on product usage, uptime and support.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-TCH-011": {
+      "agent": "AG-TCH-002",
+      "kind": "answer",
+      "headline": "Daily active users averaged 69,957 across paying tenants last quarter.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Average daily active users for each of the 14 weeks, paying customers only (BR-TCH-007). Look for the dip in the week of the September release.",
+      "sqlHash": "216235facb0e717a",
+      "columns": [
+        "period",
+        "avg_daily_active_users"
+      ],
+      "rows": [
+        [
+          "2026-06-29",
+          70907.2
+        ],
+        [
+          "2026-07-06",
+          71518.9
+        ],
+        [
+          "2026-07-13",
+          70654.9
+        ],
+        [
+          "2026-07-20",
+          70339.6
+        ],
+        [
+          "2026-07-27",
+          70712.9
+        ],
+        [
+          "2026-08-03",
+          71148.4
+        ],
+        [
+          "2026-08-10",
+          69920.1
+        ],
+        [
+          "2026-08-17",
+          71614.7
+        ],
+        [
+          "2026-08-24",
+          71005.4
+        ],
+        [
+          "2026-08-31",
+          71105.3
+        ],
+        [
+          "2026-09-07",
+          60495.4
+        ],
+        [
+          "2026-09-14",
+          69437.9
+        ],
+        [
+          "2026-09-21",
+          70499.3
+        ],
+        [
+          "2026-09-28",
+          70794.7
+        ]
+      ],
+      "citations": [
+        "product:DP-TCH-003@4.1.0",
+        "metric:PRODUCT_USAGE.avg_daily_active_users",
+        "verified_query:VQ-TCH-015",
+        "document:DOC-TCH-REVENUE-POLICY#8"
+      ],
+      "personas": {}
+    },
+    "SC-TCH-012": {
+      "agent": "AG-TCH-002",
+      "kind": "answer",
+      "headline": "Uptime was 99.951% last quarter — within the target band.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "One minus downtime minutes over scheduled tenant minutes, announced maintenance excluded (BR-TCH-008). The EMEA pod incident in August is the largest single contributor.",
+      "sqlHash": "81991bfbbce80182",
+      "columns": [
+        "uptime_pct",
+        "uptime_pct_target_min",
+        "uptime_pct_target_max"
+      ],
+      "rows": [
+        [
+          99.9507,
+          99.9,
+          100
+        ]
+      ],
+      "citations": [
+        "product:DP-TCH-003@4.1.0",
+        "metric:PRODUCT_USAGE.uptime_pct",
+        "verified_query:VQ-TCH-039",
+        "document:DOC-TCH-SUPPORT-SLA#4"
+      ],
+      "personas": {}
+    },
+    "SC-TCH-013": {
+      "agent": "AG-TCH-002",
+      "kind": "answer",
+      "headline": "AI Assistant has the lowest adoption at 27.4% of entitled accounts.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Adoption is measured among active accounts entitled to the feature, over the last thirty days (BR-TCH-009). Showing the 5 least-adopted features.",
+      "sqlHash": "ac1e073f92ff2f24",
+      "columns": [
+        "feature",
+        "feature_adoption_pct"
+      ],
+      "rows": [
+        [
+          "AI Assistant",
+          27.4143
+        ],
+        [
+          "Audit log export",
+          40.8163
+        ],
+        [
+          "Single sign-on",
+          67.037
+        ],
+        [
+          "Advanced analytics",
+          68.3281
+        ],
+        [
+          "Sandbox environments",
+          70
+        ]
+      ],
+      "citations": [
+        "product:DP-TCH-003@4.1.0",
+        "metric:FEATURE_ADOPTION.feature_adoption_pct",
+        "document:DOC-TCH-REVENUE-POLICY#9"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "AI Assistant has the lowest adoption at 27.7% of entitled accounts.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TCH-014": {
+      "agent": "AG-TCH-002",
+      "kind": "answer",
+      "headline": "Enterprise is the stickiest plan at 45.6% DAU/MAU last quarter.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Growth is lowest at 36.5%. Stickiness is daily over monthly active users, paying customers only.",
+      "sqlHash": "04c45108872e4056",
+      "columns": [
+        "plan_tier",
+        "stickiness_pct"
+      ],
+      "rows": [
+        [
+          "Enterprise",
+          45.6132
+        ],
+        [
+          "Starter",
+          36.6098
+        ],
+        [
+          "Scale",
+          36.5076
+        ],
+        [
+          "Growth",
+          36.4539
+        ]
+      ],
+      "citations": [
+        "product:DP-TCH-003@4.1.0",
+        "metric:PRODUCT_USAGE.stickiness_pct",
+        "document:DOC-TCH-REVENUE-POLICY#8"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Enterprise is the stickiest plan at 45.6% DAU/MAU last quarter.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TCH-015": {
+      "agent": "AG-TCH-002",
+      "kind": "answer",
+      "headline": "First response averaged 3.10 hours last quarter — within target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Support Experience is still in certification, so treat this figure as provisional. Merged duplicates are excluded (BR-TCH-010).",
+      "sqlHash": "2fae4a0ac33d20c4",
+      "columns": [
+        "avg_first_response_hours"
+      ],
+      "rows": [
+        [
+          3.09907
+        ]
+      ],
+      "citations": [
+        "product:DP-TCH-004@1.0.0-rc.1",
+        "metric:SUPPORT_EXPERIENCE.avg_first_response_hours",
+        "rule:BR-TCH-010",
+        "document:DOC-TCH-SUPPORT-SLA#3"
+      ],
+      "personas": {
+        "A": {
+          "kind": "decline",
+          "headline": "You don’t have access to Support Experience yet."
+        }
+      }
+    },
+    "SC-TCH-016": {
+      "agent": "AG-TCH-002",
+      "kind": "answer",
+      "headline": "Across 1,138 accounts, the median account uses 63.4% of its licensed seats.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "The middle 80% of accounts sit between 49.2% and 79.3%; the lowest is 27.3% — candidates for adoption plays before renewal.",
+      "sqlHash": "0d4e83c0adfae0a4",
+      "columns": [
+        "account_count",
+        "seat_utilisation_pct_p10",
+        "seat_utilisation_pct_p50",
+        "seat_utilisation_pct_p90",
+        "seat_utilisation_pct_min",
+        "seat_utilisation_pct_max"
+      ],
+      "rows": [
+        [
+          1138,
+          49.1828,
+          63.4038,
+          79.3391,
+          27.2727,
+          92.9457
+        ]
+      ],
+      "citations": [
+        "product:DP-TCH-003@4.1.0",
+        "metric:PRODUCT_USAGE.seat_utilisation_pct",
+        "document:DOC-TCH-REVENUE-POLICY#2"
+      ],
+      "personas": {}
+    },
+    "SC-TCH-017": {
+      "agent": "AG-TCH-002",
+      "kind": "answer",
+      "headline": "Enterprise has the highest seat utilisation at 68.8% last month.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "\"Licence utilisation\" maps to seat utilisation: monthly active users over licensed seats. SMB is lowest at 57.3% across 3 segments.",
+      "sqlHash": "bda4773e7718f458",
+      "columns": [
+        "segment",
+        "seat_utilisation_pct"
+      ],
+      "rows": [
+        [
+          "Enterprise",
+          68.7646
+        ],
+        [
+          "Mid-Market",
+          68.4506
+        ],
+        [
+          "SMB",
+          57.3356
+        ]
+      ],
+      "citations": [
+        "product:DP-TCH-003@4.1.0",
+        "metric:PRODUCT_USAGE.seat_utilisation_pct",
+        "verified_query:VQ-TCH-040",
+        "document:DOC-TCH-REVENUE-POLICY#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Enterprise has the highest seat utilisation at 67.9% last month.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TCH-018": {
+      "agent": "AG-TCH-002",
+      "kind": "answer",
+      "headline": "North America had the most daily active users last month at 30,216 per day.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Average daily active users across the 4 regions you are entitled to see; the region row-access policy applies.",
+      "sqlHash": "a813728490017326",
+      "columns": [
+        "region",
+        "avg_daily_active_users"
+      ],
+      "rows": [
+        [
+          "North America",
+          30216.4
+        ],
+        [
+          "EMEA",
+          21145.8
+        ],
+        [
+          "APAC",
+          10021.2
+        ],
+        [
+          "LATAM",
+          6680.63
+        ]
+      ],
+      "citations": [
+        "product:DP-TCH-003@4.1.0",
+        "metric:PRODUCT_USAGE.avg_daily_active_users",
+        "document:DOC-TCH-REVENUE-POLICY#8"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "EMEA had the most daily active users last month at 21,146 per day.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TCH-019": {
+      "agent": "AG-TCH-002",
+      "kind": "clarify",
+      "headline": "\"Support\" can mean a few things — which one do you need?",
+      "narrative": "I can show SLA attainment, first response time, resolution time, CSAT or ticket volume. Pick one and a period.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-TCH-020": {
+      "agent": "AG-TCH-002",
+      "kind": "decline",
+      "headline": "I can't change entitlements — that is done by the account team in billing.",
+      "narrative": "Entitlements and licences change only through an order processed by the account team. I can show feature adoption by plan tier so you can see what entitlement would unlock.",
+      "citations": [],
+      "personas": {}
+    }
+  }
+}

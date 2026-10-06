@@ -1,0 +1,52 @@
+# Seeded intake requests and demand-board items. REQ-TCH-001 deliberately near-duplicates DP-TCH-001
+# (ARR & Retention) so the intake duplicate detector fires (AC5.1).
+requests:
+  - id: REQ-TCH-001
+    title: Regional ARR and retention scorecard
+    requester: technology:emea-sales-vp
+    decision: Which EMEA accounts and segments get retention and expansion plays next quarter
+    decider: Regional VP Sales
+    cadence: Monthly, with a quarterly business review
+    workaround: Billing exports pasted into a spreadsheet and matched to CRM accounts by hand
+    questions:
+      - What is our ARR by region?
+      - What is net revenue retention by segment in EMEA?
+      - Which segments have the highest logo churn?
+      - How much expansion ARR did we add last quarter?
+    stakes: Retention budget goes to segments that are not losing revenue while EMEA SMB churn grows unnoticed
+    freshness: Monthly, two days after month close
+    status: SUBMITTED
+  - id: REQ-TCH-002
+    title: Renewal risk early warning
+    requester: technology:revops-analyst
+    decision: Which renewals in the next two quarters need an executive sponsor and a success plan
+    decider: VP Customer Success
+    cadence: Weekly
+    workaround: Customer success managers keep their own renewal trackers with gut-feel health scores
+    questions:
+      - Which renewals in the next two quarters have falling seat utilisation?
+      - How many renewing accounts opened P1 tickets in the last 90 days?
+      - What share of renewing ARR sits with accounts not using their core features?
+    stakes: Contraction and churn are found at the renewal call, too late to act
+    freshness: Daily
+    status: IN_TRIAGE
+  - id: REQ-TCH-003
+    title: Customer acquisition cost payback
+    requester: technology:cfo
+    decision: How much to invest in each acquisition channel next fiscal year
+    decider: Chief Financial Officer
+    cadence: Quarterly
+    workaround: Finance allocates sales and marketing spend to channels in a spreadsheet once a year
+    questions:
+      - What is CAC payback by acquisition channel?
+      - How does gross-margin-adjusted payback compare across segments?
+      - Which channels bring the highest net revenue retention after year one?
+    stakes: Spend keeps flowing to channels with long payback and weak retention
+    freshness: Monthly
+    status: APPROVED
+
+demand_items:
+  - { id: DM-TCH-001, title: CAC payback product, kind: product, description: "Sales and marketing spend joined to new logo ARR and gross margin by channel and segment for payback analysis.", requested_by: technology:cfo, votes: 12 }
+  - { id: DM-TCH-002, title: Renewal risk agent, kind: agent, description: "Explains which upcoming renewals show falling usage, unresolved P1 tickets or low feature adoption, from certified products.", requested_by: technology:revops-analyst, votes: 10 }
+  - { id: DM-TCH-003, title: Cloud cost per tenant product, kind: product, description: "Infrastructure cost per tenant and gross margin by plan tier from cloud billing exports.", requested_by: technology:data-product-owner, votes: 7 }
+  - { id: DM-TCH-004, title: Product-qualified leads, kind: product, description: "Self-serve and free-tier accounts whose usage signals readiness for a sales conversation.", requested_by: technology:emea-sales-vp, votes: 5 }

@@ -1,0 +1,83 @@
+name: GTM_PIPELINE
+description: Opportunities, win rate, bookings, deal size, sales cycle and open pipeline by close date
+tables:
+  - { alias: o, fqn: CONFORMED_GOLD.FCT_OPPORTUNITY, pk: opportunity_key }
+  - { alias: a, fqn: CONFORMED_GOLD.DIM_ACCOUNT, pk: account_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: o.account_key, to: a.account_key }
+  - { from: o.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: a.region, label: Region, synonyms: [geo, sales region], term: GT-TCH-REGION }
+  - { name: segment, expr: a.segment, label: Segment, synonyms: [market segment, company size], term: GT-TCH-SEGMENT }
+  - { name: opportunity_type, expr: o.opp_type, label: Opportunity type, synonyms: [deal type, opp type], term: GT-TCH-OPPORTUNITY-TYPE }
+  - { name: lead_source, expr: o.lead_source, label: Lead source, synonyms: [deal source, sourced by] }
+  - { name: stage, expr: o.stage, label: Stage, synonyms: [sales stage, deal stage] }
+  - { name: sales_rep, expr: o.sales_rep, label: Sales rep, synonyms: [account executive, rep, seller] }
+  - { name: sales_team, expr: o.sales_team, label: Sales team, synonyms: [team] }
+time_dimensions:
+  - { name: close_date, expr: d.date, default: true }
+facts:
+  - { name: amount_usd, expr: o.amount_usd }
+metrics:
+  - name: win_rate_pct
+    label: Win rate
+    expr: 100.0 * SUM(CASE WHEN o.is_won THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN o.is_closed THEN 1 ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [close rate, win ratio, closed won rate]
+    term: GT-TCH-WIN-RATE
+    description: Won opportunities as a share of opportunities closed (won or lost) in the period
+    default_filters: [ { rule: BR-TCH-005 } ]
+    naive_expr: 100.0 * SUM(CASE WHEN o.is_won THEN 1 ELSE 0 END) / COUNT(*)
+  - name: bookings_usd
+    label: New bookings
+    expr: SUM(CASE WHEN o.is_won THEN o.amount_usd ELSE 0 END)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [new arr booked, closed won amount, booked arr]
+    term: GT-TCH-BOOKINGS
+    description: Annual contract value of won new-business and expansion opportunities closed in the period
+    default_filters: [ { rule: BR-TCH-005 } ]
+  - name: avg_deal_size
+    label: Average deal size
+    expr: AVG(CASE WHEN o.is_won THEN o.amount_usd END)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [average contract value, acv, average selling price]
+    term: GT-TCH-DEAL-SIZE
+    description: Mean annual contract value of won opportunities closed in the period
+    default_filters: [ { rule: BR-TCH-005 } ]
+  - name: sales_cycle_days
+    label: Sales cycle
+    expr: AVG(o.cycle_days)
+    unit: days
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [sales cycle length, time to close, days to close]
+    term: GT-TCH-SALES-CYCLE
+    description: Mean days from opportunity creation to close for won opportunities closed in the period
+    default_filters: [ { rule: BR-TCH-005 } ]
+  - name: open_pipeline_usd
+    label: Open pipeline
+    expr: SUM(CASE WHEN NOT o.is_closed THEN o.amount_usd ELSE 0 END)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [pipeline value, open opportunities value, weighted pipeline]
+    term: GT-TCH-PIPELINE
+    description: Amount of open opportunities expected to close in the period
+  - name: opportunities_won
+    label: Opportunities won
+    expr: SUM(CASE WHEN o.is_won THEN 1 ELSE 0 END)
+    unit: deals
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [deals won, won deals]
+    term: GT-TCH-BOOKINGS
+    description: Number of won opportunities closed in the period
+    default_filters: [ { rule: BR-TCH-005 } ]
+products: [DP-TCH-002]

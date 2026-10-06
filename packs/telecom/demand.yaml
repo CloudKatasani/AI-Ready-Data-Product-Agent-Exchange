@@ -1,0 +1,83 @@
+# Seeded intake requests and demand-board items. REQ-TEL-001 deliberately near-duplicates DP-TEL-004
+# (Churn & Retention) so the intake duplicate detector fires (AC5.1). Seed products from the ADPM telecom pack
+# that are not yet built (cell capacity, field job scheduling, subscriber single view) become demand items.
+requests:
+  - id: REQ-TEL-001
+    title: Regional churn scorecard
+    requester: telecom:regional-director-northeast
+    decision: Which Northeast markets need extra retention offers and store coverage next month
+    decider: Regional Commercial Director
+    cadence: Monthly
+    workaround: Finance churn numbers filtered to my region and port-outs counted by hand
+    questions:
+      - What was the churn rate by region last quarter?
+      - Which rate plans have the highest postpaid churn?
+      - How has port-out share moved this year?
+      - Are we inside our postpaid churn target?
+    stakes: A competitor's promotion empties a market before anyone notices the port-outs
+    freshness: Weekly by Monday 08:00
+    status: SUBMITTED
+  - id: REQ-TEL-002
+    title: Cell capacity and experience
+    requester: telecom:network-dpo
+    decision: Which cells to prioritise for capacity upgrade next quarter
+    decider: VP Network Operations
+    cadence: Quarterly
+    workaround: Performance exports joined manually to a planning spreadsheet
+    questions:
+      - Which cells breached the congestion threshold most often last quarter?
+      - How many subscribers are served by each?
+      - Which of those cells also show elevated churn?
+    stakes: Capital goes to cells that are congested but carry few customers
+    freshness: Weekly
+    status: IN_TRIAGE
+  - id: REQ-TEL-003
+    title: Churn risk and service experience
+    requester: telecom:retention-analyst
+    decision: Which subscribers to target with a retention offer this month, given recent service faults
+    decider: Retention Manager
+    cadence: Monthly
+    workaround: A churn score list with no service-experience context
+    questions:
+      - How many high churn-risk subscribers had a service fault in the last 60 days?
+      - What is the save rate for subscribers with a recent fault?
+      - What margin is retained per accepted offer?
+    stakes: Offers go to customers who would have stayed, and miss those with a service problem
+    freshness: Daily by 07:00
+    status: APPROVED
+  - id: REQ-TEL-004
+    title: Field job scheduling
+    requester: telecom:network-dpo
+    decision: Which jobs to schedule to which technicians tomorrow
+    decider: Field Operations Planner
+    cadence: Daily
+    workaround: A scheduling tool with no skills or first-visit history
+    questions:
+      - Which open jobs breach their appointment window tomorrow?
+      - Which technicians have the right skills in the right market?
+      - Which job types have the worst first-time fix?
+    stakes: Jobs are revisited and appointment commitments are missed
+    freshness: Every 30 minutes
+    status: SUBMITTED
+  - id: REQ-TEL-005
+    title: Northeast churn drill-down
+    requester: telecom:regional-director-northeast
+    decision: Which Northeast markets and plans to review in the next retention council
+    decider: Regional Commercial Director
+    cadence: Monthly
+    workaround: Monthly email from the retention analyst with a pivot table
+    questions:
+      - What was the churn rate in the Northeast last quarter by market?
+      - Which plans drive Northeast port-outs?
+      - How many save offers were accepted in the Northeast last quarter?
+    stakes: Retention effort spent on markets that are not driving Northeast churn
+    freshness: Monthly
+    status: MERGED
+
+demand_items:
+  - { id: DM-TEL-001, title: Device & plan profitability product, kind: product, description: "Gross margin per line after cost of service and amortised device subsidy, by plan and handset.", requested_by: telecom:cco, votes: 14 }
+  - { id: DM-TEL-002, title: Subscriber single view, kind: product, description: "One subscriber across lines, accounts and households, with contract state and marketing consent.", requested_by: telecom:retention-analyst, votes: 12 }
+  - { id: DM-TEL-003, title: Network experience churn agent, kind: agent, description: "Explains how dropped calls and faults at a subscriber's serving sites relate to churn, from certified products.", requested_by: telecom:cco, votes: 10 }
+  - { id: DM-TEL-004, title: Cell capacity and experience product, kind: product, description: "Cell congestion, throughput and served-subscriber counts on one certified definition.", requested_by: telecom:network-dpo, votes: 8 }
+  - { id: DM-TEL-005, title: Care contact driver agent, kind: agent, description: "Explains care contact reasons and first-contact resolution by channel once care contacts are certified.", requested_by: telecom:data-steward, votes: 6 }
+  - { id: DM-TEL-006, title: Enterprise connectivity order-to-activate product, kind: product, description: "Enterprise fiber and SD-WAN orders from quote to activation with lead time against contract dates.", requested_by: telecom:cco, votes: 5 }

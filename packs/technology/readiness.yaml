@@ -1,0 +1,6 @@
+# Readiness preset labels for Cobalt Cloud Software (preset ids from the ported readiness engine: early, mid, advanced).
+preset_labels:
+  early: Spreadsheet board pack
+  mid: Mid-migration
+  advanced: Governed revenue lakehouse
+question_overrides: []

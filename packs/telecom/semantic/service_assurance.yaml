@@ -1,0 +1,59 @@
+name: SERVICE_ASSURANCE
+description: Network fault tickets — volumes, mean time to restore, restoration SLA and impacted subscriber hours
+tables:
+  - { alias: f, fqn: CONFORMED_GOLD.FCT_NETWORK_FAULT, pk: fault_key }
+  - { alias: c, fqn: CONFORMED_GOLD.DIM_CELL_SITE, pk: site_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: f.site_key, to: c.site_key }
+  - { from: f.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: c.region, label: Region, synonyms: [territory, operating region], term: GT-TEL-REGION }
+  - { name: market, expr: c.market_name, label: Market, synonyms: [metro, market area], term: GT-TEL-MARKET }
+  - { name: fault_class, expr: f.fault_class, label: Fault class, synonyms: [fault type, fault cause, root cause], term: GT-TEL-FAULT }
+  - { name: severity, expr: f.severity, label: Severity, synonyms: [fault severity, fault priority] }
+  - { name: site_class, expr: c.site_class, label: Site class, synonyms: [urban or rural, morphology] }
+  - { name: fault_site, expr: c.site_id, label: Cell site, synonyms: [faulted site], term: GT-TEL-CELL-SITE }
+time_dimensions:
+  - { name: raised_date, expr: d.date, default: true }
+facts:
+  - { name: restore_hours, expr: f.restore_hours }
+metrics:
+  - name: faults_raised
+    label: Network faults
+    expr: COUNT(*)
+    unit: faults
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [fault count, number of faults, fault tickets, faults raised]
+    term: GT-TEL-FAULT
+    description: Service-affecting fault tickets raised in the period
+  - name: mttr_hours
+    label: Mean time to restore
+    expr: AVG(f.restore_hours)
+    unit: hours
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [mttr, fault repair time, time to restore, restoration time]
+    term: GT-TEL-MTTR
+    description: Mean hours from fault raise to service restoration, restored faults only
+    naive_expr: AVG(coalesce(f.restore_hours, 0))
+  - name: impacted_subscriber_hours
+    label: Impacted subscriber hours
+    expr: SUM(f.impacted_subscriber_hours)
+    unit: hours
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [customer impact hours, impacted customer hours, subscriber impact]
+    term: GT-TEL-IMPACT-HOURS
+    description: Impacted subscribers multiplied by restoration hours, summed over restored faults
+  - name: restored_within_sla_pct
+    label: Faults restored within SLA
+    expr: 100.0 * AVG(CASE WHEN f.restored THEN CASE WHEN f.restored_within_sla THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [restoration sla, sla attainment, restored within four hours]
+    term: GT-TEL-FAULT-SLA
+    description: Share of restored faults brought back within the four-hour restoration SLA
+products: [DP-TEL-005]

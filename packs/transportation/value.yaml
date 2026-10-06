@@ -1,0 +1,51 @@
+# Value cases per product (marketplace value model, converted from the DP-TRN-001/002 value_case blocks). All
+# figures are illustrative and synthetic.
+- id: VC-TRN-001
+  product: DP-TRN-001
+  hypothesis: A governed on-time and dwell view lets operations fix the two Northeast cross-docks and the appointment process before shippers raise penalties, and retires the hand-built daily scorecard.
+  baseline: "Daily carrier scorecard assembled manually from TMS exports; about 95 analyst hours a month; penalties discovered at quarterly service reviews."
+  benefit_model: "avoided_sla_penalties + detention_cost_reduction + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Average monthly SLA penalty exposure per at-risk shipper", value: 9400, unit: usd, source: "Commercial FY26 contracts" }
+    - { text: "At-risk shippers brought back inside their service schedule", value: 6, unit: shippers, source: "Customer service review, H1 2026" }
+    - { text: "Achievable dwell reduction from dock-process action", value: 11, unit: percent, source: "Northeast cross-dock pilot" }
+    - { text: "Analyst hours saved per month", value: 80, unit: hours, source: "Operations analytics time study" }
+    - { text: "Fully loaded analyst rate", value: 85, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 758400
+  measured: { value_usd: 604000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-TRN-002
+  product: DP-TRN-002
+  hypothesis: Utilisation and empty miles by terminal and equipment let the fleet team move or retire under-used tractors and attack West empty running, avoiding tractor purchases.
+  baseline: "Weekly utilisation sheet rebuilt from ELD exports; tractor purchases planned on total fleet size rather than utilisation by terminal."
+  benefit_model: "avoided_tractor_purchases * annual_cost_per_tractor + empty_mile_reduction * cost_per_mile"
+  assumptions:
+    - { text: "Tractor purchases avoided by redeploying under-used units", value: 12, unit: tractors, source: "Fleet plan 2027" }
+    - { text: "Annual ownership cost per tractor", value: 31000, unit: usd, source: "Fleet finance model FY26" }
+    - { text: "Empty miles removed per year in the West", value: 420000, unit: miles, source: "Network planning backhaul study" }
+    - { text: "Cost per mile on removed empty miles", value: 1.4, unit: usd_per_mile, source: "Variable cost model FY26" }
+  annual_value_usd: 960000
+  measured: { value_usd: 712000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-TRN-003
+  product: DP-TRN-003
+  hypothesis: Crash rates and company-driver turnover by region and tenure direct safety stand-downs and retention spend to Mountain, cutting crash cost and recruiting cost.
+  baseline: "Crash register and HR separation lists reconciled in a spreadsheet each month; retention spend spread evenly across regions."
+  benefit_model: "avoided_recordable_crashes * cost_per_crash + avoided_separations * cost_per_hire"
+  assumptions:
+    - { text: "Recordable crashes avoided per year", value: 6, unit: crashes, source: "Safety stand-down pilot, 2025" }
+    - { text: "Average cost of a recordable crash", value: 91000, unit: usd, source: "Insurance and claims history FY24-FY26" }
+    - { text: "Company-driver separations avoided per year", value: 40, unit: drivers, source: "Retention programme pilot, Mountain" }
+    - { text: "Cost to recruit and train a replacement driver", value: 11500, unit: usd, source: "Recruiting cost study FY26" }
+  annual_value_usd: 1006000
+  measured: { value_usd: 688000, period: "2026-Q1..2026-Q3 annualised", confidence: low }
+- id: VC-TRN-004
+  product: DP-TRN-004
+  hypothesis: Lane and segment economics read from what was billed and spent let pricing reprice money-losing freight at bid time and allocate claims to the shippers that drive them.
+  baseline: "Quarterly lane profitability model rebuilt from settlement and claims exports; about 120 analyst hours a month."
+  benefit_model: "repriced_revenue * margin_uplift + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Revenue repriced at the next bid cycle", value: 14000000, unit: usd, source: "Pricing bid calendar 2027" }
+    - { text: "Margin uplift on repriced revenue", value: 0.035, unit: ratio, source: "Pricing pilot on 30 lanes" }
+    - { text: "Analyst hours saved per month", value: 100, unit: hours, source: "Finance analytics time study" }
+    - { text: "Fully loaded analyst rate", value: 85, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 592000
+  measured: null

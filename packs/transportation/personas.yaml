@@ -1,0 +1,48 @@
+# Five demo identities, one per archetype (01-functional-spec §2.2). People are generated, not real.
+- id: transportation:terminal-ops-southeast
+  archetype: A
+  name: Danielle Okafor
+  title: Regional Operations Manager, Southeast
+  domain: Terminal operations
+  roles: [DATA_CONSUMER]
+  row_filter: { dimension: region, allowed: [Southeast] }
+  unmasked: []
+  cares: On-time delivery, dwell and tractor utilisation at the Southeast terminals; wants plain answers she can act on this week.
+  sees: Southeast region only; shipper and driver contacts masked.
+- id: transportation:network-analyst
+  archetype: B
+  name: Marcus Lindqvist
+  title: Network Planning Analyst
+  domain: Network planning
+  roles: [DATA_CONSUMER, ANALYST]
+  unmasked: []
+  cares: Service, utilisation, empty miles and safety by region, terminal and equipment type.
+  sees: All regions; personal data masked.
+- id: transportation:ops-dpo
+  archetype: C
+  name: Priya Raman
+  title: Operations Data Product Owner
+  domain: Operations
+  roles: [DOMAIN_PRODUCT_OWNER, DATA_ENGINEER]
+  unmasked: []
+  cares: Shipping certified delivery, fleet and freight cost products that agents can trust.
+  sees: All regions; personal data masked; can build and submit products for review.
+- id: transportation:data-steward
+  archetype: D
+  name: Tomas Herrera
+  title: Fleet & Safety Data Steward
+  domain: Governance
+  roles: [DATA_STEWARD, GOVERNANCE_COUNCIL, PRIVACY_OFFICER]
+  unmasked: [PII, GOV_ID]
+  cares: Glossary health, CDE ownership, masking coverage and certification decisions.
+  sees: Everything, unmasked; approves access requests and certification gates.
+- id: transportation:coo
+  archetype: E
+  name: Alicia Brandt
+  title: Chief Operating Officer
+  domain: Executive
+  roles: [EXECUTIVE, PORTFOLIO_LEAD, GOVERNANCE_COUNCIL]
+  unmasked: []
+  aggregates_only: true
+  cares: Service, utilisation, operating ratio and safety against plan, and where to invest next.
+  sees: Aggregates only; portfolio, value and readiness.

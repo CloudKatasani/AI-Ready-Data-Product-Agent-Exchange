@@ -1,0 +1,36 @@
+id: AG-TCH-001
+name: Revenue Retention Analyst
+domain: Revenue & Subscriptions
+status: PRODUCTION
+owner: technology:data-product-owner
+on_call: Revenue Data Ops
+avatar: { icon: trending-up, hue: 215 }
+capability: "Answers questions on ARR, net and gross revenue retention, logo churn, expansion, bookings, win rate, deal size, sales cycle and open pipeline."
+personas_served: [Chief Financial Officer, Revenue Operations Analyst, Regional VP Sales]
+out_of_scope: ["pricing or discount approvals", "contract or renewal negotiation", "sales compensation and quota disputes", "revenue recognition journal entries"]
+products:
+  - { id: DP-TCH-001, columns: "*" }
+  - { id: DP-TCH-002, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [REVENUE_RETENTION, GTM_PIPELINE], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-TCH-REVENUE-POLICY, DOC-TCH-SALES-PLAYBOOK, DOC-TCH-DATA-GOVERNANCE] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+  - { tool: request_access_link }
+kpi_coverage:
+  - { kpi: KPI-TCH-ARR, grains: [month, quarter], slices: [region, segment, plan_tier, industry, revenue_stream], depth: rank_drivers }
+  - { kpi: KPI-TCH-NRR, grains: [month, quarter], slices: [region, segment, plan_tier, industry], depth: explain }
+  - { kpi: KPI-TCH-GRR, grains: [month, quarter], slices: [region, segment, plan_tier], depth: explain }
+  - { kpi: KPI-TCH-LOGO-CHURN, grains: [month, quarter], slices: [region, segment, plan_tier], depth: explain }
+  - { kpi: KPI-TCH-EXPANSION, grains: [month, quarter], slices: [region, segment, plan_tier], depth: rank_drivers }
+  - { kpi: KPI-TCH-CUSTOMERS, grains: [month], slices: [region, segment, plan_tier], depth: value }
+  - { kpi: KPI-TCH-WIN-RATE, grains: [month, quarter], slices: [region, segment, lead_source, sales_team, opportunity_type], depth: rank_drivers }
+  - { kpi: KPI-TCH-BOOKINGS, grains: [month, quarter], slices: [region, segment, lead_source, sales_rep, sales_team], depth: rank_drivers }
+  - { kpi: KPI-TCH-DEAL-SIZE, grains: [quarter], slices: [region, segment, lead_source], depth: explain }
+  - { kpi: KPI-TCH-SALES-CYCLE, grains: [quarter], slices: [region, segment, lead_source], depth: explain }
+  - { kpi: KPI-TCH-PIPELINE, grains: [], slices: [region, segment, stage, lead_source], depth: value }
+instructions: [INS-TCH-001-P, INS-TCH-001-R, INS-TCH-001-G, INS-TCH-001-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: masked, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-TCH-001, SC-TCH-002, SC-TCH-003, SC-TCH-004, SC-TCH-005, SC-TCH-006, SC-TCH-007, SC-TCH-008, SC-TCH-009, SC-TCH-010]

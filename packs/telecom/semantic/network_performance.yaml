@@ -1,0 +1,72 @@
+name: NETWORK_PERFORMANCE
+description: Daily cell-site counters — dropped calls, call setup, availability, throughput and traffic by site, market, region, technology and vendor
+tables:
+  - { alias: n, fqn: CONFORMED_GOLD.FCT_NETWORK_DAILY, pk: network_day_key }
+  - { alias: c, fqn: CONFORMED_GOLD.DIM_CELL_SITE, pk: site_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: n.site_key, to: c.site_key }
+  - { from: n.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: c.region, label: Region, synonyms: [territory, operating region], term: GT-TEL-REGION }
+  - { name: market, expr: c.market_name, label: Market, synonyms: [metro, market area], term: GT-TEL-MARKET }
+  - { name: site, expr: c.site_id, label: Cell site, synonyms: [site id, tower, cell], term: GT-TEL-CELL-SITE }
+  - { name: technology, expr: c.technology, label: Technology, synonyms: [radio technology, network generation, 5g or lte] }
+  - { name: vendor, expr: c.vendor, label: Radio vendor, synonyms: [equipment vendor, ran vendor] }
+  - { name: site_class, expr: c.site_class, label: Site class, synonyms: [urban or rural, morphology] }
+  - { name: site_type, expr: c.site_type, label: Site type, synonyms: [macro or small cell] }
+  - { name: planned_maintenance, expr: n.planned_maintenance, label: Planned maintenance day, synonyms: [maintenance window, planned work], term: GT-TEL-PLANNED-MAINTENANCE }
+time_dimensions:
+  - { name: kpi_date, expr: d.date, default: true }
+facts:
+  - { name: call_attempts, expr: n.call_attempts }
+  - { name: downtime_min, expr: n.downtime_min }
+metrics:
+  - name: dropped_call_rate
+    label: Dropped call rate
+    expr: 100.0 * SUM(n.dropped_calls) / NULLIF(SUM(n.call_attempts), 0)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [dcr, call drop rate, dropped calls, call drops]
+    term: GT-TEL-DCR
+    description: Abnormally released voice calls as a share of call attempts, from network counters
+    naive_expr: 100.0 * AVG(1.0 * n.dropped_calls / NULLIF(n.call_attempts, 0))
+  - name: network_availability
+    label: Network availability
+    expr: 100.0 - 100.0 * SUM(n.downtime_min) / NULLIF(SUM(n.scheduled_min), 0)
+    unit: '%'
+    decimals: 3
+    direction: higher_is_better
+    synonyms: [availability, uptime, network uptime, site availability]
+    term: GT-TEL-AVAILABILITY
+    description: Share of scheduled site-minutes in service, excluding planned maintenance in the approved window
+    default_filters: [ { rule: BR-TEL-015 } ]
+  - name: call_setup_success_rate
+    label: Call setup success rate
+    expr: 100.0 - 100.0 * SUM(n.setup_failures) / NULLIF(SUM(n.call_attempts), 0)
+    unit: '%'
+    decimals: 2
+    direction: higher_is_better
+    synonyms: [cssr, setup success rate, call setup success]
+    term: GT-TEL-CSSR
+    description: Share of call attempts set up successfully
+  - name: avg_throughput_mbps
+    label: Downlink throughput
+    expr: AVG(n.throughput_mbps)
+    unit: Mbps
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [throughput, download speed, data speed, user throughput]
+    term: GT-TEL-THROUGHPUT
+    description: Mean user downlink throughput across site-days
+  - name: data_traffic_tb
+    label: Mobile data traffic
+    expr: SUM(n.data_tb)
+    unit: TB
+    decimals: 0
+    direction: neutral
+    synonyms: [traffic carried, network traffic, data traffic volume]
+    term: GT-TEL-TRAFFIC
+    description: Data carried by the sampled site-days in terabytes
+products: [DP-TEL-002]

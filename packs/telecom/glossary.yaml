@@ -1,0 +1,693 @@
+# Altair Communications business glossary (synthetic). Ported from the AI-Ready telecom glossary (T-001..T-031)
+# and the ADPM telecom pack; ids, owners and mappings adapted to this pack's personas, warehouse and semantic views.
+
+# ── Subscriber & accounts ───────────────────────────────────────────────────────────────────────────
+- id: GT-TEL-SUBSCRIBER
+  name: "Subscriber"
+  definition: "A mobile line or fiber broadband home with a service agreement on one billing account. One account can hold several subscribers."
+  formula: "One record per subscriber_id"
+  domain: Subscriber
+  owner: telecom:data-steward
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [customer line, connection]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_SUBSCRIBER.subscriber_id, CURATED_SILVER.SUBSCRIBER.subscriber_id]
+    metrics: []
+
+- id: GT-TEL-ACTIVE-SUBSCRIBER
+  name: "Active Subscriber"
+  definition: "A subscriber whose status is Active and who is not an inactive prepaid line (no top-up in 60 days)."
+  formula: "status = 'Active' AND NOT prepaid_inactive"
+  domain: Subscriber
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [active line, active subscriber base]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_SUBSCRIBER.status, CONFORMED_GOLD.DIM_SUBSCRIBER.is_active]
+    metrics: [active_subscribers]
+
+- id: GT-TEL-REGION
+  name: "Region"
+  definition: "One of Altair's four operating regions — Northeast, Southeast, Central and West — each made up of two markets."
+  formula: "Derived from market: Harborview/Granite Valley → Northeast, Palmetto Coast/Cypress Bay → Southeast, Prairie Crossing/Lakeshore → Central, Sierra Vista/Pacific Rim → West"
+  domain: Enterprise
+  owner: telecom:data-steward
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [operating region]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_MARKET.region, CONFORMED_GOLD.DIM_SUBSCRIBER.region, CONFORMED_GOLD.DIM_CELL_SITE.region]
+    metrics: []
+
+- id: GT-TEL-MARKET
+  name: "Market"
+  definition: "One of Altair's eight commercial markets; the unit for store, retention and network planning."
+  formula: "market_id → market_name"
+  domain: Enterprise
+  owner: telecom:data-steward
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [commercial market]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_MARKET.market_name]
+    metrics: []
+
+- id: GT-TEL-SEGMENT
+  name: "Segment"
+  definition: "The commercial segment of a line: Postpaid (monthly bill), Prepaid (pay in advance) or Broadband (fiber home internet)."
+  formula: "Rate plan → segment"
+  domain: Subscriber
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [line segment]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_SUBSCRIBER.segment, CONFORMED_GOLD.DIM_PLAN.segment]
+    metrics: []
+
+- id: GT-TEL-RATE-PLAN
+  name: "Rate Plan"
+  definition: "The commercial plan a line is on, with monthly plan charge and data allowance, from the product catalogue."
+  formula: "plan_id → plan_name, segment, monthly_price"
+  domain: Subscriber
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [price plan]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_PLAN.plan_name]
+    metrics: []
+
+- id: GT-TEL-MSISDN
+  name: "MSISDN"
+  definition: "The mobile number assigned to a line. Joined to usage it is customer proprietary network information (CPNI) and is masked for anyone not cleared for CPNI."
+  formula: "Masked by MASK_MSISDN"
+  domain: Privacy
+  owner: telecom:data-steward
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [mobile number]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_SUBSCRIBER.msisdn, CURATED_SILVER.SUBSCRIBER.msisdn]
+    metrics: []
+
+- id: GT-TEL-CPNI
+  name: "CPNI"
+  definition: "Customer proprietary network information: the numbers a subscriber calls, call times and durations, serving location and services used. Used internally only by cleared roles; analytics use aggregates."
+  formula: "Masked by MASK_CPNI / MASK_MSISDN"
+  domain: Privacy
+  owner: telecom:data-steward
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [customer proprietary network information]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_MONTHLY_USAGE.top_called_number, CONFORMED_GOLD.FCT_MONTHLY_USAGE.serving_site_id]
+    metrics: []
+
+- id: GT-TEL-AUTOPAY
+  name: "Autopay Enrolment"
+  definition: "A subscriber with a recurring automatic payment on file. Autopay rate is the share of active subscribers enrolled."
+  formula: "active subscribers on autopay ÷ active subscribers"
+  domain: Subscriber
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [autopay, auto pay]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_SUBSCRIBER.autopay]
+    metrics: [autopay_rate]
+
+- id: GT-TEL-TENURE
+  name: "Subscriber Tenure"
+  definition: "Months since a line was activated; average tenure is measured over active subscribers."
+  formula: "date_diff(month, activation_date, asOf)"
+  domain: Subscriber
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [tenure months]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_SUBSCRIBER.tenure_months]
+    metrics: [avg_tenure_months]
+
+- id: GT-TEL-OUT-OF-CONTRACT
+  name: "Out of Contract"
+  definition: "A postpaid subscriber with no device agreement or term commitment remaining at the reporting date — free to leave without a penalty."
+  formula: "contract_end_date IS NULL OR contract_end_date < asOf (postpaid)"
+  domain: Subscriber
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [off contract, no commitment]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_SUBSCRIBER.out_of_contract]
+    metrics: [out_of_contract_pct]
+
+- id: GT-TEL-CHURN-PROPENSITY
+  name: "Churn Propensity Score"
+  definition: "A 1–99 model score of how likely a line is to leave in the next 90 days; 70 or above is high risk."
+  formula: "churn_propensity ≥ 70 → high risk"
+  domain: Subscriber
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [churn score, propensity score]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_SUBSCRIBER.churn_propensity, CONFORMED_GOLD.DIM_SUBSCRIBER.high_churn_risk]
+    metrics: [high_churn_risk_pct]
+
+- id: GT-TEL-CARE-CONTACT
+  name: "Care Contact"
+  definition: "A customer care interaction by phone, chat, store or app. Contacts per subscriber are counted over the last 90 days."
+  formula: "count of care contacts in 90 days ÷ active subscribers"
+  domain: Customer experience
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [care interaction, care call]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_SUBSCRIBER.care_contacts_90d, CURATED_SILVER.CARE_CONTACT.contact_id]
+    metrics: [care_contacts_per_sub]
+
+# ── Churn & retention ───────────────────────────────────────────────────────────────────────────────
+- id: GT-TEL-CHURN
+  name: "Churn Rate"
+  definition: "The share of lines at the start of a month that left during the month. Churn counts voluntary disconnects and port-outs; plan migrations are excluded, involuntary disconnects are reported separately and inactive prepaid lines are excluded unless asked for."
+  formula: "(voluntary disconnects + port-outs) ÷ opening base × 100, per month"
+  domain: Churn & retention
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [churn rate, attrition]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY.movement, CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY.churned, CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY.opening_base]
+    metrics: [churn_rate]
+
+- id: GT-TEL-POSTPAID-CHURN
+  name: "Postpaid Churn Rate"
+  definition: "Churn rate for the postpaid base only: postpaid voluntary disconnects and port-outs over the opening postpaid base."
+  formula: "postpaid (voluntary + port-outs) ÷ postpaid opening base"
+  domain: Churn & retention
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [postpaid churn]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY.segment]
+    metrics: [postpaid_churn_rate]
+
+- id: GT-TEL-INACTIVE-PREPAID
+  name: "Inactive Prepaid Line"
+  definition: "A prepaid line with Active status but no top-up in 60 days. Purging these lines is housekeeping, so they are excluded from churn unless explicitly requested."
+  formula: "segment = Prepaid AND no top-up in 60 days"
+  domain: Churn & retention
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [dormant prepaid line, inactive prepaid]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY.prepaid_inactive, CONFORMED_GOLD.DIM_SUBSCRIBER.prepaid_inactive]
+    metrics: []
+
+- id: GT-TEL-PORT-OUT
+  name: "Port-Out"
+  definition: "A disconnect where the subscriber moved their number to another carrier through number portability. Port-out share is port-outs as a share of churn."
+  formula: "port-outs ÷ (voluntary disconnects + port-outs)"
+  domain: Churn & retention
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [ported number, competitive loss]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY.port_out]
+    metrics: [port_out_share]
+
+- id: GT-TEL-VOLUNTARY-DISCONNECT
+  name: "Voluntary Disconnect"
+  definition: "A disconnect requested by the subscriber without porting the number away. Together with port-outs it makes up churn."
+  formula: "movement = Voluntary disconnect"
+  domain: Churn & retention
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [customer-initiated disconnect]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY.voluntary_disconnect]
+    metrics: []
+
+- id: GT-TEL-INVOLUNTARY-DISCONNECT
+  name: "Involuntary Disconnect"
+  definition: "A disconnect initiated by Altair for non-payment or fraud. It is not churn but it reduces net adds."
+  formula: "movement = Involuntary disconnect"
+  domain: Churn & retention
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [non-pay disconnect]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY.involuntary_disconnect]
+    metrics: []
+
+- id: GT-TEL-PLAN-MIGRATION
+  name: "Plan Migration"
+  definition: "A subscriber moving from one rate plan to another. A migration is not churn: the subscriber stays with Altair."
+  formula: "movement = Plan migration"
+  domain: Churn & retention
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [migration]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY.plan_migration]
+    metrics: []
+
+- id: GT-TEL-NET-ADDS
+  name: "Net Adds"
+  definition: "Net change in the line base: gross adds minus all disconnects (voluntary, port-out and involuntary). Plan migrations net to zero."
+  formula: "gross adds − (voluntary + port-outs + involuntary disconnects)"
+  domain: Churn & retention
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [net additions]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY.net_add_delta]
+    metrics: [net_adds]
+
+- id: GT-TEL-GROSS-ADDS
+  name: "Gross Adds"
+  definition: "New lines connected in the period, including port-ins and excluding reactivations within 30 days of a disconnect."
+  formula: "Σ gross adds"
+  domain: Churn & retention
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [gross additions]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY.gross_add]
+    metrics: [gross_adds]
+
+- id: GT-TEL-SAVE-RATE
+  name: "Save Rate"
+  definition: "Retention save offers accepted (line still active 30 days later) as a share of save offers made."
+  formula: "offers accepted ÷ offers made"
+  domain: Churn & retention
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [save offer rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY.save_offer_made, CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY.save_offer_accepted]
+    metrics: [save_rate]
+
+# ── Billing & revenue ───────────────────────────────────────────────────────────────────────────────
+- id: GT-TEL-ARPU
+  name: "ARPU"
+  definition: "Average revenue per user: monthly service revenue per billed line. Service revenue includes plan charges, overage and retail roaming and excludes device installments and one-off fees."
+  formula: "Σ service revenue ÷ billed line-months"
+  domain: Revenue
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [average revenue per user]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_BILLING.service_revenue]
+    metrics: [arpu]
+
+- id: GT-TEL-SERVICE-REVENUE
+  name: "Service Revenue"
+  definition: "Billed recurring charges — plan, overage and retail roaming — net of rating-to-billing leakage, excluding device installments."
+  formula: "Σ (rated − leakage)"
+  domain: Revenue
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [service revenues]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_BILLING.service_revenue, CONFORMED_GOLD.FCT_BILLING.billed_amount]
+    metrics: [service_revenue]
+
+- id: GT-TEL-LEAKAGE
+  name: "Revenue Leakage"
+  definition: "Rated charges that never reached an invoice, as a share of rated charges. A market above 0.8% in a quarter is escalated to revenue assurance."
+  formula: "Σ leakage ÷ Σ rated amount"
+  domain: Revenue
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [leakage, rated-to-billed gap]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_BILLING.leakage_amount, CONFORMED_GOLD.FCT_BILLING.rated_amount]
+    metrics: [revenue_leakage_pct]
+
+- id: GT-TEL-BAD-DEBT
+  name: "Bad Debt"
+  definition: "Billed charges, including device installments, written off as uncollectible. The bad debt ratio divides write-offs by total billed."
+  formula: "Σ written off ÷ Σ total billed"
+  domain: Revenue
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [write-off]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_BILLING.written_off_amount]
+    metrics: [bad_debt_ratio]
+
+- id: GT-TEL-DAYS-TO-PAY
+  name: "Days to Pay"
+  definition: "Calendar days from invoice to payment for paid invoices."
+  formula: "mean(payment date − invoice date)"
+  domain: Revenue
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [payment days]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_BILLING.days_to_pay]
+    metrics: [avg_days_to_pay]
+
+- id: GT-TEL-DEVICE-INSTALLMENT
+  name: "Device Installment"
+  definition: "The monthly repayment on a financed handset. Billed with the invoice but excluded from service revenue and ARPU."
+  formula: "device_installment"
+  domain: Revenue
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [handset installment, device payment]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_BILLING.device_installment]
+    metrics: []
+
+- id: GT-TEL-DATA-USAGE
+  name: "Data Usage per Subscriber"
+  definition: "Mobile data used per mobile line with usage in the month; broadband homes are excluded."
+  formula: "Σ data GB ÷ mobile line-months with usage"
+  domain: Usage
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [data consumption]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_MONTHLY_USAGE.data_gb]
+    metrics: [data_gb_per_sub]
+
+- id: GT-TEL-MOU
+  name: "Minutes of Use"
+  definition: "Voice minutes per mobile line with usage in the month."
+  formula: "Σ voice minutes ÷ mobile line-months with usage"
+  domain: Usage
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [voice minutes per line]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_MONTHLY_USAGE.voice_min]
+    metrics: [voice_min_per_sub]
+
+- id: GT-TEL-ROAMING-REVENUE
+  name: "Roaming Revenue"
+  definition: "Retail outbound roaming billed to Altair subscribers travelling abroad. Wholesale inbound settlements with partner networks are excluded unless asked for."
+  formula: "Σ revenue where direction = 'Outbound retail'"
+  domain: Revenue
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [roaming, retail roaming]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ROAMING.revenue_amount, CONFORMED_GOLD.FCT_ROAMING.direction]
+    metrics: [roaming_revenue, roaming_data_gb]
+
+# ── Network & service assurance ─────────────────────────────────────────────────────────────────────
+- id: GT-TEL-CELL-SITE
+  name: "Cell Site"
+  definition: "A physical radio site (macro or small cell) carrying LTE or 5G traffic, owned by one market."
+  formula: "One record per site_id"
+  domain: Network
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [site, tower]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CELL_SITE.site_id]
+    metrics: []
+
+- id: GT-TEL-DCR
+  name: "Dropped Call Rate"
+  definition: "Abnormally released voice calls divided by call attempts, measured from network counters (not handset reports) over whole calendar quarters."
+  formula: "Σ dropped calls ÷ Σ call attempts × 100"
+  domain: Network
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [call drop rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_NETWORK_DAILY.dropped_calls, CONFORMED_GOLD.FCT_NETWORK_DAILY.call_attempts]
+    metrics: [dropped_call_rate]
+
+- id: GT-TEL-AVAILABILITY
+  name: "Network Availability"
+  definition: "The share of scheduled site-minutes in service. Planned maintenance inside the approved 00:00–05:00 window is excluded; every site must reach 99.9% each month."
+  formula: "100 − Σ downtime ÷ Σ scheduled minutes × 100 (planned maintenance excluded)"
+  domain: Network
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [network uptime]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_NETWORK_DAILY.downtime_min, CONFORMED_GOLD.FCT_NETWORK_DAILY.scheduled_min]
+    metrics: [network_availability]
+
+- id: GT-TEL-PLANNED-MAINTENANCE
+  name: "Planned Maintenance"
+  definition: "Downtime scheduled and approved in advance inside the maintenance window; excluded from availability unless explicitly requested."
+  formula: "outage_type = Planned maintenance"
+  domain: Network
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [maintenance window]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_NETWORK_DAILY.planned_maintenance]
+    metrics: []
+
+- id: GT-TEL-CSSR
+  name: "Call Setup Success Rate"
+  definition: "The share of call attempts set up successfully."
+  formula: "100 − Σ setup failures ÷ Σ call attempts × 100"
+  domain: Network
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [call setup success]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_NETWORK_DAILY.setup_failures]
+    metrics: [call_setup_success_rate]
+
+- id: GT-TEL-THROUGHPUT
+  name: "Downlink Throughput"
+  definition: "Average user downlink speed delivered by a site in megabits per second."
+  formula: "mean of site-day throughput"
+  domain: Network
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [download throughput]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_NETWORK_DAILY.throughput_mbps]
+    metrics: [avg_throughput_mbps]
+
+- id: GT-TEL-TRAFFIC
+  name: "Mobile Data Traffic"
+  definition: "Data carried by the radio network, in terabytes."
+  formula: "Σ site data TB"
+  domain: Network
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [traffic volume]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_NETWORK_DAILY.data_tb]
+    metrics: [data_traffic_tb]
+
+- id: GT-TEL-FAULT
+  name: "Network Fault"
+  definition: "A service-affecting fault ticket raised on a cell site, classified by fault class and severity."
+  formula: "One record per fault_id"
+  domain: Service assurance
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [fault ticket, network incident]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_NETWORK_FAULT.fault_class]
+    metrics: [faults_raised]
+
+- id: GT-TEL-MTTR
+  name: "Mean Time to Restore"
+  definition: "Mean hours from fault raise to service restoration, restored faults only."
+  formula: "mean(restored − raised) in hours"
+  domain: Service assurance
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [mean time to repair, fault restoration time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_NETWORK_FAULT.restore_hours]
+    metrics: [mttr_hours]
+
+- id: GT-TEL-IMPACT-HOURS
+  name: "Impacted Subscriber Hours"
+  definition: "Subscribers impacted by a fault multiplied by the hours until restoration."
+  formula: "Σ impacted subscribers × restore hours"
+  domain: Service assurance
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [impacted customer hours]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_NETWORK_FAULT.impacted_subscriber_hours]
+    metrics: [impacted_subscriber_hours]
+
+- id: GT-TEL-FAULT-SLA
+  name: "Fault Restoration SLA"
+  definition: "The four-hour service restoration commitment for network faults."
+  formula: "restore_hours ≤ 4"
+  domain: Service assurance
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [restoration sla]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_NETWORK_FAULT.restored_within_sla]
+    metrics: [restored_within_sla_pct]
+
+# ── Field operations & experience ───────────────────────────────────────────────────────────────────
+- id: GT-TEL-WORK-ORDER
+  name: "Work Order"
+  definition: "A field job — new install, fiber activation, broadband repair or network site repair — assigned to a technician."
+  formula: "One record per wo_id"
+  domain: Field operations
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [job, field job]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORK_ORDER.wo_type, CONFORMED_GOLD.FCT_WORK_ORDER.hours_to_resolve]
+    metrics: [avg_hours_to_resolve]
+
+- id: GT-TEL-FTF
+  name: "First-Time Fix"
+  definition: "A closed work order with no repeat visit for the same fault within 30 days. First-time fix rate is first-time fixes over closed work orders."
+  formula: "first-time fixes ÷ closed work orders"
+  domain: Field operations
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [first time fix, fixed first time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORK_ORDER.first_time_fix]
+    metrics: [first_time_fix_rate]
+
+- id: GT-TEL-TRUCK-ROLL
+  name: "Truck Roll"
+  definition: "A work order that needed a technician to travel to the premises or site; remote fixes avoid a truck roll."
+  formula: "Σ work orders with truck_roll"
+  domain: Field operations
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [dispatch, technician dispatch]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORK_ORDER.truck_roll]
+    metrics: [truck_rolls]
+
+- id: GT-TEL-APPOINTMENT
+  name: "Appointment Met"
+  definition: "A work order where the technician arrived inside the committed appointment window."
+  formula: "appointments met ÷ work orders"
+  domain: Field operations
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [appointment kept]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORK_ORDER.appointment_met]
+    metrics: [appointment_met_rate]
+
+- id: GT-TEL-FIBER-ACTIVATION
+  name: "Fiber Activation Lead Time"
+  definition: "Calendar days from a fiber broadband order to service activation, completed activations only; the target is ten days."
+  formula: "mean(activation date − order date)"
+  domain: Field operations
+  owner: telecom:network-dpo
+  steward: telecom:data-steward
+  status: IN_REVIEW
+  cde: false
+  synonyms: [fibre activation lead time, activation lead time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORK_ORDER.activation_days]
+    metrics: [fiber_activation_days]
+
+- id: GT-TEL-NPS
+  name: "Net Promoter Score"
+  definition: "Percentage of survey respondents scoring 9–10 (promoters) minus percentage scoring 0–6 (detractors), on a −100 to +100 scale."
+  formula: "% promoters − % detractors"
+  domain: Customer experience
+  owner: telecom:retention-analyst
+  steward: telecom:data-steward
+  status: IN_REVIEW
+  cde: false
+  synonyms: [net promoter score]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_NPS_RESPONSE.score, CONFORMED_GOLD.FCT_NPS_RESPONSE.nps_category]
+    metrics: [nps, survey_responses, detractor_pct]

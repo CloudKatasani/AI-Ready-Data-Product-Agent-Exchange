@@ -1,0 +1,23 @@
+id: DP-TEL-008
+name: Device & Plan Profitability
+domain: Billing & Revenue Assurance
+archetype: CONSUMER_ALIGNED
+initial_status: DRAFT
+seed_stage: 2
+version: 0.1.0
+owner: telecom:network-dpo
+steward: null
+description: Invoice-level service revenue, cost of service and amortised device subsidy by rate plan and handset, for gross margin per subscriber.
+purpose: Pricing and device portfolio decisions based on margin per line rather than headline ARPU.
+decision: { persona: Chief Financial Officer, decision: "Which plans to reprice and which handsets to stop subsidising", cadence: Quarterly, workaround: "Finance allocation model run once a year in spreadsheets", consequence: "Low-margin plan and device combinations are subsidised for years without anyone noticing" }
+sample_questions: ["What is gross margin per subscriber by plan this quarter?", "Device subsidy per postpaid subscriber"]
+semantic_view: null
+output_ports:
+  - { kind: sql, ref: DATA_PRODUCTS.DP_TEL_008_PLAN_PROFITABILITY }
+sla: { freshness_minutes: 43200, availability_pct: 98.0, max_null_rate_pct: 2.0 }
+kpis: []
+upstream: [CONFORMED_GOLD.FCT_BILLING, CONFORMED_GOLD.DIM_PLAN, CONFORMED_GOLD.DIM_SUBSCRIBER]
+consumers: [Finance, Pricing, Device portfolio]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: null

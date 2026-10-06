@@ -7,6 +7,7 @@ import { QueryService } from '../src/lib/query/query-service';
 
 const prisma = db();
 const rubrics = getRubrics();
+const failed: string[] = [];
 for (const id of listPackIds()) {
   let pack;
   try {
@@ -21,8 +22,20 @@ for (const id of listPackIds()) {
   } catch {
     console.log(`${id}: warehouse not built — quality snapshots skipped (run pnpm warehouse:build first)`);
   }
-  const r = await seedPack(prisma, pack, { rubrics, qs });
+  let r;
+  try {
+    r = await seedPack(prisma, pack, { rubrics, qs });
+  } catch (e) {
+    // One broken pack must not block the others; the run still fails at the end.
+    console.error(`${id}: seed failed — ${(e as Error).message.split('\n')[0]}`);
+    failed.push(id);
+    continue;
+  }
   console.log(`${id}: ${r.personas} personas, ${r.entitlements} entitlements, ${r.products} products, ${r.agents} agents, ${r.snapshots} quality snapshots`);
 }
 await closeWarehouses();
 await prisma.$disconnect();
+if (failed.length) {
+  console.error(`Seed failed for: ${failed.join(', ')}`);
+  process.exitCode = 1;
+}

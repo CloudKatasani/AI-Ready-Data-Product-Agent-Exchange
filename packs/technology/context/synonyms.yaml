@@ -1,0 +1,78 @@
+# Cobalt Cloud Software synonyms (synthetic): SaaS revenue, sales and support jargon → governed metric,
+# dimension, value or glossary term.
+
+# ── Revenue & retention ─────────────────────────────────────────────────────────────────────────────
+- term: ARR
+  synonyms: [annual recurring revenue, subscription revenue, recurring revenue run rate]
+  maps_to: { kind: metric, ref: arr }
+- term: Net revenue retention
+  synonyms: [NRR, net dollar retention, NDR, dollar-based net retention]
+  maps_to: { kind: metric, ref: nrr_pct }
+- term: Gross revenue retention
+  synonyms: [GRR, gross dollar retention, gross retention]
+  maps_to: { kind: metric, ref: grr_pct }
+- term: Logo churn
+  synonyms: [customer churn, churn rate, logo attrition]
+  maps_to: { kind: metric, ref: logo_churn_pct }
+- term: Expansion ARR
+  synonyms: [upsell, upsell revenue, cross-sell revenue]
+  maps_to: { kind: metric, ref: expansion_arr }
+- term: One-time services
+  synonyms: [professional services, implementation fees, services revenue]
+  maps_to: { kind: term, ref: GT-TCH-REVENUE-STREAM }
+
+# ── Go-to-market ────────────────────────────────────────────────────────────────────────────────────
+- term: New bookings
+  synonyms: [bookings, closed won, new business booked]
+  maps_to: { kind: metric, ref: bookings_usd }
+- term: Win rate
+  synonyms: [close rate, conversion to won]
+  maps_to: { kind: metric, ref: win_rate_pct }
+- term: Average deal size
+  synonyms: [ACV, average contract value, average selling price]
+  maps_to: { kind: metric, ref: avg_deal_size }
+- term: Sales cycle
+  synonyms: [time to close, deal velocity]
+  maps_to: { kind: metric, ref: sales_cycle_days }
+- term: Open pipeline
+  synonyms: [pipeline, pipe coverage]
+  maps_to: { kind: metric, ref: open_pipeline_usd }
+
+# ── Product engagement ──────────────────────────────────────────────────────────────────────────────
+- term: Daily active users
+  synonyms: [DAU, daily actives, active users per day]
+  maps_to: { kind: metric, ref: avg_daily_active_users }
+- term: DAU/MAU stickiness
+  synonyms: [DAU/MAU, DAU to MAU ratio, product stickiness]
+  maps_to: { kind: metric, ref: stickiness_pct }
+- term: Seat utilisation
+  synonyms: [licence utilisation, license utilization, seat usage, seats in use]
+  maps_to: { kind: metric, ref: seat_utilisation_pct }
+- term: Uptime
+  synonyms: [availability, platform availability, service availability]
+  maps_to: { kind: metric, ref: uptime_pct }
+- term: AI Assistant
+  synonyms: [AI copilot, the assistant feature]
+  maps_to: { kind: value, ref: feature=AI Assistant }
+
+# ── Customer support ────────────────────────────────────────────────────────────────────────────────
+- term: First response time
+  synonyms: [FRT, time to first response, first reply time]
+  maps_to: { kind: metric, ref: avg_first_response_hours }
+- term: SLA attainment
+  synonyms: [SLA compliance, SLA hit rate]
+  maps_to: { kind: metric, ref: sla_attainment_pct }
+- term: CSAT
+  synonyms: [customer satisfaction, satisfaction score]
+  maps_to: { kind: metric, ref: csat_pct }
+- term: P1
+  synonyms: [sev 1, severity 1, urgent tickets]
+  maps_to: { kind: value, ref: priority=P1 }
+
+# ── Dimensions ──────────────────────────────────────────────────────────────────────────────────────
+- term: Region
+  synonyms: [geo, territory, sales territory]
+  maps_to: { kind: dimension, ref: region }
+- term: Plan tier
+  synonyms: [edition, pricing plan, subscription plan]
+  maps_to: { kind: dimension, ref: plan_tier }

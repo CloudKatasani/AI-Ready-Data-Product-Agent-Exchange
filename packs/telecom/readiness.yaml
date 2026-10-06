@@ -1,0 +1,6 @@
+# Readiness preset labels for Altair Communications (preset ids from the ported readiness engine: early, mid, advanced).
+preset_labels:
+  early: OSS/BSS spreadsheets
+  mid: Mid-migration
+  advanced: Governed lakehouse
+question_overrides: []

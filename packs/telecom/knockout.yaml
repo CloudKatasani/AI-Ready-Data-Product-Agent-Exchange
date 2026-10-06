@@ -1,0 +1,96 @@
+# Knockout (Why AI-Ready): four governed answers and how each degrades when a layer is switched off.
+# declared_delta_pct is computed through the real knockout query path at scale M (pnpm knockout:deltas --update).
+answers:
+  - id: KO-TEL-01
+    kpi: KPI-TEL-CHURN
+    question: "What was the churn rate last quarter, excluding inactive prepaid lines?"
+    query: { view: CHURN_RETENTION, metrics: [churn_rate], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # CDC duplicate line-months and tombstoned lines inflate the base and the disconnects
+      gold: wrong          # no conformed opening-base and churn flags; movement codes read raw
+      semantic: wrong      # naive formula counts involuntary disconnects and plan migrations as churn
+      glossary: ambiguous  # "attrition" no longer resolves to the churn rate
+      context: wrong       # inactive prepaid purges (BR-TEL-012) are no longer excluded
+      governance: unsafe   # no certification, row access or lineage on the answer
+    declared_delta_pct: { gold: 0.6, semantic: 113.7, glossary: 0, context: 63.3, governance: 0 }
+  - id: KO-TEL-02
+    kpi: KPI-TEL-ARPU
+    question: "What was ARPU last quarter?"
+    query: { view: BILLING_REVENUE, metrics: [arpu], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # replayed invoice updates double-count bills
+      gold: unverified     # same charges from Silver but no certified plan and market conformance
+      semantic: wrong      # naive formula averages total billed, device installments included
+      glossary: ambiguous  # "revenue per user" does not resolve to ARPU
+      context: unverified  # ARPU definition (BR-TEL-011) not cited
+      governance: unsafe   # subscriber-level bills reachable without row access
+    declared_delta_pct: { gold: 0, semantic: 20.1, glossary: 0, context: 0, governance: 0 }
+  - id: KO-TEL-03
+    kpi: KPI-TEL-AVAIL
+    question: "What was network availability last quarter?"
+    query: { view: NETWORK_PERFORMANCE, metrics: [network_availability], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # dirty outage codes leave downtime unclassified
+      gold: unverified     # availability computed without the conformed cell-site dimension
+      semantic: ambiguous  # site-days vs scheduled minutes not distinguished
+      glossary: ambiguous  # "uptime" does not resolve
+      context: wrong       # planned maintenance (BR-TEL-015) counted as downtime
+      governance: unsafe   # subscriber location data reachable in the raw layer
+    declared_delta_pct: { gold: 0, semantic: -0.4, glossary: 0, context: -0.4, governance: 0 }
+  - id: KO-TEL-04
+    kpi: KPI-TEL-DCR
+    question: "What was the dropped call rate last quarter?"
+    query: { view: NETWORK_PERFORMANCE, metrics: [dropped_call_rate], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # duplicate counter files double-count call attempts
+      gold: unverified     # counters not tied to the conformed site inventory
+      semantic: wrong      # naive formula averages site-day ratios instead of weighting by call attempts
+      glossary: ambiguous  # "call drops" does not resolve
+      context: unverified  # counter-based definition (BR-TEL-017) not cited
+      governance: unsafe   # no certification or lineage on the answer
+    declared_delta_pct: { silver: 0, gold: 0, semantic: -0.1, glossary: 0, context: 0, governance: 0 }
+
+# Silver equivalents the compiler uses when the Gold layer is off (05 §1 step 7). column_map maps a Gold column
+# name to the Silver column (or Silver expression) that replaces it. DIM_DATE has no Silver source and stays.
+gold_fallbacks:
+  - gold: CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY
+    silver: CURATED_SILVER.LINE_MONTH
+    column_map:
+      line_month_key: line_month_id
+      plan_key: plan_id
+      market_key: market_id
+      date_key: "CAST(strftime(month_end, '%Y%m%d') AS INTEGER)"
+      opening_base: "movement <> 'Gross add'"
+      churned: "movement IN ('Voluntary disconnect', 'Port-out')"
+      port_out: "movement = 'Port-out'"
+      gross_add: "movement = 'Gross add'"
+      net_add_delta: "CASE WHEN movement = 'Gross add' THEN 1 WHEN movement IN ('Voluntary disconnect', 'Port-out', 'Involuntary disconnect') THEN -1 ELSE 0 END"
+  - gold: CONFORMED_GOLD.DIM_PLAN
+    silver: CURATED_SILVER.RATE_PLAN
+    column_map:
+      plan_key: plan_id
+  - gold: CONFORMED_GOLD.DIM_MARKET
+    silver: CURATED_SILVER.MARKET
+    column_map:
+      market_key: market_id
+  - gold: CONFORMED_GOLD.FCT_BILLING
+    silver: CURATED_SILVER.INVOICE
+    column_map:
+      invoice_key: invoice_id
+      plan_key: plan_id
+      market_key: market_id
+      date_key: "CAST(strftime(month_end, '%Y%m%d') AS INTEGER)"
+      service_revenue: billed_amount
+      total_billed: "billed_amount + device_installment"
+  - gold: CONFORMED_GOLD.FCT_NETWORK_DAILY
+    silver: CURATED_SILVER.CELL_KPI_DAILY
+    column_map:
+      network_day_key: kpi_id
+      site_key: site_id
+      date_key: "CAST(strftime(kpi_date, '%Y%m%d') AS INTEGER)"
+      scheduled_min: "1440"
+  - gold: CONFORMED_GOLD.DIM_CELL_SITE
+    silver: CURATED_SILVER.CELL_SITE
+    column_map:
+      site_key: site_id
+      site_name: site_id

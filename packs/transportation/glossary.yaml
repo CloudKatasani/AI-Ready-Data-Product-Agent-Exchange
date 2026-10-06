@@ -1,0 +1,369 @@
+# Meridian Freight Lines business glossary (synthetic). Converted from the Marketplace TRN KPI and product
+# definitions and extended with carrier vocabulary; ids, owners and mappings use this pack's personas and warehouse.
+
+- id: GT-TRN-OTD
+  name: On-Time Delivery
+  definition: "A load is on time when it is delivered inside the appointment window agreed with the consignee. On-time delivery is the share of delivered loads that were on time, excluding loads whose delay was caused by the customer unless explicitly requested."
+  formula: "loads delivered on time ÷ loads delivered; customer-caused delays excluded by default (BR-TRN-002)"
+  domain: Shipments & Service
+  owner: transportation:ops-dpo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [OTD, on-time performance, delivered on time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAD.on_time, CONFORMED_GOLD.FCT_LOAD.delay_minutes]
+    metrics: [on_time_delivery_pct, late_loads]
+
+- id: GT-TRN-CUSTOMER-DELAY
+  name: Customer-Caused Delay
+  definition: "A late delivery whose root cause sits with the shipper or consignee — freight not ready, appointment refused or rescheduled, consignee closed — as coded by the dispatcher and confirmed by the customer service team."
+  domain: Shipments & Service
+  owner: transportation:ops-dpo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [shipper-caused delay, consignee delay]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAD.customer_caused_delay, CONFORMED_GOLD.FCT_LOAD.delay_cause]
+    metrics: []
+
+- id: GT-TRN-DWELL
+  name: Dwell Time
+  definition: "Hours a tractor spends at the origin facility between gate-in and gate-out. Measured on live loads only; drop-and-hook loads swap a pre-loaded trailer and have no live dwell."
+  formula: "mean of (gate-out − gate-in) hours on live loads (BR-TRN-003)"
+  domain: Shipments & Service
+  owner: transportation:ops-dpo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [facility dwell, time at the dock]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAD.dwell_hours]
+    metrics: [avg_dwell_hours]
+
+- id: GT-TRN-DETENTION
+  name: Detention
+  definition: "Time a driver is held at a facility beyond the two free hours allowed by contract, billed to the shipper at the contract detention rate."
+  formula: "max(dwell hours − 2, 0) on live loads × detention rate"
+  domain: Freight Finance
+  owner: transportation:ops-dpo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [detention time, detention pay]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAD.detention_hours, CONFORMED_GOLD.FCT_LOAD.detention_revenue]
+    metrics: []
+
+- id: GT-TRN-EXCEPTION
+  name: Service Exception
+  definition: "A logged event that breaks the delivery promise in a way other than lateness: damage, refusal, misroute or shortage."
+  formula: "loads with an exception ÷ loads"
+  domain: Shipments & Service
+  owner: transportation:ops-dpo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [exception, delivery exception]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAD.exception_logged, CONFORMED_GOLD.FCT_LOAD.exception_type]
+    metrics: [exception_rate_pct]
+
+- id: GT-TRN-LOAD
+  name: Load
+  definition: "One truckload shipment from pickup at the origin to delivery at the consignee, moved by one tractor under one bill of lading."
+  domain: Shipments & Service
+  owner: transportation:ops-dpo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [truckload, shipment]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAD.load_id]
+    metrics: [loads_delivered]
+
+- id: GT-TRN-LIVE-LOAD
+  name: Live Load
+  definition: "A load where the tractor waits while the trailer is loaded or unloaded, as opposed to drop and hook, where a pre-loaded trailer is swapped."
+  domain: Shipments & Service
+  owner: transportation:ops-dpo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [live loading, live unload]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAD.load_type]
+    metrics: []
+
+- id: GT-TRN-SERVICE-LEVEL
+  name: Service Level
+  definition: "The delivery commitment a load is tendered under: Standard, Appointment (fixed delivery window) or Expedited (team or priority)."
+  domain: Shipments & Service
+  owner: transportation:ops-dpo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [service commitment]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAD.service_level]
+    metrics: []
+
+- id: GT-TRN-SHIPPER
+  name: Shipper
+  definition: "A customer that tenders freight to Meridian Freight Lines, with a commercial segment and a contract type (dedicated, contract or spot)."
+  domain: Shipments & Service
+  owner: transportation:ops-dpo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [customer, account]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.customer_name, CONFORMED_GOLD.DIM_CUSTOMER.segment]
+    metrics: []
+
+- id: GT-TRN-TERMINAL
+  name: Terminal
+  definition: "A Meridian facility — terminal, cross-dock or drop yard — that loads originate from and where tractors and drivers are domiciled."
+  domain: Shipments & Service
+  owner: transportation:ops-dpo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [facility, yard, domicile]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_TERMINAL.terminal_id]
+    metrics: []
+
+- id: GT-TRN-REGION
+  name: Operating Region
+  definition: "One of the five operating regions — Northeast, Southeast, Central, Mountain and West. Loads take the region of their origin terminal; tractors and drivers take the region of their home terminal."
+  domain: Shipments & Service
+  owner: transportation:data-steward
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [territory, operating area]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_TERMINAL.region, CONFORMED_GOLD.DIM_DRIVER.region]
+    metrics: []
+
+- id: GT-TRN-EQUIPMENT
+  name: Equipment Type
+  definition: "The trailer pool a tractor pulls: dry van, refrigerated (reefer) or flatbed."
+  domain: Fleet & Assets
+  owner: transportation:ops-dpo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [trailer type]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_TRACTOR.equipment_type, CONFORMED_GOLD.FCT_LOAD.equipment_type]
+    metrics: []
+
+- id: GT-TRN-UTILISATION
+  name: Asset Utilisation
+  definition: "Revenue-earning hours as a share of the hours tractors were available for dispatch. Days a tractor spends in the shop for planned maintenance are excluded unless explicitly requested."
+  formula: "Σ revenue hours ÷ Σ available hours on in-service days (BR-TRN-006)"
+  domain: Fleet & Assets
+  owner: transportation:ops-dpo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [fleet utilisation, tractor utilisation]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_FLEET_DAY.revenue_hours, CONFORMED_GOLD.FCT_FLEET_DAY.available_hours]
+    metrics: [asset_utilisation_pct]
+
+- id: GT-TRN-IN-SERVICE
+  name: In-Service Day
+  definition: "A tractor-day on which the tractor was available for dispatch rather than in the shop for planned maintenance or repair."
+  domain: Fleet & Assets
+  owner: transportation:ops-dpo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [in service, out of shop]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_FLEET_DAY.in_service]
+    metrics: []
+
+- id: GT-TRN-EMPTY-MILES
+  name: Empty Miles
+  definition: "Miles a tractor drives without revenue freight — repositioning between a delivery and the next pickup. Reported as a share of all miles driven."
+  formula: "Σ empty miles ÷ Σ (loaded + empty) miles"
+  domain: Fleet & Assets
+  owner: transportation:ops-dpo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [empty mile percentage, unloaded miles]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_FLEET_DAY.empty_miles, CONFORMED_GOLD.FCT_FLEET_DAY.total_miles]
+    metrics: [empty_miles_pct, fleet_miles]
+
+- id: GT-TRN-MPG
+  name: Fuel Economy
+  definition: "Miles driven per gallon of diesel across the fleet, always computed as total miles over total gallons and never as an average of tractor averages."
+  formula: "Σ total miles ÷ Σ gallons"
+  domain: Fleet & Assets
+  owner: transportation:ops-dpo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [fuel efficiency, miles per gallon]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_FLEET_DAY.fuel_gallons]
+    metrics: [fuel_mpg]
+
+- id: GT-TRN-REV-TRUCK-WEEK
+  name: Revenue per Truck per Week
+  definition: "Linehaul revenue earned per active tractor per week — the headline measure of tractor productivity."
+  formula: "Σ revenue ÷ active tractors ÷ (days in period ÷ 7)"
+  domain: Fleet & Assets
+  owner: transportation:ops-dpo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [revenue per tractor per week, truck productivity]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_FLEET_DAY.revenue_usd]
+    metrics: [revenue_per_truck_week]
+
+- id: GT-TRN-DRIVER-TYPE
+  name: Driver Type
+  definition: "Whether a driver is a company employee or an owner-operator leased on with their own tractor. Driver turnover is reported for company drivers unless explicitly requested."
+  domain: Drivers & Safety
+  owner: transportation:data-steward
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [company or owner-operator]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_DRIVER.driver_type]
+    metrics: []
+
+- id: GT-TRN-TURNOVER
+  name: Driver Turnover
+  definition: "Annualised separations — voluntary and involuntary — as a share of average driver headcount. Company drivers only unless explicitly requested (BR-TRN-010)."
+  formula: "separations × 12 ÷ driver-months employed"
+  domain: Drivers & Safety
+  owner: transportation:data-steward
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [driver churn, driver attrition]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_DRIVER_MONTH.separated, CONFORMED_GOLD.FCT_DRIVER_MONTH.employed, CONFORMED_GOLD.DIM_DRIVER.separation_date]
+    metrics: [driver_turnover_pct]
+
+- id: GT-TRN-SAFETY-RATE
+  name: Safety Incident Rate
+  definition: "DOT-recordable crashes — those involving an injury, a fatality or a vehicle towed from the scene — per million miles driven. Telematics alerts and non-recordable events are not incidents."
+  formula: "recordable crashes × 1,000,000 ÷ miles"
+  domain: Drivers & Safety
+  owner: transportation:data-steward
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [crash rate, recordable crash rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_DRIVER_MONTH.recordable_crashes, CONFORMED_GOLD.FCT_DRIVER_MONTH.miles]
+    metrics: [safety_incident_rate]
+
+- id: GT-TRN-PREVENTABLE
+  name: Preventable Crash
+  definition: "A recordable crash the safety review board judges the driver could reasonably have avoided."
+  formula: "preventable recordable crashes × 1,000,000 ÷ miles"
+  domain: Drivers & Safety
+  owner: transportation:data-steward
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [preventable accident]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_DRIVER_MONTH.preventable_crashes]
+    metrics: [preventable_crash_rate]
+
+- id: GT-TRN-HOS
+  name: Hours-of-Service Violation
+  definition: "A breach of the driving and on-duty limits recorded by the electronic logging device or found at a roadside inspection."
+  domain: Drivers & Safety
+  owner: transportation:data-steward
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [HOS violation, log violation]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_DRIVER_MONTH.hos_violations]
+    metrics: [hos_violations]
+
+- id: GT-TRN-REVENUE
+  name: Freight Revenue
+  definition: "Revenue billed for a load: linehaul, fuel surcharge and detention. Reported on loads picked up in the period."
+  formula: "Σ linehaul + fuel surcharge + detention revenue"
+  domain: Freight Finance
+  owner: transportation:coo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [billings, freight billings]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAD.revenue, CONFORMED_GOLD.FCT_LOAD.linehaul_revenue, CONFORMED_GOLD.FCT_LOAD.fuel_surcharge]
+    metrics: [freight_revenue]
+
+- id: GT-TRN-CPM
+  name: Cost per Mile
+  definition: "Operating, fuel and accessorial cost divided by total miles — loaded plus empty — so empty repositioning is paid for in the measure."
+  formula: "Σ total cost ÷ Σ (loaded + empty) miles"
+  domain: Freight Finance
+  owner: transportation:coo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [CPM, operating cost per mile]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAD.total_cost, CONFORMED_GOLD.FCT_LOAD.total_miles]
+    metrics: [cost_per_mile]
+
+- id: GT-TRN-RPM
+  name: Revenue per Loaded Mile
+  definition: "Revenue, including fuel surcharge, per loaded mile — the yield on the miles the shipper pays for."
+  formula: "Σ revenue ÷ Σ loaded miles"
+  domain: Freight Finance
+  owner: transportation:coo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [RPM, yield]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAD.loaded_miles]
+    metrics: [revenue_per_loaded_mile]
+
+- id: GT-TRN-OR
+  name: Operating Ratio
+  definition: "Operating cost, including cargo claims, as a percentage of revenue. Below 100% the operation makes money; carriers manage to the low 90s."
+  formula: "(total cost + claim cost) ÷ revenue × 100"
+  domain: Freight Finance
+  owner: transportation:coo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [operating ratio percent, op ratio]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAD.operating_cost, CONFORMED_GOLD.FCT_LOAD.fuel_cost]
+    metrics: [operating_ratio_pct]
+
+- id: GT-TRN-CLAIMS
+  name: Claims Ratio
+  definition: "Paid and open cargo claims, at reserve, as a share of revenue. Denied claims are excluded."
+  formula: "Σ claim cost (paid + open) ÷ Σ revenue"
+  domain: Freight Finance
+  owner: transportation:coo
+  steward: transportation:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [cargo claims ratio, claim cost ratio]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LOAD.claim_cost]
+    metrics: [claims_ratio_pct]

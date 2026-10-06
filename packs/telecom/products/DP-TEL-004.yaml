@@ -1,0 +1,25 @@
+id: DP-TEL-004
+name: Churn & Retention
+domain: Churn & Retention
+archetype: CONSUMER_ALIGNED
+initial_status: CERTIFIED
+seed_stage: 12
+version: 2.0.1
+owner: telecom:retention-analyst
+steward: telecom:data-steward
+description: Monthly base movements by region, market, segment and rate plan — gross adds, voluntary disconnects, port-outs, involuntary disconnects, plan migrations and retention save offers.
+purpose: Board and investor churn reporting, retention targeting and the link between network experience and churn.
+decision: { persona: Chief Customer & Operations Officer, decision: "Where to put retention budget and save-offer capacity next month", cadence: Monthly, workaround: "A churn score list and a finance churn number that never agree", consequence: "Offers go to customers who would have stayed while a competitor's promotion empties one region" }
+sample_questions: ["What was the churn rate by region last quarter?", "How has postpaid churn changed month over month this year?", "Port-out share of churn by region last quarter"]
+semantic_view: CHURN_RETENTION
+output_ports:
+  - { kind: semantic, ref: CHURN_RETENTION }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_TEL_004_CHURN_RETENTION }
+  - { kind: agent, ref: AG-TEL-002 }
+sla: { freshness_minutes: 1440, availability_pct: 99.5, max_null_rate_pct: 0.5 }
+kpis: [KPI-TEL-CHURN, KPI-TEL-PP-CHURN, KPI-TEL-NET-ADDS, KPI-TEL-GROSS-ADDS, KPI-TEL-PORT-OUT, KPI-TEL-SAVE]
+upstream: [CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY, CONFORMED_GOLD.DIM_PLAN, CONFORMED_GOLD.DIM_MARKET]
+consumers: [Retention marketing, Finance, Investor relations, Churn Sentinel agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-TEL-004

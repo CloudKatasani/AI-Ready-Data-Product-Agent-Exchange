@@ -1,0 +1,47 @@
+# Domains, conformed backbone entities and links for Cobalt Cloud Software (fictional B2B SaaS vendor).
+# Converted from the Marketplace TCH products (product usage, service reliability) and extended with the
+# revenue, go-to-market and support domains a SaaS revenue leadership team runs on.
+domains:
+  - id: revenue
+    name: Revenue & Subscriptions
+    description: Accounts, subscription contracts, add-on lines and the month-end ARR that net and gross revenue retention, churn and expansion are measured on.
+    owner: technology:cfo
+    entities: [Account, Subscription, Subscription line, ARR snapshot]
+  - id: go-to-market
+    name: Go-to-Market
+    description: Sales opportunities, sales reps, bookings and the pipeline that feeds new and expansion ARR.
+    owner: technology:data-product-owner
+    entities: [Opportunity, Sales rep]
+  - id: product-engagement
+    name: Product Engagement
+    description: Daily tenant telemetry (active users, seats, availability) and feature-level adoption across entitled accounts.
+    owner: technology:data-product-owner
+    entities: [Daily usage, Feature adoption]
+  - id: customer-support
+    name: Customer Support
+    description: Support tickets raised by account contacts, first-response SLAs, resolution time and satisfaction surveys.
+    owner: technology:revenue-steward
+    entities: [Contact, Support ticket]
+
+backbone:
+  entities:
+    - { name: Account, description: "A business that holds (or held) a Cobalt subscription", key: account_id, domain: revenue, golden_source: CONFORMED_GOLD.DIM_ACCOUNT }
+    - { name: Subscription, description: "The base platform contract an account lands on; its end date is the cancellation date", key: subscription_id, domain: revenue, golden_source: CURATED_SILVER.SUBSCRIPTION_LINE }
+    - { name: Subscription line, description: "A recurring add-on, seat reduction or one-time services line on an account", key: line_id, domain: revenue, golden_source: CURATED_SILVER.SUBSCRIPTION_LINE }
+    - { name: ARR snapshot, description: "Month-end ARR per account and revenue stream with 1- and 12-month lookbacks", key: "account_id, month_end, revenue_stream", domain: revenue, golden_source: CONFORMED_GOLD.FCT_ARR_MONTHLY }
+    - { name: Opportunity, description: "A new business, expansion or renewal sales opportunity", key: opportunity_id, domain: go-to-market, golden_source: CONFORMED_GOLD.FCT_OPPORTUNITY }
+    - { name: Sales rep, description: "An account executive who owns opportunities", key: rep_id, domain: go-to-market, golden_source: CURATED_SILVER.SALES_REP }
+    - { name: Daily usage, description: "One tenant-day of active users, licensed seats and downtime", key: "account_id, usage_date", domain: product-engagement, golden_source: CONFORMED_GOLD.FCT_PRODUCT_USAGE }
+    - { name: Feature adoption, description: "Thirty-day usage of one feature by one account, with entitlement", key: "account_id, feature_code", domain: product-engagement, golden_source: CONFORMED_GOLD.FCT_FEATURE_ADOPTION }
+    - { name: Contact, description: "A named person at an account who can raise support tickets", key: contact_id, domain: customer-support, golden_source: CONFORMED_GOLD.DIM_CONTACT }
+    - { name: Support ticket, description: "A support request raised by a contact, with priority, first response and resolution", key: ticket_id, domain: customer-support, golden_source: CONFORMED_GOLD.FCT_SUPPORT_TICKET }
+  links:
+    - { from: Account, to: Subscription, cardinality: 1:1, via: account_id }
+    - { from: Subscription, to: Subscription line, cardinality: 1:N, via: subscription_id }
+    - { from: Account, to: ARR snapshot, cardinality: 1:N, via: account_id }
+    - { from: Account, to: Opportunity, cardinality: 1:N, via: account_id }
+    - { from: Sales rep, to: Opportunity, cardinality: 1:N, via: rep_id }
+    - { from: Account, to: Daily usage, cardinality: 1:N, via: account_id }
+    - { from: Account, to: Feature adoption, cardinality: 1:N, via: account_id }
+    - { from: Account, to: Contact, cardinality: 1:N, via: account_id }
+    - { from: Contact, to: Support ticket, cardinality: 1:N, via: contact_id }

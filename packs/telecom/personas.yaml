@@ -1,0 +1,50 @@
+# Five demo identities, one per archetype (01-functional-spec §2.2). People are generated, not real.
+# Ported from the AI-Ready telecom personas (subscriber analyst, network operations, revenue assurance,
+# data steward) and extended with the regional business user (A) and the executive (E).
+- id: telecom:regional-director-northeast
+  archetype: A
+  name: Nadia Ferreira
+  title: Regional Commercial Director, Northeast
+  domain: Consumer sales
+  roles: [DATA_CONSUMER]
+  row_filter: { dimension: region, allowed: [Northeast] }
+  unmasked: []
+  cares: Churn, autopay, ARPU and network experience in the Northeast markets; wants plain answers she can take into this week's store and retention reviews.
+  sees: Northeast region only; subscriber PII, CPNI and card data masked.
+- id: telecom:retention-analyst
+  archetype: B
+  name: Daniel Osei
+  title: Base Management & Retention Analyst
+  domain: Retention
+  roles: [DATA_CONSUMER, ANALYST]
+  unmasked: []
+  cares: Churn, port-outs, net adds, save offers, autopay and the link between network experience and churn.
+  sees: All regions; subscriber PII and CPNI masked.
+- id: telecom:network-dpo
+  archetype: C
+  name: Rebecca Lindgren
+  title: Network & Field Data Product Owner
+  domain: Network operations
+  roles: [DOMAIN_PRODUCT_OWNER, DATA_ENGINEER]
+  unmasked: []
+  cares: Shipping certified network, field service and revenue assurance products that agents can trust.
+  sees: All regions; PII and CPNI masked; can build and submit products for review.
+- id: telecom:data-steward
+  archetype: D
+  name: Tomás Herrera
+  title: CPNI & Data Governance Steward
+  domain: Governance
+  roles: [DATA_STEWARD, GOVERNANCE_COUNCIL, PRIVACY_OFFICER]
+  unmasked: [PII, CPNI, PCI]
+  cares: Glossary health, CDE ownership, CPNI controls, masking coverage and certification decisions.
+  sees: Everything, unmasked; approves access requests and certification gates.
+- id: telecom:cco
+  archetype: E
+  name: Priya Raman
+  title: Chief Customer & Operations Officer
+  domain: Executive
+  roles: [EXECUTIVE, PORTFOLIO_LEAD, GOVERNANCE_COUNCIL]
+  unmasked: []
+  aggregates_only: true
+  cares: Churn and net adds against plan, ARPU, network quality and field productivity, and where to invest next.
+  sees: Aggregates only; portfolio, value and readiness.

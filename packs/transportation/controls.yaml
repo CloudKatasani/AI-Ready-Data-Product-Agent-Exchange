@@ -1,0 +1,100 @@
+# Control library for Meridian Freight Lines (fictional). Regulators and jurisdictions are invented; frameworks are
+# named for the public standards they are modelled on. Illustrative, not legal advice.
+jurisdictions:
+  - { id: JUR-MFL-MOTOR, name: "Interstate motor carrier operations", regulator: "Federal motor carrier safety regulator (FMCSA-style)" }
+  - { id: JUR-MFL-STATE, name: "State of Calloway (headquarters, payroll and most terminals)", regulator: "Calloway Department of Labor and Commerce" }
+  - { id: JUR-MFL-PRIVACY, name: "Multi-state employee and contact privacy regimes", regulator: "State attorneys general (CCPA-style statutes)" }
+  - { id: JUR-MFL-CORP, name: "Corporate policy", regulator: "Meridian Freight Lines Audit & Risk Committee" }
+
+controls:
+  - id: CTL-TRN-001
+    name: Revenue, operating ratio and cost reporting
+    framework: SOX-style ICFR
+    description: >-
+      Revenue, operating cost, cost per mile and operating ratio used in financial and lender reporting come from one
+      certified product with a reconciled metric definition; changes to the revenue or cost definitions require a
+      versioned contract and Finance approval.
+    jurisdiction: JUR-MFL-CORP
+    applies_to: { domains: [freight-finance] }
+    evidence: Reconciliation of governed revenue and cost to the general ledger and the approved contract version history.
+    stage: 11
+  - id: CTL-TRN-002
+    name: Driver personal data protection
+    framework: State employee privacy acts (CCPA-style)
+    description: >-
+      Driver names and phone numbers are masked for every persona without PII clearance; driver-level outputs are
+      released only to the safety team for coaching, never to agents or analytical outputs for individual action.
+    jurisdiction: JUR-MFL-PRIVACY
+    applies_to: { classes: [PII], domains: [drivers-safety] }
+    evidence: Masking policy attachment report for every PII-tagged driver column and a sample of masked query logs.
+    stage: 6
+  - id: CTL-TRN-003
+    name: Commercial driver licence data
+    framework: Driver qualification file rules (FMCSA-style)
+    description: >-
+      CDL numbers are government identifiers held only in the driver roster Silver table, shown last-four only via
+      MASK_GOV_ID, and never land in Gold facts, data products or agent answers.
+    jurisdiction: JUR-MFL-MOTOR
+    applies_to: { classes: [GOV_ID], domains: [drivers-safety] }
+    evidence: Column classification scan showing GOV_ID only in CURATED_SILVER.DRIVER_ROSTER and masking attached.
+    stage: 6
+  - id: CTL-TRN-004
+    name: Hours-of-service and safety event recording
+    framework: Hours-of-service and crash register rules (FMCSA-style)
+    description: >-
+      Every ELD hours-of-service violation, roadside inspection violation and crash is recorded in the safety register
+      within 24 hours; DOT-recordable crashes (injury, fatality or tow-away) are classified by the safety team.
+    jurisdiction: JUR-MFL-MOTOR
+    applies_to: { domains: [drivers-safety] }
+    evidence: Safety register completeness report and the recordable-crash classification log.
+    stage: 8
+  - id: CTL-TRN-005
+    name: Shipper contact data protection
+    framework: State consumer privacy acts (CCPA-style)
+    description: >-
+      Shipper logistics contacts (name, email, phone) are personal data: masked for every persona without PII
+      clearance and never exposed through analytical products or agents.
+    jurisdiction: JUR-MFL-PRIVACY
+    applies_to: { classes: [PII], domains: [shipments-service, freight-finance] }
+    evidence: Masking attached to DIM_CUSTOMER contact columns before any product exposing them is certified.
+    stage: 6
+  - id: CTL-TRN-006
+    name: Cargo claims handling
+    framework: Carrier cargo liability rules (Carmack-style)
+    description: >-
+      Cargo claims are acknowledged within 30 days and decided within 120 days; claim cost is reported on paid and
+      open claims at reserve, and claim decisions are made by a named claims manager, never by an agent.
+    jurisdiction: JUR-MFL-MOTOR
+    applies_to: { domains: [freight-finance] }
+    evidence: Claims ageing report and the decision log from the claims management system.
+    stage: 10
+  - id: CTL-TRN-007
+    name: Fair treatment of drivers in safety decisions
+    framework: State labor rules and corporate safety policy
+    description: >-
+      Coaching, discipline and dismissal decisions are made by a named safety manager on the driver's full record;
+      agents never recommend action against an individual driver.
+    jurisdiction: JUR-MFL-STATE
+    applies_to: { domains: [drivers-safety] }
+    evidence: Agent out-of-scope lists, refusal test results and the safety decision log.
+    stage: 10
+  - id: CTL-TRN-008
+    name: Critical data element ownership
+    framework: Enterprise data governance policy
+    description: >-
+      Every critical data element has a named owner and steward, at least one executable data quality rule and a
+      glossary term before the product that exposes it can be certified.
+    jurisdiction: JUR-MFL-CORP
+    applies_to: { domains: [shipments-service, fleet-assets, drivers-safety, freight-finance] }
+    evidence: CDE register with owners, linked DQ rules and their latest results.
+    stage: 8
+  - id: CTL-TRN-009
+    name: Customer service-level reporting
+    framework: Shipper contract service schedules
+    description: >-
+      On-time delivery reported to shippers follows the contract definition — customer-caused delays are excluded
+      and disclosed — and comes only from the certified delivery product.
+    jurisdiction: JUR-MFL-CORP
+    applies_to: { domains: [shipments-service] }
+    evidence: Quarterly service reviews generated from the certified product with the business rule version cited.
+    stage: 11

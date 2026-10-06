@@ -1,0 +1,29 @@
+id: DP-TCH-004
+name: Support Experience
+domain: Customer Support
+archetype: AGGREGATE
+initial_status: IN_CERTIFICATION
+seed_stage: 11
+version: 1.0.0-rc.1
+owner: technology:data-product-owner
+steward: technology:revenue-steward
+description: Support tickets with first response, SLA attainment, resolution time and satisfaction by priority, channel and account.
+purpose: Give support leadership and the Customer Health agent a certified view of response SLAs and satisfaction.
+decision: { persona: VP Customer Support, decision: "Where to add support capacity and which queues miss contractual SLAs", cadence: Weekly, workaround: "Helpdesk dashboards exported to spreadsheets and joined to CRM accounts by hand", consequence: "SLA breaches on Enterprise accounts surface only when the customer escalates" }
+sample_questions: ["What was our average first response time last quarter?", "SLA attainment by priority", "CSAT by channel"]
+semantic_view: SUPPORT_EXPERIENCE
+output_ports:
+  - { kind: semantic, ref: SUPPORT_EXPERIENCE }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_TCH_004_SUPPORT_EXPERIENCE }
+  - { kind: agent, ref: AG-TCH-002 }
+sla: { freshness_minutes: 60, availability_pct: 99.5, max_null_rate_pct: 1.0 }
+kpis: [KPI-TCH-FIRST-RESPONSE, KPI-TCH-SLA, KPI-TCH-CSAT]
+upstream: [CONFORMED_GOLD.FCT_SUPPORT_TICKET, CONFORMED_GOLD.DIM_ACCOUNT, CONFORMED_GOLD.DIM_CONTACT]
+consumers: [Support leadership, Customer success, Customer Health Analyst agent]
+lifecycle_seed: { artifacts: auto }
+certification_script:
+  initial: { gate4: warn, gate6: fail }
+  fixes:
+    - { id: FIX-1, check: semantic.verified_queries, label: "Add 3 verified queries for first response time", effect: { overlay: VERIFIED_QUERY, keys: [VQ-TCH-028, VQ-TCH-029, VQ-TCH-030] } }
+    - { id: FIX-2, check: governance.masking, label: "Attach PII masking to contact email and phone", effect: { policy_attach: { policy: MASK_EMAIL, columns: [CONFORMED_GOLD.DIM_CONTACT.email, CONFORMED_GOLD.DIM_CONTACT.phone] } } }
+value_case: VC-TCH-004

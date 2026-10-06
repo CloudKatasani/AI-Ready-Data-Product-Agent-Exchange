@@ -1,0 +1,42 @@
+# "Break something" templates (05 §2.4), modelled on the AI-Ready ext/operate.ts INC-1..INC-5 set and targeted at
+# Meridian's Gold objects. Effects are applied as overlay views in the _INCIDENT schema while an incident is open.
+- id: INC-TRN-LATE-FEED
+  kind: late_feed
+  title: TMS load feed six hours late
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_LOAD
+  params: { lag_hours: 6 }
+  affects: { products: [DP-TRN-001, DP-TRN-004], agents: [AG-TRN-001] }
+  narrative: >-
+    The CDC extract from the TMS stalled and no delivered loads have landed for six hours. Delivery Performance is
+    now behind its 30-minute freshness SLA, so today's on-time delivery and dwell figures miss the afternoon's
+    deliveries and any agent answer about recent service is stale.
+  detection: Freshness rule DQ-TRN-012 on the curated loads fails and the product moves to Degraded.
+  resolution: Restart the TMS extract, backfill the six-hour gap and re-run the DQ rules; the product returns to Healthy.
+- id: INC-TRN-NULL-SPIKE
+  kind: null_spike
+  title: Null spike in tractor revenue hours
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_FLEET_DAY
+  column: revenue_hours
+  params: { null_pct: 18 }
+  affects: { products: [DP-TRN-002], agents: [AG-TRN-002] }
+  narrative: >-
+    A telematics firmware update left 18% of the latest tractor-days without revenue hours, so a critical data
+    element arrives empty. Asset utilisation would be understated for every terminal whose tractors took the update.
+  detection: Completeness rule DQ-TRN-016 on revenue_hours fails; Fleet Utilisation is Degraded.
+  resolution: Roll back the firmware mapping, re-pull the affected days from the ELD provider and confirm the null rate is back to zero.
+- id: INC-TRN-SCHEMA-DRIFT
+  kind: schema_drift
+  title: Load revenue column renamed upstream
+  severity: SEV1
+  object: CONFORMED_GOLD.FCT_LOAD
+  column: revenue
+  params: { rename_to: total_revenue_usd }
+  affects: { products: [DP-TRN-004], agents: [AG-TRN-001] }
+  narrative: >-
+    A settlement-system release renamed the load revenue column to total_revenue_usd without a contract change. Every
+    freight metric that depends on revenue (operating ratio, revenue per loaded mile, claims ratio, freight revenue)
+    fails to compile, so the agent declines with an incident banner instead of answering.
+  detection: Metric compilation for FREIGHT_ECONOMICS fails and DQ-TRN-035 cannot find its column; the contract check flags a breaking change.
+  resolution: Map total_revenue_usd back to revenue in Silver, raise a contract major version with a 30-day notice, and re-run checks.

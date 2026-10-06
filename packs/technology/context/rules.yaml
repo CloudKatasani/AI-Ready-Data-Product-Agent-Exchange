@@ -1,0 +1,118 @@
+# Cobalt Cloud Software business rules (synthetic). Rules with an `apply` block are applied by the metric
+# compiler as default filters; the rest are definitions, thresholds and policies cited in answers.
+
+# ── Revenue & retention ─────────────────────────────────────────────────────────────────────────────
+- id: BR-TCH-001
+  domain: Revenue
+  text: "ARR and every retention metric count recurring subscription revenue only; one-time professional services (implementation, training, migrations) are excluded unless the question explicitly asks to include them."
+  kind: filter
+  metric: arr
+  source_doc: DOC-TCH-REVENUE-POLICY
+  apply:
+    filter: { dimension: revenue_stream, op: "=", value: Subscription }
+    unless_question_mentions: [including one-time, including one time, including services, including professional services, with services, all revenue]
+
+- id: BR-TCH-002
+  domain: Revenue
+  text: "ARR is the annualised value of all recurring subscription lines active at month end, net of seat reductions. For a window longer than one month, ARR is the average of the month-end values in the window."
+  kind: definition
+  metric: arr
+  source_doc: DOC-TCH-REVENUE-POLICY
+
+- id: BR-TCH-003
+  domain: Revenue
+  text: "Net revenue retention compares ARR today from the accounts that had ARR twelve months earlier with their ARR then, including expansion, contraction and churn; new logos are excluded. Gross revenue retention caps each account at its starting ARR, so expansion cannot offset losses."
+  kind: definition
+  metric: nrr_pct
+  source_doc: DOC-TCH-REVENUE-POLICY
+
+- id: BR-TCH-004
+  domain: Revenue
+  text: "Logo churn is the share of accounts paying twelve months earlier whose subscription ARR is now zero. An account on a seat reduction is contraction, not churn."
+  kind: definition
+  metric: logo_churn_pct
+  source_doc: DOC-TCH-REVENUE-POLICY
+
+- id: BR-TCH-012
+  domain: Revenue
+  text: "Net revenue retention below 100% or logo churn above 10% for two consecutive quarters triggers a retention review with the Chief Customer Officer."
+  kind: threshold
+  metric: nrr_pct
+  source_doc: DOC-TCH-REVENUE-POLICY
+
+# ── Go-to-market ────────────────────────────────────────────────────────────────────────────────────
+- id: BR-TCH-005
+  domain: Go-to-market
+  text: "Win rate, bookings, deal size and sales cycle measure new business and expansion only; renewal opportunities are retention, not new bookings, and are excluded unless the question asks to include them."
+  kind: filter
+  metric: win_rate_pct
+  source_doc: DOC-TCH-SALES-PLAYBOOK
+  apply:
+    filter: { dimension: opportunity_type, op: "!=", value: Renewal }
+    unless_question_mentions: [including renewals, with renewals, renewals included]
+
+- id: BR-TCH-006
+  domain: Go-to-market
+  text: "Win rate is won opportunities divided by opportunities closed (won plus lost) by close date; open opportunities are never in the denominator."
+  kind: definition
+  metric: win_rate_pct
+  source_doc: DOC-TCH-SALES-PLAYBOOK
+
+# ── Product engagement ──────────────────────────────────────────────────────────────────────────────
+- id: BR-TCH-007
+  domain: Product engagement
+  text: "Daily active users are distinct users with at least one qualifying action in a tenant-day; monthly active users use a thirty-day window. Only paying customers' tenants count — trial and offboarding tenants are excluded."
+  kind: definition
+  metric: avg_daily_active_users
+  source_doc: DOC-TCH-REVENUE-POLICY
+
+- id: BR-TCH-008
+  domain: Product engagement
+  text: "Uptime is one minus downtime minutes divided by scheduled tenant minutes; announced maintenance windows are excluded at source. The customer commitment is 99.9% per quarter."
+  kind: threshold
+  metric: uptime_pct
+  source_doc: DOC-TCH-SUPPORT-SLA
+
+- id: BR-TCH-009
+  domain: Product engagement
+  text: "Feature adoption is measured among accounts whose plan entitles them to the feature; an account adopts a feature when it has at least one event in the last thirty days."
+  kind: definition
+  metric: feature_adoption_pct
+  source_doc: DOC-TCH-REVENUE-POLICY
+
+# ── Customer support ────────────────────────────────────────────────────────────────────────────────
+- id: BR-TCH-010
+  domain: Customer support
+  text: "Response and resolution metrics exclude tickets merged into another ticket as duplicates, unless the question asks to include merged tickets."
+  kind: filter
+  metric: avg_first_response_hours
+  source_doc: DOC-TCH-SUPPORT-SLA
+  apply:
+    filter: { dimension: ticket_status, op: "!=", value: Merged }
+    unless_question_mentions: [including merged, merged tickets included, with merged tickets]
+
+- id: BR-TCH-011
+  domain: Customer support
+  text: "First-response SLA targets by priority: P1 30 minutes, P2 2 hours, P3 8 hours, P4 24 hours. A ticket meets SLA when its first response is within the target for its priority."
+  kind: threshold
+  metric: sla_attainment_pct
+  source_doc: DOC-TCH-SUPPORT-SLA
+
+# ── Governance policies ─────────────────────────────────────────────────────────────────────────────
+- id: BR-TCH-013
+  domain: Governance
+  text: "Contact names, emails and phone numbers and sales staff names are PII and are masked for every persona without PII clearance, in every surface including agent answers."
+  kind: policy
+  source_doc: DOC-TCH-DATA-GOVERNANCE
+
+- id: BR-TCH-014
+  domain: Governance
+  text: "Regional sales leaders see only accounts in their own region; other regions and company totals are not disclosed to them."
+  kind: policy
+  source_doc: DOC-TCH-DATA-GOVERNANCE
+
+- id: BR-TCH-015
+  domain: Governance
+  text: "Agents answer with aggregates only. Requests for one named account's contract, usage, contacts or ticket history are declined and redirected to the account team in the CRM."
+  kind: policy
+  source_doc: DOC-TCH-DATA-GOVERNANCE

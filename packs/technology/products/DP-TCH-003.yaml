@@ -1,0 +1,26 @@
+id: DP-TCH-003
+name: Product Usage & Adoption
+domain: Product Engagement
+archetype: CONSUMER_ALIGNED
+initial_status: CERTIFIED
+seed_stage: 12
+version: 4.1.0
+owner: technology:data-product-owner
+steward: technology:revenue-steward
+description: Tenant-day active users, stickiness, seat utilisation and uptime, plus thirty-day feature adoption among entitled accounts.
+purpose: Show product and customer success teams which accounts and features are engaged before renewal, from certified telemetry.
+decision: { persona: VP Customer Success, decision: "Which accounts and features get adoption plays ahead of renewal", cadence: Monthly, workaround: "Quarterly manual cohort pull by the product analytics team", consequence: "Under-used seats are discovered at renewal, when the customer asks to contract" }
+sample_questions: ["Average daily active users last quarter", "DAU/MAU stickiness by plan tier", "Which features have the lowest adoption?"]
+semantic_view: PRODUCT_USAGE
+output_ports:
+  - { kind: semantic, ref: PRODUCT_USAGE }
+  - { kind: semantic, ref: FEATURE_ADOPTION }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_TCH_003_PRODUCT_USAGE }
+  - { kind: agent, ref: AG-TCH-002 }
+sla: { freshness_minutes: 120, availability_pct: 99.5, max_null_rate_pct: 0.5 }
+kpis: [KPI-TCH-DAU, KPI-TCH-STICKINESS, KPI-TCH-SEAT-UTIL, KPI-TCH-UPTIME, KPI-TCH-FEATURE-ADOPTION]
+upstream: [CONFORMED_GOLD.FCT_PRODUCT_USAGE, CONFORMED_GOLD.FCT_FEATURE_ADOPTION, CONFORMED_GOLD.DIM_ACCOUNT]
+consumers: [Product management, Customer success, Customer Health Analyst agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-TCH-003

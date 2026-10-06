@@ -1,0 +1,38 @@
+id: AG-TEL-003
+name: Network Quality Advisor
+domain: Network Performance
+status: PRODUCTION
+owner: telecom:network-dpo
+on_call: Network Analytics
+avatar: { icon: radio-tower, hue: 190 }
+capability: "Answers questions on dropped calls, call setup, availability, throughput, traffic, fault restoration and field service — first-time fix, truck rolls and fiber activation."
+personas_served: [VP Network Operations, Director of Service Assurance, Head of Field Operations]
+out_of_scope: ["radio parameter changes", "scheduling field crews", "capital planning approval", "creating trouble tickets"]
+products:
+  - { id: DP-TEL-002, columns: "*" }
+  - { id: DP-TEL-005, columns: "*" }
+  - { id: DP-TEL-006, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [NETWORK_PERFORMANCE, SERVICE_ASSURANCE, FIELD_OPERATIONS], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-TEL-NETWORK-SLA, DOC-TEL-FIELD-SERVICE] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-TEL-DCR, grains: [month, quarter, year], slices: [region, market, site, technology, vendor, site_class], depth: rank_drivers }
+  - { kpi: KPI-TEL-AVAIL, grains: [month, quarter], slices: [region, market, technology, vendor], depth: explain }
+  - { kpi: KPI-TEL-CSSR, grains: [month, quarter], slices: [region, vendor, technology], depth: explain }
+  - { kpi: KPI-TEL-THROUGHPUT, grains: [month, quarter], slices: [region, technology, site_class], depth: explain }
+  - { kpi: KPI-TEL-TRAFFIC, grains: [month, quarter], slices: [region, technology, market], depth: trend }
+  - { kpi: KPI-TEL-MTTR, grains: [month, quarter], slices: [region, fault_class, severity, site_class], depth: rank_drivers }
+  - { kpi: KPI-TEL-IMPACT-HRS, grains: [month, quarter], slices: [region, fault_class, site_class], depth: rank_drivers }
+  - { kpi: KPI-TEL-RESTORE-SLA, grains: [month, quarter], slices: [region, fault_class, severity], depth: explain }
+  - { kpi: KPI-TEL-FTF, grains: [month, quarter], slices: [region, market, wo_type, technician_skill], depth: rank_drivers }
+  - { kpi: KPI-TEL-TRUCK-ROLLS, grains: [month, quarter], slices: [region, wo_type], depth: trend }
+  - { kpi: KPI-TEL-RESOLVE-HRS, grains: [month, quarter], slices: [region, wo_type, technician_skill], depth: explain }
+  - { kpi: KPI-TEL-APPT, grains: [month, quarter], slices: [region, wo_type], depth: explain }
+  - { kpi: KPI-TEL-FIBER-LEAD, grains: [month, quarter], slices: [region, market], depth: trend }
+instructions: [INS-TEL-003-P, INS-TEL-003-R, INS-TEL-003-G, INS-TEL-003-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 6000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-TEL-014, SC-TEL-015, SC-TEL-016, SC-TEL-017, SC-TEL-018, SC-TEL-019, SC-TEL-020]

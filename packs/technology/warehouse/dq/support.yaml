@@ -1,0 +1,60 @@
+# Customer support DQ rules (Support Experience, DP-TCH-004 — in certification).
+- id: DQ-TCH-024
+  object: CONFORMED_GOLD.FCT_SUPPORT_TICKET
+  column: ticket_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: critical
+  alert_route: engineering
+  description: One row per ticket after CDC deduplication.
+- id: DQ-TCH-025
+  object: CONFORMED_GOLD.FCT_SUPPORT_TICKET
+  column: first_response_minutes
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every ticket has a first-response time (SLA attainment depends on it).
+- id: DQ-TCH-026
+  object: CONFORMED_GOLD.FCT_SUPPORT_TICKET
+  column: first_response_minutes
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: First-response minutes are not negative.
+- id: DQ-TCH-027
+  object: CONFORMED_GOLD.FCT_SUPPORT_TICKET
+  column: ticket_status
+  dimension: validity
+  assertion: "invalid_rate == 0"
+  allowed: [Solved, Closed, Open, Merged]
+  severity: critical
+  alert_route: steward
+  description: Ticket status is conformed — BR-TCH-010 excludes merged duplicates by value.
+- id: DQ-TCH-028
+  object: CONFORMED_GOLD.FCT_SUPPORT_TICKET
+  column: priority
+  dimension: validity
+  assertion: "invalid_rate == 0"
+  allowed: [P1, P2, P3, P4]
+  severity: high
+  alert_route: steward
+  description: Priority is P1–P4 so the SLA target resolves.
+- id: DQ-TCH-029
+  object: CONFORMED_GOLD.FCT_SUPPORT_TICKET
+  column: created_ts
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: Tickets created in the last day have arrived from the helpdesk.
+- id: DQ-TCH-030
+  object: CONFORMED_GOLD.DIM_CONTACT
+  column: email
+  dimension: validity
+  assertion: "regex_rate >= 0.99"
+  pattern: "^[a-z0-9.]+@[a-z0-9.-]+$"
+  severity: medium
+  alert_route: steward
+  description: Contact emails are lower-cased and well formed.

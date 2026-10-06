@@ -1,0 +1,334 @@
+# Scripted scenarios for Meridian Freight Lines — converted from the Marketplace TRN demo exchanges
+# (DEMO-AG-TRN-001-01..05, DEMO-AG-TRN-002-01..05, DEMO-AG-TRN-003-*). Numbers come from golden.json; `expect`
+# holds shape assertions only. Standard depth: 20 scenarios covering all 15 patterns.
+
+# ================================================================ AG-TRN-001 Delivery SLA Sentinel
+- id: SC-TRN-001
+  agent: AG-TRN-001
+  pattern: 3
+  question: "What was on-time delivery by region last quarter?"
+  paraphrases:
+    - "On-time delivery by region last quarter, excluding customer-caused delays"
+    - "otd per region last qtr"
+    - "on time performance by territory for Q3"
+  kind: answer
+  query: { view: DELIVERY_SERVICE, metrics: [on_time_delivery_pct], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: on_time_delivery_pct, dir: desc }] }
+  answer:
+    headline: "{{top.region}} led on-time delivery last quarter at {{top.on_time_delivery_pct}}%."
+    narrative: "Customer-caused delays are excluded, as every shipper contract defines it (BR-TRN-002). {{bottom.region}} trailed at {{bottom.on_time_delivery_pct}}% across {{rows}} regions; network on-time delivery was {{total.on_time_delivery_pct}}%."
+    chart: bar
+  followups: ["Which terminals drove the Northeast?", "Include customer-caused delays", "On-time delivery by month this year"]
+  expect: { rows: 5, top: { region: Mountain }, rules: [BR-TRN-002] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TRN-002
+  agent: AG-TRN-001
+  pattern: 10
+  question: "What was on-time delivery by region last quarter, including customer-caused delays?"
+  paraphrases:
+    - "On-time delivery by region last quarter including customer delays"
+    - "otd per region last quarter, all delays counted"
+  kind: answer
+  query: { view: DELIVERY_SERVICE, metrics: [on_time_delivery_pct], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: on_time_delivery_pct, dir: desc }] }
+  answer:
+    headline: "Including customer-caused delays, {{top.region}} led on-time delivery last quarter at {{top.on_time_delivery_pct}}%."
+    narrative: "You asked to include customer-caused delays, so BR-TRN-002 is not applied. Mountain drops from first because its building-materials job sites refuse appointments; network on-time delivery on this basis was {{total.on_time_delivery_pct}}%."
+    chart: bar
+  followups: ["Excluding customer-caused delays", "Late loads by delay cause last quarter"]
+  expect: { rows: 5, top: { region: Southeast } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TRN-003
+  agent: AG-TRN-001
+  pattern: 5
+  question: "Which five origin terminals had the longest dwell last quarter?"
+  paraphrases:
+    - "Top 5 terminals by dwell time last quarter"
+    - "where are trucks waiting longest at the dock last qtr"
+  kind: answer
+  query: { view: DELIVERY_SERVICE, metrics: [avg_dwell_hours], dimensions: [terminal], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_dwell_hours, dir: desc }], limit: 5, analysis: rank }
+  answer:
+    headline: "{{top.terminal}} had the longest dwell last quarter at {{top.avg_dwell_hours}} hours on live loads."
+    narrative: "Ranked over {{rows}} origin terminals, live loads only (BR-TRN-003). Network dwell averaged {{total.avg_dwell_hours}} hours; every hour beyond the two free hours is billable detention (BR-TRN-004)."
+    chart: bar
+  followups: ["On-time delivery at these terminals", "Average dwell time by region this year"]
+  expect: { rows: 5, top: { terminal: T-07 }, rules: [BR-TRN-003] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TRN-004
+  agent: AG-TRN-001
+  pattern: 4
+  question: "How has on-time delivery trended month by month this year?"
+  paraphrases:
+    - "Monthly on-time delivery year to date"
+    - "otd trend ytd by month"
+  kind: answer
+  query: { view: DELIVERY_SERVICE, metrics: [on_time_delivery_pct], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "On-time delivery is {{total.on_time_delivery_pct}}% year to date."
+    narrative: "Monthly on-time delivery over {{rows}} months, customer-caused delays excluded (BR-TRN-002)."
+    chart: line
+  followups: ["On-time delivery by region last quarter", "Late loads by delay cause last quarter"]
+  expect: { rows: 9, rules: [BR-TRN-002] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TRN-005
+  agent: AG-TRN-001
+  pattern: 14
+  question: "What is our operating ratio this year against target?"
+  paraphrases:
+    - "Is the operating ratio on target year to date?"
+    - "op ratio vs plan ytd"
+  kind: answer
+  query: { view: FREIGHT_ECONOMICS, metrics: [operating_ratio_pct], timeRange: { ytd: true }, analysis: compare_target }
+  answer:
+    headline: "The operating ratio is {{top.operating_ratio_pct}}% year to date — {{vsTarget.top}} target."
+    narrative: "Operating, fuel and accessorial cost plus cargo claims as a share of revenue (BR-TRN-016). Freight Cost & Margin is still in certification, so treat this figure as provisional."
+    chart: kpi
+  followups: ["Cost per mile by quarter this year", "When will Freight Cost & Margin be certified?"]
+  expect: { rows: 1, certified: false }
+  personas_expect: { A: { kind: decline } }
+
+- id: SC-TRN-006
+  agent: AG-TRN-001
+  pattern: 9
+  question: "How does the claims ratio compare across shipper segments this year?"
+  paraphrases:
+    - "Claims ratio by segment year to date"
+    - "which customer verticals cost us most in cargo claims"
+  kind: answer
+  query: { view: FREIGHT_ECONOMICS, metrics: [claims_ratio_pct], dimensions: [shipper_segment], timeRange: { ytd: true }, orderBy: [{ field: claims_ratio_pct, dir: desc }] }
+  answer:
+    headline: "{{top.shipper_segment}} shippers carry the highest claims ratio this year at {{top.claims_ratio_pct}}% of revenue."
+    narrative: "Paid and open cargo claims, denied claims excluded (BR-TRN-017). {{bottom.shipper_segment}} is lowest at {{bottom.claims_ratio_pct}}%. Freight Cost & Margin is still in certification, so treat these figures as provisional."
+    chart: bar
+  followups: ["Claims ratio by quarter this year", "Operating ratio by region this year"]
+  expect: { rows: 6, top: { shipper_segment: Food & beverage }, certified: false }
+
+- id: SC-TRN-007
+  agent: AG-TRN-001
+  pattern: 7
+  question: "How has cost per mile changed quarter over quarter this year?"
+  paraphrases:
+    - "Cost per mile by quarter year to date"
+    - "is our cpm rising quarter on quarter?"
+  kind: answer
+  query: { view: FREIGHT_ECONOMICS, metrics: [cost_per_mile], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "Cost per mile moved {{delta.cost_per_mile}} from the first to the latest quarter this year."
+    narrative: "Operating, fuel and accessorial cost per total mile for each of the {{rows}} quarters (BR-TRN-015); the third-quarter diesel spike shows in the latest quarter. Freight Cost & Margin is still in certification, so treat these figures as provisional."
+    chart: line
+  followups: ["Cost per mile by equipment type this year", "What is our operating ratio this year against target?"]
+  expect: { rows: 3, certified: false }
+
+- id: SC-TRN-008
+  agent: AG-TRN-001
+  pattern: 15
+  question: "Reschedule tomorrow's delivery appointments for the Northeast cross-docks."
+  paraphrases:
+    - "Move the delivery appointments at T-03 to the afternoon"
+    - "Can you rebook the dock appointments for tomorrow?"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't reschedule appointments or change dispatch — that is outside what this agent is allowed to do."
+    narrative: "Appointments are booked by customer service with the consignee and dispatch plans the loads. I can show you dwell and on-time delivery at those terminals so the planners have the evidence."
+    chart: none
+  followups: ["Which five origin terminals had the longest dwell last quarter?", "On-time delivery by origin terminal last quarter"]
+
+- id: SC-TRN-009
+  agent: AG-TRN-001
+  pattern: 15
+  question: "What was asset utilisation for the tractor fleet last quarter?"
+  paraphrases:
+    - "How busy were our trucks last quarter?"
+  kind: redirect
+  query: null
+  redirect_to: AG-TRN-002
+  answer:
+    headline: "That's a fleet question — the Fleet & Safety Analyst answers it."
+    narrative: "I cover delivery service and freight economics. The Fleet & Safety Analyst is certified on tractor utilisation, empty miles, fuel economy and revenue per truck."
+    chart: none
+  followups: ["Ask the Fleet & Safety Analyst", "What can you answer?"]
+
+# ================================================================ AG-TRN-002 Fleet & Safety Analyst
+- id: SC-TRN-010
+  agent: AG-TRN-002
+  pattern: 5
+  question: "Which equipment types had the lowest asset utilisation last quarter?"
+  paraphrases:
+    - "Which equipment types are utilised least?"
+    - "least utilized trailer types last qtr"
+  kind: answer
+  query: { view: FLEET_UTILISATION, metrics: [asset_utilisation_pct], dimensions: [equipment_type], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: asset_utilisation_pct, dir: asc }], analysis: rank }
+  answer:
+    headline: "{{top.equipment_type}} tractors had the lowest asset utilisation last quarter at {{top.asset_utilisation_pct}}%."
+    narrative: "In-service days only (BR-TRN-006). {{bottom.equipment_type}} was highest at {{bottom.asset_utilisation_pct}}%; the fleet ran at {{total.asset_utilisation_pct}}%."
+    chart: bar
+  followups: ["Asset utilisation by region last quarter", "Revenue per truck per week by region last quarter"]
+  expect: { rows: 3, top: { equipment_type: Flatbed }, rules: [BR-TRN-006] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TRN-011
+  agent: AG-TRN-002
+  pattern: 3
+  question: "Which region ran the most empty miles last quarter?"
+  paraphrases:
+    - "Empty miles percentage by region last quarter"
+    - "where is empty running worst by territory"
+  kind: answer
+  query: { view: FLEET_UTILISATION, metrics: [empty_miles_pct], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: empty_miles_pct, dir: desc }] }
+  answer:
+    headline: "{{top.region}} ran the most empty miles last quarter at {{top.empty_miles_pct}}% of miles driven."
+    narrative: "Freight out of the ports is imbalanced, so West tractors reposition empty more often. {{bottom.region}} ran the fewest at {{bottom.empty_miles_pct}}%; the fleet ran {{total.empty_miles_pct}}% empty."
+    chart: bar
+  followups: ["Empty miles percentage by month this year", "Fuel economy by equipment type this year"]
+  expect: { rows: 5, top: { region: West } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TRN-012
+  agent: AG-TRN-002
+  pattern: 2
+  question: "Is the safety incident rate within target over the last 12 months?"
+  paraphrases:
+    - "Are we on target for recordable crashes per million miles?"
+    - "crash rate vs target last 12 months"
+  kind: answer
+  query: { view: DRIVER_SAFETY, metrics: [safety_incident_rate], timeRange: { last: { n: 12, unit: month } }, analysis: compare_target }
+  answer:
+    headline: "The safety incident rate is {{top.safety_incident_rate}} recordable crashes per million miles — {{vsTarget.top}} target."
+    narrative: "DOT-recordable crashes only (BR-TRN-011): an injury, a fatality or a vehicle towed from the scene, over the last 12 months."
+    chart: kpi
+  followups: ["Safety incident rate by region over the last 12 months", "Preventable crash rate by region over the last 12 months"]
+  expect: { rows: 1 }
+  personas_expect: { A: { kind: decline } }
+
+- id: SC-TRN-013
+  agent: AG-TRN-002
+  pattern: 6
+  question: "Where is driver turnover highest by region over the last 12 months?"
+  paraphrases:
+    - "Driver turnover by region over the last 12 months"
+    - "which territory loses the most drivers"
+  kind: answer
+  query: { view: DRIVER_SAFETY, metrics: [driver_turnover_pct], dimensions: [region], timeRange: { last: { n: 12, unit: month } }, orderBy: [{ field: driver_turnover_pct, dir: desc }] }
+  answer:
+    headline: "{{top.region}} has the highest driver turnover at {{top.driver_turnover_pct}}% annualised."
+    narrative: "Company drivers only (BR-TRN-010). {{bottom.region}} is lowest at {{bottom.driver_turnover_pct}}%; company-driver turnover across the network is {{total.driver_turnover_pct}}%."
+    chart: bar
+  followups: ["Driver turnover by tenure band over the last 12 months", "Include owner-operators"]
+  expect: { rows: 5, top: { region: Mountain }, rules: [BR-TRN-010] }
+  personas_expect: { A: { kind: decline } }
+
+- id: SC-TRN-014
+  agent: AG-TRN-002
+  pattern: 12
+  question: "Which five drivers logged the most hours-of-service violations this year?"
+  paraphrases:
+    - "Top 5 drivers by HOS violations this year"
+    - "drivers with the most log violations ytd"
+  kind: answer
+  query: { view: DRIVER_SAFETY, metrics: [hos_violations], dimensions: [driver_name], timeRange: { ytd: true }, orderBy: [{ field: hos_violations, dir: desc }], limit: 5, analysis: rank }
+  answer:
+    headline: "The most hours-of-service violations logged by one driver this year is {{top.hos_violations}}."
+    narrative: "Driver names are masked unless your persona is cleared for PII. This list is for the safety team's coaching only — it is not a basis for action against an individual driver (BR-TRN-014)."
+    chart: table
+  followups: ["Hours-of-service violations by region this year", "Hours-of-service violations by month this year"]
+  expect: { rows: 5 }
+  personas_expect: { B: { masked: [driver_name] }, D: { masked: [] } }
+
+- id: SC-TRN-015
+  agent: AG-TRN-002
+  pattern: 8
+  question: "How is fuel economy distributed across home terminals this year?"
+  paraphrases:
+    - "Spread of mpg by home terminal"
+    - "fuel economy percentiles across terminals ytd"
+  kind: answer
+  query: { view: FLEET_UTILISATION, metrics: [fuel_mpg], dimensions: [home_terminal], timeRange: { ytd: true }, analysis: distribution }
+  answer:
+    headline: "Across {{top.home_terminal_count}} home terminals, the median terminal gets {{top.fuel_mpg_p50}} miles per gallon."
+    narrative: "The middle 80% of terminals sit between {{top.fuel_mpg_p10}} and {{top.fuel_mpg_p90}} mpg; the least efficient terminal gets {{top.fuel_mpg_min}} mpg (total miles over total gallons, BR-TRN-008)."
+    chart: table
+  followups: ["Fuel economy by model year band this year", "Fuel economy by equipment type this year"]
+  expect: { rows: 1 }
+
+- id: SC-TRN-016
+  agent: AG-TRN-002
+  pattern: 11
+  question: "How much deadhead are we running by equipment type last quarter?"
+  paraphrases:
+    - "deadhead percentage per trailer type last qtr"
+    - "empty running by equipment class"
+  kind: answer
+  query: { view: FLEET_UTILISATION, metrics: [empty_miles_pct], dimensions: [equipment_type], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: empty_miles_pct, dir: desc }] }
+  answer:
+    headline: "{{top.equipment_type}} tractors ran the most deadhead last quarter at {{top.empty_miles_pct}}% of miles."
+    narrative: "\"Deadhead\" maps to the governed empty miles percentage: empty miles as a share of all miles driven (BR-TRN-007). The fleet ran {{total.empty_miles_pct}}% empty across {{rows}} equipment types."
+    chart: bar
+  followups: ["Which region ran the most empty miles last quarter?", "Empty miles percentage by month this year"]
+  expect: { rows: 3 }
+
+- id: SC-TRN-017
+  agent: AG-TRN-002
+  pattern: 13
+  question: "What was asset utilisation by region last quarter?"
+  paraphrases:
+    - "utilisation per territory last quarter"
+    - "how hard did each region work its tractors last qtr"
+  kind: answer
+  query: { view: FLEET_UTILISATION, metrics: [asset_utilisation_pct], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: asset_utilisation_pct, dir: desc }] }
+  answer:
+    headline: "{{top.region}} had the highest asset utilisation last quarter at {{top.asset_utilisation_pct}}%."
+    narrative: "Revenue hours over available hours on in-service days (BR-TRN-006) across {{rows}} regions you are entitled to see; the region row-access policy applies."
+    chart: bar
+  followups: ["Which equipment types had the lowest asset utilisation last quarter?", "Revenue per truck per week by region last quarter"]
+  expect: { rows: 5, rules: [BR-TRN-006] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TRN-018
+  agent: AG-TRN-002
+  pattern: 1
+  question: "What was revenue per truck per week last quarter?"
+  paraphrases:
+    - "revenue per tractor per week last quarter"
+    - "truck productivity last qtr"
+  kind: answer
+  query: { view: FLEET_UTILISATION, metrics: [revenue_per_truck_week], timeRange: { last: { n: 1, unit: quarter } }, analysis: value }
+  answer:
+    headline: "Each active tractor earned {{top.revenue_per_truck_week}} per week last quarter."
+    narrative: "Linehaul revenue divided by tractors with telematics activity and by the weeks in the quarter (BR-TRN-009)."
+    chart: kpi
+  followups: ["Revenue per truck per week by region last quarter", "Revenue per truck per week by month this year"]
+  expect: { rows: 1 }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TRN-019
+  agent: AG-TRN-002
+  pattern: 15
+  question: "What can you answer?"
+  paraphrases:
+    - "What can you help me with?"
+    - "help"
+  kind: help
+  query: null
+  answer:
+    headline: "I answer questions about fleet productivity and driver safety — not delivery service or freight cost."
+    narrative: "Ask me about asset utilisation, empty miles, fuel economy, revenue per truck, crash rates, hours-of-service violations or driver turnover. For on-time delivery, dwell or cost per mile, ask the Delivery SLA Sentinel."
+    chart: none
+  followups: ["Which equipment types had the lowest asset utilisation last quarter?", "Is the safety incident rate within target over the last 12 months?", "Where is driver turnover highest by region over the last 12 months?"]
+
+- id: SC-TRN-020
+  agent: AG-TRN-002
+  pattern: 15
+  question: "Put driver D-00417 on a final written warning for last week's crash."
+  paraphrases:
+    - "Suspend the driver who had the crash on Tuesday"
+    - "Can you start disciplinary action against a driver?"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't take or recommend action against an individual driver — agents act, humans decide."
+    narrative: "Coaching, discipline and dismissal are decided by a named safety manager on the driver's full record (BR-TRN-014). I can show crash rates and hours-of-service violations by region, driver type or tenure."
+    chart: none
+  followups: ["Is the safety incident rate within target over the last 12 months?", "Safety incident rate by region over the last 12 months"]

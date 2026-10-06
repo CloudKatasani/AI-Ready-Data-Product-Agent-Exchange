@@ -1,0 +1,741 @@
+{
+  "pack": "transportation",
+  "version": "1.0.0",
+  "scale": "M",
+  "scenarios": {
+    "SC-TRN-001": {
+      "agent": "AG-TRN-001",
+      "kind": "answer",
+      "headline": "Mountain led on-time delivery last quarter at 97.0%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Customer-caused delays are excluded, as every shipper contract defines it (BR-TRN-002). Northeast trailed at 89.2% across 5 regions; network on-time delivery was 92.8%.",
+      "sqlHash": "ed073eb9cf2126d1",
+      "columns": [
+        "region",
+        "on_time_delivery_pct"
+      ],
+      "rows": [
+        [
+          "Mountain",
+          97.0221
+        ],
+        [
+          "Southeast",
+          94.2242
+        ],
+        [
+          "Central",
+          93.5216
+        ],
+        [
+          "West",
+          92.5648
+        ],
+        [
+          "Northeast",
+          89.1966
+        ]
+      ],
+      "citations": [
+        "product:DP-TRN-001@2.2.0",
+        "metric:DELIVERY_SERVICE.on_time_delivery_pct",
+        "rule:BR-TRN-002",
+        "verified_query:VQ-TRN-002",
+        "document:DOC-TRN-SERVICE-STANDARD#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Southeast led on-time delivery last quarter at 94.2%.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TRN-002": {
+      "agent": "AG-TRN-001",
+      "kind": "answer",
+      "headline": "Including customer-caused delays, Southeast led on-time delivery last quarter at 91.2%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "You asked to include customer-caused delays, so BR-TRN-002 is not applied. Mountain drops from first because its building-materials job sites refuse appointments; network on-time delivery on this basis was 89.8%.",
+      "sqlHash": "519ba5f9f7e8bed7",
+      "columns": [
+        "region",
+        "on_time_delivery_pct"
+      ],
+      "rows": [
+        [
+          "Southeast",
+          91.1781
+        ],
+        [
+          "Mountain",
+          90.583
+        ],
+        [
+          "Central",
+          90.563
+        ],
+        [
+          "West",
+          90.1741
+        ],
+        [
+          "Northeast",
+          87.2945
+        ]
+      ],
+      "citations": [
+        "product:DP-TRN-001@2.2.0",
+        "metric:DELIVERY_SERVICE.on_time_delivery_pct",
+        "verified_query:VQ-TRN-002",
+        "document:DOC-TRN-SERVICE-STANDARD#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Including customer-caused delays, Southeast led on-time delivery last quarter at 91.2%.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TRN-003": {
+      "agent": "AG-TRN-001",
+      "kind": "answer",
+      "headline": "T-07 had the longest dwell last quarter at 5.39 hours on live loads.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Ranked over 5 origin terminals, live loads only (BR-TRN-003). Network dwell averaged 2.33 hours; every hour beyond the two free hours is billable detention (BR-TRN-004).",
+      "sqlHash": "24e351aab3d20bcc",
+      "columns": [
+        "terminal",
+        "avg_dwell_hours"
+      ],
+      "rows": [
+        [
+          "T-07",
+          5.38566
+        ],
+        [
+          "T-03",
+          5.1512
+        ],
+        [
+          "T-15",
+          2.25357
+        ],
+        [
+          "T-18",
+          2.19493
+        ],
+        [
+          "T-12",
+          2.15537
+        ]
+      ],
+      "citations": [
+        "product:DP-TRN-001@2.2.0",
+        "metric:DELIVERY_SERVICE.avg_dwell_hours",
+        "rule:BR-TRN-003",
+        "verified_query:VQ-TRN-006",
+        "document:DOC-TRN-SERVICE-STANDARD#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "T-12 had the longest dwell last quarter at 2.16 hours on live loads.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TRN-004": {
+      "agent": "AG-TRN-001",
+      "kind": "answer",
+      "headline": "On-time delivery is 92.8% year to date.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Monthly on-time delivery over 9 months, customer-caused delays excluded (BR-TRN-002).",
+      "sqlHash": "afc51c2a1948447c",
+      "columns": [
+        "period",
+        "on_time_delivery_pct"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          93.7005
+        ],
+        [
+          "2026-02-01",
+          92.4537
+        ],
+        [
+          "2026-03-01",
+          92.834
+        ],
+        [
+          "2026-04-01",
+          93.4734
+        ],
+        [
+          "2026-05-01",
+          91.6696
+        ],
+        [
+          "2026-06-01",
+          92.8969
+        ],
+        [
+          "2026-07-01",
+          92.8829
+        ],
+        [
+          "2026-08-01",
+          92.6287
+        ],
+        [
+          "2026-09-01",
+          92.8449
+        ]
+      ],
+      "citations": [
+        "product:DP-TRN-001@2.2.0",
+        "metric:DELIVERY_SERVICE.on_time_delivery_pct",
+        "rule:BR-TRN-002",
+        "verified_query:VQ-TRN-001",
+        "document:DOC-TRN-SERVICE-STANDARD#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "On-time delivery is 94.3% year to date.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TRN-005": {
+      "agent": "AG-TRN-001",
+      "kind": "answer",
+      "headline": "The operating ratio is 92.5% year to date — within target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Operating, fuel and accessorial cost plus cargo claims as a share of revenue (BR-TRN-016). Freight Cost & Margin is still in certification, so treat this figure as provisional.",
+      "sqlHash": "6702924cce9bf54b",
+      "columns": [
+        "operating_ratio_pct",
+        "operating_ratio_pct_target_min",
+        "operating_ratio_pct_target_max"
+      ],
+      "rows": [
+        [
+          92.5296,
+          90,
+          94
+        ]
+      ],
+      "citations": [
+        "product:DP-TRN-004@1.0.0-rc.1",
+        "metric:FREIGHT_ECONOMICS.operating_ratio_pct",
+        "verified_query:VQ-TRN-060",
+        "document:DOC-TRN-FREIGHT-FINANCE#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "decline",
+          "headline": "You don’t have access to Freight Cost & Margin yet."
+        }
+      }
+    },
+    "SC-TRN-006": {
+      "agent": "AG-TRN-001",
+      "kind": "answer",
+      "headline": "Food & beverage shippers carry the highest claims ratio this year at 1.66% of revenue.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Paid and open cargo claims, denied claims excluded (BR-TRN-017). Manufacturing is lowest at 0.69%. Freight Cost & Margin is still in certification, so treat these figures as provisional.",
+      "sqlHash": "6c639bf7d54f86df",
+      "columns": [
+        "shipper_segment",
+        "claims_ratio_pct"
+      ],
+      "rows": [
+        [
+          "Food & beverage",
+          1.66489
+        ],
+        [
+          "Retail",
+          0.912263
+        ],
+        [
+          "Automotive",
+          0.901389
+        ],
+        [
+          "Building materials",
+          0.818678
+        ],
+        [
+          "Paper & packaging",
+          0.774332
+        ],
+        [
+          "Manufacturing",
+          0.686985
+        ]
+      ],
+      "citations": [
+        "product:DP-TRN-004@1.0.0-rc.1",
+        "metric:FREIGHT_ECONOMICS.claims_ratio_pct",
+        "document:DOC-TRN-FREIGHT-FINANCE#3"
+      ],
+      "personas": {}
+    },
+    "SC-TRN-007": {
+      "agent": "AG-TRN-001",
+      "kind": "answer",
+      "headline": "Cost per mile moved +0.103 from the first to the latest quarter this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Operating, fuel and accessorial cost per total mile for each of the 3 quarters (BR-TRN-015); the third-quarter diesel spike shows in the latest quarter. Freight Cost & Margin is still in certification, so treat these figures as provisional.",
+      "sqlHash": "75fddf7828b23ed8",
+      "columns": [
+        "period",
+        "cost_per_mile"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          2.49003
+        ],
+        [
+          "2026-04-01",
+          2.48624
+        ],
+        [
+          "2026-07-01",
+          2.59259
+        ]
+      ],
+      "citations": [
+        "product:DP-TRN-004@1.0.0-rc.1",
+        "metric:FREIGHT_ECONOMICS.cost_per_mile",
+        "verified_query:VQ-TRN-062",
+        "document:DOC-TRN-FREIGHT-FINANCE#2"
+      ],
+      "personas": {}
+    },
+    "SC-TRN-008": {
+      "agent": "AG-TRN-001",
+      "kind": "decline",
+      "headline": "I can't reschedule appointments or change dispatch — that is outside what this agent is allowed to do.",
+      "narrative": "Appointments are booked by customer service with the consignee and dispatch plans the loads. I can show you dwell and on-time delivery at those terminals so the planners have the evidence.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-TRN-009": {
+      "agent": "AG-TRN-001",
+      "kind": "redirect",
+      "headline": "That's a fleet question — the Fleet & Safety Analyst answers it.",
+      "narrative": "I cover delivery service and freight economics. The Fleet & Safety Analyst is certified on tractor utilisation, empty miles, fuel economy and revenue per truck.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-TRN-010": {
+      "agent": "AG-TRN-002",
+      "kind": "answer",
+      "headline": "Flatbed tractors had the lowest asset utilisation last quarter at 60.9%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "In-service days only (BR-TRN-006). Dry van was highest at 76.0%; the fleet ran at 73.6%.",
+      "sqlHash": "25b06e9795879226",
+      "columns": [
+        "equipment_type",
+        "asset_utilisation_pct"
+      ],
+      "rows": [
+        [
+          "Flatbed",
+          60.8527
+        ],
+        [
+          "Reefer",
+          75.6653
+        ],
+        [
+          "Dry van",
+          76.0229
+        ]
+      ],
+      "citations": [
+        "product:DP-TRN-002@1.4.0",
+        "metric:FLEET_UTILISATION.asset_utilisation_pct",
+        "rule:BR-TRN-006",
+        "verified_query:VQ-TRN-022",
+        "document:DOC-TRN-FLEET-STANDARD#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Flatbed tractors had the lowest asset utilisation last quarter at 60.2%.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TRN-011": {
+      "agent": "AG-TRN-002",
+      "kind": "answer",
+      "headline": "West ran the most empty miles last quarter at 19.0% of miles driven.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Freight out of the ports is imbalanced, so West tractors reposition empty more often. Southeast ran the fewest at 11.5%; the fleet ran 13.2% empty.",
+      "sqlHash": "29046334b64fa10a",
+      "columns": [
+        "region",
+        "empty_miles_pct"
+      ],
+      "rows": [
+        [
+          "West",
+          19.0077
+        ],
+        [
+          "Northeast",
+          11.576
+        ],
+        [
+          "Central",
+          11.5464
+        ],
+        [
+          "Mountain",
+          11.5302
+        ],
+        [
+          "Southeast",
+          11.4792
+        ]
+      ],
+      "citations": [
+        "product:DP-TRN-002@1.4.0",
+        "metric:FLEET_UTILISATION.empty_miles_pct",
+        "verified_query:VQ-TRN-024",
+        "document:DOC-TRN-FLEET-STANDARD#3"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Southeast ran the most empty miles last quarter at 11.5% of miles driven.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TRN-012": {
+      "agent": "AG-TRN-002",
+      "kind": "answer",
+      "headline": "The safety incident rate is 1.31 recordable crashes per million miles — within target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "DOT-recordable crashes only (BR-TRN-011): an injury, a fatality or a vehicle towed from the scene, over the last 12 months.",
+      "sqlHash": "a71cbfb6086428fa",
+      "columns": [
+        "safety_incident_rate",
+        "safety_incident_rate_target_min",
+        "safety_incident_rate_target_max"
+      ],
+      "rows": [
+        [
+          1.31278,
+          0.9,
+          1.5
+        ]
+      ],
+      "citations": [
+        "product:DP-TRN-003@1.1.0",
+        "metric:DRIVER_SAFETY.safety_incident_rate",
+        "verified_query:VQ-TRN-040",
+        "document:DOC-TRN-DRIVER-SAFETY#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "decline",
+          "headline": "You don’t have access to Driver Safety & Retention yet."
+        }
+      }
+    },
+    "SC-TRN-013": {
+      "agent": "AG-TRN-002",
+      "kind": "answer",
+      "headline": "Mountain has the highest driver turnover at 104.9% annualised.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Company drivers only (BR-TRN-010). Northeast is lowest at 59.8%; company-driver turnover across the network is 64.9%.",
+      "sqlHash": "e4db477215242ff5",
+      "columns": [
+        "region",
+        "driver_turnover_pct"
+      ],
+      "rows": [
+        [
+          "Mountain",
+          104.854
+        ],
+        [
+          "West",
+          62.7334
+        ],
+        [
+          "Central",
+          61.7336
+        ],
+        [
+          "Southeast",
+          60.6792
+        ],
+        [
+          "Northeast",
+          59.8033
+        ]
+      ],
+      "citations": [
+        "product:DP-TRN-003@1.1.0",
+        "metric:DRIVER_SAFETY.driver_turnover_pct",
+        "rule:BR-TRN-010",
+        "verified_query:VQ-TRN-047",
+        "document:DOC-TRN-DRIVER-SAFETY#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "decline",
+          "headline": "You don’t have access to Driver Safety & Retention yet."
+        }
+      }
+    },
+    "SC-TRN-014": {
+      "agent": "AG-TRN-002",
+      "kind": "answer",
+      "headline": "The most hours-of-service violations logged by one driver this year is 3.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Driver names are masked unless your persona is cleared for PII. This list is for the safety team's coaching only — it is not a basis for action against an individual driver (BR-TRN-014).",
+      "sqlHash": "2cb29afc08f3c35d",
+      "columns": [
+        "driver_name",
+        "hos_violations"
+      ],
+      "rows": [
+        [
+          "Joshua Nguyen (D-01172)",
+          3
+        ],
+        [
+          "Aisha Thompson (D-00309)",
+          2
+        ],
+        [
+          "Barbara Adams (D-01574)",
+          2
+        ],
+        [
+          "Barbara Young (D-00255)",
+          2
+        ],
+        [
+          "Elizabeth Jackson (D-00081)",
+          2
+        ]
+      ],
+      "citations": [
+        "product:DP-TRN-003@1.1.0",
+        "metric:DRIVER_SAFETY.hos_violations",
+        "document:DOC-TRN-DRIVER-SAFETY#3"
+      ],
+      "personas": {
+        "B": {
+          "kind": "answer",
+          "headline": "The most hours-of-service violations logged by one driver this year is 3.",
+          "rowFiltered": false,
+          "masked": [
+            "driver_name"
+          ]
+        },
+        "D": {
+          "kind": "answer",
+          "headline": "The most hours-of-service violations logged by one driver this year is 3.",
+          "rowFiltered": false,
+          "masked": []
+        }
+      }
+    },
+    "SC-TRN-015": {
+      "agent": "AG-TRN-002",
+      "kind": "answer",
+      "headline": "Across 24 home terminals, the median terminal gets 6.53 miles per gallon.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "The middle 80% of terminals sit between 6.44 and 6.63 mpg; the least efficient terminal gets 6.41 mpg (total miles over total gallons, BR-TRN-008).",
+      "sqlHash": "2fd14eef055f50c9",
+      "columns": [
+        "home_terminal_count",
+        "fuel_mpg_p10",
+        "fuel_mpg_p50",
+        "fuel_mpg_p90",
+        "fuel_mpg_min",
+        "fuel_mpg_max"
+      ],
+      "rows": [
+        [
+          24,
+          6.43947,
+          6.52947,
+          6.6307,
+          6.4131,
+          6.6601
+        ]
+      ],
+      "citations": [
+        "product:DP-TRN-002@1.4.0",
+        "metric:FLEET_UTILISATION.fuel_mpg",
+        "document:DOC-TRN-FLEET-STANDARD#1"
+      ],
+      "personas": {}
+    },
+    "SC-TRN-016": {
+      "agent": "AG-TRN-002",
+      "kind": "answer",
+      "headline": "Flatbed tractors ran the most deadhead last quarter at 13.5% of miles.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "\"Deadhead\" maps to the governed empty miles percentage: empty miles as a share of all miles driven (BR-TRN-007). The fleet ran 13.2% empty across 3 equipment types.",
+      "sqlHash": "05ca81976f36df04",
+      "columns": [
+        "equipment_type",
+        "empty_miles_pct"
+      ],
+      "rows": [
+        [
+          "Flatbed",
+          13.4577
+        ],
+        [
+          "Reefer",
+          13.2501
+        ],
+        [
+          "Dry van",
+          13.0541
+        ]
+      ],
+      "citations": [
+        "product:DP-TRN-002@1.4.0",
+        "metric:FLEET_UTILISATION.empty_miles_pct",
+        "document:DOC-TRN-DATA-GOVERNANCE#3"
+      ],
+      "personas": {}
+    },
+    "SC-TRN-017": {
+      "agent": "AG-TRN-002",
+      "kind": "answer",
+      "headline": "Southeast had the highest asset utilisation last quarter at 74.5%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Revenue hours over available hours on in-service days (BR-TRN-006) across 5 regions you are entitled to see; the region row-access policy applies.",
+      "sqlHash": "0b7b3f0381016be0",
+      "columns": [
+        "region",
+        "asset_utilisation_pct"
+      ],
+      "rows": [
+        [
+          "Southeast",
+          74.4734
+        ],
+        [
+          "Northeast",
+          73.6426
+        ],
+        [
+          "Mountain",
+          73.4205
+        ],
+        [
+          "Central",
+          73.2156
+        ],
+        [
+          "West",
+          73.0918
+        ]
+      ],
+      "citations": [
+        "product:DP-TRN-002@1.4.0",
+        "metric:FLEET_UTILISATION.asset_utilisation_pct",
+        "rule:BR-TRN-006",
+        "verified_query:VQ-TRN-021",
+        "document:DOC-TRN-FLEET-STANDARD#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Southeast had the highest asset utilisation last quarter at 74.5%.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TRN-018": {
+      "agent": "AG-TRN-002",
+      "kind": "answer",
+      "headline": "Each active tractor earned $3,347 per week last quarter.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Linehaul revenue divided by tractors with telematics activity and by the weeks in the quarter (BR-TRN-009).",
+      "sqlHash": "d8fd044910fa9b72",
+      "columns": [
+        "revenue_per_truck_week"
+      ],
+      "rows": [
+        [
+          3346.76
+        ]
+      ],
+      "citations": [
+        "product:DP-TRN-002@1.4.0",
+        "metric:FLEET_UTILISATION.revenue_per_truck_week",
+        "verified_query:VQ-TRN-029",
+        "document:DOC-TRN-FLEET-STANDARD#4"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Each active tractor earned $3,379 per week last quarter.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-TRN-019": {
+      "agent": "AG-TRN-002",
+      "kind": "help",
+      "headline": "I answer questions about fleet productivity and driver safety — not delivery service or freight cost.",
+      "narrative": "Ask me about asset utilisation, empty miles, fuel economy, revenue per truck, crash rates, hours-of-service violations or driver turnover. For on-time delivery, dwell or cost per mile, ask the Delivery SLA Sentinel.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-TRN-020": {
+      "agent": "AG-TRN-002",
+      "kind": "decline",
+      "headline": "I can't take or recommend action against an individual driver — agents act, humans decide.",
+      "narrative": "Coaching, discipline and dismissal are decided by a named safety manager on the driver's full record (BR-TRN-014). I can show crash rates and hours-of-service violations by region, driver type or tenure.",
+      "citations": [],
+      "personas": {}
+    }
+  }
+}

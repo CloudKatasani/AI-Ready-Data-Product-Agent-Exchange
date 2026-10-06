@@ -1,0 +1,77 @@
+name: DELIVERY_SERVICE
+description: Truckload delivery service at load grain — on-time delivery, dwell and exceptions by origin terminal, region, shipper segment and service level
+tables:
+  - { alias: l, fqn: CONFORMED_GOLD.FCT_LOAD, pk: load_key }
+  - { alias: t, fqn: CONFORMED_GOLD.DIM_TERMINAL, pk: terminal_key }
+  - { alias: c, fqn: CONFORMED_GOLD.DIM_CUSTOMER, pk: customer_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: l.terminal_key, to: t.terminal_key }
+  - { from: l.customer_key, to: c.customer_key }
+  - { from: l.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: t.region, label: Region, synonyms: [operating region, territory, area], term: GT-TRN-REGION }
+  - { name: terminal, expr: t.terminal_id, label: Origin terminal, synonyms: [terminal, facility, origin facility, cross-dock, yard], term: GT-TRN-TERMINAL }
+  - { name: terminal_type, expr: t.terminal_type, label: Terminal type, synonyms: [facility type] }
+  - { name: customer_segment, expr: c.segment, label: Shipper segment, synonyms: [segment, customer segment, vertical], term: GT-TRN-SHIPPER }
+  - { name: service_level, expr: l.service_level, label: Service level, synonyms: [service commitment, service type], term: GT-TRN-SERVICE-LEVEL }
+  - { name: load_type, expr: l.load_type, label: Load type, synonyms: [live or drop, drop and hook], term: GT-TRN-LIVE-LOAD }
+  - { name: equipment_type, expr: l.equipment_type, label: Equipment type, synonyms: [equipment, trailer type], term: GT-TRN-EQUIPMENT }
+  - { name: delay_cause, expr: l.delay_cause, label: Delay cause, synonyms: [cause of delay, late reason, reason for lateness] }
+  - { name: customer_caused_delay, expr: l.customer_caused_delay, label: Customer-caused delay, synonyms: [shipper caused delay, customer delay], term: GT-TRN-CUSTOMER-DELAY }
+  - { name: exception_type, expr: l.exception_type, label: Exception type, synonyms: [exception category] }
+time_dimensions:
+  - { name: pickup_date, expr: d.date, default: true }
+facts:
+  - { name: dwell_hours, expr: l.dwell_hours, description: Hours between gate-in and gate-out at the origin }
+  - { name: delay_minutes, expr: l.delay_minutes, description: Minutes delivered after the appointment window }
+metrics:
+  - name: on_time_delivery_pct
+    label: On-time delivery
+    expr: 100.0 * AVG(CASE WHEN l.on_time THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [otd, on time delivery rate, on-time performance, delivered on time, on time percentage]
+    term: GT-TRN-OTD
+    description: Share of delivered loads that arrived inside the appointment window, excluding customer-caused delays unless asked
+    default_filters: [ { rule: BR-TRN-002 } ]
+    naive_expr: 100.0 * AVG(CASE WHEN l.delay_minutes <= 60 THEN 1 ELSE 0 END)
+  - name: late_loads
+    label: Late loads
+    expr: SUM(CASE WHEN l.on_time THEN 0 ELSE 1 END)
+    unit: loads
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [late deliveries, missed appointments, number of late loads]
+    term: GT-TRN-OTD
+    description: Loads delivered after the appointment window
+  - name: avg_dwell_hours
+    label: Average dwell time
+    expr: AVG(l.dwell_hours)
+    unit: hours
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [dwell, dwell hours, facility dwell, time at the dock, wait time at pickup]
+    term: GT-TRN-DWELL
+    description: Average hours a tractor spends at the origin between gate-in and gate-out, on live loads unless asked
+    default_filters: [ { rule: BR-TRN-003 } ]
+  - name: exception_rate_pct
+    label: Exception rate
+    expr: 100.0 * AVG(CASE WHEN l.exception_logged THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [exceptions, exception percentage, service exceptions]
+    term: GT-TRN-EXCEPTION
+    description: Share of loads with a logged service exception (damage, refusal, misroute or shortage)
+  - name: loads_delivered
+    label: Loads delivered
+    expr: COUNT(*)
+    unit: loads
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [loads, shipments, load count, number of loads, volume]
+    term: GT-TRN-LOAD
+    description: Loads picked up in the period
+products: [DP-TRN-001]

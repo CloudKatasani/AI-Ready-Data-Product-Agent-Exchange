@@ -1,0 +1,25 @@
+id: DP-TCH-002
+name: Pipeline & Bookings
+domain: Go-to-Market
+archetype: SOURCE_ALIGNED
+initial_status: CERTIFIED
+seed_stage: 12
+version: 1.6.0
+owner: technology:data-product-owner
+steward: technology:revenue-steward
+description: Opportunities from the CRM with win rate, bookings, deal size, sales cycle and open pipeline by close date.
+purpose: Give sales leadership and revenue operations one governed view of pipeline and bookings for forecast calls.
+decision: { persona: Chief Revenue Officer, decision: "Which regions and lead sources get next quarter's pipeline-generation budget", cadence: Monthly forecast call, workaround: "CRM report exports reconciled by revenue operations before every forecast call", consequence: "Win rate inflated by renewals and budget moved to channels that do not close" }
+sample_questions: ["What was our win rate last quarter?", "New bookings by region last quarter", "Open pipeline closing next quarter"]
+semantic_view: GTM_PIPELINE
+output_ports:
+  - { kind: semantic, ref: GTM_PIPELINE }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_TCH_002_PIPELINE_BOOKINGS }
+  - { kind: agent, ref: AG-TCH-001 }
+sla: { freshness_minutes: 60, availability_pct: 99.5, max_null_rate_pct: 1.0 }
+kpis: [KPI-TCH-WIN-RATE, KPI-TCH-BOOKINGS, KPI-TCH-DEAL-SIZE, KPI-TCH-SALES-CYCLE, KPI-TCH-PIPELINE]
+upstream: [CONFORMED_GOLD.FCT_OPPORTUNITY, CONFORMED_GOLD.DIM_ACCOUNT]
+consumers: [Sales leadership, Revenue operations, Revenue Retention Analyst agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-TCH-002

@@ -1,0 +1,264 @@
+# Bronze source tables for Meridian Freight Lines (MFL_AI_PLATFORM).
+# Converted from the Marketplace TRN manifests (DP-TRN-001 Fleet Movement & Delivery Performance, DP-TRN-002
+# Freight Cost & Margin) and re-expressed as a truckload carrier's own systems: TMS, telematics/ELD, HR,
+# safety and claims. Terminals are a full population at every scale so regional rankings stay calibrated;
+# customers, tractors, drivers and the event tables scale S/M/L.
+# Derived values a plant must move (on-time, detention, recordable crashes, separations) are computed in Silver
+# from the Bronze root columns, because plants adjust base rows after formulas have been evaluated.
+tables:
+  - name: TMS_TERMINAL
+    system: TMS facility master
+    description: Terminals, cross-docks and drop yards that loads originate from and tractors are domiciled at
+    key: terminal_id
+    rows: { S: 24, M: 24, L: 24 }
+    cdc_noise: { duplicate_updates_pct: 2 }
+    columns:
+      - { name: terminal_id, type: VARCHAR, gen: { seq: { prefix: "T-", pad: 2 } } }
+      - { name: terminal_name, type: VARCHAR, gen: { template: "Terminal {terminal_id}" }, dirty: false }
+      - { name: region, type: VARCHAR, gen: { choice: { values: [Northeast, Southeast, Central, Mountain, West], weights: [24, 22, 22, 14, 18] } }, dirty: false }
+      - { name: terminal_type, type: VARCHAR, gen: { choice: { values: [Terminal, Cross-dock, Drop yard], weights: [60, 25, 15] } } }
+      - { name: door_count, type: INTEGER, gen: { uniform: { min: 12, max: 140 } } }
+    plant:
+      - id: P-TRN-01
+        description: "Northeast terminals; T-03 and T-07 are the two cross-docks behind the dwell-driven lateness pattern"
+        where: { terminal_id: { in: [T-01, T-02, T-03, T-04, T-07, T-11] } }
+        adjust: { region: { set: Northeast } }
+      - id: P-TRN-02
+        description: "T-03 and T-07 are cross-docks"
+        where: { terminal_id: { in: [T-03, T-07] } }
+        adjust: { terminal_type: { set: Cross-dock } }
+      - id: P-TRN-03
+        description: "Mountain terminals: T-05, T-10 and T-15 (the smallest region)"
+        where: { terminal_id: { in: [T-05, T-10, T-15] } }
+        adjust: { region: { set: Mountain } }
+      - id: P-TRN-18
+        description: "Southeast terminals"
+        where: { terminal_id: { in: [T-06, T-09, T-12, T-16, T-20] } }
+        adjust: { region: { set: Southeast } }
+      - id: P-TRN-19
+        description: "Central terminals"
+        where: { terminal_id: { in: [T-08, T-13, T-17, T-21, T-23] } }
+        adjust: { region: { set: Central } }
+      - id: P-TRN-20
+        description: "West terminals"
+        where: { terminal_id: { in: [T-14, T-18, T-19, T-22, T-24] } }
+        adjust: { region: { set: West } }
+
+  - name: TMS_CUSTOMER
+    system: TMS customer master
+    description: Shippers (customers) with segment, home region, contract type and the logistics contact
+    key: customer_id
+    rows: { S: 150, M: 400, L: 1200 }
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 5 }
+    columns:
+      - { name: customer_id, type: VARCHAR, gen: { seq: { prefix: "C-", pad: 4 } } }
+      - { name: customer_name, type: VARCHAR, gen: { company: true } }
+      - { name: segment, type: VARCHAR, gen: { choice: { values: [Retail, Food & beverage, Manufacturing, Building materials, Automotive, Paper & packaging], weights: [24, 20, 18, 14, 12, 12] } } }
+      - { name: region, type: VARCHAR, gen: { choice: { values: [Northeast, Southeast, Central, Mountain, West], weights: [24, 22, 22, 14, 18] } }, dirty: false }
+      - { name: contract_type, type: VARCHAR, gen: { choice: { values: [Dedicated, Contract, Spot], weights: [18, 67, 15] } } }
+      - { name: contact_first_name, type: VARCHAR, gen: { person: first }, tags: [PII] }
+      - { name: contact_last_name, type: VARCHAR, gen: { person: last }, tags: [PII] }
+      - { name: contact_email, type: VARCHAR, gen: { email: { first: contact_first_name, last: contact_last_name, domain: shipper-mail.example.com } }, tags: [PII], null_pct: 4 }
+      - { name: contact_phone, type: VARCHAR, gen: { phone: true }, tags: [PII], null_pct: 3 }
+      - { name: customer_since, type: DATE, gen: { date: { from: "2008-01-01", to: "2026-06-30" } } }
+
+  - name: FLT_TRACTOR
+    system: Fleet maintenance (asset register)
+    description: Power units (tractors) with home terminal, trailer pool, make and model year
+    key: tractor_id
+    rows: { S: 300, M: 600, L: 1500 }
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 3 }
+    columns:
+      - { name: tractor_id, type: VARCHAR, gen: { seq: { prefix: "TR-", pad: 4 } } }
+      - { name: home_terminal_id, type: VARCHAR, gen: { fk: { table: TMS_TERMINAL, column: terminal_id } } }
+      - { name: home_region, type: VARCHAR, gen: { derive_from: { fk_column: home_terminal_id, parent_column: region } }, dirty: false }
+      - { name: equipment_type, type: VARCHAR, gen: { choice: { values: [Dry van, Reefer, Flatbed], weights: [58, 28, 14] } } }
+      - { name: make, type: VARCHAR, gen: { choice: { values: [Kestrel, Northway, Ironvale, Summit Ridge], weights: [34, 28, 22, 16] } } }
+      - { name: model_year, type: INTEGER, gen: { choice: { values: [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026], weights: [6, 8, 10, 12, 14, 15, 15, 13, 7] } } }
+      - { name: mpg_noise, type: DOUBLE, gen: { normal: { mean: 0, sd: 0.25, min: -0.7, max: 0.7, decimals: 3 } } }
+      - { name: rated_mpg, type: DOUBLE, gen: { formula: "6.15 + (model_year - 2018) * 0.12 + mpg_noise", decimals: 2 } }
+    plant:
+      - id: P-TRN-04
+        description: "Reefer tractors burn more fuel (refrigeration unit on the tractor's fuel tank)"
+        where: { equipment_type: Reefer }
+        adjust: { rated_mpg: { multiply: 0.93 } }
+
+  - name: HR_DRIVER
+    system: HR and driver qualification files
+    description: Drivers (company and owner-operator) with home terminal, hire date and separation date
+    key: driver_id
+    rows: { S: 800, M: 1600, L: 4000 }
+    loaded_at_from: hire_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.3, dirty_strings_pct: 5, late_arrivals_pct: 1 }
+    columns:
+      - { name: driver_id, type: VARCHAR, gen: { seq: { prefix: "D-", pad: 5 } } }
+      - { name: first_name, type: VARCHAR, gen: { person: first }, tags: [PII] }
+      - { name: last_name, type: VARCHAR, gen: { person: last }, tags: [PII] }
+      - { name: phone, type: VARCHAR, gen: { phone: true }, tags: [PII], null_pct: 2 }
+      - { name: cdl_number, type: VARCHAR, gen: { template: "CDL-{driver_id}" }, tags: [GOV_ID], dirty: false }
+      - { name: home_terminal_id, type: VARCHAR, gen: { fk: { table: TMS_TERMINAL, column: terminal_id } } }
+      - { name: home_region, type: VARCHAR, gen: { derive_from: { fk_column: home_terminal_id, parent_column: region } }, dirty: false }
+      - { name: driver_type, type: VARCHAR, gen: { choice: { values: [Company, Owner-operator], weights: [80, 20] } } }
+      - { name: hire_date, type: DATE, gen: { date: { from: "2023-01-01", to: asOf } } }
+      - { name: separation_date, type: DATE, description: "Last day worked; future-dated rows are resignations still serving notice", gen: { date_offset: { from_column: hire_date, days: { min: 30, max: 1000 } } } }
+      - { name: separation_reason, type: VARCHAR, gen: { choice: { values: [Voluntary - pay, Voluntary - home time, Voluntary - other carrier, Involuntary - safety, Involuntary - other], weights: [26, 30, 22, 9, 13] } } }
+    plant:
+      - id: P-TRN-05
+        description: "Owner-operators leave much sooner — why driver turnover is reported for company drivers unless asked"
+        where: { driver_type: Owner-operator }
+        adjust: { separation_date: { add: -330 } }
+      - id: P-TRN-06
+        description: "Mountain company drivers churn faster (thin freight, long time away from home)"
+        where: { home_region: Mountain, driver_type: Company }
+        adjust: { separation_date: { add: -160 } }
+
+  - name: TMS_LOAD
+    system: TMS (dispatch and settlement)
+    description: Truckload shipments (one row per load) with lane, equipment, miles, revenue, cost, dwell and delivery outcome
+    key: load_id
+    rows: { S: 6000, M: 60000, L: 600000 }
+    loaded_at_from: pickup_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.4, dirty_strings_pct: 3, late_arrivals_pct: 1 }
+    columns:
+      - { name: load_id, type: VARCHAR, gen: { seq: { prefix: "LD-", pad: 7 } } }
+      - { name: customer_id, type: VARCHAR, gen: { fk: { table: TMS_CUSTOMER, column: customer_id, dist: zipf, s: 0.8 } } }
+      - { name: customer_segment, type: VARCHAR, gen: { derive_from: { fk_column: customer_id, parent_column: segment } }, dirty: false }
+      - { name: origin_terminal_id, type: VARCHAR, gen: { fk: { table: TMS_TERMINAL, column: terminal_id } } }
+      - { name: origin_region, type: VARCHAR, gen: { derive_from: { fk_column: origin_terminal_id, parent_column: region } }, dirty: false }
+      - { name: dest_region, type: VARCHAR, gen: { choice: { values: [Northeast, Southeast, Central, Mountain, West], weights: [24, 22, 22, 14, 18] } } }
+      - { name: tractor_id, type: VARCHAR, gen: { fk: { table: FLT_TRACTOR, column: tractor_id } } }
+      - { name: equipment_type, type: VARCHAR, gen: { derive_from: { fk_column: tractor_id, parent_column: equipment_type } } }
+      - { name: rated_mpg, type: DOUBLE, gen: { derive_from: { fk_column: tractor_id, parent_column: rated_mpg } } }
+      - { name: driver_id, type: VARCHAR, gen: { fk: { table: HR_DRIVER, column: driver_id } } }
+      - { name: pickup_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf, seasonality: { month: [0.9, 0.88, 0.97, 1.0, 1.02, 1.03, 1.0, 1.02, 1.05, 1.08, 1.1, 0.95] } } } }
+      - { name: service_level, type: VARCHAR, gen: { choice: { values: [Standard, Appointment, Expedited], weights: [55, 33, 12] } } }
+      - { name: load_type, type: VARCHAR, gen: { choice: { values: [Live, Drop & hook], weights: [62, 38] } } }
+      - { name: loaded_miles, type: INTEGER, gen: { lognormal: { mu: 5.9, sigma: 0.55, min: 40, max: 2600 } } }
+      - { name: empty_ratio, type: DOUBLE, gen: { normal: { mean: 0.14, sd: 0.06, min: 0.02, max: 0.5, decimals: 3 } } }
+      - { name: empty_miles, type: INTEGER, gen: { formula: "round(loaded_miles * empty_ratio)" } }
+      - { name: rate_per_mile, type: DOUBLE, gen: { normal: { mean: 2.55, sd: 0.3, min: 1.9, max: 4.5, decimals: 3 } } }
+      - { name: linehaul_revenue, type: DOUBLE, gen: { formula: "loaded_miles * rate_per_mile", decimals: 2 } }
+      - { name: fuel_surcharge, type: DOUBLE, gen: { formula: "loaded_miles * 0.52", decimals: 2 } }
+      - { name: cost_per_mile_std, type: DOUBLE, gen: { normal: { mean: 1.85, sd: 0.17, min: 1.1, max: 2.6, decimals: 3 } } }
+      - { name: operating_cost, type: DOUBLE, gen: { formula: "(loaded_miles + empty_miles) * cost_per_mile_std", decimals: 2 } }
+      - { name: fuel_cost, type: DOUBLE, gen: { formula: "(loaded_miles + empty_miles) / rated_mpg * 3.85", decimals: 2 } }
+      - { name: acc_draw, type: DOUBLE, gen: { uniform: { min: 0, max: 100, decimals: 2 } } }
+      - { name: acc_amount, type: DOUBLE, gen: { lognormal: { mu: 4.6, sigma: 0.7, min: 15, max: 2500, decimals: 2 } } }
+      - { name: accessorial_cost, type: DOUBLE, gen: { formula: "if(acc_draw < 18, acc_amount, 0)", decimals: 2 } }
+      - { name: dwell_hours, type: DOUBLE, gen: { lognormal: { mu: 0.55, sigma: 0.6, min: 0.1, max: 48, decimals: 2 } } }
+      - { name: late_draw, type: DOUBLE, gen: { uniform: { min: 0, max: 100, decimals: 2 } } }
+      - { name: delay_raw, type: INTEGER, gen: { lognormal: { mu: 4.4, sigma: 0.9, min: 5, max: 2880 } } }
+      - { name: delay_minutes, type: INTEGER, gen: { formula: "if(late_draw < 8.5, delay_raw, 0)" } }
+      - { name: delay_cause, type: VARCHAR, gen: { choice: { values: [Carrier, Customer, Weather], weights: [52, 33, 15] } } }
+      - { name: exception_logged, type: BOOLEAN, gen: { bernoulli: 0.031 } }
+      - { name: exception_type, type: VARCHAR, gen: { choice: { values: [Damage, Refused, Misroute, Shortage], weights: [34, 22, 18, 26] } } }
+    plant:
+      - id: P-TRN-07
+        description: "Live loads at the T-03 and T-07 Northeast cross-docks dwell 2.6x longer — the dwell-driven lateness behind Northeast on-time"
+        where: { origin_terminal_id: { in: [T-03, T-07] } }
+        adjust: { dwell_hours: { multiply: 2.6 } }
+      - id: P-TRN-08
+        description: "Loads out of T-03 and T-07 run late after long dwell (carrier-caused)"
+        where: { origin_terminal_id: { in: [T-03, T-07] } }
+        adjust: { delay_minutes: { set: 210, pct: 14 } }
+      - id: P-TRN-09
+        description: "Carrier-caused delays at T-03 and T-07"
+        where: { origin_terminal_id: { in: [T-03, T-07] } }
+        adjust: { delay_cause: { set: Carrier, pct: 85 } }
+      - id: P-TRN-10
+        description: "Mountain runs the tightest operation on carrier-controllable service"
+        where: { origin_region: Mountain }
+        adjust: { delay_minutes: { set: 0, pct: 40 } }
+      - id: P-TRN-11
+        description: "Mountain building-materials job sites refuse appointments — customer-caused delays that BR-TRN-002 excludes from on-time"
+        where: { origin_region: Mountain, customer_segment: Building materials }
+        adjust: { delay_minutes: { set: 240, pct: 70 } }
+      - id: P-TRN-12
+        description: "Every delay on a Mountain building-materials load is booked as customer-caused"
+        where: { origin_region: Mountain, customer_segment: Building materials }
+        adjust: { delay_cause: { set: Customer } }
+      - id: P-TRN-13
+        description: "Diesel spike in Q3 2026 lifts fuel cost and cost per mile"
+        window: { column: pickup_date, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { fuel_cost: { multiply: 1.18 } }
+
+  - name: ELD_FLEET_DAY
+    system: Telematics / ELD
+    description: One telematics record per tractor per day with available and revenue hours, loaded and empty miles, fuel and revenue
+    key: fleet_day_id
+    rows: { S: 24000, M: 240000, L: 600000 }
+    loaded_at_from: activity_date
+    cdc_noise: { duplicate_updates_pct: 3, deletes_pct: 0.2, dirty_strings_pct: 2, late_arrivals_pct: 2 }
+    columns:
+      - { name: fleet_day_id, type: VARCHAR, gen: { seq: { prefix: "FD-", pad: 8 } } }
+      - { name: tractor_id, type: VARCHAR, gen: { fk: { table: FLT_TRACTOR, column: tractor_id } } }
+      - { name: home_region, type: VARCHAR, gen: { derive_from: { fk_column: tractor_id, parent_column: home_region } }, dirty: false }
+      - { name: equipment_type, type: VARCHAR, gen: { derive_from: { fk_column: tractor_id, parent_column: equipment_type } } }
+      - { name: rated_mpg, type: DOUBLE, gen: { derive_from: { fk_column: tractor_id, parent_column: rated_mpg } } }
+      - { name: driver_id, type: VARCHAR, gen: { fk: { table: HR_DRIVER, column: driver_id } } }
+      - { name: activity_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: available_hours, type: DOUBLE, gen: { normal: { mean: 21, sd: 2, min: 10, max: 24, decimals: 1 } } }
+      - { name: shop_draw, type: DOUBLE, gen: { uniform: { min: 0, max: 100, decimals: 2 } } }
+      - { name: in_shop, type: BOOLEAN, gen: { formula: "shop_draw < 7" } }
+      - { name: util_ratio, type: DOUBLE, gen: { normal: { mean: 0.76, sd: 0.11, min: 0.15, max: 0.98, decimals: 3 } } }
+      - { name: revenue_hours, type: DOUBLE, gen: { formula: "if(in_shop, 0, available_hours * util_ratio)", decimals: 1 } }
+      - { name: loaded_miles, type: INTEGER, gen: { formula: "round(revenue_hours * 28)" } }
+      - { name: empty_ratio, type: DOUBLE, gen: { normal: { mean: 0.13, sd: 0.05, min: 0.01, max: 0.45, decimals: 3 } } }
+      - { name: empty_miles, type: INTEGER, gen: { formula: "round(loaded_miles * empty_ratio)" } }
+      - { name: fuel_gallons, type: DOUBLE, gen: { formula: "(loaded_miles + empty_miles) / rated_mpg", decimals: 1 } }
+      - { name: rate_per_mile, type: DOUBLE, gen: { normal: { mean: 2.55, sd: 0.25, min: 1.8, max: 4.5, decimals: 3 } } }
+      - { name: revenue_usd, type: DOUBLE, gen: { formula: "loaded_miles * rate_per_mile", decimals: 2 } }
+    plant:
+      - id: P-TRN-14
+        description: "Flatbed tractors earn fewer of their available hours (seasonal construction freight) — the least utilised equipment"
+        where: { equipment_type: Flatbed }
+        adjust: { revenue_hours: { multiply: 0.8 }, loaded_miles: { multiply: 0.8 }, empty_miles: { multiply: 0.8 }, fuel_gallons: { multiply: 0.8 }, revenue_usd: { multiply: 0.8 } }
+      - id: P-TRN-15
+        description: "West tractors run 80% more empty miles (head-haul imbalance out of the ports); fuel scales with total miles"
+        where: { home_region: West }
+        adjust: { empty_miles: { multiply: 1.8 }, fuel_gallons: { multiply: 1.09 } }
+
+  - name: SAF_EVENT
+    system: Safety management (telematics alerts, roadside inspections, crash register)
+    description: Driver safety events — alerts, hours-of-service and inspection violations, and crashes with a severity score
+    key: event_id
+    rows: { S: 600, M: 4000, L: 12000 }
+    loaded_at_from: event_date
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 4 }
+    columns:
+      - { name: event_id, type: VARCHAR, gen: { seq: { prefix: "SE-", pad: 6 } } }
+      - { name: driver_id, type: VARCHAR, gen: { fk: { table: HR_DRIVER, column: driver_id } } }
+      - { name: home_region, type: VARCHAR, gen: { derive_from: { fk_column: driver_id, parent_column: home_region } }, dirty: false }
+      - { name: tractor_id, type: VARCHAR, gen: { fk: { table: FLT_TRACTOR, column: tractor_id } } }
+      - { name: event_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: event_type, type: VARCHAR, gen: { choice: { values: [Hard-brake alert, Speeding alert, Hours-of-service violation, Roadside inspection violation, Crash], weights: [41, 27, 14, 14, 4] } } }
+      - { name: severity_score, type: INTEGER, gen: { uniform: { min: 0, max: 100 } } }
+      - { name: preventable_flag, type: BOOLEAN, gen: { bernoulli: 0.58 } }
+      - { name: location_note, type: VARCHAR, gen: { template: "{event_type} near {home_region}" } }
+    plant:
+      - id: P-TRN-16
+        description: "Mountain drivers log more crashes (mountain grades, winter chain-up routes)"
+        where: { home_region: Mountain }
+        adjust: { event_type: { set: Crash, pct: 6 } }
+
+  - name: CLM_CARGO_CLAIM
+    system: Claims management
+    description: Cargo claims raised by shippers against loads (damage, shortage, temperature excursion, loss)
+    key: claim_id
+    rows: { S: 60, M: 600, L: 6000 }
+    loaded_at_from: claim_date
+    cdc_noise: { duplicate_updates_pct: 4, dirty_strings_pct: 3 }
+    columns:
+      - { name: claim_id, type: VARCHAR, gen: { seq: { prefix: "CL-", pad: 6 } } }
+      - { name: load_id, type: VARCHAR, gen: { fk: { table: TMS_LOAD, column: load_id } } }
+      - { name: customer_segment, type: VARCHAR, gen: { derive_from: { fk_column: load_id, parent_column: customer_segment } }, dirty: false }
+      - { name: pickup_date, type: DATE, gen: { derive_from: { fk_column: load_id, parent_column: pickup_date } } }
+      - { name: claim_date, type: DATE, gen: { date_offset: { from_column: pickup_date, days: { min: 3, max: 75 }, clamp_to_as_of: true } } }
+      - { name: claim_type, type: VARCHAR, gen: { choice: { values: [Damage, Shortage, Temperature excursion, Loss], weights: [52, 26, 12, 10] } } }
+      - { name: claim_amount, type: DOUBLE, gen: { lognormal: { mu: 7.0, sigma: 0.9, min: 50, max: 60000, decimals: 2 } } }
+      - { name: claim_status, type: VARCHAR, gen: { choice: { values: [Paid, Open, Denied], weights: [62, 23, 15] } } }
+    plant:
+      - id: P-TRN-17
+        description: "Food & beverage claims are larger — temperature excursions spoil whole loads"
+        where: { customer_segment: Food & beverage }
+        adjust: { claim_amount: { multiply: 2.4 }, claim_type: { set: Temperature excursion, pct: 60 } }

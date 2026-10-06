@@ -1,0 +1,133 @@
+# Control library for Altair Communications (fictional). Regulators and jurisdictions are invented; frameworks
+# are named for the public standards they are modelled on (ported from the ADPM telecom controls). Illustrative,
+# not legal or regulatory advice.
+jurisdictions:
+  - { id: JUR-ALT-COMMS, name: "Communications regulation", regulator: "National Communications Authority (fictional)" }
+  - { id: JUR-ALT-PRIVACY, name: "Consumer privacy", regulator: "Consumer Data Protection Office (fictional)" }
+  - { id: JUR-ALT-PAYMENTS, name: "Payment card industry", regulator: "Card Data Security Council (fictional)" }
+  - { id: JUR-ALT-CORP, name: "Corporate policy", regulator: "Altair Board Audit & Risk Committee" }
+
+controls:
+  - id: CTL-TEL-001
+    name: CPNI protection
+    framework: CPNI rules (customer proprietary network information)
+    description: >-
+      The numbers a subscriber calls, call times and durations, serving location and services used are CPNI. CPNI
+      is used internally only by roles cleared by the Privacy Office; everyone else sees masked values or aggregates,
+      and every access to a CPNI column is logged.
+    jurisdiction: JUR-ALT-COMMS
+    applies_to: { classes: [CPNI] }
+    evidence: Masking policies on every CPNI column, access history for CPNI reads and the list of cleared roles.
+    stage: 6
+  - id: CTL-TEL-002
+    name: Subscriber personal data
+    framework: Consumer privacy act-style personal data rules
+    description: >-
+      Subscriber names, emails, phone numbers, addresses and dates of birth are personal data. They are masked for
+      every role without PII clearance in every surface, including agent answers, and used only for a stated purpose.
+    jurisdiction: JUR-ALT-PRIVACY
+    applies_to: { classes: [PII] }
+    evidence: Column tags and masking on DIM_SUBSCRIBER and silver subscriber objects; access review of care and field roles.
+    stage: 6
+  - id: CTL-TEL-003
+    name: Payment card data
+    framework: PCI DSS-style card data standard
+    description: >-
+      Card numbers captured on payments are stored tokenised and shown only as the last four digits. Card data never
+      leaves the billing domain and is never exposed through analytical products or agents.
+    jurisdiction: JUR-ALT-PAYMENTS
+    applies_to: { classes: [PCI], domains: [billing-revenue] }
+    evidence: MASK_PCI on CURATED_SILVER.PAYMENT.card_number and the absence of card columns in Gold and product ports.
+    stage: 6
+  - id: CTL-TEL-004
+    name: Quality of service reporting
+    framework: Regulatory QoS reporting
+    description: >-
+      Published network quality figures — dropped call rate, call setup success and availability — must be
+      reproducible from source counters with one definition. Availability excludes planned maintenance inside the
+      approved window; changes to definitions need a versioned contract.
+    jurisdiction: JUR-ALT-COMMS
+    applies_to: { domains: [network-performance, service-assurance] }
+    evidence: Certified product version, metric definition and lineage from OSS counters to the reported figure.
+    stage: 11
+  - id: CTL-TEL-005
+    name: Subscriber KPI definitions
+    framework: Investor and regulator KPI reporting
+    description: >-
+      Churn, net adds, gross adds and ARPU reported to the board and investors come from one certified product.
+      Churn counts voluntary disconnects and port-outs over the opening base; plan migrations are not churn and
+      inactive prepaid lines are excluded unless a report explicitly asks for them.
+    jurisdiction: JUR-ALT-CORP
+    applies_to: { domains: [churn-retention, billing-revenue] }
+    evidence: Board pack reconciliation to the certified churn and revenue products and the approved definition history.
+    stage: 11
+  - id: CTL-TEL-006
+    name: Marketing consent
+    framework: Telemarketing and consent rules
+    description: >-
+      Retention and marketing contact requires current recorded consent per channel. Agents never trigger outbound
+      contact; save offers are approved and made by named retention staff.
+    jurisdiction: JUR-ALT-PRIVACY
+    applies_to: { domains: [churn-retention, subscriber] }
+    evidence: Consent flags on the subscriber record, retention offer decision log and agent out-of-scope lists.
+    stage: 10
+  - id: CTL-TEL-007
+    name: Number portability integrity
+    framework: Number portability rules
+    description: >-
+      Ported numbers must resolve to the correct current provider in every product; a completed port request is the
+      only evidence of a port-out, and port-outs are reported separately from other voluntary disconnects.
+    jurisdiction: JUR-ALT-COMMS
+    applies_to: { domains: [churn-retention] }
+    evidence: Port completion records reconciled monthly to the churn product's port-out counts.
+    stage: 9
+  - id: CTL-TEL-008
+    name: Revenue assurance
+    framework: Revenue assurance maturity model
+    description: >-
+      Rated and billed charges are reconciled at invoice level every bill cycle; a market whose leakage exceeds 0.8%
+      in a quarter is escalated to revenue assurance with a root-cause owner.
+    jurisdiction: JUR-ALT-CORP
+    applies_to: { domains: [billing-revenue] }
+    evidence: Monthly rated-to-billed reconciliation from the certified billing product and the escalation register.
+    stage: 11
+  - id: CTL-TEL-009
+    name: Lawful process separation
+    framework: Lawful intercept and process separation
+    description: >-
+      Lawful process data is segregated from commercial analytics. Analytical products and agents never receive,
+      reveal or confirm lawful process requests about a subscriber.
+    jurisdiction: JUR-ALT-COMMS
+    applies_to: { domains: [subscriber, billing-revenue] }
+    evidence: Environment segregation attestation and agent refusal tests for lawful-process questions.
+    stage: 10
+  - id: CTL-TEL-010
+    name: Critical data element ownership
+    framework: Data management body of knowledge-style CDE standard
+    description: >-
+      Every critical data element used in board, regulator or investor reporting has a named owner and steward, at
+      least one executable data quality rule and a glossary term before the product exposing it can be certified.
+    jurisdiction: JUR-ALT-CORP
+    applies_to: { domains: [subscriber, churn-retention, billing-revenue, network-performance, service-assurance, field-operations, customer-experience] }
+    evidence: CDE register with owners, linked DQ rules and their latest results.
+    stage: 8
+  - id: CTL-TEL-011
+    name: Usage record retention
+    framework: Records retention schedule
+    description: >-
+      Mediated usage records are retained for 18 months for billing disputes and then aggregated; billing records for
+      seven years. Platform history is append-only so retained records cannot be silently altered.
+    jurisdiction: JUR-ALT-COMMS
+    applies_to: { domains: [billing-revenue] }
+    evidence: Retention configuration per object and the most recent purge certificate.
+    stage: 9
+  - id: CTL-TEL-012
+    name: Location data handling
+    framework: Location privacy rules
+    description: >-
+      Network location data (serving cell per subscriber) is aggregated before analytical use unless a lawful basis
+      exists; site-level network metrics never reveal an individual subscriber's movements.
+    jurisdiction: JUR-ALT-PRIVACY
+    applies_to: { classes: [CPNI], domains: [network-performance] }
+    evidence: Aggregate-only output ports on network products and masking on serving-cell columns.
+    stage: 6

@@ -1,0 +1,481 @@
+# Bronze source tables for Altair Communications (ALT_AI_PLATFORM).
+# Converted from the AI-Ready telecom generators (generators.config.ts / data.ts) and the Marketplace
+# DP-TEL-001/002 manifests. Markets, rate plans, cell sites and technicians are full populations at every scale;
+# subscriber-side and event tables scale S/M/L. Monthly tables carry `month_no` (1 = Jan 2025 … 21 = Sep 2026).
+# Amounts that depend on planted flags (rated, billed, leakage, downtime, throughput) are derived in Silver so
+# that planted patterns flow through to every downstream number.
+tables:
+  - name: MKT_MARKET
+    system: Enterprise reference data
+    description: The eight commercial markets and the operating region each belongs to
+    key: market_id
+    rows: { S: 8, M: 8, L: 8 }
+    cdc_noise: { duplicate_updates_pct: 2 }
+    columns:
+      - { name: market_id, type: VARCHAR, gen: { seq: { prefix: "MK-", pad: 2 } } }
+      - { name: market_name, type: VARCHAR, gen: { formula: "if(market_id == 'MK-01', 'Harborview', if(market_id == 'MK-02', 'Granite Valley', if(market_id == 'MK-03', 'Palmetto Coast', if(market_id == 'MK-04', 'Cypress Bay', if(market_id == 'MK-05', 'Prairie Crossing', if(market_id == 'MK-06', 'Lakeshore', if(market_id == 'MK-07', 'Sierra Vista', 'Pacific Rim')))))))" } }
+      - { name: region, type: VARCHAR, gen: { formula: "if(market_id == 'MK-01' || market_id == 'MK-02', 'Northeast', if(market_id == 'MK-03' || market_id == 'MK-04', 'Southeast', if(market_id == 'MK-05' || market_id == 'MK-06', 'Central', 'West')))" } }
+      - { name: launch_year, type: INTEGER, gen: { uniform: { min: 1998, max: 2014 } } }
+
+  - name: PRD_RATE_PLAN
+    system: Product catalogue
+    description: Postpaid, prepaid and fiber broadband rate plans with monthly plan charge and data allowance
+    key: plan_id
+    rows: { S: 8, M: 8, L: 8 }
+    cdc_noise: { duplicate_updates_pct: 2 }
+    columns:
+      - { name: plan_id, type: VARCHAR, gen: { seq: { prefix: "PL-", pad: 2 } } }
+      - { name: plan_name, type: VARCHAR, gen: { formula: "if(plan_id == 'PL-01', 'Unlimited Max', if(plan_id == 'PL-02', 'Unlimited Plus', if(plan_id == 'PL-03', 'Essentials 15GB', if(plan_id == 'PL-04', 'Family Share', if(plan_id == 'PL-05', 'Prepaid Flex', if(plan_id == 'PL-06', 'Prepaid Basic', if(plan_id == 'PL-07', 'Fiber 500', 'Fiber Gig')))))))" } }
+      - { name: segment, type: VARCHAR, gen: { formula: "if(plan_id == 'PL-05' || plan_id == 'PL-06', 'Prepaid', if(plan_id == 'PL-07' || plan_id == 'PL-08', 'Broadband', 'Postpaid'))" } }
+      - { name: lob, type: VARCHAR, gen: { formula: "if(plan_id == 'PL-07' || plan_id == 'PL-08', 'Broadband', 'Mobile')" } }
+      - { name: monthly_price, type: DOUBLE, gen: { formula: "if(plan_id == 'PL-01', 70, if(plan_id == 'PL-02', 58, if(plan_id == 'PL-03', 42, if(plan_id == 'PL-04', 38, if(plan_id == 'PL-05', 35, if(plan_id == 'PL-06', 25, if(plan_id == 'PL-07', 65, 85)))))))", decimals: 2 } }
+      - { name: data_allowance_gb, type: INTEGER, gen: { formula: "if(plan_id == 'PL-03', 15, if(plan_id == 'PL-05', 10, if(plan_id == 'PL-06', 5, if(plan_id == 'PL-07' || plan_id == 'PL-08', 0, 999))))" } }
+
+  - name: CRM_SUBSCRIBER
+    system: CRM (subscriber master via CDC)
+    description: Subscriber master — one row per mobile line or broadband home with plan, market, autopay, contract and churn propensity
+    key: subscriber_id
+    rows: { S: 3000, M: 30000, L: 300000 }
+    loaded_at_from: activation_date
+    cdc_noise: { duplicate_updates_pct: 5, deletes_pct: 0.4, dirty_strings_pct: 6, late_arrivals_pct: 1 }
+    columns:
+      - { name: subscriber_id, type: VARCHAR, gen: { seq: { prefix: "SB", pad: 8 } } }
+      - { name: account_id, type: VARCHAR, gen: { template: "AC-{subscriber_id}" }, dirty: false }
+      - { name: first_name, type: VARCHAR, gen: { person: first }, tags: [PII] }
+      - { name: last_name, type: VARCHAR, gen: { person: last }, tags: [PII] }
+      - { name: email, type: VARCHAR, gen: { email: { first: first_name, last: last_name, domain: example.net } }, tags: [PII], null_pct: 8 }
+      - { name: msisdn, type: VARCHAR, gen: { phone: true }, tags: [CPNI] }
+      - { name: street_address, type: VARCHAR, gen: { address: true }, tags: [PII] }
+      - { name: date_of_birth, type: DATE, gen: { date: { from: "1945-01-01", to: "2007-12-31" } }, tags: [PII] }
+      - { name: market_id, type: VARCHAR, gen: { fk: { table: MKT_MARKET, column: market_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: market_id, parent_column: region } } }
+      - { name: plan_id, type: VARCHAR, gen: { fk: { table: PRD_RATE_PLAN, column: plan_id } } }
+      - { name: segment, type: VARCHAR, gen: { derive_from: { fk_column: plan_id, parent_column: segment } } }
+      - { name: lob, type: VARCHAR, gen: { derive_from: { fk_column: plan_id, parent_column: lob } } }
+      - { name: plan_price, type: DOUBLE, gen: { derive_from: { fk_column: plan_id, parent_column: monthly_price } } }
+      - { name: status_code, type: VARCHAR, gen: { choice: { values: [A, D], weights: [94, 6] } }, dirty: false }
+      - { name: dormant_flag, type: BOOLEAN, gen: { bernoulli: 0.14 } }
+      - { name: autopay_flag, type: VARCHAR, gen: { choice: { values: [Y, N], weights: [76, 24] } }, dirty: false }
+      - { name: device_financed, type: BOOLEAN, gen: { bernoulli: 0.55 } }
+      - { name: activation_date, type: DATE, gen: { date: { from: "2017-01-01", to: "2026-09-25" } } }
+      - { name: contract_type, type: VARCHAR, gen: { choice: { values: [No contract, Device agreement, Term commitment], weights: [30, 50, 20] } } }
+      - { name: contract_end_date, type: DATE, gen: { date: { from: "2025-06-01", to: "2028-09-30" } } }
+      - { name: churn_propensity, type: INTEGER, gen: { normal: { mean: 34, sd: 19, min: 1, max: 99 } } }
+    plant:
+      - id: P-TEL-01
+        description: "Southeast carries a large tail of inactive prepaid lines (no top-up in 60 days) after a 2025 distributor promotion"
+        where: { region: Southeast, segment: Prepaid }
+        adjust: { dormant_flag: { set: true, pct: 45 } }
+      - id: P-TEL-02
+        description: "Prepaid subscribers enrol in autopay far less often"
+        where: { segment: Prepaid }
+        adjust: { autopay_flag: { set: N, pct: 50 } }
+      - id: P-TEL-03
+        description: "Prepaid lines carry no term contract and no device financing"
+        where: { segment: Prepaid }
+        adjust: { contract_type: { set: No contract }, device_financed: { set: false } }
+      - id: P-TEL-04
+        description: "Essentials 15GB subscribers score markedly higher churn propensity (price-sensitive base)"
+        where: { plan_id: PL-03 }
+        adjust: { churn_propensity: { add: 16 } }
+      - id: P-TEL-05
+        description: "West is the most competitive region; propensity is higher across the base"
+        where: { region: West }
+        adjust: { churn_propensity: { add: 7 } }
+
+  - name: BSS_LINE_MONTH
+    system: BSS subscriber lifecycle (monthly base movements)
+    description: One sampled line-month with its base movement (retained, gross add, voluntary disconnect, port-out, involuntary disconnect, plan migration) and any retention save offer
+    key: line_month_id
+    rows: { S: 18000, M: 180000, L: 1800000 }
+    cdc_noise: { duplicate_updates_pct: 3, deletes_pct: 0.2, dirty_strings_pct: 3, late_arrivals_pct: 1 }
+    columns:
+      - { name: line_month_id, type: VARCHAR, gen: { seq: { prefix: "LM", pad: 9 } } }
+      - { name: subscriber_id, type: VARCHAR, gen: { fk: { table: CRM_SUBSCRIBER, column: subscriber_id } } }
+      - { name: market_id, type: VARCHAR, gen: { derive_from: { fk_column: subscriber_id, parent_column: market_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: subscriber_id, parent_column: region } } }
+      - { name: plan_id, type: VARCHAR, gen: { derive_from: { fk_column: subscriber_id, parent_column: plan_id } } }
+      - { name: segment, type: VARCHAR, gen: { derive_from: { fk_column: subscriber_id, parent_column: segment } } }
+      - { name: dormant_flag, type: BOOLEAN, gen: { derive_from: { fk_column: subscriber_id, parent_column: dormant_flag } } }
+      - { name: month_no, type: INTEGER, gen: { choice: { values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21] } } }
+      - { name: movement, type: VARCHAR, gen: { choice: { values: [Retained, Voluntary disconnect, Port-out, Involuntary disconnect, Plan migration, Gross add], weights: [94.25, 0.55, 0.45, 0.25, 0.9, 3.6] } } }
+      - { name: save_offer_made, type: BOOLEAN, gen: { bernoulli: 0.035 } }
+      - { name: save_offer_accepted, type: BOOLEAN, gen: { bernoulli: 0.3 } }
+    plant:
+      - id: P-TEL-06
+        description: "Prepaid lines churn about three times as often as postpaid (voluntary and port-out)"
+        where: { segment: Prepaid }
+        adjust: { movement: { set: Voluntary disconnect, pct: 2.0 } }
+      - id: P-TEL-07
+        description: "Prepaid port-outs to discount carriers"
+        where: { segment: Prepaid }
+        adjust: { movement: { set: Port-out, pct: 0.8 } }
+      - id: P-TEL-08
+        description: "Prepaid activations run well ahead of postpaid gross adds"
+        where: { segment: Prepaid }
+        adjust: { movement: { set: Gross add, pct: 2.5 } }
+      - id: P-TEL-09
+        description: "Inactive prepaid lines are purged by the 60-day no-top-up rule and land as voluntary disconnects"
+        where: { segment: Prepaid, dormant_flag: true }
+        adjust: { movement: { set: Voluntary disconnect, pct: 22 } }
+      - id: P-TEL-10
+        description: "A competitor's switching promotion drives West port-outs up sharply in Q3 2026"
+        where: { region: West, month_no: { in: [19, 20, 21] } }
+        adjust: { movement: { set: Port-out, pct: 1.4 } }
+      - id: P-TEL-11
+        description: "Essentials 15GB churns more than the other postpaid plans"
+        where: { plan_id: PL-03 }
+        adjust: { movement: { set: Voluntary disconnect, pct: 0.6 } }
+      - id: P-TEL-12
+        description: "Postpaid voluntary churn spikes in March 2026 after the annual price adjustment"
+        where: { segment: Postpaid, month_no: 15 }
+        adjust: { movement: { set: Voluntary disconnect, pct: 0.8 } }
+      - id: P-TEL-13
+        description: "Postpaid save offers are accepted far more often than prepaid ones"
+        where: { segment: Postpaid }
+        adjust: { save_offer_accepted: { set: true, pct: 20 } }
+
+  - name: BSS_INVOICE
+    system: BSS billing (rating and invoicing, invoice CDC)
+    description: Monthly invoices with plan charge drivers, overage, roaming, rating-to-billing leakage and device installments
+    key: invoice_id
+    rows: { S: 12000, M: 120000, L: 1200000 }
+    cdc_noise: { duplicate_updates_pct: 3, deletes_pct: 0.2, late_arrivals_pct: 1 }
+    columns:
+      - { name: invoice_id, type: VARCHAR, gen: { seq: { prefix: "INV", pad: 9 } } }
+      - { name: subscriber_id, type: VARCHAR, gen: { fk: { table: CRM_SUBSCRIBER, column: subscriber_id } } }
+      - { name: market_id, type: VARCHAR, gen: { derive_from: { fk_column: subscriber_id, parent_column: market_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: subscriber_id, parent_column: region } } }
+      - { name: plan_id, type: VARCHAR, gen: { derive_from: { fk_column: subscriber_id, parent_column: plan_id } } }
+      - { name: segment, type: VARCHAR, gen: { derive_from: { fk_column: subscriber_id, parent_column: segment } } }
+      - { name: plan_price, type: DOUBLE, gen: { derive_from: { fk_column: subscriber_id, parent_column: plan_price } } }
+      - { name: device_financed, type: BOOLEAN, gen: { derive_from: { fk_column: subscriber_id, parent_column: device_financed } } }
+      - { name: month_no, type: INTEGER, gen: { choice: { values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21] } } }
+      - { name: usage_factor, type: DOUBLE, gen: { normal: { mean: 1.0, sd: 0.07, min: 0.7, max: 1.6, decimals: 3 } } }
+      - { name: overage_flag, type: BOOLEAN, gen: { bernoulli: 0.08 } }
+      - { name: overage_base, type: DOUBLE, gen: { uniform: { min: 5, max: 25, decimals: 2 } } }
+      - { name: roam_flag, type: BOOLEAN, gen: { bernoulli: 0.05 } }
+      - { name: roam_base, type: DOUBLE, gen: { lognormal: { mu: 3.0, sigma: 0.4, min: 5, max: 250, decimals: 2 } } }
+      - { name: leak_flag, type: BOOLEAN, gen: { bernoulli: 0.035 } }
+      - { name: leak_share, type: DOUBLE, gen: { uniform: { min: 0.08, max: 0.3, decimals: 3 } } }
+      - { name: installment_base, type: DOUBLE, gen: { uniform: { min: 15, max: 42, decimals: 2 } } }
+    plant:
+      - id: P-TEL-14
+        description: "A mediation change in Lakeshore leaves usage rated but unbilled in Q3 2026 (rating-to-billing leakage)"
+        where: { market_id: MK-06, month_no: { in: [19, 20, 21] } }
+        adjust: { leak_flag: { set: true, pct: 9 } }
+      - id: P-TEL-15
+        description: "Northeast subscribers sit on richer plans and add-ons, lifting monthly charges"
+        where: { region: Northeast }
+        adjust: { usage_factor: { multiply: 1.08 } }
+      - id: P-TEL-16
+        description: "Summer travel lifts retail roaming charges in July and August"
+        where: { month_no: { in: [7, 8, 19, 20] } }
+        adjust: { roam_flag: { set: true, pct: 6 } }
+      - id: P-TEL-17
+        description: "Essentials 15GB lines run into overage charges far more often"
+        where: { plan_id: PL-03 }
+        adjust: { overage_flag: { set: true, pct: 18 } }
+
+  - name: BSS_PAYMENT
+    system: BSS payments and collections
+    description: The payment or write-off settling each invoice, with method, days to pay and the tokenised card used
+    key: payment_id
+    rows: { S: 12000, M: 120000, L: 1200000 }
+    cdc_noise: { duplicate_updates_pct: 2, deletes_pct: 0.2, dirty_strings_pct: 3 }
+    columns:
+      - { name: payment_id, type: VARCHAR, gen: { seq: { prefix: "PAY", pad: 9 } } }
+      - { name: invoice_id, type: VARCHAR, gen: { fk: { table: BSS_INVOICE, column: invoice_id, dist: sequential } } }
+      - { name: subscriber_id, type: VARCHAR, gen: { derive_from: { fk_column: invoice_id, parent_column: subscriber_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: invoice_id, parent_column: region } } }
+      - { name: segment, type: VARCHAR, gen: { derive_from: { fk_column: invoice_id, parent_column: segment } } }
+      - { name: month_no, type: INTEGER, gen: { derive_from: { fk_column: invoice_id, parent_column: month_no } } }
+      - { name: pay_method, type: VARCHAR, gen: { choice: { values: [Autopay, Card, Cash, Bank transfer], weights: [66, 18, 8, 8] } } }
+      - { name: days_to_pay, type: INTEGER, gen: { lognormal: { mu: 2.45, sigma: 0.55, min: 0, max: 120 } } }
+      - { name: write_off_flag, type: BOOLEAN, gen: { bernoulli: 0.011 } }
+      - { name: card_number, type: VARCHAR, gen: { template: "4000-0000-{payment_id}" }, tags: [PCI], dirty: false }
+    plant:
+      - id: P-TEL-18
+        description: "Autopay invoices settle on the due date — far faster than card, cash or bank transfer"
+        where: { pay_method: Autopay }
+        adjust: { days_to_pay: { multiply: 0.45 } }
+      - id: P-TEL-19
+        description: "Cash payers carry most of the bad debt"
+        where: { pay_method: Cash }
+        adjust: { write_off_flag: { set: true, pct: 5 } }
+      - id: P-TEL-20
+        description: "Southeast write-offs rise through 2026 as a handset financing cohort defaults"
+        where: { region: Southeast, month_no: { in: [13, 14, 15, 16, 17, 18, 19, 20, 21] } }
+        adjust: { write_off_flag: { set: true, pct: 1.4 } }
+
+  - name: MED_USAGE_MONTHLY
+    system: CDR mediation (usage summarised per line-month)
+    description: Mediated data, voice and SMS usage per line-month, with the most-called number and serving cell (CPNI)
+    key: usage_id
+    rows: { S: 10000, M: 100000, L: 1000000 }
+    cdc_noise: { duplicate_updates_pct: 2, late_arrivals_pct: 2 }
+    columns:
+      - { name: usage_id, type: VARCHAR, gen: { seq: { prefix: "US", pad: 9 } } }
+      - { name: subscriber_id, type: VARCHAR, gen: { fk: { table: CRM_SUBSCRIBER, column: subscriber_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: subscriber_id, parent_column: region } } }
+      - { name: plan_id, type: VARCHAR, gen: { derive_from: { fk_column: subscriber_id, parent_column: plan_id } } }
+      - { name: month_no, type: INTEGER, gen: { choice: { values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21] } } }
+      - { name: data_gb, type: DOUBLE, gen: { lognormal: { mu: 2.5, sigma: 0.5, min: 0, max: 250, decimals: 2 } } }
+      - { name: voice_min, type: INTEGER, gen: { lognormal: { mu: 5.85, sigma: 0.45, min: 0, max: 6000 } } }
+      - { name: sms_count, type: INTEGER, gen: { poisson: { lambda: 55, min: 0 } } }
+      - { name: top_called_number, type: VARCHAR, gen: { phone: true }, tags: [CPNI] }
+      - { name: serving_site_id, type: VARCHAR, gen: { fk: { table: NET_CELL_SITE, column: site_id } }, tags: [CPNI] }
+    plant:
+      - id: P-TEL-21
+        description: "Unlimited Max lines use about 80% more data than the base"
+        where: { plan_id: PL-01 }
+        adjust: { data_gb: { multiply: 1.8 } }
+      - id: P-TEL-22
+        description: "Essentials 15GB lines throttle their data to stay inside the allowance"
+        where: { plan_id: PL-03 }
+        adjust: { data_gb: { multiply: 0.7 } }
+      - id: P-TEL-23
+        description: "5G handset upgrades lift data usage through 2026"
+        where: { month_no: { in: [13, 14, 15, 16, 17, 18] } }
+        adjust: { data_gb: { multiply: 1.06 } }
+      - id: P-TEL-24
+        description: "Q3 2026 5G handset launch season lifts data usage again"
+        where: { month_no: { in: [19, 20, 21] } }
+        adjust: { data_gb: { multiply: 1.14 } }
+
+  - name: ROAM_TAP_RECORD
+    system: Roaming clearing house (TAP files)
+    description: Roaming usage records — retail outbound (Altair subscribers abroad) and wholesale inbound (partner subscribers on Altair's network)
+    key: record_id
+    rows: { S: 3000, M: 30000, L: 300000 }
+    loaded_at_from: event_date
+    cdc_noise: { duplicate_updates_pct: 4, dirty_strings_pct: 3, late_arrivals_pct: 3 }
+    columns:
+      - { name: record_id, type: VARCHAR, gen: { seq: { prefix: "TAP", pad: 9 } } }
+      - { name: market_id, type: VARCHAR, gen: { fk: { table: MKT_MARKET, column: market_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: market_id, parent_column: region } } }
+      - { name: direction, type: VARCHAR, gen: { choice: { values: [Outbound retail, Inbound wholesale], weights: [58, 42] } } }
+      - { name: partner_zone, type: VARCHAR, gen: { choice: { values: [Zone 1 North America, Zone 2 Europe, Zone 3 Rest of world], weights: [55, 30, 15] } } }
+      - { name: partner_network, type: VARCHAR, gen: { company: true } }
+      - { name: event_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf, seasonality: { month: [0.8, 0.8, 0.9, 0.9, 1.0, 1.2, 1.6, 1.6, 1.1, 0.9, 0.8, 1.0] } } } }
+      - { name: data_mb, type: DOUBLE, gen: { lognormal: { mu: 6.0, sigma: 0.8, min: 1, max: 60000, decimals: 1 } } }
+      - { name: revenue_amount, type: DOUBLE, gen: { lognormal: { mu: 2.8, sigma: 0.7, min: 0.5, max: 2500, decimals: 2 } } }
+    plant:
+      - id: P-TEL-25
+        description: "Wholesale inbound settlements are larger per record than retail day passes"
+        where: { direction: Inbound wholesale }
+        adjust: { revenue_amount: { multiply: 1.5 } }
+      - id: P-TEL-26
+        description: "Rest-of-world roaming is billed at the highest day-pass rate"
+        where: { partner_zone: Zone 3 Rest of world }
+        adjust: { revenue_amount: { multiply: 2.0 } }
+
+  - name: NET_CELL_SITE
+    system: Network inventory
+    description: Cell sites with market, technology, site type, class, radio vendor and subscribers served
+    key: site_id
+    rows: { S: 240, M: 240, L: 240 }
+    cdc_noise: { duplicate_updates_pct: 2 }
+    columns:
+      - { name: site_id, type: VARCHAR, gen: { seq: { prefix: "CS-", pad: 4 } } }
+      - { name: market_id, type: VARCHAR, gen: { fk: { table: MKT_MARKET, column: market_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: market_id, parent_column: region } } }
+      - { name: technology, type: VARCHAR, gen: { choice: { values: [5G, LTE], weights: [45, 55] } } }
+      - { name: site_type, type: VARCHAR, gen: { choice: { values: [Macro, Small cell], weights: [78, 22] } } }
+      - { name: site_class, type: VARCHAR, gen: { choice: { values: [Urban, Suburban, Rural], weights: [40, 38, 22] } } }
+      - { name: vendor, type: VARCHAR, gen: { choice: { values: [Kestrel Networks, Norrland Radio], weights: [55, 45] } } }
+      - { name: subscribers_served, type: INTEGER, gen: { lognormal: { mu: 8.2, sigma: 0.5, min: 300, max: 40000 } } }
+      - { name: on_air_year, type: INTEGER, gen: { uniform: { min: 2008, max: 2025 } } }
+    plant:
+      - id: P-TEL-27
+        description: "CS-0042 is a congested LTE macro site in Pacific Rim (West)"
+        where: { site_id: CS-0042 }
+        adjust: { market_id: { set: MK-08 }, region: { set: West }, technology: { set: LTE }, site_type: { set: Macro }, site_class: { set: Urban } }
+
+  - name: OSS_CELL_KPI_DAILY
+    system: OSS performance management (daily counters)
+    description: Sampled site-days of call attempts, drops, setup failures, outage type, traffic and throughput drivers
+    key: kpi_id
+    rows: { S: 10000, M: 100000, L: 1000000 }
+    loaded_at_from: kpi_date
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 2, late_arrivals_pct: 1 }
+    columns:
+      - { name: kpi_id, type: VARCHAR, gen: { seq: { prefix: "CK", pad: 9 } } }
+      - { name: site_id, type: VARCHAR, gen: { fk: { table: NET_CELL_SITE, column: site_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: site_id, parent_column: region } } }
+      - { name: technology, type: VARCHAR, gen: { derive_from: { fk_column: site_id, parent_column: technology } } }
+      - { name: vendor, type: VARCHAR, gen: { derive_from: { fk_column: site_id, parent_column: vendor } } }
+      - { name: kpi_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: call_attempts, type: INTEGER, gen: { lognormal: { mu: 7.4, sigma: 0.35, min: 200, max: 20000 } } }
+      - { name: drop_rate, type: DOUBLE, gen: { normal: { mean: 0.0084, sd: 0.0018, min: 0.001, max: 0.05, decimals: 5 } } }
+      - { name: dropped_calls, type: INTEGER, gen: { formula: "round(call_attempts * drop_rate)" } }
+      - { name: setup_fail_rate, type: DOUBLE, gen: { normal: { mean: 0.0072, sd: 0.0015, min: 0.0005, max: 0.05, decimals: 5 } } }
+      - { name: setup_failures, type: INTEGER, gen: { formula: "round(call_attempts * setup_fail_rate)" } }
+      - { name: outage_type, type: VARCHAR, gen: { choice: { values: [None, Unplanned outage, Planned maintenance], weights: [96.6, 1.4, 2.0] } } }
+      - { name: maint_min, type: INTEGER, gen: { uniform: { min: 90, max: 300 } } }
+      - { name: outage_min, type: INTEGER, gen: { lognormal: { mu: 3.5, sigma: 0.8, min: 2, max: 1440 } } }
+      - { name: data_tb, type: DOUBLE, gen: { lognormal: { mu: 0.3, sigma: 0.4, min: 0.05, max: 20, decimals: 3 } } }
+      - { name: throughput_base, type: DOUBLE, gen: { normal: { mean: 92, sd: 20, min: 15, max: 400, decimals: 1 } } }
+    plant:
+      - id: P-TEL-28
+        description: "A Q2 2026 software load raised dropped calls network-wide until it was rolled back in late June"
+        window: { column: kpi_date, from: "2026-04-01", to: "2026-06-30" }
+        adjust: { dropped_calls: { multiply: 1.16 } }
+      - id: P-TEL-29
+        description: "CS-0042 drops four to five times the normal rate in September 2026 (congestion after a neighbour site fault)"
+        where: { site_id: CS-0042 }
+        window: { column: kpi_date, from: "2026-09-01", to: "2026-09-30" }
+        adjust: { dropped_calls: { multiply: 4.5 } }
+      - id: P-TEL-30
+        description: "Norrland Radio sites fail call setup more often"
+        where: { vendor: Norrland Radio }
+        adjust: { setup_failures: { multiply: 1.3 } }
+      - id: P-TEL-31
+        description: "July 2026 wildfires take West sites off air (unplanned outages)"
+        where: { region: West }
+        window: { column: kpi_date, from: "2026-07-01", to: "2026-07-31" }
+        adjust: { outage_type: { set: Unplanned outage, pct: 4 } }
+      - id: P-TEL-32
+        description: "The Q3 2026 Northeast capacity programme runs heavy planned maintenance in the approved window"
+        where: { region: Northeast }
+        window: { column: kpi_date, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { outage_type: { set: Planned maintenance, pct: 6 } }
+
+  - name: OSS_FAULT_TICKET
+    system: Service assurance (fault management)
+    description: Service-affecting network fault tickets with fault class, severity, restoration time and impact share
+    key: fault_id
+    rows: { S: 900, M: 9000, L: 90000 }
+    loaded_at_from: raised_ts
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.3, dirty_strings_pct: 4 }
+    columns:
+      - { name: fault_id, type: VARCHAR, gen: { seq: { prefix: "FT-", pad: 7 } } }
+      - { name: site_id, type: VARCHAR, gen: { fk: { table: NET_CELL_SITE, column: site_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: site_id, parent_column: region } } }
+      - { name: subscribers_served, type: INTEGER, gen: { derive_from: { fk_column: site_id, parent_column: subscribers_served } } }
+      - { name: raised_ts, type: TIMESTAMP, gen: { datetime: { from: "2025-01-01", to: asOf } } }
+      - { name: fault_class, type: VARCHAR, gen: { choice: { values: [Power, Backhaul, Radio equipment, Fiber cut, Software], weights: [26, 22, 24, 10, 18] } } }
+      - { name: severity, type: VARCHAR, gen: { choice: { values: [Critical, Major, Minor], weights: [15, 45, 40] } } }
+      - { name: restored_flag, type: BOOLEAN, gen: { bernoulli: 0.97 } }
+      - { name: restore_hours, type: DOUBLE, gen: { lognormal: { mu: 1.0, sigma: 0.65, min: 0.2, max: 96, decimals: 2 } } }
+      - { name: impact_share, type: DOUBLE, gen: { uniform: { min: 0.05, max: 0.5, decimals: 3 } } }
+    plant:
+      - id: P-TEL-33
+        description: "Fiber cuts take two to three times longer to restore (splicing crews and permits)"
+        where: { fault_class: Fiber cut }
+        adjust: { restore_hours: { multiply: 2.6 } }
+      - id: P-TEL-34
+        description: "A July 2026 heat wave causes a run of power faults in Central"
+        where: { region: Central }
+        window: { column: raised_ts, from: "2026-07-01", to: "2026-07-31" }
+        adjust: { fault_class: { set: Power, pct: 45 } }
+      - id: P-TEL-35
+        description: "Faults raised in the last fortnight of September 2026 are still being worked"
+        window: { column: raised_ts, from: "2026-09-16", to: "2026-09-30" }
+        adjust: { restored_flag: { set: false, pct: 40 } }
+
+  - name: FSM_TECHNICIAN
+    system: Field service management
+    description: Field technicians with home market and primary skill
+    key: tech_id
+    rows: { S: 320, M: 320, L: 320 }
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 3 }
+    columns:
+      - { name: tech_id, type: VARCHAR, gen: { seq: { prefix: "TC-", pad: 4 } } }
+      - { name: tech_name, type: VARCHAR, gen: { person: full }, tags: [PII] }
+      - { name: market_id, type: VARCHAR, gen: { fk: { table: MKT_MARKET, column: market_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: market_id, parent_column: region } } }
+      - { name: skill, type: VARCHAR, gen: { choice: { values: [Fiber, Wireless, Multi-skill], weights: [40, 30, 30] } } }
+      - { name: hire_year, type: INTEGER, gen: { uniform: { min: 2005, max: 2026 } } }
+
+  - name: FSM_WORK_ORDER
+    system: Field service management
+    description: Field work orders — installs, fiber activations, broadband repairs and network site repairs — with truck roll, first-time fix and appointment outcomes
+    key: wo_id
+    rows: { S: 2400, M: 24000, L: 240000 }
+    loaded_at_from: opened_ts
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.3, dirty_strings_pct: 3, late_arrivals_pct: 1 }
+    columns:
+      - { name: wo_id, type: VARCHAR, gen: { seq: { prefix: "WO-", pad: 8 } } }
+      - { name: tech_id, type: VARCHAR, gen: { fk: { table: FSM_TECHNICIAN, column: tech_id } } }
+      - { name: market_id, type: VARCHAR, gen: { derive_from: { fk_column: tech_id, parent_column: market_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: tech_id, parent_column: region } } }
+      - { name: skill, type: VARCHAR, gen: { derive_from: { fk_column: tech_id, parent_column: skill } } }
+      - { name: subscriber_id, type: VARCHAR, gen: { fk: { table: CRM_SUBSCRIBER, column: subscriber_id } } }
+      - { name: customer_phone, type: VARCHAR, gen: { derive_from: { fk_column: subscriber_id, parent_column: msisdn } }, tags: [PII] }
+      - { name: service_address, type: VARCHAR, gen: { derive_from: { fk_column: subscriber_id, parent_column: street_address } }, tags: [PII] }
+      - { name: wo_type, type: VARCHAR, gen: { choice: { values: [New install, Fiber activation, Broadband repair, Network site repair], weights: [24, 16, 38, 22] } } }
+      - { name: opened_ts, type: TIMESTAMP, gen: { datetime: { from: "2025-01-01", to: asOf, business_hours: true } } }
+      - { name: truck_roll_flag, type: BOOLEAN, gen: { bernoulli: 0.8 } }
+      - { name: ftf_flag, type: BOOLEAN, gen: { bernoulli: 0.84 } }
+      - { name: hours_to_resolve, type: DOUBLE, gen: { lognormal: { mu: 1.45, sigma: 0.5, min: 0.5, max: 72, decimals: 2 } } }
+      - { name: appointment_met_flag, type: BOOLEAN, gen: { bernoulli: 0.91 } }
+      - { name: activation_days, type: INTEGER, gen: { lognormal: { mu: 2.2, sigma: 0.4, min: 2, max: 90 } } }
+      - { name: status, type: VARCHAR, gen: { choice: { values: [Closed, Open], weights: [95, 5] } } }
+    plant:
+      - id: P-TEL-36
+        description: "Network site repairs are fixed first time less often (parts and access)"
+        where: { wo_type: Network site repair }
+        adjust: { ftf_flag: { set: false, pct: 12 } }
+      - id: P-TEL-37
+        description: "Multi-skilled technicians fix first time far more often"
+        where: { skill: Multi-skill }
+        adjust: { ftf_flag: { set: true, pct: 50 } }
+      - id: P-TEL-38
+        description: "A West permitting backlog stretches fiber activation lead times in Q3 2026"
+        where: { region: West, wo_type: Fiber activation }
+        window: { column: opened_ts, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { activation_days: { multiply: 1.8 }, appointment_met_flag: { set: false, pct: 20 } }
+      - id: P-TEL-39
+        description: "Remote diagnostics resolve a fifth of broadband repairs without a truck roll"
+        where: { wo_type: Broadband repair }
+        adjust: { truck_roll_flag: { set: false, pct: 20 } }
+      - id: P-TEL-40
+        description: "Work orders opened in the last ten days are still open"
+        window: { column: opened_ts, from: "2026-09-21", to: "2026-09-30" }
+        adjust: { status: { set: Open, pct: 60 } }
+
+  - name: CARE_CONTACT
+    system: Customer care (contact centre and digital care)
+    description: Care interactions by phone, chat, store and app, with reason, handle time and first-contact resolution
+    key: contact_id
+    rows: { S: 4500, M: 45000, L: 450000 }
+    loaded_at_from: contact_ts
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 4, late_arrivals_pct: 1 }
+    columns:
+      - { name: contact_id, type: VARCHAR, gen: { seq: { prefix: "CC", pad: 9 } } }
+      - { name: subscriber_id, type: VARCHAR, gen: { fk: { table: CRM_SUBSCRIBER, column: subscriber_id, dist: zipf, s: 0.3 } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: subscriber_id, parent_column: region } } }
+      - { name: contact_ts, type: TIMESTAMP, gen: { datetime: { from: "2025-07-01", to: asOf, business_hours: true } } }
+      - { name: channel, type: VARCHAR, gen: { choice: { values: [Phone, Chat, Store, App], weights: [44, 26, 14, 16] } } }
+      - { name: reason, type: VARCHAR, gen: { choice: { values: [Billing, Network & coverage, Device, Plan change, Cancellation request], weights: [34, 22, 16, 18, 10] } } }
+      - { name: handle_min, type: INTEGER, gen: { lognormal: { mu: 2.1, sigma: 0.5, min: 1, max: 120 } } }
+      - { name: resolved_first_contact, type: BOOLEAN, gen: { bernoulli: 0.74 } }
+      - { name: agent_notes, type: VARCHAR, gen: { template: "Contact {contact_id} from {subscriber_id} about {reason}" }, tags: [PII] }
+
+  - name: CX_NPS_SURVEY
+    system: Customer experience survey platform
+    description: NPS survey responses (0–10) at relationship and transactional touchpoints, with verbatims
+    key: response_id
+    rows: { S: 1800, M: 18000, L: 180000 }
+    loaded_at_from: survey_date
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 3 }
+    columns:
+      - { name: response_id, type: VARCHAR, gen: { seq: { prefix: "NPS", pad: 8 } } }
+      - { name: subscriber_id, type: VARCHAR, gen: { fk: { table: CRM_SUBSCRIBER, column: subscriber_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: subscriber_id, parent_column: region } } }
+      - { name: segment, type: VARCHAR, gen: { derive_from: { fk_column: subscriber_id, parent_column: segment } } }
+      - { name: survey_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: touchpoint, type: VARCHAR, gen: { choice: { values: [Relationship, Care interaction, Install, Repair, Store visit], weights: [40, 22, 12, 14, 12] } } }
+      - { name: score, type: INTEGER, gen: { choice: { values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], weights: [2, 1, 2, 3, 4, 6, 8, 14, 22, 20, 18] } } }
+      - { name: verbatim, type: VARCHAR, gen: { template: "Survey {response_id} from {subscriber_id} after {touchpoint}" }, tags: [PII] }
+    plant:
+      - id: P-TEL-41
+        description: "West sentiment drops in Q3 2026 with the port-out wave and slower fiber activations"
+        where: { region: West }
+        window: { column: survey_date, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { score: { set: 3, pct: 14 } }
+      - id: P-TEL-42
+        description: "Install surveys are the least positive touchpoint"
+        where: { touchpoint: Install }
+        adjust: { score: { set: 5, pct: 18 } }

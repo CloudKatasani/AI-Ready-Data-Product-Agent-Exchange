@@ -1,0 +1,74 @@
+name: FLEET_UTILISATION
+description: Tractor-day telematics — asset utilisation, empty miles, fuel economy and revenue per truck by region, terminal, equipment and model year
+tables:
+  - { alias: f, fqn: CONFORMED_GOLD.FCT_FLEET_DAY, pk: fleet_day_key }
+  - { alias: tr, fqn: CONFORMED_GOLD.DIM_TRACTOR, pk: tractor_key }
+  - { alias: t, fqn: CONFORMED_GOLD.DIM_TERMINAL, pk: terminal_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: f.tractor_key, to: tr.tractor_key }
+  - { from: f.terminal_key, to: t.terminal_key }
+  - { from: f.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: t.region, label: Region, synonyms: [operating region, territory, area], term: GT-TRN-REGION }
+  - { name: home_terminal, expr: t.terminal_id, label: Home terminal, synonyms: [domicile, home base], term: GT-TRN-TERMINAL }
+  - { name: equipment_type, expr: tr.equipment_type, label: Equipment type, synonyms: [equipment, trailer type, equipment types], term: GT-TRN-EQUIPMENT }
+  - { name: tractor_make, expr: tr.make, label: Tractor make, synonyms: [make, manufacturer, oem] }
+  - { name: model_year_band, expr: tr.model_year_band, label: Model year band, synonyms: [model year, tractor age, truck age] }
+  - { name: in_service, expr: f.in_service, label: In service, synonyms: [in service days, out of shop], term: GT-TRN-IN-SERVICE }
+time_dimensions:
+  - { name: activity_date, expr: d.date, default: true }
+facts:
+  - { name: available_hours, expr: f.available_hours, description: Hours the tractor was available for dispatch }
+  - { name: revenue_hours, expr: f.revenue_hours, description: Hours the tractor spent on revenue-earning work }
+  - { name: total_miles, expr: f.total_miles, description: Loaded plus empty miles }
+metrics:
+  - name: asset_utilisation_pct
+    label: Asset utilisation
+    expr: 100.0 * SUM(f.revenue_hours) / SUM(f.available_hours)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [utilisation, utilization, fleet utilisation, fleet utilization, asset utilization, tractor utilisation, truck utilization]
+    term: GT-TRN-UTILISATION
+    description: Revenue-earning hours as a share of hours tractors were available for dispatch, on in-service days unless asked
+    default_filters: [ { rule: BR-TRN-006 } ]
+    naive_expr: AVG(f.revenue_hours / f.available_hours) * 100.0
+  - name: empty_miles_pct
+    label: Empty miles
+    expr: 100.0 * SUM(f.empty_miles) / SUM(f.total_miles)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [empty mile percentage, deadhead, deadhead percentage, empty miles percentage, unloaded miles]
+    term: GT-TRN-EMPTY-MILES
+    description: Empty (deadhead) miles as a share of all miles driven
+  - name: fuel_mpg
+    label: Fuel economy
+    expr: SUM(f.total_miles) / SUM(f.fuel_gallons)
+    unit: mpg
+    decimals: 2
+    direction: higher_is_better
+    synonyms: [mpg, miles per gallon, fuel efficiency, fuel mileage]
+    term: GT-TRN-MPG
+    description: Miles driven per gallon of diesel, computed as total miles over total gallons
+    naive_expr: AVG(f.total_miles / NULLIF(f.fuel_gallons, 0))
+  - name: revenue_per_truck_week
+    label: Revenue per truck per week
+    expr: SUM(f.revenue_usd) / COUNT(DISTINCT f.tractor_key) / (COUNT(DISTINCT f.activity_date) / 7.0)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [revenue per tractor per week, weekly revenue per truck, revenue per truck, truck productivity]
+    term: GT-TRN-REV-TRUCK-WEEK
+    description: Linehaul revenue earned per active tractor per week in the period
+  - name: fleet_miles
+    label: Fleet miles
+    expr: SUM(f.total_miles)
+    unit: miles
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [total miles, miles driven, fleet mileage]
+    term: GT-TRN-EMPTY-MILES
+    description: Loaded plus empty miles driven by the fleet
+products: [DP-TRN-002]

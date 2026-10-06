@@ -1,0 +1,75 @@
+name: SUPPORT_EXPERIENCE
+description: Support tickets — first response, SLA attainment, resolution time and satisfaction (in certification)
+tables:
+  - { alias: t, fqn: CONFORMED_GOLD.FCT_SUPPORT_TICKET, pk: ticket_key }
+  - { alias: a, fqn: CONFORMED_GOLD.DIM_ACCOUNT, pk: account_key }
+  - { alias: c, fqn: CONFORMED_GOLD.DIM_CONTACT, pk: contact_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: t.account_key, to: a.account_key }
+  - { from: t.contact_key, to: c.contact_key }
+  - { from: t.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: a.region, label: Region, synonyms: [geo, sales region], term: GT-TCH-REGION }
+  - { name: segment, expr: a.segment, label: Segment, synonyms: [market segment, company size], term: GT-TCH-SEGMENT }
+  - { name: plan_tier, expr: a.plan_tier, label: Plan tier, synonyms: [plan, edition, pricing tier], term: GT-TCH-PLAN-TIER }
+  - { name: priority, expr: t.priority, label: Priority, synonyms: [severity, ticket priority], term: GT-TCH-TICKET-PRIORITY }
+  - { name: channel, expr: t.channel, label: Channel, synonyms: [support channel, contact channel] }
+  - { name: category, expr: t.category, label: Category, synonyms: [ticket category, issue type] }
+  - { name: ticket_status, expr: t.ticket_status, label: Ticket status, synonyms: [status] }
+  - { name: contact_role, expr: c.job_title, label: Contact role, synonyms: [requester role, job title] }
+  - { name: contact_email, expr: c.email, label: Contact email, synonyms: [requester email] }
+time_dimensions:
+  - { name: created_date, expr: d.date, default: true }
+facts:
+  - { name: first_response_minutes, expr: t.first_response_minutes }
+metrics:
+  - name: avg_first_response_hours
+    label: First response time
+    expr: AVG(t.first_response_minutes) / 60.0
+    unit: hours
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [time to first response, first reply time, frt]
+    term: GT-TCH-FIRST-RESPONSE
+    description: Mean hours from ticket creation to the first agent response
+    default_filters: [ { rule: BR-TCH-010 } ]
+  - name: sla_attainment_pct
+    label: SLA attainment
+    expr: 100.0 * AVG(CASE WHEN t.sla_met THEN 1.0 ELSE 0.0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [sla compliance, response sla, sla hit rate]
+    term: GT-TCH-SLA-ATTAINMENT
+    description: Share of tickets whose first response met the SLA target for their priority
+    default_filters: [ { rule: BR-TCH-010 } ]
+  - name: csat_pct
+    label: CSAT
+    expr: 100.0 * AVG(CASE WHEN t.csat_satisfied THEN 1.0 WHEN NOT t.csat_satisfied THEN 0.0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [customer satisfaction, satisfaction score, csat score]
+    term: GT-TCH-CSAT
+    description: Share of survey responses rating the support experience 4 or 5 out of 5
+  - name: tickets_opened
+    label: Tickets opened
+    expr: COUNT(*)
+    unit: tickets
+    decimals: 0
+    direction: neutral
+    synonyms: [ticket volume, support volume, number of tickets]
+    term: GT-TCH-SUPPORT-TICKET
+    description: Support tickets created in the period
+  - name: avg_resolution_hours
+    label: Resolution time
+    expr: AVG(t.resolution_hours)
+    unit: hours
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [time to resolve, time to resolution, mttr]
+    term: GT-TCH-RESOLUTION-TIME
+    description: Mean hours from ticket creation to resolution
+    default_filters: [ { rule: BR-TCH-010 } ]
+products: [DP-TCH-004]

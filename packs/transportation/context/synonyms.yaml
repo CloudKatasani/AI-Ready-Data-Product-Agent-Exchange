@@ -1,0 +1,95 @@
+# Meridian Freight Lines synonyms (synthetic): trucking jargon → governed metric, dimension, value or glossary term.
+
+# ── Shipments & service ──────────────────────────────────────────────────────────────────────────────
+- term: On-time delivery
+  synonyms: [on time, on-time %, otp, service performance, delivery reliability]
+  maps_to: { kind: metric, ref: on_time_delivery_pct }
+- term: Average dwell time
+  synonyms: [dock time, wait time, detention time, time at shipper]
+  maps_to: { kind: metric, ref: avg_dwell_hours }
+- term: Exception rate
+  synonyms: [service failures, damage and refusals, exception %]
+  maps_to: { kind: metric, ref: exception_rate_pct }
+- term: Loads delivered
+  synonyms: [load volume, number of shipments, loads moved]
+  maps_to: { kind: metric, ref: loads_delivered }
+- term: Origin terminal
+  synonyms: [origin, pickup terminal, origin facilities]
+  maps_to: { kind: dimension, ref: terminal }
+- term: Shipper segment
+  synonyms: [industry segment, customer vertical]
+  maps_to: { kind: dimension, ref: customer_segment }
+- term: Building materials
+  synonyms: [construction shippers, building supply]
+  maps_to: { kind: value, ref: customer_segment=Building materials }
+- term: Food & beverage
+  synonyms: [food shippers, grocery shippers, f&b]
+  maps_to: { kind: value, ref: customer_segment=Food & beverage }
+
+# ── Fleet & assets ───────────────────────────────────────────────────────────────────────────────────
+- term: Asset utilisation
+  synonyms: [tractor productivity hours, seat utilisation, how busy the trucks are]
+  maps_to: { kind: metric, ref: asset_utilisation_pct }
+- term: Empty miles
+  synonyms: [empty running, repositioning miles, non-revenue miles]
+  maps_to: { kind: metric, ref: empty_miles_pct }
+- term: Fuel economy
+  synonyms: [fuel burn, diesel efficiency]
+  maps_to: { kind: metric, ref: fuel_mpg }
+- term: Revenue per truck per week
+  synonyms: [weekly truck revenue, rev per truck]
+  maps_to: { kind: metric, ref: revenue_per_truck_week }
+- term: Equipment type
+  synonyms: [trailer pool, equipment class]
+  maps_to: { kind: dimension, ref: equipment_type }
+- term: Reefer
+  synonyms: [refrigerated, temperature controlled, reefers]
+  maps_to: { kind: value, ref: equipment_type=Reefer }
+- term: Flatbed
+  synonyms: [flatbeds, open deck]
+  maps_to: { kind: value, ref: equipment_type=Flatbed }
+
+# ── Drivers & safety ─────────────────────────────────────────────────────────────────────────────────
+- term: Safety incident rate
+  synonyms: [recordables per million miles, crash frequency, dot recordables]
+  maps_to: { kind: metric, ref: safety_incident_rate }
+- term: Driver turnover
+  synonyms: [driver retention problem, how many drivers we lose, quit rate]
+  maps_to: { kind: metric, ref: driver_turnover_pct }
+- term: Hours-of-service violations
+  synonyms: [hos breaches, logbook violations]
+  maps_to: { kind: metric, ref: hos_violations }
+- term: Driver type
+  synonyms: [employment type, company versus owner-operator]
+  maps_to: { kind: dimension, ref: driver_type }
+
+# ── Freight finance ──────────────────────────────────────────────────────────────────────────────────
+- term: Cost per mile
+  synonyms: [cost per total mile, all-in cost per mile, operating cpm]
+  maps_to: { kind: metric, ref: cost_per_mile }
+- term: Operating ratio
+  synonyms: [cost ratio, expense ratio]
+  maps_to: { kind: metric, ref: operating_ratio_pct }
+- term: Claims ratio
+  synonyms: [cargo claims, claims as a percent of revenue, claim losses]
+  maps_to: { kind: metric, ref: claims_ratio_pct }
+- term: Revenue per loaded mile
+  synonyms: [loaded rate, linehaul yield, rate per loaded mile]
+  maps_to: { kind: metric, ref: revenue_per_loaded_mile }
+
+# ── Shared ───────────────────────────────────────────────────────────────────────────────────────────
+- term: Region
+  synonyms: [territory, operating region, division, market area]
+  maps_to: { kind: dimension, ref: region }
+- term: Mountain
+  synonyms: [mountain region, rockies]
+  maps_to: { kind: value, ref: region=Mountain }
+- term: Northeast
+  synonyms: [north east, northeast region]
+  maps_to: { kind: value, ref: region=Northeast }
+- term: Southeast
+  synonyms: [south east, southeast region]
+  maps_to: { kind: value, ref: region=Southeast }
+- term: Customer-caused delay
+  synonyms: [shipper delays, consignee delays, customer fault]
+  maps_to: { kind: term, ref: GT-TRN-CUSTOMER-DELAY }

@@ -1,0 +1,196 @@
+# Altair Communications business rules (synthetic), ported from the AI-Ready telecom context (BR-001..BR-017)
+# and extended. Rules with an `apply` block are applied by the metric compiler as default filters; the rest are
+# definitions, thresholds and policies cited in answers.
+
+# ── Churn & retention ───────────────────────────────────────────────────────────────────────────────
+- id: BR-TEL-001
+  domain: Churn & retention
+  text: "Churn counts voluntary disconnects and port-outs; plan migrations are excluded. Monthly churn = (voluntary disconnects + port-outs) ÷ opening base, and a quarter's churn is the average monthly rate."
+  kind: definition
+  metric: churn_rate
+  source_doc: DOC-TEL-KPI-STANDARD
+
+- id: BR-TEL-002
+  domain: Churn & retention
+  text: "Involuntary disconnects (non-payment and fraud) are not churn; they are reported separately and do reduce net adds. Net adds = gross adds − all disconnects."
+  kind: definition
+  metric: net_adds
+  source_doc: DOC-TEL-KPI-STANDARD
+
+- id: BR-TEL-003
+  domain: Churn & retention
+  text: "Gross adds include port-ins and exclude reactivations within 30 days of a disconnect."
+  kind: definition
+  metric: gross_adds
+  source_doc: DOC-TEL-KPI-STANDARD
+
+- id: BR-TEL-004
+  domain: Churn & retention
+  text: "Port-out share is port-outs divided by churn (voluntary disconnects plus port-outs); a port-out needs a completed port request."
+  kind: definition
+  metric: port_out_share
+  source_doc: DOC-TEL-KPI-STANDARD
+
+- id: BR-TEL-005
+  domain: Churn & retention
+  text: "Postpaid churn above 1.2% in any month, or above 1.0% for a quarter, triggers a retention review with the regional commercial director."
+  kind: threshold
+  metric: postpaid_churn_rate
+  source_doc: DOC-TEL-KPI-STANDARD
+
+- id: BR-TEL-006
+  domain: Churn & retention
+  text: "A save offer counts as accepted only when the subscriber takes the offer and the line is still active 30 days later; save rate = accepted ÷ offers made."
+  kind: definition
+  metric: save_rate
+  source_doc: DOC-TEL-KPI-STANDARD
+
+- id: BR-TEL-012
+  domain: Churn & retention
+  text: "Churn metrics exclude inactive prepaid lines (no top-up in 60 days) unless explicitly requested — purging those lines is housekeeping, not a customer decision."
+  kind: filter
+  metric: churn_rate
+  source_doc: DOC-TEL-KPI-STANDARD
+  apply:
+    filter: { dimension: prepaid_inactive, op: "=", value: false }
+    unless_question_mentions: [including inactive prepaid, including inactive prepaid lines, including dormant prepaid, including inactive lines, including dormant lines, all lines]
+
+# ── Subscriber ──────────────────────────────────────────────────────────────────────────────────────
+- id: BR-TEL-007
+  domain: Subscriber
+  text: "An active subscriber has status Active and is not an inactive prepaid line; autopay, tenure, contract and churn-risk metrics are measured over active subscribers only."
+  kind: definition
+  metric: active_subscribers
+  source_doc: DOC-TEL-KPI-STANDARD
+
+- id: BR-TEL-008
+  domain: Subscriber
+  text: "High churn propensity means a model score of 70 or above; the score is refreshed monthly and is never used on its own to change a subscriber's price."
+  kind: threshold
+  metric: high_churn_risk_pct
+  source_doc: DOC-TEL-KPI-STANDARD
+
+- id: BR-TEL-009
+  domain: Subscriber
+  text: "A postpaid subscriber is out of contract when no device agreement or term commitment remains at the reporting date."
+  kind: definition
+  metric: out_of_contract_pct
+  source_doc: DOC-TEL-KPI-STANDARD
+
+- id: BR-TEL-010
+  domain: Subscriber
+  text: "Autopay rate is the share of active subscribers with a recurring automatic payment on file; one-off card payments are not autopay."
+  kind: definition
+  metric: autopay_rate
+  source_doc: DOC-TEL-CREDIT-COLLECTIONS
+
+# ── Billing & revenue ───────────────────────────────────────────────────────────────────────────────
+- id: BR-TEL-011
+  domain: Revenue
+  text: "ARPU is monthly service revenue per billed line. Device installments and one-off fees are excluded; overage and retail roaming are included."
+  kind: definition
+  metric: arpu
+  source_doc: DOC-TEL-KPI-STANDARD
+
+- id: BR-TEL-013
+  domain: Revenue
+  text: "Revenue leakage compares rated and billed amounts at invoice level; a market above 0.8% leakage in a quarter is escalated to revenue assurance."
+  kind: threshold
+  metric: revenue_leakage_pct
+  source_doc: DOC-TEL-REVENUE-ASSURANCE
+
+- id: BR-TEL-014
+  domain: Revenue
+  text: "Bad debt is billed charges (including device installments) written off as uncollectible, divided by total billed in the period."
+  kind: definition
+  metric: bad_debt_ratio
+  source_doc: DOC-TEL-CREDIT-COLLECTIONS
+
+- id: BR-TEL-016
+  domain: Usage
+  text: "Data usage and minutes of use per subscriber count mobile lines with usage in the month; broadband homes are excluded."
+  kind: definition
+  metric: data_gb_per_sub
+  source_doc: DOC-TEL-KPI-STANDARD
+
+- id: BR-TEL-020
+  domain: Revenue
+  text: "Roaming revenue counts retail outbound roaming billed to Altair subscribers; wholesale inbound settlements with partner networks are excluded unless explicitly requested."
+  kind: filter
+  metric: roaming_revenue
+  source_doc: DOC-TEL-ROAMING
+  apply:
+    filter: { dimension: direction, op: "=", value: Outbound retail }
+    unless_question_mentions: [including wholesale, including inbound, including wholesale inbound, wholesale inbound, inbound wholesale]
+
+# ── Network & service assurance ─────────────────────────────────────────────────────────────────────
+- id: BR-TEL-015
+  domain: Network
+  text: "Network availability excludes planned maintenance inside the approved 00:00–05:00 local window unless explicitly requested."
+  kind: filter
+  metric: network_availability
+  source_doc: DOC-TEL-NETWORK-SLA
+  apply:
+    filter: { dimension: planned_maintenance, op: "=", value: false }
+    unless_question_mentions: [including planned maintenance, including maintenance, including planned work, all downtime]
+
+- id: BR-TEL-017
+  domain: Network
+  text: "Dropped call rate uses network counters, not handset reports, and compares whole calendar quarters; a region above 0.85% for a quarter is reviewed by RAN engineering."
+  kind: threshold
+  metric: dropped_call_rate
+  source_doc: DOC-TEL-NETWORK-SLA
+
+- id: BR-TEL-018
+  domain: Network
+  text: "Every cell site must achieve at least 99.9% availability in each calendar month; a site below that breaches its SLA."
+  kind: threshold
+  metric: network_availability
+  source_doc: DOC-TEL-NETWORK-SLA
+
+- id: BR-TEL-019
+  domain: Service assurance
+  text: "Mean time to restore counts restored faults only, from fault raise to service restoration; the restoration SLA is four hours."
+  kind: definition
+  metric: mttr_hours
+  source_doc: DOC-TEL-NETWORK-SLA
+
+# ── Field operations ────────────────────────────────────────────────────────────────────────────────
+- id: BR-TEL-021
+  domain: Field operations
+  text: "A work order is a first-time fix when no repeat visit for the same fault happens within 30 days; only closed work orders count."
+  kind: definition
+  metric: first_time_fix_rate
+  source_doc: DOC-TEL-FIELD-SERVICE
+
+- id: BR-TEL-022
+  domain: Field operations
+  text: "Fiber activation lead time runs from order to service activation in calendar days, completed activations only; the target is ten days."
+  kind: definition
+  metric: fiber_activation_days
+  source_doc: DOC-TEL-FIELD-SERVICE
+
+# ── Governance policies ─────────────────────────────────────────────────────────────────────────────
+- id: BR-TEL-023
+  domain: Privacy
+  text: "MSISDNs, numbers called and serving cells are CPNI: they are shown only to roles cleared for CPNI; everyone else sees masked values or aggregates, in every surface including agent answers."
+  kind: policy
+  source_doc: DOC-TEL-CPNI
+
+- id: BR-TEL-024
+  domain: Governance
+  text: "Agents answer with aggregates only. Requests for an individual subscriber's usage, bills, contact details or location are declined and redirected to the care process."
+  kind: policy
+  source_doc: DOC-TEL-DATA-GOVERNANCE
+
+- id: BR-TEL-025
+  domain: Governance
+  text: "Agents never approve retention offers or billing credits, change rate plans, dispatch technicians or change network configuration; those decisions belong to named people."
+  kind: policy
+  source_doc: DOC-TEL-DATA-GOVERNANCE
+
+- id: BR-TEL-026
+  domain: Governance
+  text: "Regional personas see only rows for their own region; totals across other regions are not disclosed to them."
+  kind: policy
+  source_doc: DOC-TEL-DATA-GOVERNANCE

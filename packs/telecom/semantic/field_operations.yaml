@@ -1,0 +1,67 @@
+name: FIELD_OPERATIONS
+description: Field work orders — first-time fix, truck rolls, resolution hours, appointments kept and fiber activation lead time
+tables:
+  - { alias: w, fqn: CONFORMED_GOLD.FCT_WORK_ORDER, pk: work_order_key }
+  - { alias: m, fqn: CONFORMED_GOLD.DIM_MARKET, pk: market_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: w.market_key, to: m.market_key }
+  - { from: w.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: m.region, label: Region, synonyms: [territory, operating region], term: GT-TEL-REGION }
+  - { name: market, expr: m.market_name, label: Market, synonyms: [metro, market area], term: GT-TEL-MARKET }
+  - { name: wo_type, expr: w.wo_type, label: Work order type, synonyms: [job type, order type, visit type], term: GT-TEL-WORK-ORDER }
+  - { name: technician_skill, expr: w.technician_skill, label: Technician skill, synonyms: [skill, crew skill] }
+  - { name: customer_phone, expr: w.customer_phone, label: Customer contact phone, synonyms: [contact number, customer phone] }
+  - { name: service_address, expr: w.service_address, label: Service address, synonyms: [install address, customer address] }
+time_dimensions:
+  - { name: opened_date, expr: d.date, default: true }
+facts:
+  - { name: hours_to_resolve, expr: w.hours_to_resolve }
+metrics:
+  - name: first_time_fix_rate
+    label: First-time fix rate
+    expr: 100.0 * AVG(CASE WHEN w.closed THEN CASE WHEN w.first_time_fix THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [ftf, first time fix, fixed first time, first visit resolution]
+    term: GT-TEL-FTF
+    description: Share of closed work orders fixed on the first visit (no repeat visit for the same fault within 30 days)
+  - name: truck_rolls
+    label: Truck rolls
+    expr: SUM(CASE WHEN w.truck_roll THEN 1 ELSE 0 END)
+    unit: visits
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [technician dispatches, field visits, dispatches]
+    term: GT-TEL-TRUCK-ROLL
+    description: Work orders that needed a technician on site, in the governed work order sample
+  - name: avg_hours_to_resolve
+    label: Hours to resolve
+    expr: AVG(w.hours_to_resolve)
+    unit: hours
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [resolution time, job duration, time to complete]
+    term: GT-TEL-WORK-ORDER
+    description: Mean hours from opening to closing a work order, closed orders only
+  - name: appointment_met_rate
+    label: Appointments met
+    expr: 100.0 * AVG(CASE WHEN w.appointment_met THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [appointment keeping, on-time appointments, appointments kept]
+    term: GT-TEL-APPOINTMENT
+    description: Share of work orders where the technician arrived inside the committed appointment window
+  - name: fiber_activation_days
+    label: Fiber activation lead time
+    expr: AVG(w.activation_days)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [fibre activation lead time, activation lead time, time to activate fiber, order to activation]
+    term: GT-TEL-FIBER-ACTIVATION
+    description: Mean days from fiber order to service activation, completed activations only
+products: [DP-TEL-006]

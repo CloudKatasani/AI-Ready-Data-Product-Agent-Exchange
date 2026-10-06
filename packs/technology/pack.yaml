@@ -1,0 +1,51 @@
+id: technology
+name: Technology
+version: 1.0.0
+depth: standard
+code: TCH
+industry: B2B SaaS software vendor
+company:
+  name: Cobalt Cloud Software
+  short: CCS
+  hq: Harbourview
+  description: B2B SaaS vendor of a collaboration and workflow platform selling to 1,500 business accounts across four regions
+database: CCS_AI_PLATFORM
+locale: en-US
+currency: USD
+asOf: 2026-09-30
+seed: 20261010
+regions: [North America, EMEA, APAC, LATAM]
+overridable:
+  regions: true
+  companyName: true
+  terms: [plan tier, seat, workspace]
+home:
+  heroQuestion: "What is our ARR by region, excluding one-time services?"
+  heroAgent: AG-TCH-001
+  headlineKpis: [KPI-TCH-ARR, KPI-TCH-NRR, KPI-TCH-WIN-RATE, KPI-TCH-UPTIME]
+  theatreScenarios: [SC-TCH-001, SC-TCH-004, SC-TCH-013]
+icon: cloud
+hook: Subscription revenue, pipeline, product usage and support data — governed for AI
+# Standard packs carry 3 Certified + 1 In certification products and no In development product, so the
+# lifecycle story role points at the certification demo product (see the phase report / engine note).
+story_roles:
+  heroScenario: SC-TCH-001
+  certDemoProduct: DP-TCH-004
+  lifecycleDemoProduct: DP-TCH-004
+  incidentForStory: INC-TCH-LATE-FEED
+  knockoutKpi: KPI-TCH-ARR
+  qualityFixAgent: AG-TCH-002
+# Only words that are unmistakably this pack's content; generic SaaS English (account, plan, usage) stays out.
+lint_terms:
+  - Cobalt
+  - Harbourview
+  - SaaS
+  - ARR
+  - NRR
+  - GRR
+  - MRR
+  - churn
+  - DAU
+  - MAU
+  - CSAT
+  - bookings

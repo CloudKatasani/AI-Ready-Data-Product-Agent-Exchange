@@ -1,0 +1,82 @@
+# Load economics and cargo claim DQ rules.
+- id: DQ-TRN-035
+  object: CONFORMED_GOLD.FCT_LOAD
+  column: revenue
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every load has revenue (operating ratio, revenue per loaded mile, claims ratio).
+- id: DQ-TRN-036
+  object: CONFORMED_GOLD.FCT_LOAD
+  column: revenue
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: Load revenue is positive.
+- id: DQ-TRN-037
+  object: CONFORMED_GOLD.FCT_LOAD
+  column: total_cost
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every load has a total cost (cost per mile, operating ratio).
+- id: DQ-TRN-038
+  object: CONFORMED_GOLD.FCT_LOAD
+  column: total_cost
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: Load cost is positive.
+- id: DQ-TRN-039
+  object: CONFORMED_GOLD.FCT_LOAD
+  column: total_miles
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every load has total (loaded plus empty) miles.
+- id: DQ-TRN-040
+  object: CONFORMED_GOLD.FCT_LOAD
+  column: total_miles
+  dimension: validity
+  assertion: "min >= 1"
+  severity: high
+  alert_route: engineering
+  description: Every load moves at least one mile.
+- id: DQ-TRN-041
+  object: CONFORMED_GOLD.FCT_LOAD
+  column: claim_cost
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Claim cost is populated (zero when no claim) for the claims ratio.
+- id: DQ-TRN-042
+  object: CONFORMED_GOLD.FCT_LOAD
+  column: claim_cost
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Claim cost is never negative.
+- id: DQ-TRN-043
+  object: CURATED_SILVER.CARGO_CLAIM
+  column: claim_status
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Paid, Open, Denied]
+  severity: medium
+  alert_route: steward
+  description: Claim status conforms to Paid, Open and Denied.
+- id: DQ-TRN-044
+  object: CURATED_SILVER.CARGO_CLAIM
+  column: claim_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per cargo claim after deduplication.

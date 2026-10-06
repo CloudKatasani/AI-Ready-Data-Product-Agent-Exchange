@@ -1,0 +1,50 @@
+id: telecom
+name: Telecom
+version: 1.0.0
+depth: deep
+code: TEL
+industry: Mobile, broadband & enterprise connectivity operator
+company:
+  name: Altair Communications
+  short: ALT
+  hq: Harborview
+  description: Mobile, fiber broadband and enterprise connectivity operator serving 11.9M lines across four regions and eight markets
+database: ALT_AI_PLATFORM
+locale: en-US
+currency: USD
+asOf: 2026-09-30
+seed: 20261007
+regions: [Northeast, Southeast, Central, West]
+overridable:
+  regions: true
+  companyName: true
+  terms: [market, cell site, rate plan]
+home:
+  heroQuestion: "What was the churn rate by region last quarter, excluding inactive prepaid lines?"
+  heroAgent: AG-TEL-002
+  headlineKpis: [KPI-TEL-CHURN, KPI-TEL-ARPU, KPI-TEL-DCR, KPI-TEL-AVAIL]
+  theatreScenarios: [SC-TEL-001, SC-TEL-014, SC-TEL-021]
+icon: signal
+hook: Subscriber, network, billing and field data — governed for AI
+story_roles:
+  heroScenario: SC-TEL-001
+  certDemoProduct: DP-TEL-006
+  lifecycleDemoProduct: DP-TEL-007
+  incidentForStory: INC-TEL-LATE-FEED
+  knockoutKpi: KPI-TEL-CHURN
+  qualityFixAgent: AG-TEL-001
+lint_terms:
+  - Altair
+  - Harborview
+  - ARPU
+  - churn
+  - MSISDN
+  - roaming
+  - postpaid
+  - prepaid
+  - port-out
+  - net adds
+  - dropped call
+  - cell site
+  - truck roll
+  - fiber

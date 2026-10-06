@@ -1,0 +1,90 @@
+# Tractor and telematics (fleet day) DQ rules.
+- id: DQ-TRN-014
+  object: CONFORMED_GOLD.FCT_FLEET_DAY
+  column: available_hours
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every tractor-day has available hours (asset utilisation denominator).
+- id: DQ-TRN-015
+  object: CONFORMED_GOLD.FCT_FLEET_DAY
+  column: available_hours
+  dimension: validity
+  assertion: "max <= 24"
+  severity: high
+  alert_route: engineering
+  description: A tractor cannot be available for more than 24 hours in a day.
+- id: DQ-TRN-016
+  object: CONFORMED_GOLD.FCT_FLEET_DAY
+  column: revenue_hours
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every tractor-day has revenue hours (asset utilisation numerator).
+- id: DQ-TRN-017
+  object: CONFORMED_GOLD.FCT_FLEET_DAY
+  column: revenue_hours
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Revenue hours are never negative.
+- id: DQ-TRN-018
+  object: CONFORMED_GOLD.FCT_FLEET_DAY
+  column: in_service
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every tractor-day says whether the tractor was in service or in the shop (BR-TRN-006).
+- id: DQ-TRN-019
+  object: CONFORMED_GOLD.FCT_FLEET_DAY
+  column: fuel_gallons
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: medium
+  alert_route: engineering
+  description: Fuel burned is never negative.
+- id: DQ-TRN-020
+  object: CONFORMED_GOLD.FCT_FLEET_DAY
+  column: fleet_day_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per telematics record after deduplication.
+- id: DQ-TRN-021
+  object: CONFORMED_GOLD.FCT_FLEET_DAY
+  column: activity_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: Telematics days are no more than one day behind the reporting date.
+- id: DQ-TRN-022
+  object: CURATED_SILVER.FLEET_DAY
+  dimension: timeliness
+  assertion: "freshness_min <= 1440"
+  severity: medium
+  alert_route: engineering
+  description: The curated telematics days have been refreshed within the last day.
+- id: DQ-TRN-023
+  object: CONFORMED_GOLD.DIM_TRACTOR
+  column: equipment_type
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Dry van, Reefer, Flatbed]
+  severity: medium
+  alert_route: steward
+  description: Equipment types conform to Dry van, Reefer and Flatbed.
+- id: DQ-TRN-024
+  object: CONFORMED_GOLD.DIM_TRACTOR
+  column: tractor_id
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^TR-[0-9]{4}$"
+  severity: low
+  alert_route: engineering
+  description: Tractor ids follow the asset register numbering convention.

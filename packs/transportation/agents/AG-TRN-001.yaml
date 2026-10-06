@@ -1,0 +1,33 @@
+id: AG-TRN-001
+name: Delivery SLA Sentinel
+domain: Shipments & Service
+status: PRODUCTION
+owner: transportation:ops-dpo
+on_call: Fleet Operations Data Ops
+avatar: { icon: clock, hue: 200 }
+capability: "Answers questions on on-time delivery, dwell, service exceptions and load volume, and on freight revenue, cost per mile, operating ratio and the claims ratio."
+personas_served: [VP Operations, Regional Operations Manager, Customer Service Lead, Chief Financial Officer]
+out_of_scope: ["dispatch or appointment changes", "carrier contracting or rate negotiation", "approving or settling a cargo claim", "individual shipment lookups"]
+products:
+  - { id: DP-TRN-001, columns: "*" }
+  - { id: DP-TRN-004, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [DELIVERY_SERVICE, FREIGHT_ECONOMICS], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-TRN-SERVICE-STANDARD, DOC-TRN-FREIGHT-FINANCE, DOC-TRN-DATA-GOVERNANCE] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+  - { tool: request_access_link }
+kpi_coverage:
+  - { kpi: KPI-TRN-OTD, grains: [month, quarter], slices: [region, terminal, customer_segment, service_level, equipment_type], depth: rank_drivers }
+  - { kpi: KPI-TRN-DWELL, grains: [month, quarter], slices: [region, terminal, customer_segment, load_type], depth: explain }
+  - { kpi: KPI-TRN-EXCEPTION, grains: [month, quarter], slices: [region, terminal, customer_segment, exception_type], depth: rank_drivers }
+  - { kpi: KPI-TRN-LOADS, grains: [month, quarter], slices: [region, terminal, customer_segment, service_level], depth: value }
+  - { kpi: KPI-TRN-OR, grains: [month, quarter], slices: [region, shipper_segment, equipment], depth: explain }
+  - { kpi: KPI-TRN-CPM, grains: [month, quarter], slices: [region, equipment, shipper_segment], depth: trend }
+  - { kpi: KPI-TRN-RPM, grains: [month, quarter], slices: [region, shipper_segment, contract_type], depth: explain }
+  - { kpi: KPI-TRN-CLAIMS, grains: [month, quarter], slices: [region, shipper_segment, equipment], depth: rank_drivers }
+instructions: [INS-TRN-001-P, INS-TRN-001-R, INS-TRN-001-G, INS-TRN-001-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 6000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-TRN-001, SC-TRN-002, SC-TRN-003, SC-TRN-004, SC-TRN-005, SC-TRN-006, SC-TRN-007, SC-TRN-008, SC-TRN-009]

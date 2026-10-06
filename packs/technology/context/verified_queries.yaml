@@ -1,0 +1,272 @@
+# Verified queries — curated question -> MetricQuery pairs, converted from the Marketplace TCH demo exchanges.
+# Every query compiles through compileMetricQuery() on the named view. The three certified views carry ≥ 10 active
+# entries each (certification check 4). SUPPORT_EXPERIENCE deliberately has only 7
+# active entries and no active first-response query: the DP-TCH-004 certification story (gate 4) activates
+# VQ-TCH-028..030 via FIX-1.
+
+# ---------------------------------------------------------------- REVENUE_RETENTION (AG-TCH-001) — 10 active
+- id: VQ-TCH-001
+  question: "What was ARR at the end of last month?"
+  query: { view: REVENUE_RETENTION, metrics: [arr], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-TCH-001
+  verified_by: technology:revops-analyst
+  verified_at: 2026-06-08
+- id: VQ-TCH-002
+  question: "ARR by segment last month"
+  query: { view: REVENUE_RETENTION, metrics: [arr], dimensions: [segment], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: arr, dir: desc }] }
+  agent: AG-TCH-001
+  verified_by: technology:revops-analyst
+  verified_at: 2026-06-08
+- id: VQ-TCH-003
+  question: "How has ARR trended month by month over the last 12 months?"
+  query: { view: REVENUE_RETENTION, metrics: [arr], timeGrain: month, timeRange: { last: { n: 12, unit: month } }, analysis: trend }
+  agent: AG-TCH-001
+  verified_by: technology:revops-analyst
+  verified_at: 2026-06-15
+- id: VQ-TCH-004
+  question: "What was net revenue retention last quarter?"
+  query: { view: REVENUE_RETENTION, metrics: [nrr_pct], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-TCH-001
+  verified_by: technology:revenue-steward
+  verified_at: 2026-06-15
+- id: VQ-TCH-005
+  question: "Net revenue retention by plan tier last quarter"
+  query: { view: REVENUE_RETENTION, metrics: [nrr_pct], dimensions: [plan_tier], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: nrr_pct, dir: desc }] }
+  agent: AG-TCH-001
+  verified_by: technology:revops-analyst
+  verified_at: 2026-06-22
+- id: VQ-TCH-006
+  question: "What was gross revenue retention last quarter?"
+  query: { view: REVENUE_RETENTION, metrics: [grr_pct], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-TCH-001
+  verified_by: technology:revenue-steward
+  verified_at: 2026-06-22
+- id: VQ-TCH-007
+  question: "Logo churn by region last quarter"
+  query: { view: REVENUE_RETENTION, metrics: [logo_churn_pct], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: logo_churn_pct, dir: desc }] }
+  agent: AG-TCH-001
+  verified_by: technology:revops-analyst
+  verified_at: 2026-06-29
+- id: VQ-TCH-008
+  question: "Expansion ARR by month this year"
+  query: { view: REVENUE_RETENTION, metrics: [expansion_arr], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TCH-001
+  verified_by: technology:revops-analyst
+  verified_at: 2026-07-06
+- id: VQ-TCH-009
+  question: "How many paying customers did we have at the end of last month?"
+  query: { view: REVENUE_RETENTION, metrics: [paying_customers], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-TCH-001
+  verified_by: technology:revops-analyst
+  verified_at: 2026-07-06
+- id: VQ-TCH-031
+  question: "Gross revenue retention by segment last quarter"
+  query: { view: REVENUE_RETENTION, metrics: [grr_pct], dimensions: [segment], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: grr_pct, dir: asc }] }
+  agent: AG-TCH-001
+  verified_by: technology:revenue-steward
+  verified_at: 2026-07-27
+
+# ---------------------------------------------------------------- GTM_PIPELINE (AG-TCH-001) — 10 active
+- id: VQ-TCH-010
+  question: "Win rate by lead source this year"
+  query: { view: GTM_PIPELINE, metrics: [win_rate_pct], dimensions: [lead_source], timeRange: { ytd: true }, orderBy: [{ field: win_rate_pct, dir: desc }] }
+  agent: AG-TCH-001
+  verified_by: technology:revops-analyst
+  verified_at: 2026-07-13
+- id: VQ-TCH-011
+  question: "New bookings by region last quarter"
+  query: { view: GTM_PIPELINE, metrics: [bookings_usd], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: bookings_usd, dir: desc }] }
+  agent: AG-TCH-001
+  verified_by: technology:revops-analyst
+  verified_at: 2026-07-13
+- id: VQ-TCH-012
+  question: "Average deal size by segment last quarter"
+  query: { view: GTM_PIPELINE, metrics: [avg_deal_size], dimensions: [segment], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_deal_size, dir: desc }] }
+  agent: AG-TCH-001
+  verified_by: technology:revops-analyst
+  verified_at: 2026-07-20
+- id: VQ-TCH-013
+  question: "Average sales cycle by segment this year"
+  query: { view: GTM_PIPELINE, metrics: [sales_cycle_days], dimensions: [segment], timeRange: { ytd: true }, orderBy: [{ field: sales_cycle_days, dir: desc }] }
+  agent: AG-TCH-001
+  verified_by: technology:revops-analyst
+  verified_at: 2026-07-20
+- id: VQ-TCH-014
+  question: "Open pipeline closing next quarter by region"
+  query: { view: GTM_PIPELINE, metrics: [open_pipeline_usd], dimensions: [region], timeRange: { from: "2026-10-01", to: "2026-12-31" }, orderBy: [{ field: open_pipeline_usd, dir: desc }] }
+  agent: AG-TCH-001
+  verified_by: technology:revops-analyst
+  verified_at: 2026-07-27
+- id: VQ-TCH-032
+  question: "What was our win rate last quarter?"
+  query: { view: GTM_PIPELINE, metrics: [win_rate_pct], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-TCH-001
+  verified_by: technology:revops-analyst
+  verified_at: 2026-07-27
+- id: VQ-TCH-033
+  question: "Win rate by region last quarter"
+  query: { view: GTM_PIPELINE, metrics: [win_rate_pct], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: win_rate_pct, dir: asc }] }
+  agent: AG-TCH-001
+  verified_by: technology:revops-analyst
+  verified_at: 2026-08-03
+- id: VQ-TCH-034
+  question: "New bookings by month this year"
+  query: { view: GTM_PIPELINE, metrics: [bookings_usd], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TCH-001
+  verified_by: technology:revops-analyst
+  verified_at: 2026-08-03
+- id: VQ-TCH-035
+  question: "Opportunities won by lead source last quarter"
+  query: { view: GTM_PIPELINE, metrics: [opportunities_won], dimensions: [lead_source], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: opportunities_won, dir: desc }] }
+  agent: AG-TCH-001
+  verified_by: technology:revops-analyst
+  verified_at: 2026-08-10
+- id: VQ-TCH-036
+  question: "Open pipeline closing next quarter by stage"
+  query: { view: GTM_PIPELINE, metrics: [open_pipeline_usd], dimensions: [stage], timeRange: { from: "2026-10-01", to: "2026-12-31" }, orderBy: [{ field: open_pipeline_usd, dir: desc }] }
+  agent: AG-TCH-001
+  verified_by: technology:revops-analyst
+  verified_at: 2026-08-10
+
+# ---------------------------------------------------------------- PRODUCT_USAGE (AG-TCH-002) — 10 active
+- id: VQ-TCH-015
+  question: "Average daily active users last quarter"
+  query: { view: PRODUCT_USAGE, metrics: [avg_daily_active_users], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-TCH-002
+  verified_by: technology:data-product-owner
+  verified_at: 2026-08-03
+- id: VQ-TCH-016
+  question: "DAU/MAU stickiness by segment last quarter"
+  query: { view: PRODUCT_USAGE, metrics: [stickiness_pct], dimensions: [segment], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: stickiness_pct, dir: desc }] }
+  agent: AG-TCH-002
+  verified_by: technology:data-product-owner
+  verified_at: 2026-08-03
+- id: VQ-TCH-017
+  question: "Seat utilisation by plan tier last month"
+  query: { view: PRODUCT_USAGE, metrics: [seat_utilisation_pct], dimensions: [plan_tier], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: seat_utilisation_pct, dir: desc }] }
+  agent: AG-TCH-002
+  verified_by: technology:data-product-owner
+  verified_at: 2026-08-10
+- id: VQ-TCH-018
+  question: "Uptime by region last quarter"
+  query: { view: PRODUCT_USAGE, metrics: [uptime_pct], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: uptime_pct, dir: asc }] }
+  agent: AG-TCH-002
+  verified_by: technology:data-product-owner
+  verified_at: 2026-08-17
+- id: VQ-TCH-037
+  question: "Daily active users by plan tier last quarter"
+  query: { view: PRODUCT_USAGE, metrics: [avg_daily_active_users], dimensions: [plan_tier], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_daily_active_users, dir: desc }] }
+  agent: AG-TCH-002
+  verified_by: technology:data-product-owner
+  verified_at: 2026-08-31
+- id: VQ-TCH-038
+  question: "DAU/MAU stickiness by month this year"
+  query: { view: PRODUCT_USAGE, metrics: [stickiness_pct], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TCH-002
+  verified_by: technology:data-product-owner
+  verified_at: 2026-08-31
+- id: VQ-TCH-039
+  question: "Uptime by day last month"
+  query: { view: PRODUCT_USAGE, metrics: [uptime_pct], timeGrain: day, timeRange: { last: { n: 1, unit: month } }, analysis: trend }
+  agent: AG-TCH-002
+  verified_by: technology:data-product-owner
+  verified_at: 2026-09-07
+- id: VQ-TCH-040
+  question: "Seat utilisation by segment last quarter"
+  query: { view: PRODUCT_USAGE, metrics: [seat_utilisation_pct], dimensions: [segment], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: seat_utilisation_pct, dir: asc }] }
+  agent: AG-TCH-002
+  verified_by: technology:data-product-owner
+  verified_at: 2026-09-07
+- id: VQ-TCH-041
+  question: "What was uptime last month?"
+  query: { view: PRODUCT_USAGE, metrics: [uptime_pct], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-TCH-002
+  verified_by: technology:data-product-owner
+  verified_at: 2026-09-14
+- id: VQ-TCH-042
+  question: "Daily active users by industry last month"
+  query: { view: PRODUCT_USAGE, metrics: [avg_daily_active_users], dimensions: [industry], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: avg_daily_active_users, dir: desc }] }
+  agent: AG-TCH-002
+  verified_by: technology:data-product-owner
+  verified_at: 2026-09-14
+
+# ---------------------------------------------------------------- FEATURE_ADOPTION (AG-TCH-002)
+- id: VQ-TCH-019
+  question: "Feature adoption by plan tier"
+  query: { view: FEATURE_ADOPTION, metrics: [feature_adoption_pct], dimensions: [plan_tier], orderBy: [{ field: feature_adoption_pct, dir: desc }] }
+  agent: AG-TCH-002
+  verified_by: technology:data-product-owner
+  verified_at: 2026-08-24
+- id: VQ-TCH-020
+  question: "Feature adoption by feature category"
+  query: { view: FEATURE_ADOPTION, metrics: [feature_adoption_pct], dimensions: [feature_category], orderBy: [{ field: feature_adoption_pct, dir: desc }] }
+  agent: AG-TCH-002
+  verified_by: technology:data-product-owner
+  verified_at: 2026-08-24
+
+# ---------------------------------------------------------------- SUPPORT_EXPERIENCE (AG-TCH-002) — 7 active of the 10 certification needs
+- id: VQ-TCH-021
+  question: "What was SLA attainment last quarter?"
+  query: { view: SUPPORT_EXPERIENCE, metrics: [sla_attainment_pct], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-TCH-002
+  verified_by: technology:revenue-steward
+  verified_at: 2026-09-01
+- id: VQ-TCH-022
+  question: "SLA attainment by priority last quarter"
+  query: { view: SUPPORT_EXPERIENCE, metrics: [sla_attainment_pct], dimensions: [priority], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: sla_attainment_pct, dir: asc }] }
+  agent: AG-TCH-002
+  verified_by: technology:revenue-steward
+  verified_at: 2026-09-01
+- id: VQ-TCH-023
+  question: "SLA attainment by region last quarter"
+  query: { view: SUPPORT_EXPERIENCE, metrics: [sla_attainment_pct], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: sla_attainment_pct, dir: asc }] }
+  agent: AG-TCH-002
+  verified_by: technology:revenue-steward
+  verified_at: 2026-09-03
+- id: VQ-TCH-024
+  question: "CSAT by channel last quarter"
+  query: { view: SUPPORT_EXPERIENCE, metrics: [csat_pct], dimensions: [channel], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: csat_pct, dir: desc }] }
+  agent: AG-TCH-002
+  verified_by: technology:revenue-steward
+  verified_at: 2026-09-03
+- id: VQ-TCH-025
+  question: "CSAT trend by month this year"
+  query: { view: SUPPORT_EXPERIENCE, metrics: [csat_pct], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TCH-002
+  verified_by: technology:revenue-steward
+  verified_at: 2026-09-08
+- id: VQ-TCH-026
+  question: "Tickets opened by category last month"
+  query: { view: SUPPORT_EXPERIENCE, metrics: [tickets_opened], dimensions: [category], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: tickets_opened, dir: desc }] }
+  agent: AG-TCH-002
+  verified_by: technology:revenue-steward
+  verified_at: 2026-09-08
+- id: VQ-TCH-027
+  question: "Average resolution time by priority last quarter"
+  query: { view: SUPPORT_EXPERIENCE, metrics: [avg_resolution_hours], dimensions: [priority], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_resolution_hours, dir: desc }] }
+  agent: AG-TCH-002
+  verified_by: technology:revenue-steward
+  verified_at: 2026-09-10
+
+# ---------------------------------------------------------------- SUPPORT_EXPERIENCE first response — pending certification FIX-1 (DP-TCH-004)
+- id: VQ-TCH-028
+  question: "What is our average first response time last quarter?"
+  query: { view: SUPPORT_EXPERIENCE, metrics: [avg_first_response_hours], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-TCH-002
+  verified_by: technology:revenue-steward
+  verified_at: 2026-09-22
+  status: pending_fix
+- id: VQ-TCH-029
+  question: "First response time trend by month this year"
+  query: { view: SUPPORT_EXPERIENCE, metrics: [avg_first_response_hours], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TCH-002
+  verified_by: technology:revenue-steward
+  verified_at: 2026-09-22
+  status: pending_fix
+- id: VQ-TCH-030
+  question: "First response time by priority last quarter"
+  query: { view: SUPPORT_EXPERIENCE, metrics: [avg_first_response_hours], dimensions: [priority], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_first_response_hours, dir: desc }] }
+  agent: AG-TCH-002
+  verified_by: technology:revenue-steward
+  verified_at: 2026-09-22
+  status: pending_fix

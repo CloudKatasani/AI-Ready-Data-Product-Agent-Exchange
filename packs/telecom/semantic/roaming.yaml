@@ -1,0 +1,41 @@
+name: ROAMING
+description: Roaming revenue and data — retail outbound for Altair subscribers abroad and wholesale inbound partner traffic
+tables:
+  - { alias: r, fqn: CONFORMED_GOLD.FCT_ROAMING, pk: roaming_key }
+  - { alias: m, fqn: CONFORMED_GOLD.DIM_MARKET, pk: market_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: r.market_key, to: m.market_key }
+  - { from: r.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: m.region, label: Region, synonyms: [territory, operating region], term: GT-TEL-REGION }
+  - { name: market, expr: m.market_name, label: Market, synonyms: [metro, market area], term: GT-TEL-MARKET }
+  - { name: direction, expr: r.direction, label: Roaming direction, synonyms: [roaming type, inbound or outbound], term: GT-TEL-ROAMING-REVENUE }
+  - { name: partner_zone, expr: r.partner_zone, label: Roaming zone, synonyms: [zone, destination zone, travel zone] }
+  - { name: partner_network, expr: r.partner_network, label: Partner network, synonyms: [roaming partner, partner operator] }
+time_dimensions:
+  - { name: event_date, expr: d.date, default: true }
+facts:
+  - { name: revenue_amount, expr: r.revenue_amount }
+metrics:
+  - name: roaming_revenue
+    label: Roaming revenue
+    expr: SUM(r.revenue_amount)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [roaming revenues, roaming income, travel pass revenue]
+    term: GT-TEL-ROAMING-REVENUE
+    description: Retail outbound roaming revenue billed to Altair subscribers (wholesale inbound excluded by default)
+    default_filters: [ { rule: BR-TEL-020 } ]
+  - name: roaming_data_gb
+    label: Roaming data
+    expr: SUM(r.data_mb) / 1024.0
+    unit: GB
+    decimals: 0
+    direction: neutral
+    synonyms: [roaming data volume, roaming traffic, data used abroad]
+    term: GT-TEL-ROAMING-REVENUE
+    description: Data carried on roaming records in gigabytes (wholesale inbound excluded by default)
+    default_filters: [ { rule: BR-TEL-020 } ]
+products: [DP-TEL-003]

@@ -1,0 +1,326 @@
+# Scripted scenarios for Cobalt Cloud Software — converted from the Marketplace AG-TCH-001/002/003 demo exchanges
+# and extended to the revenue and support domains. Numbers come from golden.json; `expect` holds shape assertions.
+
+# ================================================================ AG-TCH-001 Revenue Retention Analyst
+- id: SC-TCH-001
+  agent: AG-TCH-001
+  pattern: 3
+  question: "What is our ARR by region, excluding one-time services?"
+  paraphrases:
+    - "What is our ARR by region?"
+    - "annual recurring revenue per geo"
+    - "arr split by sales region last month"
+  kind: answer
+  query: { view: REVENUE_RETENTION, metrics: [arr], dimensions: [region], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: arr, dir: desc }] }
+  answer:
+    headline: "{{top.region}} carries the most ARR at {{top.arr}} at the end of last month."
+    narrative: "One-time professional services are excluded (BR-TCH-001). {{bottom.region}} is smallest at {{bottom.arr}}; total ARR across {{rows}} regions is {{total.arr}}."
+    chart: bar
+  followups: ["Include one-time services", "Net revenue retention by region", "ARR trend over the last 12 months"]
+  expect: { rows: 4, top: { region: North America }, rules: [BR-TCH-001] }
+  personas_expect: { A: { rowFiltered: true }, E: { kind: answer } }
+
+- id: SC-TCH-002
+  agent: AG-TCH-001
+  pattern: 10
+  question: "What is our ARR by region including one-time services?"
+  paraphrases:
+    - "ARR by region including professional services"
+    - "arr per geo including one-time implementation revenue"
+  kind: answer
+  query: { view: REVENUE_RETENTION, metrics: [arr], dimensions: [region], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: arr, dir: desc }] }
+  answer:
+    headline: "Including one-time services, {{top.region}} shows {{top.arr}} — this is not the governed ARR figure."
+    narrative: "You asked to include one-time services, so the exclusion in BR-TCH-001 is not applied. Large Q3 implementation projects inflate every region; compare with the standard view that excludes them."
+    chart: bar
+  followups: ["Exclude one-time services", "How much services revenue did we sell last quarter?"]
+  expect: { rows: 4, top: { region: North America } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TCH-003
+  agent: AG-TCH-001
+  pattern: 9
+  question: "How does net revenue retention compare across segments last quarter?"
+  paraphrases:
+    - "NRR by segment last quarter"
+    - "compare net dollar retention for enterprise, mid-market and smb"
+  kind: answer
+  query: { view: REVENUE_RETENTION, metrics: [nrr_pct, grr_pct], dimensions: [segment], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: nrr_pct, dir: desc }] }
+  answer:
+    headline: "{{top.segment}} leads net revenue retention at {{top.nrr_pct}}% last quarter."
+    narrative: "{{bottom.segment}} trails at {{bottom.nrr_pct}}% net and {{bottom.grr_pct}}% gross retention. Retention uses the trailing twelve-month cohort of paying accounts, subscription revenue only (BR-TCH-001)."
+    chart: bar
+  followups: ["Logo churn by segment", "Expansion ARR by segment last quarter"]
+  expect: { rows: 3, top: { segment: Enterprise }, rules: [BR-TCH-001] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TCH-004
+  agent: AG-TCH-001
+  pattern: 4
+  question: "How has net revenue retention trended month by month this year?"
+  paraphrases:
+    - "Monthly NRR year to date"
+    - "nrr trend ytd by month"
+  kind: answer
+  query: { view: REVENUE_RETENTION, metrics: [nrr_pct], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "Net revenue retention is {{total.nrr_pct}}% year to date — {{vsTarget.top}} target."
+    narrative: "Trailing twelve-month NRR at each of the {{rows}} month ends this year, subscription revenue only (BR-TCH-001). It moved {{delta.nrr_pct}} points from January to September."
+    chart: line
+  followups: ["NRR by segment last quarter", "Gross revenue retention last quarter"]
+  expect: { rows: 9, rules: [BR-TCH-001] }
+
+- id: SC-TCH-005
+  agent: AG-TCH-001
+  pattern: 2
+  question: "Is logo churn within our target for the last quarter?"
+  paraphrases:
+    - "Are we within the logo churn target last quarter?"
+    - "logo churn vs target last qtr"
+  kind: answer
+  query: { view: REVENUE_RETENTION, metrics: [logo_churn_pct], timeRange: { last: { n: 1, unit: quarter } }, analysis: compare_target }
+  answer:
+    headline: "Logo churn was {{top.logo_churn_pct}}% last quarter — {{vsTarget.top}} the target band."
+    narrative: "Share of accounts paying twelve months earlier that now pay nothing. Seat reductions count as contraction, not churn (BR-TCH-004)."
+    chart: kpi
+  followups: ["Logo churn by region", "Which segments churn most?"]
+  expect: { rows: 1 }
+
+- id: SC-TCH-006
+  agent: AG-TCH-001
+  pattern: 12
+  question: "Which five sales reps booked the most new ARR last quarter?"
+  paraphrases:
+    - "Top 5 account executives by bookings last quarter"
+    - "best sellers by new bookings last qtr"
+  kind: answer
+  query: { view: GTM_PIPELINE, metrics: [bookings_usd], dimensions: [sales_rep], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: bookings_usd, dir: desc }], limit: 5, analysis: rank }
+  answer:
+    headline: "The top sales rep booked {{top.bookings_usd}} of new business and expansion last quarter."
+    narrative: "Rep names are masked unless your persona is cleared for PII. Showing the top {{rows}} reps; renewals are excluded from bookings (BR-TCH-005)."
+    chart: table
+  followups: ["Bookings by region", "Win rate by sales team"]
+  expect: { rows: 5, rules: [BR-TCH-005] }
+  personas_expect: { A: { masked: [sales_rep], rowFiltered: true }, D: { masked: [] } }
+
+- id: SC-TCH-007
+  agent: AG-TCH-001
+  pattern: 7
+  question: "How has win rate changed quarter over quarter this year?"
+  paraphrases:
+    - "Win rate by quarter year to date"
+    - "is our close rate improving quarter on quarter?"
+  kind: answer
+  query: { view: GTM_PIPELINE, metrics: [win_rate_pct], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "Win rate moved {{delta.win_rate_pct}} points from the first to the latest quarter this year."
+    narrative: "Won as a share of closed new-business and expansion opportunities for each of the {{rows}} quarters; renewals are excluded (BR-TCH-005)."
+    chart: line
+  followups: ["Win rate by region last quarter", "Win rate including renewals"]
+  expect: { rows: 3, rules: [BR-TCH-005] }
+
+- id: SC-TCH-008
+  agent: AG-TCH-001
+  pattern: 6
+  question: "What drove expansion ARR last quarter by segment?"
+  paraphrases:
+    - "Which segments contributed most to expansion last quarter?"
+    - "upsell revenue breakdown by segment last qtr"
+  kind: answer
+  query: { view: REVENUE_RETENTION, metrics: [expansion_arr], dimensions: [segment], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: expansion_arr, dir: desc }], analysis: contribution }
+  answer:
+    headline: "{{top.segment}} drove {{top.expansion_arr_share_pct}}% of expansion ARR last quarter ({{top.expansion_arr}})."
+    narrative: "Expansion ARR is month-over-month growth on accounts already paying. Total expansion was {{total.expansion_arr}} across {{rows}} segments."
+    chart: bar
+  followups: ["Net revenue retention by segment", "Expansion ARR by month this year"]
+  expect: { rows: 3, top: { segment: Enterprise }, rules: [BR-TCH-001] }
+
+- id: SC-TCH-009
+  agent: AG-TCH-001
+  pattern: 15
+  question: "Approve a 20% discount on the renewal for our largest customer."
+  paraphrases:
+    - "Can you sign off a discount for the renewal?"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't approve discounts — pricing decisions are made by people in deal desk."
+    narrative: "Discount and pricing approvals go through deal desk and the regional VP. I can show win rate, deal size or net revenue retention for the segment so the approver has the evidence."
+    chart: none
+  followups: ["Average deal size by segment last quarter", "Net revenue retention by segment last quarter"]
+
+- id: SC-TCH-010
+  agent: AG-TCH-001
+  pattern: 15
+  question: "How many daily active users do we have?"
+  paraphrases:
+    - "What is our DAU?"
+  kind: redirect
+  query: null
+  redirect_to: AG-TCH-002
+  answer:
+    headline: "That's a product engagement question — the Customer Health Analyst answers it."
+    narrative: "I cover ARR, retention and pipeline. The Customer Health Analyst is certified on product usage, uptime and support."
+    chart: none
+  followups: ["Ask the Customer Health Analyst", "What can you answer?"]
+
+# ================================================================ AG-TCH-002 Customer Health Analyst
+- id: SC-TCH-011
+  agent: AG-TCH-002
+  pattern: 4
+  question: "How did daily active users trend week by week last quarter?"
+  paraphrases:
+    - "Weekly DAU last quarter"
+    - "daily actives trend by week last qtr"
+  kind: answer
+  query: { view: PRODUCT_USAGE, metrics: [avg_daily_active_users], timeGrain: week, timeRange: { last: { n: 1, unit: quarter } }, analysis: trend }
+  answer:
+    headline: "Daily active users averaged {{total.avg_daily_active_users}} across paying tenants last quarter."
+    narrative: "Average daily active users for each of the {{rows}} weeks, paying customers only (BR-TCH-007). Look for the dip in the week of the September release."
+    chart: line
+  followups: ["Stickiness by plan tier", "Seat utilisation by segment"]
+
+- id: SC-TCH-012
+  agent: AG-TCH-002
+  pattern: 2
+  question: "Was platform uptime within target last quarter?"
+  paraphrases:
+    - "Did we hit our uptime commitment last quarter?"
+    - "availability vs target last qtr"
+  kind: answer
+  query: { view: PRODUCT_USAGE, metrics: [uptime_pct], timeRange: { last: { n: 1, unit: quarter } }, analysis: compare_target }
+  answer:
+    headline: "Uptime was {{top.uptime_pct}}% last quarter — {{vsTarget.top}} the target band."
+    narrative: "One minus downtime minutes over scheduled tenant minutes, announced maintenance excluded (BR-TCH-008). The EMEA pod incident in August is the largest single contributor."
+    chart: kpi
+  followups: ["Uptime by region last quarter", "Uptime trend by day"]
+  expect: { rows: 1 }
+
+- id: SC-TCH-013
+  agent: AG-TCH-002
+  pattern: 5
+  question: "Which five features have the lowest adoption?"
+  paraphrases:
+    - "Bottom 5 features by adoption among entitled accounts"
+    - "least adopted features"
+  kind: answer
+  query: { view: FEATURE_ADOPTION, metrics: [feature_adoption_pct], dimensions: [feature], orderBy: [{ field: feature_adoption_pct, dir: asc }], limit: 5, analysis: rank }
+  answer:
+    headline: "{{top.feature}} has the lowest adoption at {{top.feature_adoption_pct}}% of entitled accounts."
+    narrative: "Adoption is measured among active accounts entitled to the feature, over the last thirty days (BR-TCH-009). Showing the {{rows}} least-adopted features."
+    chart: bar
+  followups: ["AI Assistant adoption by plan tier", "Feature adoption by segment"]
+  expect: { rows: 5, top: { feature: AI Assistant } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TCH-014
+  agent: AG-TCH-002
+  pattern: 3
+  question: "What is DAU/MAU stickiness by plan tier last quarter?"
+  paraphrases:
+    - "stickiness per edition last quarter"
+    - "dau to mau ratio by plan tier"
+  kind: answer
+  query: { view: PRODUCT_USAGE, metrics: [stickiness_pct], dimensions: [plan_tier], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: stickiness_pct, dir: desc }] }
+  answer:
+    headline: "{{top.plan_tier}} is the stickiest plan at {{top.stickiness_pct}}% DAU/MAU last quarter."
+    narrative: "{{bottom.plan_tier}} is lowest at {{bottom.stickiness_pct}}%. Stickiness is daily over monthly active users, paying customers only."
+    chart: bar
+  followups: ["Seat utilisation by plan tier", "Daily active users trend"]
+  expect: { rows: 4, top: { plan_tier: Enterprise } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TCH-015
+  agent: AG-TCH-002
+  pattern: 14
+  question: "What was our average first response time last quarter?"
+  paraphrases:
+    - "What was our FRT last quarter?"
+    - "time to first response last qtr"
+  kind: answer
+  query: { view: SUPPORT_EXPERIENCE, metrics: [avg_first_response_hours], timeRange: { last: { n: 1, unit: quarter } } }
+  answer:
+    headline: "First response averaged {{top.avg_first_response_hours}} hours last quarter — {{vsTarget.top}} target."
+    narrative: "Support Experience is still in certification, so treat this figure as provisional. Merged duplicates are excluded (BR-TCH-010)."
+    chart: kpi
+  followups: ["SLA attainment by priority", "When will Support Experience be certified?"]
+  expect: { rows: 1, certified: false, rules: [BR-TCH-010] }
+  personas_expect: { A: { kind: decline } }
+
+- id: SC-TCH-016
+  agent: AG-TCH-002
+  pattern: 8
+  question: "How is seat utilisation distributed across accounts last month?"
+  paraphrases:
+    - "Spread of seat utilisation by account last month"
+    - "seat utilisation percentiles across tenants"
+  kind: answer
+  query: { view: PRODUCT_USAGE, metrics: [seat_utilisation_pct], dimensions: [account], timeRange: { last: { n: 1, unit: month } }, analysis: distribution }
+  answer:
+    headline: "Across {{top.account_count}} accounts, the median account uses {{top.seat_utilisation_pct_p50}}% of its licensed seats."
+    narrative: "The middle 80% of accounts sit between {{top.seat_utilisation_pct_p10}}% and {{top.seat_utilisation_pct_p90}}%; the lowest is {{top.seat_utilisation_pct_min}}% — candidates for adoption plays before renewal."
+    chart: table
+  followups: ["Seat utilisation by segment", "Stickiness by plan tier"]
+  expect: { rows: 1 }
+
+- id: SC-TCH-017
+  agent: AG-TCH-002
+  pattern: 11
+  question: "What is our licence utilisation by segment last month?"
+  paraphrases:
+    - "license utilization per market segment last month"
+    - "seats in use by segment"
+  kind: answer
+  query: { view: PRODUCT_USAGE, metrics: [seat_utilisation_pct], dimensions: [segment], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: seat_utilisation_pct, dir: desc }] }
+  answer:
+    headline: "{{top.segment}} has the highest seat utilisation at {{top.seat_utilisation_pct}}% last month."
+    narrative: "\"Licence utilisation\" maps to seat utilisation: monthly active users over licensed seats. {{bottom.segment}} is lowest at {{bottom.seat_utilisation_pct}}% across {{rows}} segments."
+    chart: bar
+  followups: ["Seat utilisation distribution across accounts", "Stickiness by segment"]
+  expect: { rows: 3 }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TCH-018
+  agent: AG-TCH-002
+  pattern: 13
+  question: "What were average daily active users by region last month?"
+  paraphrases:
+    - "DAU per region last month"
+    - "daily actives by geo for September"
+  kind: answer
+  query: { view: PRODUCT_USAGE, metrics: [avg_daily_active_users], dimensions: [region], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: avg_daily_active_users, dir: desc }] }
+  answer:
+    headline: "{{top.region}} had the most daily active users last month at {{top.avg_daily_active_users}} per day."
+    narrative: "Average daily active users across the {{rows}} regions you are entitled to see; the region row-access policy applies."
+    chart: bar
+  followups: ["Uptime by region last quarter", "Stickiness by region"]
+  expect: { rows: 4, top: { region: North America } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-TCH-019
+  agent: AG-TCH-002
+  pattern: 11
+  question: "How is support doing?"
+  paraphrases:
+    - "support update"
+  kind: clarify
+  query: null
+  answer:
+    headline: "\"Support\" can mean a few things — which one do you need?"
+    narrative: "I can show SLA attainment, first response time, resolution time, CSAT or ticket volume. Pick one and a period."
+    chart: none
+  followups: ["SLA attainment by priority last quarter", "CSAT by channel last quarter", "Tickets opened by category last month"]
+
+- id: SC-TCH-020
+  agent: AG-TCH-002
+  pattern: 15
+  question: "Turn on the AI Assistant entitlement for this account."
+  paraphrases:
+    - "Give this account access to Sandbox environments"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't change entitlements — that is done by the account team in billing."
+    narrative: "Entitlements and licences change only through an order processed by the account team. I can show feature adoption by plan tier so you can see what entitlement would unlock."
+    chart: none
+  followups: ["Feature adoption by plan tier", "Which five features have the lowest adoption?"]

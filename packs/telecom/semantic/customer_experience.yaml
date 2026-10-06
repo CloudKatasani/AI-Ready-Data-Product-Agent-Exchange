@@ -1,0 +1,50 @@
+name: CUSTOMER_EXPERIENCE
+description: NPS survey responses — net promoter score and detractor share by touchpoint, region, market and plan
+tables:
+  - { alias: r, fqn: CONFORMED_GOLD.FCT_NPS_RESPONSE, pk: response_key }
+  - { alias: m, fqn: CONFORMED_GOLD.DIM_MARKET, pk: market_key }
+  - { alias: p, fqn: CONFORMED_GOLD.DIM_PLAN, pk: plan_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: r.market_key, to: m.market_key }
+  - { from: r.plan_key, to: p.plan_key }
+  - { from: r.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: m.region, label: Region, synonyms: [territory, operating region], term: GT-TEL-REGION }
+  - { name: market, expr: m.market_name, label: Market, synonyms: [metro, market area], term: GT-TEL-MARKET }
+  - { name: touchpoint, expr: r.touchpoint, label: Touchpoint, synonyms: [survey type, journey] }
+  - { name: nps_category, expr: r.nps_category, label: NPS category, synonyms: [promoter or detractor] }
+  - { name: plan, expr: p.plan_name, label: Rate plan, synonyms: [plan, tariff, price plan], term: GT-TEL-RATE-PLAN }
+time_dimensions:
+  - { name: survey_date, expr: d.date, default: true }
+facts:
+  - { name: score, expr: r.score }
+metrics:
+  - name: nps
+    label: NPS
+    expr: 100.0 * (SUM(CASE WHEN r.promoter THEN 1 ELSE 0 END) - SUM(CASE WHEN r.detractor THEN 1 ELSE 0 END)) / NULLIF(COUNT(*), 0)
+    unit: points
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [net promoter score, promoter score, customer nps]
+    term: GT-TEL-NPS
+    description: Percentage of promoters (9–10) minus percentage of detractors (0–6)
+  - name: survey_responses
+    label: Survey responses
+    expr: COUNT(*)
+    unit: responses
+    decimals: 0
+    direction: neutral
+    synonyms: [survey volume, nps responses]
+    term: GT-TEL-NPS
+    description: NPS survey responses received in the period
+  - name: detractor_pct
+    label: Detractor share
+    expr: 100.0 * AVG(CASE WHEN r.detractor THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [detractors, detractor rate]
+    term: GT-TEL-NPS
+    description: Share of responses scoring 0 to 6
+products: [DP-TEL-007]

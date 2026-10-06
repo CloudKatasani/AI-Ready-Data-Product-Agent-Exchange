@@ -187,7 +187,11 @@ export function checkReferences(c: Checks, pack: Pack, idx: PackIndex): void {
   c.ref(A, roles.qualityFixAgent, 'ref.pack.agent', 'pack.story_roles.qualityFixAgent');
   const cert = idx.products.get(roles.certDemoProduct);
   c.expect(cert?.initial_status === 'IN_CERTIFICATION' && cert.certification_script !== null, 'ref.pack.cert_demo', 'certDemoProduct must be IN_CERTIFICATION with a certification_script');
-  c.expect(idx.products.get(roles.lifecycleDemoProduct)?.initial_status === 'IN_DEVELOPMENT', 'ref.pack.lifecycle_demo', 'lifecycleDemoProduct must be IN_DEVELOPMENT');
+  // Standard packs have no IN_DEVELOPMENT product (quota: 3 certified + 1 in certification), so their
+  // lifecycle demo may reuse the in-certification product.
+  const lifecycleOk = pack.manifest.depth === 'deep' ? ['IN_DEVELOPMENT'] : ['IN_DEVELOPMENT', 'IN_CERTIFICATION'];
+  const lifecycleStatus = idx.products.get(roles.lifecycleDemoProduct)?.initial_status;
+  c.expect(lifecycleStatus !== undefined && lifecycleOk.includes(lifecycleStatus), 'ref.pack.lifecycle_demo', `lifecycleDemoProduct must be ${lifecycleOk.join(' or ')}`);
   c.expect(Boolean(idx.agents.get(roles.qualityFixAgent)?.quality_fix), 'ref.pack.quality_fix', 'qualityFixAgent must declare quality_fix');
 
   for (const d of pack.domains.domains) c.ref(PER, d.owner, 'ref.domain.persona', `domain ${d.id}`);

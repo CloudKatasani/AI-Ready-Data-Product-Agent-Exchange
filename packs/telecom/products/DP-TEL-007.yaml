@@ -1,0 +1,24 @@
+id: DP-TEL-007
+name: Customer Experience & NPS
+domain: Customer Experience
+archetype: CONSUMER_ALIGNED
+initial_status: IN_DEVELOPMENT
+seed_stage: 6
+version: 0.4.0
+owner: telecom:retention-analyst
+steward: telecom:data-steward
+description: Relationship and transactional NPS survey responses by touchpoint, region, market and rate plan, joined to the subscriber record.
+purpose: Show which journeys create detractors and link sentiment to churn so retention and care fix the causes, not the symptoms.
+decision: { persona: Head of Customer Experience, decision: "Which journeys to fix first and where to send care coaching", cadence: Monthly, workaround: "Survey platform dashboards with no link to plan, market or churn", consequence: "Install and repair detractors are noticed only when they show up as port-outs" }
+sample_questions: ["NPS by touchpoint this year", "NPS by region last quarter", "Detractor share by market"]
+semantic_view: CUSTOMER_EXPERIENCE
+output_ports:
+  - { kind: semantic, ref: CUSTOMER_EXPERIENCE }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_TEL_007_CUSTOMER_EXPERIENCE }
+sla: { freshness_minutes: 1440, availability_pct: 99.0, max_null_rate_pct: 1.0 }
+kpis: [KPI-TEL-NPS]
+upstream: [CONFORMED_GOLD.FCT_NPS_RESPONSE, CONFORMED_GOLD.DIM_MARKET]
+consumers: [Customer experience, Retention]
+lifecycle_seed: { artifacts: auto, open_proposals: true }
+certification_script: null
+value_case: VC-TEL-007

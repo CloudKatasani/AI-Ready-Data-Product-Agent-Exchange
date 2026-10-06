@@ -1,0 +1,38 @@
+id: AG-TEL-001
+name: Subscriber Insights
+domain: Subscriber & Accounts
+status: PRODUCTION
+owner: telecom:retention-analyst
+on_call: Subscriber Analytics
+avatar: { icon: users, hue: 262 }
+capability: "Answers questions on the active base, autopay, tenure, contract state, churn-risk share, care contacts, data usage and minutes of use."
+personas_served: [Subscriber Analyst, Regional Commercial Director, Head of Consumer Marketing]
+out_of_scope: ["individual subscriber lookups", "call detail records", "marketing message drafting", "plan change requests"]
+products:
+  - { id: DP-TEL-001, columns: "*" }
+  - { id: DP-TEL-003, columns: [data_gb, voice_min, plan_name, segment, lob, region] }
+tools:
+  - { tool: semantic_query, views: [SUBSCRIBER_360, MOBILE_USAGE], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-TEL-KPI-STANDARD, DOC-TEL-CPNI, DOC-TEL-DATA-GOVERNANCE] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+  - { tool: request_access_link }
+kpi_coverage:
+  - { kpi: KPI-TEL-ACTIVE, grains: [], slices: [region, market, segment, plan, tenure_band], depth: value }
+  - { kpi: KPI-TEL-AUTOPAY, grains: [], slices: [region, market, segment, plan], depth: rank_drivers }
+  - { kpi: KPI-TEL-TENURE, grains: [], slices: [region, segment, plan], depth: explain }
+  - { kpi: KPI-TEL-OOC, grains: [], slices: [region, market, plan], depth: explain }
+  - { kpi: KPI-TEL-HIGH-RISK, grains: [], slices: [region, market, plan, tenure_band, contract_type], depth: rank_drivers }
+  - { kpi: KPI-TEL-CARE, grains: [], slices: [region, segment, plan], depth: explain }
+  - { kpi: KPI-TEL-DATA-USAGE, grains: [month, quarter], slices: [region, plan, segment], depth: trend }
+  - { kpi: KPI-TEL-MOU, grains: [month, quarter], slices: [region, plan, segment], depth: trend }
+instructions: [INS-TEL-001-P, INS-TEL-001-R, INS-TEL-001-G, INS-TEL-001-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: masked, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-TEL-008, SC-TEL-009, SC-TEL-010, SC-TEL-011, SC-TEL-012, SC-TEL-013]
+quality_fix:
+  feedback_question: "What share of our subscribers pay hands-free?"
+  fix: { type: synonym, payload: { term: hands-free payment, synonyms: [hands-free, pay hands-free], maps_to: { kind: metric, ref: autopay_rate } } }
+  eval_before_pct: 88
+  eval_after_pct: 94

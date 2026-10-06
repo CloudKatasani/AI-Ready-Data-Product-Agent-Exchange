@@ -1,0 +1,74 @@
+name: FREIGHT_ECONOMICS
+description: Load economics — revenue, cost per mile, operating ratio and cargo claims by region, shipper, segment and equipment
+tables:
+  - { alias: l, fqn: CONFORMED_GOLD.FCT_LOAD, pk: load_key }
+  - { alias: c, fqn: CONFORMED_GOLD.DIM_CUSTOMER, pk: customer_key }
+  - { alias: t, fqn: CONFORMED_GOLD.DIM_TERMINAL, pk: terminal_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: l.customer_key, to: c.customer_key }
+  - { from: l.terminal_key, to: t.terminal_key }
+  - { from: l.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: t.region, label: Region, synonyms: [operating region, territory, area], term: GT-TRN-REGION }
+  - { name: shipper, expr: c.customer_name, label: Shipper, synonyms: [customer, account, shippers, customers], term: GT-TRN-SHIPPER }
+  - { name: shipper_segment, expr: c.segment, label: Shipper segment, synonyms: [segment, customer segment, vertical], term: GT-TRN-SHIPPER }
+  - { name: contract_type, expr: c.contract_type, label: Contract type, synonyms: [dedicated or contract, spot freight] }
+  - { name: equipment, expr: l.equipment_type, label: Equipment type, synonyms: [equipment type, trailer type], term: GT-TRN-EQUIPMENT }
+  - { name: service, expr: l.service_level, label: Service level, synonyms: [service commitment], term: GT-TRN-SERVICE-LEVEL }
+  - { name: contact_email, expr: c.contact_email, label: Shipper contact email, synonyms: [contact email, email] }
+  - { name: contact_phone, expr: c.contact_phone, label: Shipper contact phone, synonyms: [contact phone, phone] }
+time_dimensions:
+  - { name: load_date, expr: d.date, default: true }
+facts:
+  - { name: revenue, expr: l.revenue, description: "Linehaul, fuel surcharge and billed detention revenue" }
+  - { name: total_cost, expr: l.total_cost, description: "Operating, fuel and accessorial cost" }
+metrics:
+  - name: freight_revenue
+    label: Freight revenue
+    expr: SUM(l.revenue)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [revenue, billings, freight billings, total revenue]
+    term: GT-TRN-REVENUE
+    description: Linehaul, fuel surcharge and billed detention revenue on loads picked up in the period
+  - name: cost_per_mile
+    label: Cost per mile
+    expr: SUM(l.total_cost) / SUM(l.total_miles)
+    unit: USD per mile
+    decimals: 3
+    direction: lower_is_better
+    synonyms: [cpm, operating cost per mile, cost per total mile]
+    term: GT-TRN-CPM
+    description: Operating, fuel and accessorial cost per total (loaded plus empty) mile
+    naive_expr: SUM(l.total_cost) / SUM(l.loaded_miles)
+  - name: revenue_per_loaded_mile
+    label: Revenue per loaded mile
+    expr: SUM(l.revenue) / SUM(l.loaded_miles)
+    unit: USD per mile
+    decimals: 3
+    direction: higher_is_better
+    synonyms: [rpm, rate per mile, revenue per mile, yield]
+    term: GT-TRN-RPM
+    description: Revenue earned per loaded mile, including fuel surcharge
+  - name: operating_ratio_pct
+    label: Operating ratio
+    expr: 100.0 * (SUM(l.total_cost) + SUM(l.claim_cost)) / SUM(l.revenue)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [operating ratio percent, cost to revenue ratio, op ratio]
+    term: GT-TRN-OR
+    description: Operating cost including cargo claims as a share of revenue (lower is better)
+    naive_expr: 100.0 * SUM(l.total_cost) / SUM(l.linehaul_revenue)
+  - name: claims_ratio_pct
+    label: Claims ratio
+    expr: 100.0 * SUM(l.claim_cost) / SUM(l.revenue)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [cargo claims ratio, claims as a share of revenue, claim cost ratio]
+    term: GT-TRN-CLAIMS
+    description: Paid and open cargo claims as a share of revenue on loads picked up in the period
+products: [DP-TRN-004]

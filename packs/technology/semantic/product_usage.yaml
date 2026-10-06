@@ -1,0 +1,58 @@
+name: PRODUCT_USAGE
+description: Tenant-day active users, stickiness, seat utilisation and platform uptime for paying customers
+tables:
+  - { alias: u, fqn: CONFORMED_GOLD.FCT_PRODUCT_USAGE, pk: usage_key }
+  - { alias: a, fqn: CONFORMED_GOLD.DIM_ACCOUNT, pk: account_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: u.account_key, to: a.account_key }
+  - { from: u.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: a.region, label: Region, synonyms: [geo, sales region], term: GT-TCH-REGION }
+  - { name: segment, expr: a.segment, label: Segment, synonyms: [market segment, company size], term: GT-TCH-SEGMENT }
+  - { name: plan_tier, expr: a.plan_tier, label: Plan tier, synonyms: [plan, edition, pricing tier], term: GT-TCH-PLAN-TIER }
+  - { name: industry, expr: a.industry, label: Industry, synonyms: [vertical, industry vertical] }
+  - { name: account, expr: a.account_id, label: Account, synonyms: [tenant, workspace] }
+time_dimensions:
+  - { name: usage_date, expr: d.date, default: true }
+facts:
+  - { name: daily_active_users, expr: u.daily_active_users }
+metrics:
+  - name: avg_daily_active_users
+    label: Daily active users
+    expr: 1.0 * SUM(u.daily_active_users) / COUNT(DISTINCT u.usage_date)
+    unit: users
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [dau, daily actives, average daily active users]
+    term: GT-TCH-DAU
+    description: Average number of distinct users active per day across paying tenants
+    naive_expr: SUM(u.daily_active_users)
+  - name: stickiness_pct
+    label: DAU/MAU stickiness
+    expr: 100.0 * SUM(u.daily_active_users) / NULLIF(SUM(u.monthly_active_users), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [stickiness, dau to mau ratio, dau mau ratio]
+    term: GT-TCH-STICKINESS
+    description: Daily active users as a share of thirty-day monthly active users
+  - name: seat_utilisation_pct
+    label: Seat utilisation
+    expr: 100.0 * SUM(u.monthly_active_users) / NULLIF(SUM(u.seats_licensed), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [seat utilization, licence utilisation, license utilization, seat usage]
+    term: GT-TCH-SEAT-UTILISATION
+    description: Monthly active users as a share of licensed seats
+  - name: uptime_pct
+    label: Uptime
+    expr: 100.0 * (1 - 1.0 * SUM(u.downtime_minutes) / NULLIF(SUM(u.scheduled_minutes), 0))
+    unit: '%'
+    decimals: 3
+    direction: higher_is_better
+    synonyms: [platform availability, service availability, availability]
+    term: GT-TCH-UPTIME
+    description: Share of scheduled tenant minutes the platform was available (announced maintenance excluded at source)
+products: [DP-TCH-003]

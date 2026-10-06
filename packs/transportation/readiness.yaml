@@ -1,0 +1,6 @@
+# Readiness preset labels for Meridian Freight Lines (preset ids from the ported readiness engine: early, mid, advanced).
+preset_labels:
+  early: Spreadsheet dispatch scorecards
+  mid: Mid-migration
+  advanced: Governed telematics lakehouse
+question_overrides: []

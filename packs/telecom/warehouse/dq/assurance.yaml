@@ -1,0 +1,42 @@
+# Network fault DQ rules.
+- id: DQ-TEL-046
+  object: CONFORMED_GOLD.FCT_NETWORK_FAULT
+  column: fault_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: 'One row per fault ticket.'
+- id: DQ-TEL-047
+  object: CONFORMED_GOLD.FCT_NETWORK_FAULT
+  column: restore_hours
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: 'Restoration hours are never negative.'
+- id: DQ-TEL-048
+  object: CONFORMED_GOLD.FCT_NETWORK_FAULT
+  column: restore_hours
+  dimension: completeness
+  assertion: "null_rate <= 0.08"
+  severity: high
+  alert_route: steward
+  description: 'Restoration time is present for at least 92% of faults (open faults have none yet).'
+- id: DQ-TEL-049
+  object: CONFORMED_GOLD.FCT_NETWORK_FAULT
+  column: fault_class
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Power, Backhaul, Radio equipment, Fiber cut, Software]
+  severity: medium
+  alert_route: steward
+  description: 'Fault classes conform to the service assurance catalogue.'
+- id: DQ-TEL-050
+  object: CONFORMED_GOLD.FCT_NETWORK_FAULT
+  column: raised_ts
+  dimension: timeliness
+  assertion: "freshness_min <= 1440"
+  severity: high
+  alert_route: engineering
+  description: 'Fault tickets are current to the end of the reporting day.'

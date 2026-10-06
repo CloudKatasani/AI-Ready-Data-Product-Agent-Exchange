@@ -1,0 +1,72 @@
+sensitivity_classes:
+  - { class: PII, description: "Personal information about drivers and shipper logistics contacts" }
+  - { class: GOV_ID, description: "Government identifiers such as commercial driver licence numbers" }
+
+masking_policies:
+  - { id: MASK_PII, class: PII, macro: mask_pii, description: "Replace personal data with ••• unless the persona is cleared for PII" }
+  - { id: MASK_EMAIL, class: PII, macro: mask_email, description: "Hash the local part of email addresses" }
+  - { id: MASK_PHONE, class: PII, macro: mask_phone, description: "Show only the last four digits of phone numbers" }
+  - { id: MASK_GOV_ID, class: GOV_ID, macro: mask_gov_id, description: "Show only the last four characters of licence numbers" }
+
+row_access_policies:
+  - id: RAP_REGION
+    dimension: region
+    description: "Regional personas see only rows for their own operating region (origin or home terminal)"
+    bindings:
+      - { object: CONFORMED_GOLD.DIM_TERMINAL, column: region }
+      - { object: CONFORMED_GOLD.DIM_DRIVER, column: region }
+      - { object: CURATED_SILVER.TERMINAL, column: region }
+
+column_tags:
+  # Driver PII — masked for every persona without PII clearance.
+  - { column: CONFORMED_GOLD.DIM_DRIVER.first_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_DRIVER.last_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_DRIVER.full_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_DRIVER.phone, classes: [PII], masking: MASK_PHONE }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.contact_name, classes: [PII], masking: MASK_PII }
+  # Certification demo (DP-TRN-004 gate 6): shipper contact email and phone masking is not attached until FIX-2.
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.contact_email, classes: [PII], masking: MASK_EMAIL, mask_pending_fix: FIX-2 }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.contact_phone, classes: [PII], masking: MASK_PHONE, mask_pending_fix: FIX-2 }
+  - { column: CURATED_SILVER.SHIPPER.contact_first_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.SHIPPER.contact_last_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.SHIPPER.contact_email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.SHIPPER.contact_phone, classes: [PII], masking: MASK_PHONE }
+  - { column: CURATED_SILVER.DRIVER_ROSTER.first_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.DRIVER_ROSTER.last_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.DRIVER_ROSTER.phone, classes: [PII], masking: MASK_PHONE }
+  - { column: CURATED_SILVER.DRIVER_ROSTER.cdl_number, classes: [GOV_ID], masking: MASK_GOV_ID }
+  # Critical data elements (each has DQ rules in warehouse/dq).
+  - { column: CONFORMED_GOLD.FCT_LOAD.on_time, cde: true }
+  - { column: CONFORMED_GOLD.FCT_LOAD.customer_caused_delay, cde: true }
+  - { column: CONFORMED_GOLD.FCT_LOAD.dwell_hours, cde: true }
+  - { column: CONFORMED_GOLD.FCT_LOAD.revenue, cde: true }
+  - { column: CONFORMED_GOLD.FCT_LOAD.total_cost, cde: true }
+  - { column: CONFORMED_GOLD.FCT_LOAD.total_miles, cde: true }
+  - { column: CONFORMED_GOLD.FCT_LOAD.claim_cost, cde: true }
+  - { column: CONFORMED_GOLD.DIM_TERMINAL.region, cde: true }
+  - { column: CONFORMED_GOLD.FCT_FLEET_DAY.available_hours, cde: true }
+  - { column: CONFORMED_GOLD.FCT_FLEET_DAY.revenue_hours, cde: true }
+  - { column: CONFORMED_GOLD.FCT_FLEET_DAY.in_service, cde: true }
+  - { column: CONFORMED_GOLD.FCT_DRIVER_MONTH.miles, cde: true }
+  - { column: CONFORMED_GOLD.FCT_DRIVER_MONTH.recordable_crashes, cde: true }
+  - { column: CONFORMED_GOLD.DIM_DRIVER.driver_type, cde: true }
+
+grants:
+  - persona: transportation:terminal-ops-southeast
+    products: [DP-TRN-001, DP-TRN-002]
+    agents: [AG-TRN-001, AG-TRN-002]
+  - persona: transportation:network-analyst
+    products: [DP-TRN-001, DP-TRN-002, DP-TRN-003]
+    agents: [AG-TRN-001, AG-TRN-002]
+  - persona: transportation:ops-dpo
+    products: [DP-TRN-001, DP-TRN-002, DP-TRN-003, DP-TRN-004]
+    agents: [AG-TRN-001, AG-TRN-002]
+  - persona: transportation:data-steward
+    products: [DP-TRN-001, DP-TRN-002, DP-TRN-003, DP-TRN-004]
+    agents: [AG-TRN-001, AG-TRN-002]
+  - persona: transportation:coo
+    # Aggregates only (archetype E): sees every headline KPI tile, never row-level data.
+    products: [DP-TRN-001, DP-TRN-002, DP-TRN-003, DP-TRN-004]
+    agents: [AG-TRN-001, AG-TRN-002]
+
+public_products: []

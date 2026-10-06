@@ -1,0 +1,299 @@
+# Verified queries — curated question -> MetricQuery pairs, converted from the Marketplace TRN demo exchanges and
+# the carrier's standard operating reports. Every query compiles through compileMetricQuery() on the named view.
+# FREIGHT_ECONOMICS deliberately has only 7 active entries and no active claims-ratio query: the DP-TRN-004
+# certification story (gate 4) activates VQ-TRN-067..069 via FIX-1.
+
+# ---------------------------------------------------------------- DELIVERY_SERVICE (AG-TRN-001)
+- id: VQ-TRN-001
+  question: "What was on-time delivery last quarter?"
+  query: { view: DELIVERY_SERVICE, metrics: [on_time_delivery_pct], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-TRN-001
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-02
+- id: VQ-TRN-002
+  question: "On-time delivery by region last quarter"
+  query: { view: DELIVERY_SERVICE, metrics: [on_time_delivery_pct], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: on_time_delivery_pct, dir: desc }] }
+  agent: AG-TRN-001
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-05
+- id: VQ-TRN-003
+  question: "Which origin terminals had the lowest on-time delivery last quarter?"
+  query: { view: DELIVERY_SERVICE, metrics: [on_time_delivery_pct], dimensions: [terminal], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: on_time_delivery_pct, dir: asc }], limit: 5, analysis: rank }
+  agent: AG-TRN-001
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-08
+- id: VQ-TRN-004
+  question: "On-time delivery by service level this year"
+  query: { view: DELIVERY_SERVICE, metrics: [on_time_delivery_pct], dimensions: [service_level], timeRange: { ytd: true }, orderBy: [{ field: on_time_delivery_pct, dir: desc }] }
+  agent: AG-TRN-001
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-11
+- id: VQ-TRN-005
+  question: "On-time delivery by month this year"
+  query: { view: DELIVERY_SERVICE, metrics: [on_time_delivery_pct], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TRN-001
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-14
+- id: VQ-TRN-006
+  question: "Average dwell time by origin terminal last quarter"
+  query: { view: DELIVERY_SERVICE, metrics: [avg_dwell_hours], dimensions: [terminal], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_dwell_hours, dir: desc }], limit: 10, analysis: rank }
+  agent: AG-TRN-001
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-17
+- id: VQ-TRN-007
+  question: "Average dwell time by region this year"
+  query: { view: DELIVERY_SERVICE, metrics: [avg_dwell_hours], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: avg_dwell_hours, dir: desc }] }
+  agent: AG-TRN-001
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-20
+- id: VQ-TRN-008
+  question: "Exception rate by shipper segment last quarter"
+  query: { view: DELIVERY_SERVICE, metrics: [exception_rate_pct], dimensions: [customer_segment], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: exception_rate_pct, dir: desc }] }
+  agent: AG-TRN-001
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-23
+- id: VQ-TRN-009
+  question: "How many loads did we deliver by region last quarter?"
+  query: { view: DELIVERY_SERVICE, metrics: [loads_delivered], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: loads_delivered, dir: desc }] }
+  agent: AG-TRN-001
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-26
+- id: VQ-TRN-010
+  question: "Late loads by delay cause last quarter"
+  query: { view: DELIVERY_SERVICE, metrics: [late_loads], dimensions: [delay_cause], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: late_loads, dir: desc }] }
+  agent: AG-TRN-001
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-29
+- id: VQ-TRN-011
+  question: "On-time delivery by shipper segment last quarter"
+  query: { view: DELIVERY_SERVICE, metrics: [on_time_delivery_pct], dimensions: [customer_segment], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: on_time_delivery_pct, dir: desc }] }
+  agent: AG-TRN-001
+  verified_by: transportation:network-analyst
+  verified_at: 2026-08-01
+- id: VQ-TRN-012
+  question: "Loads delivered by month this year"
+  query: { view: DELIVERY_SERVICE, metrics: [loads_delivered], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TRN-001
+  verified_by: transportation:network-analyst
+  verified_at: 2026-08-04
+- id: VQ-TRN-013
+  question: "Average dwell time by load type across all load types last quarter"
+  query: { view: DELIVERY_SERVICE, metrics: [avg_dwell_hours], dimensions: [load_type], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_dwell_hours, dir: desc }] }
+  agent: AG-TRN-001
+  verified_by: transportation:network-analyst
+  verified_at: 2026-08-07
+
+# ---------------------------------------------------------------- FLEET_UTILISATION (AG-TRN-002)
+- id: VQ-TRN-020
+  question: "What was asset utilisation last quarter?"
+  query: { view: FLEET_UTILISATION, metrics: [asset_utilisation_pct], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-TRN-002
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-07
+- id: VQ-TRN-021
+  question: "Asset utilisation by region last quarter"
+  query: { view: FLEET_UTILISATION, metrics: [asset_utilisation_pct], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: asset_utilisation_pct, dir: desc }] }
+  agent: AG-TRN-002
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-10
+- id: VQ-TRN-022
+  question: "Asset utilisation by equipment type this year"
+  query: { view: FLEET_UTILISATION, metrics: [asset_utilisation_pct], dimensions: [equipment_type], timeRange: { ytd: true }, orderBy: [{ field: asset_utilisation_pct, dir: desc }] }
+  agent: AG-TRN-002
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-13
+- id: VQ-TRN-023
+  question: "Asset utilisation by month this year"
+  query: { view: FLEET_UTILISATION, metrics: [asset_utilisation_pct], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TRN-002
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-16
+- id: VQ-TRN-024
+  question: "Empty miles percentage by region last quarter"
+  query: { view: FLEET_UTILISATION, metrics: [empty_miles_pct], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: empty_miles_pct, dir: desc }] }
+  agent: AG-TRN-002
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-19
+- id: VQ-TRN-025
+  question: "Empty miles percentage by month this year"
+  query: { view: FLEET_UTILISATION, metrics: [empty_miles_pct], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TRN-002
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-22
+- id: VQ-TRN-026
+  question: "Fuel economy by model year band this year"
+  query: { view: FLEET_UTILISATION, metrics: [fuel_mpg], dimensions: [model_year_band], timeRange: { ytd: true }, orderBy: [{ field: fuel_mpg, dir: desc }] }
+  agent: AG-TRN-002
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-25
+- id: VQ-TRN-027
+  question: "Fuel economy by equipment type this year"
+  query: { view: FLEET_UTILISATION, metrics: [fuel_mpg], dimensions: [equipment_type], timeRange: { ytd: true }, orderBy: [{ field: fuel_mpg, dir: desc }] }
+  agent: AG-TRN-002
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-28
+- id: VQ-TRN-028
+  question: "Revenue per truck per week by region last quarter"
+  query: { view: FLEET_UTILISATION, metrics: [revenue_per_truck_week], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: revenue_per_truck_week, dir: desc }] }
+  agent: AG-TRN-002
+  verified_by: transportation:network-analyst
+  verified_at: 2026-07-31
+- id: VQ-TRN-029
+  question: "Revenue per truck per week by month this year"
+  query: { view: FLEET_UTILISATION, metrics: [revenue_per_truck_week], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TRN-002
+  verified_by: transportation:network-analyst
+  verified_at: 2026-08-03
+- id: VQ-TRN-030
+  question: "Fleet miles by region last quarter"
+  query: { view: FLEET_UTILISATION, metrics: [fleet_miles], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: fleet_miles, dir: desc }] }
+  agent: AG-TRN-002
+  verified_by: transportation:network-analyst
+  verified_at: 2026-08-06
+- id: VQ-TRN-031
+  question: "Which home terminals had the highest asset utilisation last quarter?"
+  query: { view: FLEET_UTILISATION, metrics: [asset_utilisation_pct], dimensions: [home_terminal], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: asset_utilisation_pct, dir: desc }], limit: 10, analysis: rank }
+  agent: AG-TRN-002
+  verified_by: transportation:network-analyst
+  verified_at: 2026-08-09
+
+# ---------------------------------------------------------------- DRIVER_SAFETY (AG-TRN-002)
+- id: VQ-TRN-040
+  question: "What was the safety incident rate over the last 12 months?"
+  query: { view: DRIVER_SAFETY, metrics: [safety_incident_rate], timeRange: { last: { n: 12, unit: month } } }
+  agent: AG-TRN-002
+  verified_by: transportation:data-steward
+  verified_at: 2026-07-06
+- id: VQ-TRN-041
+  question: "Safety incident rate by region over the last 12 months"
+  query: { view: DRIVER_SAFETY, metrics: [safety_incident_rate], dimensions: [region], timeRange: { last: { n: 12, unit: month } }, orderBy: [{ field: safety_incident_rate, dir: desc }] }
+  agent: AG-TRN-002
+  verified_by: transportation:data-steward
+  verified_at: 2026-07-09
+- id: VQ-TRN-042
+  question: "Preventable crash rate by region over the last 12 months"
+  query: { view: DRIVER_SAFETY, metrics: [preventable_crash_rate], dimensions: [region], timeRange: { last: { n: 12, unit: month } }, orderBy: [{ field: preventable_crash_rate, dir: desc }] }
+  agent: AG-TRN-002
+  verified_by: transportation:data-steward
+  verified_at: 2026-07-12
+- id: VQ-TRN-043
+  question: "Safety incident rate by quarter for the last 4 quarters"
+  query: { view: DRIVER_SAFETY, metrics: [safety_incident_rate], timeGrain: quarter, timeRange: { last: { n: 4, unit: quarter } }, analysis: trend }
+  agent: AG-TRN-002
+  verified_by: transportation:data-steward
+  verified_at: 2026-07-15
+- id: VQ-TRN-044
+  question: "Hours-of-service violations by region this year"
+  query: { view: DRIVER_SAFETY, metrics: [hos_violations], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: hos_violations, dir: desc }] }
+  agent: AG-TRN-002
+  verified_by: transportation:data-steward
+  verified_at: 2026-07-18
+- id: VQ-TRN-045
+  question: "Hours-of-service violations by month this year"
+  query: { view: DRIVER_SAFETY, metrics: [hos_violations], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TRN-002
+  verified_by: transportation:data-steward
+  verified_at: 2026-07-21
+- id: VQ-TRN-046
+  question: "What was driver turnover over the last 12 months?"
+  query: { view: DRIVER_SAFETY, metrics: [driver_turnover_pct], timeRange: { last: { n: 12, unit: month } } }
+  agent: AG-TRN-002
+  verified_by: transportation:data-steward
+  verified_at: 2026-07-24
+- id: VQ-TRN-047
+  question: "Driver turnover by region over the last 12 months"
+  query: { view: DRIVER_SAFETY, metrics: [driver_turnover_pct], dimensions: [region], timeRange: { last: { n: 12, unit: month } }, orderBy: [{ field: driver_turnover_pct, dir: desc }] }
+  agent: AG-TRN-002
+  verified_by: transportation:data-steward
+  verified_at: 2026-07-27
+- id: VQ-TRN-048
+  question: "Driver turnover by tenure band over the last 12 months"
+  query: { view: DRIVER_SAFETY, metrics: [driver_turnover_pct], dimensions: [tenure_band], timeRange: { last: { n: 12, unit: month } }, orderBy: [{ field: driver_turnover_pct, dir: desc }] }
+  agent: AG-TRN-002
+  verified_by: transportation:data-steward
+  verified_at: 2026-07-30
+- id: VQ-TRN-049
+  question: "Driver turnover by driver type including owner-operators over the last 12 months"
+  query: { view: DRIVER_SAFETY, metrics: [driver_turnover_pct], dimensions: [driver_type], timeRange: { last: { n: 12, unit: month } }, orderBy: [{ field: driver_turnover_pct, dir: desc }] }
+  agent: AG-TRN-002
+  verified_by: transportation:data-steward
+  verified_at: 2026-08-02
+- id: VQ-TRN-050
+  question: "What was the preventable crash rate over the last 12 months?"
+  query: { view: DRIVER_SAFETY, metrics: [preventable_crash_rate], timeRange: { last: { n: 12, unit: month } } }
+  agent: AG-TRN-002
+  verified_by: transportation:data-steward
+  verified_at: 2026-08-05
+- id: VQ-TRN-051
+  question: "Safety incident rate by tenure band over the last 12 months"
+  query: { view: DRIVER_SAFETY, metrics: [safety_incident_rate], dimensions: [tenure_band], timeRange: { last: { n: 12, unit: month } }, orderBy: [{ field: safety_incident_rate, dir: desc }] }
+  agent: AG-TRN-002
+  verified_by: transportation:data-steward
+  verified_at: 2026-08-08
+
+# ---------------------------------------------------------------- FREIGHT_ECONOMICS (AG-TRN-001)
+- id: VQ-TRN-060
+  question: "What is the operating ratio this year?"
+  query: { view: FREIGHT_ECONOMICS, metrics: [operating_ratio_pct], timeRange: { ytd: true } }
+  agent: AG-TRN-001
+  verified_by: transportation:ops-dpo
+  verified_at: 2026-07-05
+- id: VQ-TRN-061
+  question: "Operating ratio by region this year"
+  query: { view: FREIGHT_ECONOMICS, metrics: [operating_ratio_pct], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: operating_ratio_pct, dir: asc }] }
+  agent: AG-TRN-001
+  verified_by: transportation:ops-dpo
+  verified_at: 2026-07-08
+- id: VQ-TRN-062
+  question: "Cost per mile by quarter this year"
+  query: { view: FREIGHT_ECONOMICS, metrics: [cost_per_mile], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TRN-001
+  verified_by: transportation:ops-dpo
+  verified_at: 2026-07-11
+- id: VQ-TRN-063
+  question: "Cost per mile by equipment type this year"
+  query: { view: FREIGHT_ECONOMICS, metrics: [cost_per_mile], dimensions: [equipment], timeRange: { ytd: true }, orderBy: [{ field: cost_per_mile, dir: desc }] }
+  agent: AG-TRN-001
+  verified_by: transportation:ops-dpo
+  verified_at: 2026-07-14
+- id: VQ-TRN-064
+  question: "Revenue per loaded mile by shipper segment this year"
+  query: { view: FREIGHT_ECONOMICS, metrics: [revenue_per_loaded_mile], dimensions: [shipper_segment], timeRange: { ytd: true }, orderBy: [{ field: revenue_per_loaded_mile, dir: desc }] }
+  agent: AG-TRN-001
+  verified_by: transportation:ops-dpo
+  verified_at: 2026-07-17
+- id: VQ-TRN-065
+  question: "Freight revenue by region last quarter"
+  query: { view: FREIGHT_ECONOMICS, metrics: [freight_revenue], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: freight_revenue, dir: desc }] }
+  agent: AG-TRN-001
+  verified_by: transportation:ops-dpo
+  verified_at: 2026-07-20
+- id: VQ-TRN-066
+  question: "Freight revenue by month this year"
+  query: { view: FREIGHT_ECONOMICS, metrics: [freight_revenue], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TRN-001
+  verified_by: transportation:ops-dpo
+  verified_at: 2026-07-23
+
+# ---------------------------------------------------------------- Pending FIX-1 (DP-TRN-004 certification demo)
+- id: VQ-TRN-067
+  question: "What is the claims ratio this year?"
+  query: { view: FREIGHT_ECONOMICS, metrics: [claims_ratio_pct], timeRange: { ytd: true } }
+  agent: AG-TRN-001
+  verified_by: transportation:data-steward
+  verified_at: 2026-09-21
+  status: pending_fix
+- id: VQ-TRN-068
+  question: "Claims ratio by shipper segment this year"
+  query: { view: FREIGHT_ECONOMICS, metrics: [claims_ratio_pct], dimensions: [shipper_segment], timeRange: { ytd: true }, orderBy: [{ field: claims_ratio_pct, dir: desc }] }
+  agent: AG-TRN-001
+  verified_by: transportation:data-steward
+  verified_at: 2026-09-21
+  status: pending_fix
+- id: VQ-TRN-069
+  question: "Claims ratio by quarter this year"
+  query: { view: FREIGHT_ECONOMICS, metrics: [claims_ratio_pct], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-TRN-001
+  verified_by: transportation:data-steward
+  verified_at: 2026-09-21
+  status: pending_fix

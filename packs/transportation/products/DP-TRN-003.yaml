@@ -1,0 +1,25 @@
+id: DP-TRN-003
+name: Driver Safety & Retention
+domain: Drivers & Safety
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 1.1.0
+owner: transportation:data-steward
+steward: transportation:data-steward
+description: Driver-month miles, safety events, headcount and separations — crash rates per million miles, hours-of-service violations and annualised driver turnover.
+purpose: Give safety and recruiting leaders a certified view of crash rates and driver turnover by region, driver type and tenure, with driver identities masked.
+decision: { persona: VP Safety & Driver Recruiting, decision: "Where to put safety stand-downs, route reviews and retention spend next quarter", cadence: Monthly, workaround: "Crash register and HR separation lists reconciled in a spreadsheet each month", consequence: "Recruiting spend replaces drivers in regions that keep losing them, and crash-prone routes go unreviewed" }
+sample_questions: ["Safety incident rate by region", "Driver turnover over the last 12 months", "Hours-of-service violations by month"]
+semantic_view: DRIVER_SAFETY
+output_ports:
+  - { kind: semantic, ref: DRIVER_SAFETY }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_TRN_003_DRIVER_SAFETY_RETENTION }
+  - { kind: agent, ref: AG-TRN-002 }
+sla: { freshness_minutes: 1440, availability_pct: 99.0, max_null_rate_pct: 0.5 }
+kpis: [KPI-TRN-SAFETY-RATE, KPI-TRN-PREVENTABLE, KPI-TRN-TURNOVER]
+upstream: [CONFORMED_GOLD.FCT_DRIVER_MONTH, CONFORMED_GOLD.DIM_DRIVER, CURATED_SILVER.SAFETY_EVENT]
+consumers: [Safety, Driver recruiting, HR, Fleet & Safety Analyst agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-TRN-003

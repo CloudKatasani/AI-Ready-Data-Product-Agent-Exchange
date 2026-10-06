@@ -1,0 +1,77 @@
+name: SUBSCRIBER_360
+description: Subscriber master metrics — active base, autopay, tenure, contract state, churn risk and care contacts
+tables:
+  - { alias: c, fqn: CONFORMED_GOLD.DIM_SUBSCRIBER, pk: subscriber_key }
+dimensions:
+  - { name: region, expr: c.region, label: Region, synonyms: [territory, operating region], term: GT-TEL-REGION }
+  - { name: market, expr: c.market_name, label: Market, synonyms: [metro, market area], term: GT-TEL-MARKET }
+  - { name: segment, expr: c.segment, label: Segment, synonyms: [line type, customer segment, payment type], term: GT-TEL-SEGMENT }
+  - { name: plan, expr: c.plan_name, label: Rate plan, synonyms: [plan, tariff, price plan], term: GT-TEL-RATE-PLAN }
+  - { name: subscriber_status, expr: c.status, label: Status, synonyms: [line status, account status] }
+  - { name: tenure_band, expr: c.tenure_band, label: Tenure band, synonyms: [tenure, years with us, customer tenure band] }
+  - { name: age_band, expr: c.age_band, label: Age band, synonyms: [age group] }
+  - { name: churn_risk_band, expr: c.churn_risk_band, label: Churn risk band, synonyms: [propensity band, risk band] }
+  - { name: contract_type, expr: c.contract_type, label: Contract type, synonyms: [agreement type, commitment type] }
+  - { name: subscriber_name, expr: c.full_name, label: Subscriber name, synonyms: [name, customer name] }
+  - { name: msisdn, expr: c.msisdn, label: Mobile number (MSISDN), synonyms: [mobile number, line number], term: GT-TEL-MSISDN }
+time_dimensions:
+  - { name: activation_date, expr: c.activation_date, default: true }
+facts:
+  - { name: tenure_months, expr: c.tenure_months }
+  - { name: care_contacts_90d, expr: c.care_contacts_90d }
+metrics:
+  - name: active_subscribers
+    label: Active subscribers
+    expr: COUNT_IF(c.is_active)
+    unit: subscribers
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [active lines, active base, subscriber count, number of subscribers]
+    term: GT-TEL-ACTIVE-SUBSCRIBER
+    description: Lines with Active status, excluding inactive prepaid lines, in the governed subscriber sample
+  - name: autopay_rate
+    label: Autopay rate
+    expr: 100.0 * AVG(CASE WHEN c.is_active THEN CASE WHEN c.autopay THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [autopay enrolment, autopay enrollment, autopay penetration, auto-pay share]
+    term: GT-TEL-AUTOPAY
+    description: Share of active subscribers paying by automatic payment
+  - name: avg_tenure_months
+    label: Average tenure
+    expr: AVG(CASE WHEN c.is_active THEN c.tenure_months END)
+    unit: months
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [average tenure, subscriber tenure, customer lifetime, tenure in months]
+    term: GT-TEL-TENURE
+    description: Mean months since activation for active subscribers
+  - name: out_of_contract_pct
+    label: Out-of-contract share
+    expr: 100.0 * AVG(CASE WHEN c.is_active AND c.segment = 'Postpaid' THEN CASE WHEN c.out_of_contract THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [out of contract, off-contract share, contract expiry exposure]
+    term: GT-TEL-OUT-OF-CONTRACT
+    description: Share of active postpaid subscribers with no device agreement or term commitment remaining
+  - name: high_churn_risk_pct
+    label: High churn-risk share
+    expr: 100.0 * AVG(CASE WHEN c.is_active THEN CASE WHEN c.high_churn_risk THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [high churn risk, churn risk share, at-risk share, churn propensity]
+    term: GT-TEL-CHURN-PROPENSITY
+    description: Share of active subscribers with a churn propensity score of 70 or above
+  - name: care_contacts_per_sub
+    label: Care contacts per subscriber
+    expr: AVG(CASE WHEN c.is_active THEN c.care_contacts_90d END)
+    unit: contacts
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [care contacts, care contact rate, calls to care, contacted care]
+    term: GT-TEL-CARE-CONTACT
+    description: Mean customer care contacts in the last 90 days per active subscriber
+products: [DP-TEL-001]

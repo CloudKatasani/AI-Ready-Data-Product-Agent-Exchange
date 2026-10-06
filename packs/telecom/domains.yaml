@@ -1,0 +1,72 @@
+# Domains, conformed backbone entities and links (ported from the ADPM telecom pack, adapted to the
+# Altair warehouse). Owners are persona refs; golden sources are Gold objects in ALT_AI_PLATFORM.
+domains:
+  - id: subscriber
+    name: Subscriber & Accounts
+    description: Who the subscriber is, which market and rate plan they are on, how they pay, how long they have stayed, their contract state and how often they contact care.
+    owner: telecom:data-steward
+    entities: [Subscriber, Rate plan, Market, Care contact]
+  - id: churn-retention
+    name: Churn & Retention
+    description: Monthly base movements — gross adds, voluntary disconnects, port-outs, involuntary disconnects and plan migrations — plus retention save offers and their outcomes.
+    owner: telecom:retention-analyst
+    entities: [Line-month movement]
+  - id: billing-revenue
+    name: Billing & Revenue Assurance
+    description: Rating, invoicing, payments and bad debt; leakage between rated and billed charges; usage from mediated records; retail and wholesale roaming.
+    owner: telecom:network-dpo
+    entities: [Invoice, Payment, Usage record, Roaming record]
+  - id: network-performance
+    name: Network Performance
+    description: Cell sites and their daily counters — call attempts, drops, setup failures, downtime, planned maintenance, traffic and throughput.
+    owner: telecom:network-dpo
+    entities: [Cell site, Cell-day counters]
+  - id: service-assurance
+    name: Service Assurance
+    description: Network fault tickets from raise to restoration, the subscribers they impact and restoration against the fault SLA.
+    owner: telecom:network-dpo
+    entities: [Network fault]
+  - id: field-operations
+    name: Field Operations
+    description: Installs, fiber activations, broadband repairs and network site repairs worked by field technicians — truck rolls, first-time fix and appointment keeping.
+    owner: telecom:network-dpo
+    entities: [Work order, Technician]
+  - id: customer-experience
+    name: Customer Experience
+    description: Relationship and transactional NPS surveys and the care contacts that shape them.
+    owner: telecom:retention-analyst
+    entities: [NPS response]
+
+backbone:
+  entities:
+    - { name: Market, description: "One of Altair's eight markets; each belongs to one of four operating regions", key: market_id, domain: subscriber, golden_source: CONFORMED_GOLD.DIM_MARKET }
+    - { name: Rate plan, description: "A postpaid, prepaid or fiber broadband rate plan from the product catalogue", key: plan_id, domain: subscriber, golden_source: CONFORMED_GOLD.DIM_PLAN }
+    - { name: Subscriber, description: "A mobile line or fiber broadband home on one billing account", key: subscriber_id, domain: subscriber, golden_source: CONFORMED_GOLD.DIM_SUBSCRIBER }
+    - { name: Care contact, description: "One customer care interaction by phone, chat, store or app", key: contact_id, domain: subscriber, golden_source: CURATED_SILVER.CARE_CONTACT }
+    - { name: Line-month movement, description: "One line-month: opening base, gross add, voluntary disconnect, port-out, involuntary disconnect or plan migration, with any save offer", key: line_month_id, domain: churn-retention, golden_source: CONFORMED_GOLD.FCT_SUBSCRIBER_MONTHLY }
+    - { name: Invoice, description: "One monthly invoice with rated and billed charges, roaming and device installments", key: invoice_id, domain: billing-revenue, golden_source: CONFORMED_GOLD.FCT_BILLING }
+    - { name: Payment, description: "The payment (or write-off) settling one invoice", key: payment_id, domain: billing-revenue, golden_source: CURATED_SILVER.PAYMENT }
+    - { name: Usage record, description: "One line-month of mediated data, voice and SMS usage (CPNI)", key: usage_id, domain: billing-revenue, golden_source: CONFORMED_GOLD.FCT_MONTHLY_USAGE }
+    - { name: Roaming record, description: "A roaming usage record: retail outbound for Altair subscribers abroad or wholesale inbound for partner subscribers", key: record_id, domain: billing-revenue, golden_source: CONFORMED_GOLD.FCT_ROAMING }
+    - { name: Cell site, description: "A macro or small-cell radio site with technology, vendor and served subscribers", key: site_id, domain: network-performance, golden_source: CONFORMED_GOLD.DIM_CELL_SITE }
+    - { name: Cell-day counters, description: "One site-day of network counters from OSS", key: kpi_id, domain: network-performance, golden_source: CONFORMED_GOLD.FCT_NETWORK_DAILY }
+    - { name: Network fault, description: "A service-affecting fault ticket with restoration time and impacted subscribers", key: fault_id, domain: service-assurance, golden_source: CONFORMED_GOLD.FCT_NETWORK_FAULT }
+    - { name: Work order, description: "A field work order — install, fiber activation, broadband repair or network site repair", key: wo_id, domain: field-operations, golden_source: CONFORMED_GOLD.FCT_WORK_ORDER }
+    - { name: Technician, description: "A field technician based in one market with a primary skill", key: tech_id, domain: field-operations, golden_source: CURATED_SILVER.TECHNICIAN }
+    - { name: NPS response, description: "One survey response scored 0–10 at a relationship or transactional touchpoint", key: response_id, domain: customer-experience, golden_source: CONFORMED_GOLD.FCT_NPS_RESPONSE }
+  links:
+    - { from: Market, to: Subscriber, cardinality: 1:N, via: market_id }
+    - { from: Rate plan, to: Subscriber, cardinality: 1:N, via: plan_id }
+    - { from: Subscriber, to: Line-month movement, cardinality: 1:N, via: subscriber_id }
+    - { from: Subscriber, to: Invoice, cardinality: 1:N, via: subscriber_id }
+    - { from: Invoice, to: Payment, cardinality: 1:1, via: invoice_id }
+    - { from: Subscriber, to: Usage record, cardinality: 1:N, via: subscriber_id }
+    - { from: Subscriber, to: Care contact, cardinality: 1:N, via: subscriber_id }
+    - { from: Subscriber, to: NPS response, cardinality: 1:N, via: subscriber_id }
+    - { from: Subscriber, to: Work order, cardinality: 1:N, via: subscriber_id }
+    - { from: Market, to: Cell site, cardinality: 1:N, via: market_id }
+    - { from: Cell site, to: Cell-day counters, cardinality: 1:N, via: site_id }
+    - { from: Cell site, to: Network fault, cardinality: 1:N, via: site_id }
+    - { from: Market, to: Technician, cardinality: 1:N, via: market_id }
+    - { from: Technician, to: Work order, cardinality: 1:N, via: tech_id }
+    - { from: Market, to: Roaming record, cardinality: 1:N, via: market_id }

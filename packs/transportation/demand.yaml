@@ -1,0 +1,66 @@
+# Seeded intake requests and demand-board items. REQ-TRN-001 deliberately near-duplicates DP-TRN-001
+# (Delivery Performance) so the intake duplicate detector fires (AC5.1).
+requests:
+  - id: REQ-TRN-001
+    title: Regional on-time delivery scorecard
+    requester: transportation:terminal-ops-southeast
+    decision: Which terminals in my region get dock-process attention and extra appointment slots first next quarter
+    decider: Regional Operations Manager
+    cadence: Weekly, with a quarterly review
+    workaround: TMS exports pasted into a spreadsheet and split by terminal and shipper by hand
+    questions:
+      - What was on-time delivery by region last quarter?
+      - Which terminals have the longest dwell?
+      - How many loads were late because of the customer?
+      - Which shippers are at risk of a service penalty?
+    stakes: Shippers raise penalties before operations notices the terminals that are slipping
+    freshness: Daily by 06:00
+    status: SUBMITTED
+  - id: REQ-TRN-002
+    title: Tender acceptance and rejection tracking
+    requester: transportation:coo
+    decision: Which shippers' tenders to accept, price up or hand back at the next bid
+    decider: VP Sales
+    cadence: Monthly
+    workaround: Sales managers keep their own logs of rejected tenders from the EDI inbox
+    questions:
+      - What share of tenders did we accept last month by shipper segment?
+      - Which lanes do we reject most often, and why?
+      - How does tender acceptance compare with on-time delivery for the same shippers?
+    stakes: Rejected tenders erode the routing guide position with the shippers we most want to keep
+    freshness: Daily
+    status: IN_TRIAGE
+  - id: REQ-TRN-003
+    title: Maintenance cost per mile by tractor age
+    requester: transportation:network-analyst
+    decision: When to trade tractors in — at four, five or six years
+    decider: Director of Fleet
+    cadence: Annually, before the capital plan
+    workaround: Shop work orders and fuel cards joined in a desktop database once a year
+    questions:
+      - What is maintenance cost per mile by model year?
+      - How many shop days does a tractor lose per year by age?
+      - How does fuel economy fall with tractor age?
+    stakes: Tractors are kept past their economic life or traded in too early
+    freshness: Weekly
+    status: APPROVED
+  - id: REQ-TRN-004
+    title: Driver recruiting funnel
+    requester: transportation:ops-dpo
+    decision: Where to spend the recruiting budget across job boards, referral bonuses and schools
+    decider: VP Safety & Driver Recruiting
+    cadence: Monthly
+    workaround: Applicant tracking exports reconciled against hires in HR by hand
+    questions:
+      - How many applicants become hires by source?
+      - What is the 90-day retention of hires by source?
+      - What does a hire cost by region?
+    stakes: Recruiting spend replaces drivers who leave within 90 days
+    freshness: Weekly
+    status: SUBMITTED
+
+demand_items:
+  - { id: DM-TRN-001, title: "Tender acceptance product", kind: product, description: "Accepted and rejected tenders by shipper, lane and reason, for sales and network planning.", requested_by: transportation:coo, votes: 14 }
+  - { id: DM-TRN-002, title: "Maintenance cost per mile product", kind: product, description: "Shop work orders and parts cost per mile by tractor make, model year and terminal.", requested_by: transportation:network-analyst, votes: 9 }
+  - { id: DM-TRN-003, title: "Detention recovery agent", kind: agent, description: "Answers how much detention was billed versus incurred by shipper and facility, and where recovery lags.", requested_by: transportation:ops-dpo, votes: 11 }
+  - { id: DM-TRN-004, title: "Lane profitability agent", kind: agent, description: "Answers margin by lane and shipper once Freight Cost & Margin is certified.", requested_by: transportation:coo, votes: 7 }

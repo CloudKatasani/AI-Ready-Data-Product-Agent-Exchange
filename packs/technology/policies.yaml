@@ -1,0 +1,62 @@
+sensitivity_classes:
+  - { class: PII, description: "Personal information about customer contacts and Cobalt staff (names, emails, phone numbers)" }
+
+masking_policies:
+  - { id: MASK_PII, class: PII, macro: mask_pii, description: "Replace personal data with ••• unless the persona is cleared for PII" }
+  - { id: MASK_EMAIL, class: PII, macro: mask_email, description: "Hash the local part of email addresses" }
+  - { id: MASK_PHONE, class: PII, macro: mask_phone, description: "Show only the last four digits of phone numbers" }
+
+row_access_policies:
+  - id: RAP_REGION
+    dimension: region
+    description: "Regional sales leaders see only accounts in their own sales region"
+    bindings:
+      - { object: CONFORMED_GOLD.DIM_ACCOUNT, column: region }
+      - { object: CURATED_SILVER.CUSTOMER_ACCOUNT, column: region }
+
+column_tags:
+  # Contact and staff PII — masked for every persona without PII clearance.
+  - { column: CONFORMED_GOLD.DIM_CONTACT.first_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_CONTACT.last_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_CONTACT.full_name, classes: [PII], masking: MASK_PII }
+  # Certification demo (DP-TCH-004 gate 6): contact email and phone masking is not attached until FIX-2.
+  - { column: CONFORMED_GOLD.DIM_CONTACT.email, classes: [PII], masking: MASK_EMAIL, mask_pending_fix: FIX-2 }
+  - { column: CONFORMED_GOLD.DIM_CONTACT.phone, classes: [PII], masking: MASK_PHONE, mask_pending_fix: FIX-2 }
+  - { column: CONFORMED_GOLD.FCT_OPPORTUNITY.sales_rep, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.ACCOUNT_CONTACT.first_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.ACCOUNT_CONTACT.last_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.ACCOUNT_CONTACT.email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.ACCOUNT_CONTACT.phone, classes: [PII], masking: MASK_PHONE }
+  - { column: CURATED_SILVER.SALES_REP.rep_name, classes: [PII], masking: MASK_PII }
+  # Critical data elements (each has DQ rules in warehouse/dq).
+  - { column: CONFORMED_GOLD.FCT_ARR_MONTHLY.arr_usd, cde: true }
+  - { column: CONFORMED_GOLD.FCT_ARR_MONTHLY.arr_12m_ago_usd, cde: true }
+  - { column: CONFORMED_GOLD.FCT_ARR_MONTHLY.revenue_stream, cde: true }
+  - { column: CONFORMED_GOLD.DIM_ACCOUNT.region, cde: true }
+  - { column: CONFORMED_GOLD.DIM_ACCOUNT.account_id, cde: true }
+  - { column: CONFORMED_GOLD.FCT_OPPORTUNITY.amount_usd, cde: true }
+  - { column: CONFORMED_GOLD.FCT_OPPORTUNITY.opp_type, cde: true }
+  - { column: CONFORMED_GOLD.FCT_PRODUCT_USAGE.daily_active_users, cde: true }
+  - { column: CONFORMED_GOLD.FCT_PRODUCT_USAGE.downtime_minutes, cde: true }
+  - { column: CONFORMED_GOLD.FCT_SUPPORT_TICKET.first_response_minutes, cde: true }
+  - { column: CONFORMED_GOLD.FCT_SUPPORT_TICKET.ticket_status, cde: true }
+
+grants:
+  - persona: technology:emea-sales-vp
+    products: [DP-TCH-001, DP-TCH-002, DP-TCH-003]
+    agents: [AG-TCH-001, AG-TCH-002]
+  - persona: technology:revops-analyst
+    products: [DP-TCH-001, DP-TCH-002, DP-TCH-003]
+    agents: [AG-TCH-001, AG-TCH-002]
+  - persona: technology:data-product-owner
+    products: [DP-TCH-001, DP-TCH-002, DP-TCH-003, DP-TCH-004]
+    agents: [AG-TCH-001, AG-TCH-002]
+  - persona: technology:revenue-steward
+    products: [DP-TCH-001, DP-TCH-002, DP-TCH-003, DP-TCH-004]
+    agents: [AG-TCH-001, AG-TCH-002]
+  - persona: technology:cfo
+    # Aggregates only (archetype E): sees every headline KPI tile, never row-level data.
+    products: [DP-TCH-001, DP-TCH-002, DP-TCH-003, DP-TCH-004]
+    agents: [AG-TCH-001, AG-TCH-002]
+
+public_products: []
