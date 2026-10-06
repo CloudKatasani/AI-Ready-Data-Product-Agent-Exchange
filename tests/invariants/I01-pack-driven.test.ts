@@ -1,4 +1,4 @@
-import { mkdtempSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -35,5 +35,18 @@ describe('I01 pack-driven, engine-generic', () => {
     expect(scan(terms.length ? terms : [planted], [file])).toHaveLength(1);
   });
 
-  it.todo('every UI module reads industry content through getPack(), never from literals (Phase 2 screens)');
+  it('every UI module reads industry content through getPack(), never from pack files or literal pack ids', () => {
+    const ui = (dir: string): string[] =>
+      readdirSync(dir).flatMap((n) => {
+        const p = join(dir, n);
+        return statSync(p).isDirectory() ? ui(p) : /\.(ts|tsx)$/.test(n) ? [p] : [];
+      });
+    const sources = [...ui(join(process.cwd(), 'src', 'app')), ...ui(join(process.cwd(), 'src', 'components'))];
+    const packIds = listPackIds();
+    const offenders = sources.filter((f) => {
+      const t = readFileSync(f, 'utf8');
+      return /from ['"](node:)?fs['"]/.test(t) && /packs/.test(t) || packIds.some((id) => new RegExp(`['"\`]/?${id}[/'"\`]`).test(t));
+    });
+    expect(offenders).toEqual([]);
+  });
 });

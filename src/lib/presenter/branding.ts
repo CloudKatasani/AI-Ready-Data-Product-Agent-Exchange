@@ -84,3 +84,38 @@ export function brandTokens(brand: Brand): BrandTokens {
     '--brand-accent-foreground': accentFg,
   };
 }
+
+function toHex(r: number, g: number, b: number): string {
+  return `#${[r, g, b].map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('')}`;
+}
+
+/** True when the colour carries white or ink text at WCAG AA (normal text). */
+export function passesAA(hex: string): boolean {
+  return Boolean(parseHex(hex) && foregroundFor(hex));
+}
+
+/**
+ * The nearest accessible alternative for a brand colour that fails AA: darken it step by step (towards
+ * white text) or, for light colours, towards ink text — deterministic, keeping the hue.
+ */
+export function accessibleAlternative(hex: string): string {
+  const rgb = parseHex(hex);
+  if (!rgb) return DEFAULT_BRAND.primary;
+  if (foregroundFor(hex)) return hex.toLowerCase();
+  for (let k = 0.95; k > 0; k -= 0.05) {
+    const c = toHex(rgb[0] * k, rgb[1] * k, rgb[2] * k);
+    if (contrastRatio(c, WHITE) >= AA_NORMAL_TEXT) return c;
+  }
+  return INK;
+}
+
+export interface BrandCheck {
+  ok: boolean;
+  problems: { field: 'primary' | 'accent'; colour: string; suggestion: string }[];
+}
+
+/** AC1.2: reject brand colours that fail AA, each with a suggested accessible alternative. */
+export function checkBrand(brand: Pick<Brand, 'primary' | 'accent'>): BrandCheck {
+  const problems = (['primary', 'accent'] as const).filter((f) => !passesAA(brand[f])).map((f) => ({ field: f, colour: brand[f], suggestion: accessibleAlternative(brand[f]) }));
+  return { ok: problems.length === 0, problems };
+}

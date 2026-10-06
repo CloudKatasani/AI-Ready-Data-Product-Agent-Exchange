@@ -62,6 +62,13 @@ export const strategyCopy = {
     roles: 'Roles',
     workstream: 'Workstream',
     start: 'Start',
+    planView: 'Plan',
+    coverageView: 'Coverage',
+    simulate: 'Simulate +4 weeks',
+    phaseLabel: 'phase',
+    level: 'Level',
+    sourceTable: 'Source table',
+    blocker: 'Next blocker',
   },
   portfolio: {
     title: 'Portfolio',

@@ -46,5 +46,16 @@ describe('I08 determinism', () => {
     120_000,
   );
 
-  it.todo('scripted answers for every golden scenario are byte-identical across runs (Phase 3)');
+  it('scripted answers for every golden scenario are byte-identical across runs', async () => {
+    const { respondScripted } = await import('@/lib/agents/scripted/respond');
+    const { pack, persona, rubrics, service } = await import('../setup/query');
+    // Timings are wall-clock measurements, not content; DuckDB's parallel float sums can differ in the last
+    // bit, so raw cells compare at 12 significant digits. Everything else must match byte for byte.
+    const strip = (a: unknown) =>
+      JSON.stringify(a, (k, v) => (k === 'latencyMs' || k === 'ms' || k === 'elapsedMs' ? 0 : typeof v === 'string' ? v.replace(/\b\d+ ms\b/g, 'N ms') : typeof v === 'number' && !Number.isInteger(v) ? Number(v.toPrecision(12)) : v));
+    for (const s of pack.scenarios) {
+      const run = async () => strip(await respondScripted(s.agent, s.question, { pack, rubrics, qs: (await service()).qs, who: persona('D') }));
+      expect(await run(), s.id).toBe(await run());
+    }
+  });
 });

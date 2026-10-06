@@ -3,15 +3,19 @@ import { ALL_NAV_ITEMS } from '../../src/components/shell/nav';
 export const PACK = 'utilities';
 
 /** Screens built so far (no stub). */
-export const BUILT = new Set(['home', 'ask', 'marketplace', 'access', 'request', 'studio', 'factory', 'explorer', 'semantic', 'glossary', 'context', 'health', 'agentQuality', 'costValue', 'impact', 'audit', 'platformMap', 'knockout', 'compare', 'readiness', 'roadmap', 'portfolio', 'operatingModel']);
+export const BUILT = new Set(['home', 'ask', 'marketplace', 'access', 'request', 'studio', 'factory', 'explorer', 'semantic', 'glossary', 'context', 'health', 'agentQuality', 'costValue', 'impact', 'audit', 'platformMap', 'knockout', 'compare', 'readiness', 'roadmap', 'portfolio', 'operatingModel', 'admin']);
 
 /** Scaffolded routes that still render the Phase 0 stub. */
 export const STUB_URLS: string[] = [
   ...ALL_NAV_ITEMS.filter((i) => !BUILT.has(i.id)).map((i) => `/${PACK}/${i.path}`),
 ];
 
-/** Built screens (Phases 2–8). */
+/** Built screens (Phases 2–9). */
 export const SCREEN_URLS: string[] = [
+  `/${PACK}/admin`,
+  `/${PACK}/story/executive-5`,
+  `/launch?pack=${PACK}`,
+  `/${PACK}/roadmap?view=coverage&simulate=8`,
   `/${PACK}/platform-map`,
   `/${PACK}/why/knockout`,
   `/${PACK}/why/knockout?off=context&off=governance`,

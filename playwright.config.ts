@@ -11,10 +11,16 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: { baseURL, trace: 'retain-on-failure', viewport: { width: 1920, height: 1080 } },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], viewport: { width: 1920, height: 1080 } } }],
+  projects: [
+    { name: 'chromium', testMatch: ['e2e/**/*.spec.ts', 'a11y/**/*.spec.ts'], testIgnore: ['e2e/presenter.spec.ts'], use: { ...devices['Desktop Chrome'], viewport: { width: 1920, height: 1080 } } },
+    // Story runs (every story × every deep pack) after the feature suites; they never reset.
+    { name: 'stories', testMatch: ['stories/**/*.spec.ts'], dependencies: ['chromium'], use: { ...devices['Desktop Chrome'], viewport: { width: 1920, height: 1080 } } },
+    // Launch + reset rewrite the shared app DB, so they run last and alone.
+    { name: 'presenter', testMatch: ['e2e/presenter.spec.ts'], dependencies: ['stories'], fullyParallel: false, use: { ...devices['Desktop Chrome'], viewport: { width: 1920, height: 1080 } } },
+  ],
   webServer: {
     // Warehouse build is cached by pack content hash; db:setup migrates and seeds (idempotent).
-    command: `pnpm warehouse:build --pack utilities && pnpm db:setup && pnpm start --port ${port}`,
+    command: `pnpm warehouse:build && pnpm db:setup && pnpm start --port ${port}`,
     url: `${baseURL}/api/health`,
     reuseExistingServer: !process.env.CI,
     timeout: 240_000,

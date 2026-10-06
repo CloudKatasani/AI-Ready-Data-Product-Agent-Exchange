@@ -6,7 +6,7 @@ test('root redirects to the launcher, which lists installed packs', async ({ pag
   await expect(page).toHaveURL(/\/launch$/);
   const card = page.locator(`[data-pack="${PACK}"]`);
   await expect(card).toBeVisible();
-  await card.getByRole('link').click();
+  await card.getByRole('link', { name: 'Open' }).click();
   await expect(page).toHaveURL(new RegExp(`/${PACK}/home$`));
   await expect(page.getByTestId('synthetic-footer')).toContainText('as of');
 });

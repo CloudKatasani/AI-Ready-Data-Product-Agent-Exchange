@@ -7,7 +7,7 @@ import { knockout } from '@/lib/presenter/strategy';
 import { activePrincipal } from '../../../_server/session';
 
 const c = copy.strategy;
-type SP = { off?: string | string[] };
+type SP = { off?: string | string[]; kpi?: string };
 
 export default async function KnockoutPage({ params, searchParams }: { params: Promise<{ pack: string }>; searchParams: Promise<SP> }) {
   const { pack: packId } = await params;
@@ -25,6 +25,7 @@ export default async function KnockoutPage({ params, searchParams }: { params: P
         <p className="text-muted-foreground">{c.knockout.intro}</p>
       </header>
       <form method="get" className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-surface p-3" data-testid="knockout-switches">
+        {sp.kpi && <input type="hidden" name="kpi" value={sp.kpi} />}
         <fieldset className="flex flex-wrap items-center gap-3">
           <legend className="sr-only">{c.knockout.switches}</legend>
           {KNOCKOUT_LAYERS.map((l) => (
@@ -47,7 +48,7 @@ export default async function KnockoutPage({ params, searchParams }: { params: P
           const m = a ? metricOf(a.query.view, r.metric) : undefined;
           const unit = m?.unit === '%' ? '%' : m?.unit ? ` ${m.unit}` : '';
           return (
-            <li key={r.id} className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4" data-answer={r.id} data-kpi={r.kpi} data-delta={r.deltaPct ?? ''} data-confidence={r.confidence}>
+            <li key={r.id} className={`flex flex-col gap-3 rounded-lg border bg-surface p-4 ${sp.kpi === r.kpi ? 'border-primary ring-2 ring-primary/30' : 'border-border'}`} data-selected={sp.kpi === r.kpi} data-answer={r.id} data-kpi={r.kpi} data-delta={r.deltaPct ?? ''} data-confidence={r.confidence}>
               <p className="font-medium">{r.question}</p>
               <dl className="grid grid-cols-3 gap-2 text-sm">
                 <div>

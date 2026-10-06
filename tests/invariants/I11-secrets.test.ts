@@ -33,5 +33,9 @@ describe('I11 secrets', () => {
     expect(() => assertStartupConfig(parseEnv({ NODE_ENV: 'production' }))).toThrow(/SESSION_SECRET/);
   });
 
-  it.todo('the admin screen exposes key presence only (Phase 6 Admin)');
+  it('the admin screen exposes key presence only', () => {
+    const admin = readFileSync(join(process.cwd(), 'src/app/[pack]/(presenter)/admin/page.tsx'), 'utf8');
+    expect(admin).toMatch(/hasApiKey\(/);
+    expect(admin).not.toMatch(/anthropicApiKey|ANTHROPIC_API_KEY/);
+  });
 });

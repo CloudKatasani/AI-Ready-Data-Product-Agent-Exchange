@@ -5,11 +5,15 @@
 import { factoryCopy } from './en-factory';
 import { operateCopy } from './en-operate';
 import { strategyCopy } from './en-strategy';
+import { presenterCopy } from './en-presenter';
+import { adminCopy } from './en-admin';
 
 export const copy = {
   factory: factoryCopy,
   operate: operateCopy,
   strategy: strategyCopy,
+  presenter: presenterCopy,
+  admin: adminCopy,
   doors: {
     home: 'Home',
     consume: 'Consume',
@@ -62,7 +66,6 @@ export const copy = {
     personaNowViewing: 'Now viewing as',
     personaArchetype: 'Archetype',
     presenterMenu: 'Presenter menu',
-    presenterPending: 'Presenter tools arrive in Phase 9.',
     footer: 'Synthetic demo data',
     asOf: 'as of',
     modes: { scripted: 'Scripted', live: 'Live', auto: 'Auto' },

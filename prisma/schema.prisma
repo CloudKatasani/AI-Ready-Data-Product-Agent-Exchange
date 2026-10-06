@@ -617,3 +617,22 @@ model PrioritisationOverride {
 
   @@index([packId, productId])
 }
+
+// ───────── Presenter (Phase 9) ─────────
+
+/// What a presenter launches: pack + branding + terminology + story + agent mode (09 §4). Never restored by
+/// a reset — the profile and its branding survive it (AC1.4).
+model DemoProfile {
+  id          String    @id @default(cuid())
+  name        String
+  packId      String
+  brandJson   String // { productName, companyName, logoDataUrl?, primary, accent }
+  termsJson   String // display-only overrides { from: to }
+  storyId     String?
+  agentMode   String    @default("scripted")
+  locked      Boolean   @default(false)
+  archivedAt  DateTime?
+  snapshotAt  DateTime?
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
+}

@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 /** Steps a highlight through the flow path (Bronze → … → Agent). Honours prefers-reduced-motion: no auto-advance. */
-export function FlowReplay({ steps, label, replayLabel }: { steps: { layer: string; id: string; label: string }[]; label: string; replayLabel: string }) {
+export function FlowReplay({ steps, label, replayLabel, autoplay = false }: { steps: { layer: string; id: string; label: string }[]; label: string; replayLabel: string; autoplay?: boolean }) {
   const [at, setAt] = useState(steps.length - 1);
   const [running, setRunning] = useState(false);
   useEffect(() => {
@@ -15,11 +15,14 @@ export function FlowReplay({ steps, label, replayLabel }: { steps: { layer: stri
     const t = setTimeout(() => setAt((n) => n + 1), 650);
     return () => clearTimeout(t);
   }, [running, at, steps.length]);
-  const replay = () => {
+  const replay = useCallback(() => {
     const reduce = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     setAt(reduce ? steps.length - 1 : 0);
     setRunning(!reduce);
-  };
+  }, [steps.length]);
+  useEffect(() => {
+    if (autoplay) replay();
+  }, [autoplay, replay]);
   return (
     <section aria-label={label} className="flex flex-col gap-2" data-testid="flow-replay" data-at={at}>
       <div className="flex items-center gap-3">

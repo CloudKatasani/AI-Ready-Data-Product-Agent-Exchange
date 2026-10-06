@@ -15,16 +15,20 @@ interface AppShellProps {
   personas: PersonaCard[];
   activePersonaId: string;
   onSwitchPersona: SwitchPersonaAction;
+  /** Kiosk mode: the launcher is hidden (01 §M1 "Lock to this profile"). */
+  locked?: boolean;
+  /** Presenter overlay and other floating layers. */
+  overlay?: ReactNode;
   children: ReactNode;
 }
 
-export function AppShell({ brand, pack, mode, asOf, personas, activePersonaId, onSwitchPersona, children }: AppShellProps) {
+export function AppShell({ brand, pack, mode, asOf, personas, activePersonaId, onSwitchPersona, locked = false, overlay, children }: AppShellProps) {
   return (
     <div style={brandTokens(brand) as CSSProperties} className="grid min-h-screen grid-rows-[auto_1fr_auto]">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-surface focus:p-2">
         {copy.shell.skipToContent}
       </a>
-      <TopBar brand={brand} pack={pack} mode={mode} personas={personas} activePersonaId={activePersonaId} onSwitchPersona={onSwitchPersona} />
+      <TopBar brand={brand} pack={pack} mode={mode} personas={personas} activePersonaId={activePersonaId} onSwitchPersona={onSwitchPersona} locked={locked} />
       <div className="grid grid-cols-[15rem_1fr]">
         <aside className="border-r border-border bg-surface">
           <DoorNav pack={pack} />
@@ -34,6 +38,7 @@ export function AppShell({ brand, pack, mode, asOf, personas, activePersonaId, o
         </main>
       </div>
       <Footer asOf={asOf} />
+      {overlay}
     </div>
   );
 }

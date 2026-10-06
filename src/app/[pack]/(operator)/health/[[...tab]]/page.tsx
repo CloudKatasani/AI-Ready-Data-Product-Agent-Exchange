@@ -12,8 +12,9 @@ import { breakIncidentAction, resolveIncidentAction } from '../../actions';
 
 const c = copy.operate.health;
 
-export default async function HealthPage({ params }: { params: Promise<{ pack: string; tab?: string[] }> }) {
+export default async function HealthPage({ params, searchParams }: { params: Promise<{ pack: string; tab?: string[] }>; searchParams: Promise<{ incident?: string }> }) {
   const { pack: packId, tab: segs } = await params;
+  const { incident: focus } = await searchParams;
   const { tab = 'board' } = optionalSegments(segs, ['tab'] as const);
   if (tab !== 'board' && tab !== 'incidents') notFound();
   const pack = getPack(packId);
@@ -64,7 +65,7 @@ export default async function HealthPage({ params }: { params: Promise<{ pack: s
             <p className="text-sm text-muted-foreground">{c.breakIntro}</p>
             <ul className="grid gap-3 md:grid-cols-2">
               {pack.incidents.map((t) => (
-                <li key={t.id} className="flex flex-col gap-2 rounded-md border border-border p-3" data-template={t.id}>
+                <li key={t.id} className={`flex flex-col gap-2 rounded-md border p-3 ${focus === t.id ? 'border-primary ring-2 ring-primary/30' : 'border-border'}`} data-template={t.id} data-selected={focus === t.id}>
                   <p className="font-medium">
                     {t.title} <span className="text-xs text-muted-foreground">{t.id} · {t.severity} · {t.kind.replace('_', ' ')}</span>
                   </p>

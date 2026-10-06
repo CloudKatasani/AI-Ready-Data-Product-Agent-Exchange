@@ -6,8 +6,9 @@ import { flowPath, platformLayers } from '@/lib/strategy/platform';
 
 const c = copy.strategy.platform;
 
-export default async function PlatformMapPage({ params }: { params: Promise<{ pack: string }> }) {
+export default async function PlatformMapPage({ params, searchParams }: { params: Promise<{ pack: string }>; searchParams: Promise<{ replay?: string }> }) {
   const { pack: packId } = await params;
+  const sp = await searchParams;
   const pack = getPack(packId);
   const layers = platformLayers(pack);
   const path = flowPath(pack);
@@ -19,7 +20,7 @@ export default async function PlatformMapPage({ params }: { params: Promise<{ pa
         <h1 className="text-2xl font-semibold">{c.title}</h1>
         <p className="text-muted-foreground">{c.intro}</p>
       </header>
-      <FlowReplay steps={path} label={c.flow} replayLabel={c.replay} />
+      <FlowReplay steps={path} label={c.flow} replayLabel={c.replay} autoplay={sp.replay === '1'} />
       <nav aria-label={c.path} className="rounded-lg border border-border bg-surface p-3">
         <h2 className="text-sm font-semibold">{c.path}</h2>
         <ol className="mt-1 flex flex-wrap gap-3 text-sm">

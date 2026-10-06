@@ -137,11 +137,11 @@
       say: "Cost and value side by side, down to the cost of a single answer."
       expect: { costPerAnswerShown: true }
     - id: p7
-      title: Your tools, your runbook
-      go: { route: platform-map, persona: C, state: { tab: build-guide } }
-      do: ["Open the Build Guide", "Switch the tooling profile", "Show the regenerated runbook"]
-      say: "The pattern does not depend on one vendor's tools. Switch the tooling and the runbook regenerates."
-      expect: { runbookRegenerated: true }
+      title: The stack, layer by layer
+      go: { route: platform-map, persona: C, state: {} }
+      do: ["Open each layer", "Read what breaks without it", "Follow the guided path"]
+      say: "Nine layers, each with a job. Take one away and the Platform Map shows which of {{company.name}}'s answers break — and how."
+      expect: { layersShown: 9 }
     - id: p8
       title: Take it with you
       go: { route: studio, persona: C, state: { tab: exports } }
@@ -188,7 +188,7 @@
       expect: { overrideRecorded: true }
     - id: i6
       title: How mature are we becoming
-      go: { route: readiness, persona: E, state: { tab: maturity } }
+      go: { route: portfolio, persona: E, state: { view: maturity } }
       do: ["Open the maturity view", "Compare today with the target state"]
       say: "Maturity is measured on the same dimensions we started with, so progress is visible."
       expect: { maturityShown: true }

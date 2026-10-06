@@ -29,3 +29,8 @@ export function defaultPersona(pack: Pack): Persona {
 export function resolvePersona(pack: Pack, personaId: string | null): Persona {
   return pack.personas.find((p) => p.id === personaId) ?? defaultPersona(pack);
 }
+
+/** Signed active-profile cookie (same HMAC scheme as the persona cookie). */
+export const PROFILE_COOKIE = 'ks_profile';
+export const signProfile = signPersona;
+export const verifyProfile = verifyPersona;
