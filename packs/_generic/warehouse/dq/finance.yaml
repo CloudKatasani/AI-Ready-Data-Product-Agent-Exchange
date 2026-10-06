@@ -1,0 +1,75 @@
+# Finance DQ rules (FCT_FINANCIALS, DIM_LEGAL_ENTITY and their Silver sources).
+- id: DQ-GEN-001
+  object: CONFORMED_GOLD.FCT_FINANCIALS
+  column: actual_usd
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every journal line carries an amount (zero on budget lines) — revenue, cost and margin depend on it.
+- id: DQ-GEN-002
+  object: CONFORMED_GOLD.FCT_FINANCIALS
+  column: actual_usd
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Amounts are posted as positive values by account type; reversals are separate journals.
+- id: DQ-GEN-003
+  object: CONFORMED_GOLD.FCT_FINANCIALS
+  column: budget_usd
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: high
+  alert_route: steward
+  description: Every budget line carries a budgeted amount (zero on journal lines) for variance to budget.
+- id: DQ-GEN-004
+  object: CONFORMED_GOLD.FCT_FINANCIALS
+  column: account_type
+  dimension: validity
+  assertion: "invalid_rate == 0"
+  allowed: [Revenue, COGS, Opex]
+  severity: critical
+  alert_route: steward
+  description: Every line maps to one of the three P&L account types after conformance.
+- id: DQ-GEN-005
+  object: CONFORMED_GOLD.FCT_FINANCIALS
+  column: is_intercompany
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: The intercompany flag is always set, so BR-GEN-001 can eliminate intercompany sales.
+- id: DQ-GEN-006
+  object: CONFORMED_GOLD.FCT_FINANCIALS
+  column: line_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per journal or budget line — CDC duplicates are removed in Silver.
+- id: DQ-GEN-007
+  object: CONFORMED_GOLD.FCT_FINANCIALS
+  column: posting_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: Journal lines for the latest business day have arrived (the GL feed is no more than two days behind).
+- id: DQ-GEN-008
+  object: CONFORMED_GOLD.DIM_LEGAL_ENTITY
+  column: region
+  dimension: validity
+  assertion: "invalid_rate == 0"
+  allowed: [North America, Latin America, EMEA, APAC]
+  severity: critical
+  alert_route: steward
+  description: Every legal entity belongs to one of the four reporting regions (row access depends on it).
+- id: DQ-GEN-009
+  object: CURATED_SILVER.GL_JOURNAL_LINE
+  column: journal_line_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: medium
+  alert_route: engineering
+  description: Silver keeps only the latest version of each journal line.

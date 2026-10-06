@@ -1,0 +1,80 @@
+name: WORKING_CAPITAL
+description: Receivables and payables — DSO, DPO, overdue balances and payment timeliness at invoice grain
+tables:
+  - { alias: i, fqn: CONFORMED_GOLD.FCT_INVOICE, pk: invoice_key }
+  - { alias: e, fqn: CONFORMED_GOLD.DIM_LEGAL_ENTITY, pk: entity_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: i.entity_key, to: e.entity_key }
+  - { from: i.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: e.region, label: Region, synonyms: [geography, territory, area], term: GT-GEN-REGION }
+  - { name: business_unit, expr: e.business_unit, label: Business unit, synonyms: [bu, division, line of business], term: GT-GEN-BUSINESS-UNIT }
+  - { name: legal_entity, expr: e.entity_name, label: Legal entity, synonyms: [operating company, entity, subsidiary], term: GT-GEN-LEGAL-ENTITY }
+  - { name: ledger, expr: i.ledger, label: Ledger, synonyms: [receivables or payables, ar or ap] }
+  - { name: spend_category, expr: i.spend_category, label: Spend category, synonyms: [supplier category, purchase category] }
+  - { name: disputed, expr: i.disputed, label: Disputed invoice, synonyms: [in dispute, disputed invoices], term: GT-GEN-DISPUTED-INVOICE }
+time_dimensions:
+  - { name: invoice_date, expr: d.date, default: true }
+facts:
+  - { name: amount_usd, expr: i.amount_usd, description: Invoice amount in USD }
+  - { name: days_to_settle, expr: i.days_to_settle, description: Days from invoice to payment (open invoices age to the as-of date) }
+metrics:
+  - name: dso_days
+    label: Days sales outstanding
+    expr: SUM(CASE WHEN i.ledger = 'Receivable' THEN i.amount_usd * i.days_to_settle END) / NULLIF(SUM(CASE WHEN i.ledger = 'Receivable' THEN i.amount_usd END), 0)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [dso, debtor days, receivable days, collection period]
+    term: GT-GEN-DSO
+    description: Amount-weighted days from customer invoice to cash (open invoices age to the as-of date)
+    default_filters: [ { rule: BR-GEN-005 } ]
+    naive_expr: AVG(date_diff('day', i.invoice_date, i.due_date))
+  - name: dpo_days
+    label: Days payables outstanding
+    expr: SUM(CASE WHEN i.ledger = 'Payable' THEN i.amount_usd * i.days_to_settle END) / NULLIF(SUM(CASE WHEN i.ledger = 'Payable' THEN i.amount_usd END), 0)
+    unit: days
+    decimals: 1
+    direction: neutral
+    synonyms: [dpo, creditor days, payable days]
+    term: GT-GEN-DPO
+    description: Amount-weighted days from supplier invoice to payment (open invoices age to the as-of date)
+  - name: overdue_receivables_pct
+    label: Overdue receivables
+    expr: 100.0 * SUM(CASE WHEN i.ledger = 'Receivable' AND i.is_overdue THEN i.amount_usd ELSE 0 END) / NULLIF(SUM(CASE WHEN i.ledger = 'Receivable' AND i.is_open THEN i.amount_usd ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [past due receivables, overdue ar, aged debt share]
+    term: GT-GEN-OVERDUE-AR
+    description: Share of open receivables that are past their due date
+    default_filters: [ { rule: BR-GEN-005 } ]
+  - name: open_receivables
+    label: Open receivables
+    expr: SUM(CASE WHEN i.ledger = 'Receivable' AND i.is_open THEN i.amount_usd ELSE 0 END)
+    unit: USD
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [ar balance, outstanding receivables, accounts receivable balance]
+    term: GT-GEN-OPEN-AR
+    description: Value of customer invoices not yet paid at the as-of date
+  - name: supplier_on_time_pct
+    label: Supplier payments on time
+    expr: 100.0 * AVG(CASE WHEN i.ledger = 'Payable' AND i.paid_date IS NOT NULL THEN CASE WHEN i.paid_on_time THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [on-time payment rate, paid on time, payment timeliness]
+    term: GT-GEN-ON-TIME-PAYMENT
+    description: Share of paid supplier invoices settled on or before their due date
+  - name: invoices_issued
+    label: Customer invoices issued
+    expr: COUNT_IF(i.ledger = 'Receivable')
+    unit: invoices
+    decimals: 0
+    direction: neutral
+    synonyms: [invoices raised, number of invoices, invoice count]
+    term: GT-GEN-INVOICE
+    description: Customer invoices raised in the period
+products: [DP-GEN-002]

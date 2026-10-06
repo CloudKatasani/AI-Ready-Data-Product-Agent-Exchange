@@ -1,0 +1,95 @@
+name: FINANCE
+description: Group P&L — revenue, cost of sales, operating expense, margins and variance to budget at journal-line grain
+tables:
+  - { alias: f, fqn: CONFORMED_GOLD.FCT_FINANCIALS, pk: line_key }
+  - { alias: e, fqn: CONFORMED_GOLD.DIM_LEGAL_ENTITY, pk: entity_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: f.entity_key, to: e.entity_key }
+  - { from: f.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: e.region, label: Region, synonyms: [geography, territory, area], term: GT-GEN-REGION }
+  - { name: business_unit, expr: e.business_unit, label: Business unit, synonyms: [bu, division, line of business], term: GT-GEN-BUSINESS-UNIT }
+  - { name: legal_entity, expr: e.entity_name, label: Legal entity, synonyms: [operating company, entity, subsidiary], term: GT-GEN-LEGAL-ENTITY }
+  - { name: account_type, expr: f.account_label, label: Account type, synonyms: [p&l line, account] }
+  - { name: cost_center, expr: f.cost_center, label: Cost center, synonyms: [cost centre, function] }
+  - { name: intercompany, expr: f.is_intercompany, label: Intercompany, synonyms: [intercompany sales, internal recharges, ic], term: GT-GEN-INTERCOMPANY }
+time_dimensions:
+  - { name: posting_date, expr: d.date, default: true }
+facts:
+  - { name: actual_usd, expr: f.actual_usd, description: Posted actual amount in USD (zero on budget lines) }
+  - { name: budget_usd, expr: f.budget_usd, description: Budgeted amount in USD (zero on journal lines) }
+metrics:
+  - name: net_revenue
+    label: Net revenue
+    expr: SUM(CASE WHEN f.account_type = 'Revenue' THEN f.actual_usd ELSE 0 END)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [revenue, external revenue, net sales revenue]
+    term: GT-GEN-NET-REVENUE
+    description: Revenue posted to the general ledger in the period, net of intercompany sales
+    default_filters: [ { rule: BR-GEN-001 } ]
+    naive_expr: SUM(f.actual_usd)
+  - name: cost_of_sales
+    label: Cost of sales
+    expr: SUM(CASE WHEN f.account_type = 'COGS' THEN f.actual_usd ELSE 0 END)
+    unit: USD
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [cogs, cost of goods sold, direct costs]
+    term: GT-GEN-COST-OF-SALES
+    description: Direct cost of the goods and services sold in the period, net of intercompany
+    default_filters: [ { rule: BR-GEN-001 } ]
+  - name: gross_margin_pct
+    label: Gross margin
+    expr: 100.0 * (SUM(CASE WHEN f.account_type = 'Revenue' THEN f.actual_usd ELSE 0 END) - SUM(CASE WHEN f.account_type = 'COGS' THEN f.actual_usd ELSE 0 END)) / NULLIF(SUM(CASE WHEN f.account_type = 'Revenue' THEN f.actual_usd ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [gross margin percent, gross margin percentage, gross profit margin]
+    term: GT-GEN-GROSS-MARGIN
+    description: Net revenue less cost of sales, as a share of net revenue
+    default_filters: [ { rule: BR-GEN-001 } ]
+    naive_expr: 100.0 * (SUM(f.actual_usd) - SUM(CASE WHEN f.account_type = 'COGS' THEN f.actual_usd ELSE 0 END)) / NULLIF(SUM(f.actual_usd), 0)
+  - name: operating_expense
+    label: Operating expense
+    expr: SUM(CASE WHEN f.account_type = 'Opex' THEN f.actual_usd ELSE 0 END)
+    unit: USD
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [opex, operating costs, overheads]
+    term: GT-GEN-OPEX
+    description: Selling, general, administrative and engineering expense posted in the period, net of intercompany
+    default_filters: [ { rule: BR-GEN-001 } ]
+  - name: operating_margin_pct
+    label: Operating margin
+    expr: 100.0 * (SUM(CASE WHEN f.account_type = 'Revenue' THEN f.actual_usd ELSE 0 END) - SUM(CASE WHEN f.account_type <> 'Revenue' THEN f.actual_usd ELSE 0 END)) / NULLIF(SUM(CASE WHEN f.account_type = 'Revenue' THEN f.actual_usd ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [ebit margin, operating profit margin]
+    term: GT-GEN-OPERATING-MARGIN
+    description: Net revenue less cost of sales and operating expense, as a share of net revenue
+    default_filters: [ { rule: BR-GEN-001 } ]
+  - name: revenue_vs_budget_pct
+    label: Revenue vs budget
+    expr: 100.0 * (SUM(CASE WHEN f.account_type = 'Revenue' THEN f.actual_usd ELSE 0 END) - SUM(CASE WHEN f.account_type = 'Revenue' THEN f.budget_usd ELSE 0 END)) / NULLIF(SUM(CASE WHEN f.account_type = 'Revenue' THEN f.budget_usd ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [revenue variance, revenue versus budget, revenue against budget, revenue against plan, revenue to budget]
+    term: GT-GEN-BUDGET-VARIANCE
+    description: Net revenue above (positive) or below (negative) the approved budget, as a share of budget
+    default_filters: [ { rule: BR-GEN-001 } ]
+  - name: opex_vs_budget_pct
+    label: Opex vs budget
+    expr: 100.0 * (SUM(CASE WHEN f.account_type = 'Opex' THEN f.actual_usd ELSE 0 END) - SUM(CASE WHEN f.account_type = 'Opex' THEN f.budget_usd ELSE 0 END)) / NULLIF(SUM(CASE WHEN f.account_type = 'Opex' THEN f.budget_usd ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [opex variance, cost variance, opex versus budget, spend against budget]
+    term: GT-GEN-BUDGET-VARIANCE
+    description: Operating expense above (positive) or below (negative) the approved budget, as a share of budget
+    default_filters: [ { rule: BR-GEN-001 } ]
+products: [DP-GEN-001]

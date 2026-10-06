@@ -1,0 +1,49 @@
+# Value cases per product (marketplace value model; ADPM `_generic` seed-product value statements). All figures
+# are illustrative and synthetic.
+- id: VC-GEN-001
+  product: DP-GEN-001
+  hypothesis: One certified margin and revenue definition cuts the monthly close-to-management-pack cycle and stops repricing decisions being made on stale, inconsistent margin figures.
+  baseline: "Ledger extracts reconciled by hand against the budget workbook; about 3 analyst days per quarter per region on margin reporting alone."
+  benefit_model: "analyst_days_saved * loaded_day_rate + margin_points_protected * annual_revenue_at_risk"
+  assumptions:
+    - { text: "Analyst days saved per year across four regions", value: 120, unit: days, source: "FP&A time study, H1 2026" }
+    - { text: "Fully loaded analyst day rate", value: 760, unit: usd_per_day, source: "Finance planning rates FY26" }
+    - { text: "Gross margin protected by earlier repricing", value: 0.1, unit: percentage_points, source: "Commercial review of 2025 repricing delays" }
+    - { text: "Annual revenue exposed to repricing decisions", value: 480000000, unit: usd, source: "Group plan FY26" }
+  annual_value_usd: 571200
+  measured: { value_usd: 498000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-GEN-002
+  product: DP-GEN-002
+  hypothesis: An end-to-end view of receivables and payables exposes the handover that delays cash, reducing DSO by removing the worst delay.
+  baseline: "Aged-debt and AP reports pulled from each entity's ERP; group DSO of about 47 days in 2025."
+  benefit_model: "dso_days_reduced * daily_revenue * cost_of_capital"
+  assumptions:
+    - { text: "Days of DSO removed", value: 4, unit: days, source: "Treasury working-capital programme target" }
+    - { text: "Average daily net revenue", value: 1350000, unit: usd, source: "Group plan FY26" }
+    - { text: "Cost of capital", value: 0.08, unit: ratio, source: "Treasury FY26 hurdle rate" }
+  annual_value_usd: 432000
+  measured: null
+- id: VC-GEN-003
+  product: DP-GEN-003
+  hypothesis: Reporting workforce metrics safely by team lets the people function target retention where resignations are highest, without ever exposing an individual.
+  baseline: "HR extracts summarised by hand each month; small teams occasionally identifiable; retention spend allocated evenly."
+  benefit_model: "avoided_resignations * replacement_cost_per_employee + analyst_hours_saved * loaded_rate"
+  assumptions:
+    - { text: "Resignations avoided per year by targeted retention", value: 25, unit: employees, source: "People review, Customer Support retention pilot" }
+    - { text: "Replacement cost per employee (recruiting, onboarding, lost productivity)", value: 18000, unit: usd, source: "People & Culture cost model FY26" }
+    - { text: "Analyst hours saved per year", value: 300, unit: hours, source: "People analytics time study" }
+    - { text: "Fully loaded analyst rate", value: 85, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 475500
+  measured: { value_usd: 312000, period: "2026-Q1..2026-Q3 annualised", confidence: low }
+- id: VC-GEN-004
+  product: DP-GEN-004
+  hypothesis: Seeing SLA breaches and detractors by ticket category within days, not after the quarterly survey readout, protects renewals at risk from poor service.
+  baseline: "Service-desk exports and survey CSVs matched on email in a spreadsheet; detractor themes found a quarter late."
+  benefit_model: "renewal_revenue_protected * gross_margin + breaches_avoided * cost_per_breach"
+  assumptions:
+    - { text: "Annual renewal revenue protected by earlier intervention", value: 1200000, unit: usd, source: "Account management churn review 2025" }
+    - { text: "Gross margin on protected revenue", value: 0.45, unit: ratio, source: "Group plan FY26" }
+    - { text: "SLA breaches avoided per year", value: 1500, unit: tickets, source: "Service desk improvement plan" }
+    - { text: "Cost per breach (credits, escalation time)", value: 40, unit: usd, source: "Customer service cost model FY26" }
+  annual_value_usd: 600000
+  measured: null

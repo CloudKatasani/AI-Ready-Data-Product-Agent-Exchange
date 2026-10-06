@@ -1,0 +1,471 @@
+{
+  "pack": "_generic",
+  "version": "1.0.0",
+  "scale": "M",
+  "scenarios": {
+    "SC-GEN-001": {
+      "agent": "AG-GEN-001",
+      "kind": "answer",
+      "headline": "North America had the highest net revenue last quarter at $49,751,079.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Intercompany sales between Acme entities are eliminated (BR-GEN-001). Group net revenue was $125,500,026; Latin America was lowest at $17,457,252 across 4 regions.",
+      "sqlHash": "f4325800d84de680",
+      "columns": [
+        "region",
+        "net_revenue"
+      ],
+      "rows": [
+        [
+          "North America",
+          49751100
+        ],
+        [
+          "EMEA",
+          37757800
+        ],
+        [
+          "APAC",
+          20533900
+        ],
+        [
+          "Latin America",
+          17457300
+        ]
+      ],
+      "citations": [
+        "product:DP-GEN-001@2.0.0",
+        "metric:FINANCE.net_revenue",
+        "rule:BR-GEN-001",
+        "document:DOC-GEN-FINANCE-POLICY#5"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "EMEA had the highest net revenue last quarter at $37,757,839.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-GEN-002": {
+      "agent": "AG-GEN-001",
+      "kind": "answer",
+      "headline": "Including intercompany sales, EMEA would rank first last quarter at $64,962,610.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "You asked for revenue before eliminations, so BR-GEN-001 is not applied. The EMEA hub's Q3 recharges to other Acme companies reorder the ranking — they are not revenue to the group.",
+      "sqlHash": "9ddd6873bbcbff5a",
+      "columns": [
+        "region",
+        "net_revenue"
+      ],
+      "rows": [
+        [
+          "EMEA",
+          64962600
+        ],
+        [
+          "North America",
+          52245600
+        ],
+        [
+          "APAC",
+          22134800
+        ],
+        [
+          "Latin America",
+          18287200
+        ]
+      ],
+      "citations": [
+        "product:DP-GEN-001@2.0.0",
+        "metric:FINANCE.net_revenue",
+        "document:DOC-GEN-FINANCE-POLICY#4"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Including intercompany sales, EMEA would rank first last quarter at $64,962,610.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-GEN-003": {
+      "agent": "AG-GEN-001",
+      "kind": "answer",
+      "headline": "Gross margin is 44.3% year to date — within the target band.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Net revenue less cost of sales, as a share of net revenue, with intercompany eliminated (BR-GEN-001).",
+      "sqlHash": "db2c6662047dae78",
+      "columns": [
+        "gross_margin_pct",
+        "gross_margin_pct_target_min",
+        "gross_margin_pct_target_max"
+      ],
+      "rows": [
+        [
+          44.3035,
+          42,
+          48
+        ]
+      ],
+      "citations": [
+        "product:DP-GEN-001@2.0.0",
+        "metric:FINANCE.gross_margin_pct",
+        "rule:BR-GEN-001",
+        "verified_query:VQ-GEN-004",
+        "document:DOC-GEN-FINANCE-POLICY#5"
+      ],
+      "personas": {}
+    },
+    "SC-GEN-004": {
+      "agent": "AG-GEN-001",
+      "kind": "answer",
+      "headline": "Revenue against budget moved +10.5 points from the first to the latest quarter this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "It was -2.7% in the first quarter and 7.8% in the latest, net of intercompany (BR-GEN-001). Variances beyond ±5% need a written explanation (BR-GEN-004).",
+      "sqlHash": "cdc344836d9c11b3",
+      "columns": [
+        "period",
+        "revenue_vs_budget_pct"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          -2.6525
+        ],
+        [
+          "2026-04-01",
+          8.92556
+        ],
+        [
+          "2026-07-01",
+          7.84079
+        ]
+      ],
+      "citations": [
+        "product:DP-GEN-001@2.0.0",
+        "metric:FINANCE.revenue_vs_budget_pct",
+        "rule:BR-GEN-001",
+        "document:DOC-GEN-FINANCE-POLICY#1"
+      ],
+      "personas": {}
+    },
+    "SC-GEN-005": {
+      "agent": "AG-GEN-001",
+      "kind": "answer",
+      "headline": "Latin America has the highest DSO this year at 56.5 days.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Days sales outstanding weighted by invoice value, excluding invoices in formal dispute (BR-GEN-005). EMEA collects fastest at 39.6 days; the group figure is 42.5 days.",
+      "sqlHash": "1b87de28fde29288",
+      "columns": [
+        "region",
+        "dso_days"
+      ],
+      "rows": [
+        [
+          "Latin America",
+          56.4983
+        ],
+        [
+          "North America",
+          39.7095
+        ],
+        [
+          "APAC",
+          39.5943
+        ],
+        [
+          "EMEA",
+          39.5817
+        ]
+      ],
+      "citations": [
+        "product:DP-GEN-002@1.2.0",
+        "metric:WORKING_CAPITAL.dso_days",
+        "rule:BR-GEN-005",
+        "verified_query:VQ-GEN-012",
+        "document:DOC-GEN-WORKING-CAPITAL#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "EMEA has the highest DSO this year at 39.6 days.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-GEN-006": {
+      "agent": "AG-GEN-001",
+      "kind": "answer",
+      "headline": "Industrial Products holds the largest share of open receivables at $14,822,371 (31.0%).",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Open receivables total $47,764,068 across 4 business units — customer invoices not yet paid at the as-of date.",
+      "sqlHash": "b02ab6be035ad4a4",
+      "columns": [
+        "business_unit",
+        "open_receivables",
+        "open_receivables_share_pct"
+      ],
+      "rows": [
+        [
+          "Industrial Products",
+          14822400,
+          31.0325
+        ],
+        [
+          "Consumer Brands",
+          13158000,
+          27.5479
+        ],
+        [
+          "Business Services",
+          12828500,
+          26.858
+        ],
+        [
+          "Software & Data",
+          6955230,
+          14.5616
+        ]
+      ],
+      "citations": [
+        "product:DP-GEN-002@1.2.0",
+        "metric:WORKING_CAPITAL.open_receivables",
+        "document:DOC-GEN-WORKING-CAPITAL#2"
+      ],
+      "personas": {}
+    },
+    "SC-GEN-007": {
+      "agent": "AG-GEN-001",
+      "kind": "decline",
+      "headline": "I can't post or reverse journals — that is outside what this agent is allowed to do.",
+      "narrative": "Journals are posted by the entity's accounting team in the ledger, with maker-checker approval. I can show you the governed revenue and cost figures the accountant will need.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-GEN-015": {
+      "agent": "AG-GEN-001",
+      "kind": "redirect",
+      "headline": "That's a workforce question — the People & Customer Insights agent answers it.",
+      "narrative": "I cover revenue, margin, budget and working capital. The People & Customer Insights agent answers from the certified Workforce Composition product.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-GEN-008": {
+      "agent": "AG-GEN-002",
+      "kind": "answer",
+      "headline": "Customer Support has the highest voluntary attrition at 14.7% over the past year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Annualised resignations as a share of average headcount, permanent employees only (BR-GEN-007). People & Culture is lowest at 4.9%; the group rate is 9.7%.",
+      "sqlHash": "5eadbe6226f8fa81",
+      "columns": [
+        "department",
+        "voluntary_attrition_rate"
+      ],
+      "rows": [
+        [
+          "Customer Support",
+          14.7047
+        ],
+        [
+          "Engineering",
+          10.9969
+        ],
+        [
+          "Marketing",
+          10.5005
+        ],
+        [
+          "Operations",
+          8.66508
+        ],
+        [
+          "Sales",
+          8.35723
+        ],
+        [
+          "Finance",
+          7.52044
+        ],
+        [
+          "People & Culture",
+          4.90296
+        ]
+      ],
+      "citations": [
+        "product:DP-GEN-003@1.1.0",
+        "metric:WORKFORCE.voluntary_attrition_rate",
+        "rule:BR-GEN-007",
+        "document:DOC-GEN-PEOPLE-REPORTING#3"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Customer Support has the highest voluntary attrition at 15.4% over the past year.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-GEN-009": {
+      "agent": "AG-GEN-002",
+      "kind": "answer",
+      "headline": "Time to hire moved −6.1 days from the first to the latest quarter this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Average days from requisition opening to start date (BR-GEN-012): 63.0 days in the first quarter and 56.8 days in the latest.",
+      "sqlHash": "a7d1918b9e9cf052",
+      "columns": [
+        "period",
+        "time_to_hire_days"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          62.9726
+        ],
+        [
+          "2026-04-01",
+          61.3643
+        ],
+        [
+          "2026-07-01",
+          56.845
+        ]
+      ],
+      "citations": [
+        "product:DP-GEN-003@1.1.0",
+        "metric:WORKFORCE.time_to_hire_days",
+        "document:DOC-GEN-PEOPLE-REPORTING#3"
+      ],
+      "personas": {}
+    },
+    "SC-GEN-010": {
+      "agent": "AG-GEN-002",
+      "kind": "answer",
+      "headline": "Net Promoter Score was 20.8 last quarter — below target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Customer Experience is still in certification, so treat this figure as provisional. Promoters (9–10) minus detractors (0–6) among post-ticket survey responses (BR-GEN-009).",
+      "sqlHash": "fac83ac8b048175b",
+      "columns": [
+        "net_promoter_score"
+      ],
+      "rows": [
+        [
+          20.8232
+        ]
+      ],
+      "citations": [
+        "product:DP-GEN-004@1.0.0-rc.1",
+        "metric:CUSTOMER_EXPERIENCE.net_promoter_score",
+        "document:DOC-GEN-SERVICE-STANDARD#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "decline",
+          "headline": "You don’t have access to Customer Experience yet."
+        }
+      }
+    },
+    "SC-GEN-011": {
+      "agent": "AG-GEN-002",
+      "kind": "answer",
+      "headline": "Billing tickets had the worst SLA breach rate last quarter at 28.0%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Share of tickets resolved after their priority's target (BR-GEN-013), excluding auto-closed spam (BR-GEN-010). How-to was best at 12.8%; overall 17.6%.",
+      "sqlHash": "0b26a655f1a7e95c",
+      "columns": [
+        "category",
+        "sla_breach_pct"
+      ],
+      "rows": [
+        [
+          "Billing",
+          27.9594
+        ],
+        [
+          "Account access",
+          16.5232
+        ],
+        [
+          "Product issue",
+          15.589
+        ],
+        [
+          "Delivery",
+          13.4301
+        ],
+        [
+          "How-to",
+          12.7635
+        ]
+      ],
+      "citations": [
+        "product:DP-GEN-004@1.0.0-rc.1",
+        "metric:CUSTOMER_EXPERIENCE.sla_breach_pct",
+        "rule:BR-GEN-010",
+        "document:DOC-GEN-SERVICE-STANDARD#3"
+      ],
+      "personas": {}
+    },
+    "SC-GEN-012": {
+      "agent": "AG-GEN-002",
+      "kind": "answer",
+      "headline": "Including contractors and interns, attrition was 14.9% over the past year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "You asked for all workers, so the permanent-employees-only rule (BR-GEN-007) is not applied. Contractors and interns turn over by design — compare with the standard rate for permanent staff.",
+      "sqlHash": "372ba41a0165d940",
+      "columns": [
+        "attrition_rate"
+      ],
+      "rows": [
+        [
+          14.9113
+        ]
+      ],
+      "citations": [
+        "product:DP-GEN-003@1.1.0",
+        "metric:WORKFORCE.attrition_rate",
+        "verified_query:VQ-GEN-023",
+        "document:DOC-GEN-PEOPLE-REPORTING#2"
+      ],
+      "personas": {}
+    },
+    "SC-GEN-013": {
+      "agent": "AG-GEN-002",
+      "kind": "clarify",
+      "headline": "\"People numbers\" can mean a few things — which one do you need?",
+      "narrative": "I can show average headcount, attrition (all or voluntary), time to hire or the internal fill rate. Pick one and a period.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-GEN-014": {
+      "agent": "AG-GEN-002",
+      "kind": "decline",
+      "headline": "I can't look up individual employees — workforce answers are aggregate only.",
+      "narrative": "Salaries, ratings and records of named people are never available through this agent, whoever asks (BR-GEN-008). Your HR business partner can help with an individual case.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-GEN-016": {
+      "agent": "AG-GEN-002",
+      "kind": "redirect",
+      "headline": "That's a finance question — the Finance Analyst answers it.",
+      "narrative": "I cover the workforce and customer service. The Finance Analyst is certified on revenue, margin, budget and working capital.",
+      "citations": [],
+      "personas": {}
+    }
+  }
+}

@@ -1,0 +1,109 @@
+# Acme Holdings business rules (synthetic). Rules with an `apply` block are applied by the metric compiler as
+# default filters; the rest are definitions, thresholds and policies cited in answers.
+
+# ── Finance ──────────────────────────────────────────────────────────────────────────────────────
+- id: BR-GEN-001
+  domain: Finance
+  text: "Group revenue, cost and margin exclude intercompany sales and recharges between Acme legal entities unless explicitly requested."
+  kind: filter
+  metric: net_revenue
+  source_doc: DOC-GEN-FINANCE-POLICY
+  apply:
+    filter: { dimension: intercompany, op: "=", value: false }
+    unless_question_mentions: [including intercompany, gross of intercompany, before eliminations, with intercompany]
+
+- id: BR-GEN-002
+  domain: Finance
+  text: "Revenue is recognised on the posting date of the invoice journal in the entity that delivered the goods or services; credit notes are separate negative journals and are never netted into the original line."
+  kind: definition
+  metric: net_revenue
+  source_doc: DOC-GEN-FINANCE-POLICY
+
+- id: BR-GEN-003
+  domain: Finance
+  text: "Gross margin is net revenue less cost of sales, divided by net revenue. Freight, materials, direct labour and hosting are cost of sales; selling, marketing, engineering and administration are operating expense."
+  kind: definition
+  metric: gross_margin_pct
+  source_doc: DOC-GEN-FINANCE-POLICY
+
+- id: BR-GEN-004
+  domain: Finance
+  text: "A revenue or operating-expense variance to budget beyond ±5% for a region in a quarter must carry a written explanation from the regional finance manager in the monthly business review."
+  kind: threshold
+  metric: revenue_vs_budget_pct
+  source_doc: DOC-GEN-FINANCE-POLICY
+
+# ── Working capital ──────────────────────────────────────────────────────────────────────────────
+- id: BR-GEN-005
+  domain: Working Capital
+  text: "DSO and overdue receivables exclude invoices in formal dispute; disputed invoices are reported separately by the disputes team until resolved."
+  kind: filter
+  metric: dso_days
+  source_doc: DOC-GEN-WORKING-CAPITAL
+  apply:
+    filter: { dimension: disputed, op: "=", value: false }
+    unless_question_mentions: [including disputed, including disputes, disputed invoices included]
+
+- id: BR-GEN-006
+  domain: Working Capital
+  text: "Days to settle runs from the invoice date to the payment date; an invoice still open at the reporting date counts the days elapsed so far. DSO and DPO weight each invoice by its amount."
+  kind: definition
+  metric: dso_days
+  source_doc: DOC-GEN-WORKING-CAPITAL
+
+- id: BR-GEN-011
+  domain: Working Capital
+  text: "Standard customer terms are net 30 to net 45 days; supplier invoices are paid on their due date, never early unless a discount is offered."
+  kind: policy
+  metric: supplier_on_time_pct
+  source_doc: DOC-GEN-WORKING-CAPITAL
+
+# ── Workforce ────────────────────────────────────────────────────────────────────────────────────
+- id: BR-GEN-007
+  domain: Workforce
+  text: "Headcount and attrition count permanent employees only; contractors and interns are excluded unless explicitly requested."
+  kind: filter
+  metric: attrition_rate
+  source_doc: DOC-GEN-PEOPLE-REPORTING
+  apply:
+    filter: { dimension: employment_type, op: "=", value: Permanent }
+    unless_question_mentions: [including contractors, including interns, all workers, contingent workers included]
+
+- id: BR-GEN-008
+  domain: Workforce
+  text: "Workforce figures are published only for groups of five or more people, so no individual can be identified; smaller groups are rolled up to the next level."
+  kind: policy
+  metric: headcount
+  source_doc: DOC-GEN-PEOPLE-REPORTING
+
+- id: BR-GEN-012
+  domain: Workforce
+  text: "Time to hire runs from the date a requisition is opened to the start date of the person who fills it, and is reported for the month the hire starts."
+  kind: definition
+  metric: time_to_hire_days
+  source_doc: DOC-GEN-PEOPLE-REPORTING
+
+# ── Customer ─────────────────────────────────────────────────────────────────────────────────────
+- id: BR-GEN-009
+  domain: Customer
+  text: "Net Promoter Score is the percentage of promoters (9–10) minus the percentage of detractors (0–6) among survey responses; passives (7–8) count only in the denominator."
+  kind: definition
+  metric: net_promoter_score
+  source_doc: DOC-GEN-SERVICE-STANDARD
+
+- id: BR-GEN-010
+  domain: Customer
+  text: "Service metrics (resolution time, first contact resolution, SLA breach and satisfaction) exclude tickets auto-closed as spam unless explicitly requested."
+  kind: filter
+  metric: avg_resolution_hours
+  source_doc: DOC-GEN-SERVICE-STANDARD
+  apply:
+    filter: { dimension: auto_closed_spam, op: "=", value: false }
+    unless_question_mentions: [including spam, spam included, all tickets including spam]
+
+- id: BR-GEN-013
+  domain: Customer
+  text: "Service-level targets by priority: P1 resolved within 4 hours, P2 within 24 hours, P3 within 72 hours and P4 within 120 hours."
+  kind: threshold
+  metric: sla_breach_pct
+  source_doc: DOC-GEN-SERVICE-STANDARD

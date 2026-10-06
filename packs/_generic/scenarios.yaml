@@ -1,0 +1,259 @@
+# Scripted scenarios for Acme Holdings — converted from the ADPM `_generic` sample decisions (Commercial Lead,
+# Operations Manager, People Director, Customer Operations Lead). Numbers come from golden.json; `expect` holds
+# shape assertions only.
+
+# ================================================================ AG-GEN-001 Finance Analyst
+- id: SC-GEN-001
+  agent: AG-GEN-001
+  pattern: 3
+  question: "What was net revenue by region last quarter?"
+  paraphrases:
+    - "What was net revenue by region last quarter, excluding intercompany sales?"
+    - "net revenue per region last qtr"
+    - "external revenue by geography for Q3"
+  kind: answer
+  query: { view: FINANCE, metrics: [net_revenue], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: net_revenue, dir: desc }] }
+  answer:
+    headline: "{{top.region}} had the highest net revenue last quarter at {{top.net_revenue}}."
+    narrative: "Intercompany sales between Acme entities are eliminated (BR-GEN-001). Group net revenue was {{total.net_revenue}}; {{bottom.region}} was lowest at {{bottom.net_revenue}} across {{rows}} regions."
+    chart: bar
+  followups: ["Include intercompany sales", "Gross margin by region this year", "Revenue vs budget by region this year"]
+  expect: { rows: 4, top: { region: North America }, rules: [BR-GEN-001] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-GEN-002
+  agent: AG-GEN-001
+  pattern: 10
+  question: "What was net revenue by region last quarter, including intercompany?"
+  paraphrases:
+    - "Net revenue by region last quarter including intercompany sales"
+    - "regional revenue last qtr before eliminations"
+  kind: answer
+  query: { view: FINANCE, metrics: [net_revenue], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: net_revenue, dir: desc }] }
+  answer:
+    headline: "Including intercompany sales, {{top.region}} would rank first last quarter at {{top.net_revenue}}."
+    narrative: "You asked for revenue before eliminations, so BR-GEN-001 is not applied. The EMEA hub's Q3 recharges to other Acme companies reorder the ranking — they are not revenue to the group."
+    chart: bar
+  followups: ["Exclude intercompany sales", "Which legal entities had the highest net revenue this year?"]
+  expect: { rows: 4, top: { region: EMEA } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-GEN-003
+  agent: AG-GEN-001
+  pattern: 2
+  question: "Is gross margin within target this year?"
+  paraphrases:
+    - "Are we hitting our gross margin target year to date?"
+    - "gross margin vs target ytd"
+  kind: answer
+  query: { view: FINANCE, metrics: [gross_margin_pct], timeRange: { ytd: true }, analysis: compare_target }
+  answer:
+    headline: "Gross margin is {{top.gross_margin_pct}}% year to date — {{vsTarget.top}} the target band."
+    narrative: "Net revenue less cost of sales, as a share of net revenue, with intercompany eliminated (BR-GEN-001)."
+    chart: kpi
+  followups: ["Gross margin by region this year", "Gross margin by month this year"]
+  expect: { rows: 1, rules: [BR-GEN-001] }
+
+- id: SC-GEN-004
+  agent: AG-GEN-001
+  pattern: 7
+  question: "How has revenue against budget moved quarter over quarter this year?"
+  paraphrases:
+    - "Quarterly revenue variance to budget this year"
+    - "is revenue versus plan improving quarter on quarter?"
+  kind: answer
+  query: { view: FINANCE, metrics: [revenue_vs_budget_pct], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "Revenue against budget moved {{delta.revenue_vs_budget_pct}} points from the first to the latest quarter this year."
+    narrative: "It was {{top.revenue_vs_budget_pct}}% in the first quarter and {{bottom.revenue_vs_budget_pct}}% in the latest, net of intercompany (BR-GEN-001). Variances beyond ±5% need a written explanation (BR-GEN-004)."
+    chart: line
+  followups: ["Revenue vs budget by region this year", "Opex vs budget by region this year"]
+  expect: { rows: 3, rules: [BR-GEN-001] }
+
+- id: SC-GEN-005
+  agent: AG-GEN-001
+  pattern: 5
+  question: "Which regions take longest to collect cash from customers this year?"
+  paraphrases:
+    - "Rank regions by days sales outstanding year to date"
+    - "worst debtor days by geography ytd"
+  kind: answer
+  query: { view: WORKING_CAPITAL, metrics: [dso_days], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: dso_days, dir: desc }], analysis: rank }
+  answer:
+    headline: "{{top.region}} has the highest DSO this year at {{top.dso_days}} days."
+    narrative: "Days sales outstanding weighted by invoice value, excluding invoices in formal dispute (BR-GEN-005). {{bottom.region}} collects fastest at {{bottom.dso_days}} days; the group figure is {{total.dso_days}} days."
+    chart: bar
+  followups: ["DSO by quarter for the last four quarters", "Overdue receivables by region this year"]
+  expect: { rows: 4, top: { region: Latin America }, rules: [BR-GEN-005] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-GEN-006
+  agent: AG-GEN-001
+  pattern: 6
+  question: "Which business units hold the biggest share of open receivables?"
+  paraphrases:
+    - "Breakdown of unpaid customer invoices by business unit"
+    - "accounts receivable balance split by division"
+  kind: answer
+  query: { view: WORKING_CAPITAL, metrics: [open_receivables], dimensions: [business_unit], orderBy: [{ field: open_receivables, dir: desc }], analysis: contribution }
+  answer:
+    headline: "{{top.business_unit}} holds the largest share of open receivables at {{top.open_receivables}} ({{top.open_receivables_share_pct}}%)."
+    narrative: "Open receivables total {{total.open_receivables}} across {{rows}} business units — customer invoices not yet paid at the as-of date."
+    chart: bar
+  followups: ["Overdue receivables by region this year", "DSO by region this year"]
+  expect: { rows: 4 }
+
+- id: SC-GEN-007
+  agent: AG-GEN-001
+  pattern: 15
+  question: "Post a journal entry to reverse the EMEA accrual."
+  paraphrases:
+    - "Can you book a reversing journal for the hub?"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't post or reverse journals — that is outside what this agent is allowed to do."
+    narrative: "Journals are posted by the entity's accounting team in the ledger, with maker-checker approval. I can show you the governed revenue and cost figures the accountant will need."
+    chart: none
+  followups: ["Net revenue by region last quarter", "Operating margin last quarter"]
+
+- id: SC-GEN-015
+  agent: AG-GEN-001
+  pattern: 15
+  question: "What is our staff attrition rate?"
+  paraphrases:
+    - "How many employees are leaving us?"
+  kind: redirect
+  query: null
+  redirect_to: AG-GEN-002
+  answer:
+    headline: "That's a workforce question — the People & Customer Insights agent answers it."
+    narrative: "I cover revenue, margin, budget and working capital. The People & Customer Insights agent answers from the certified Workforce Composition product."
+    chart: none
+  followups: ["Ask People & Customer Insights", "What can you answer?"]
+
+# ================================================================ AG-GEN-002 People & Customer Insights
+- id: SC-GEN-008
+  agent: AG-GEN-002
+  pattern: 3
+  question: "Which departments have the highest voluntary attrition over the last 12 months?"
+  paraphrases:
+    - "Voluntary attrition by department over the last 12 months"
+    - "resignation rate per team last 12 months"
+  kind: answer
+  query: { view: WORKFORCE, metrics: [voluntary_attrition_rate], dimensions: [department], timeRange: { last: { n: 12, unit: month } }, orderBy: [{ field: voluntary_attrition_rate, dir: desc }] }
+  answer:
+    headline: "{{top.department}} has the highest voluntary attrition at {{top.voluntary_attrition_rate}}% over the past year."
+    narrative: "Annualised resignations as a share of average headcount, permanent employees only (BR-GEN-007). {{bottom.department}} is lowest at {{bottom.voluntary_attrition_rate}}%; the group rate is {{total.voluntary_attrition_rate}}%."
+    chart: bar
+  followups: ["Time to hire by department this year", "Voluntary attrition by quarter for the last four quarters"]
+  expect: { rows: 7, top: { department: Customer Support }, rules: [BR-GEN-007] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-GEN-009
+  agent: AG-GEN-002
+  pattern: 4
+  question: "How has time to hire trended quarter by quarter this year?"
+  paraphrases:
+    - "Quarterly time to fill this year"
+    - "Quarterly time to hire trend this year"
+  kind: answer
+  query: { view: WORKFORCE, metrics: [time_to_hire_days], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "Time to hire moved {{delta.time_to_hire_days}} days from the first to the latest quarter this year."
+    narrative: "Average days from requisition opening to start date (BR-GEN-012): {{top.time_to_hire_days}} days in the first quarter and {{bottom.time_to_hire_days}} days in the latest."
+    chart: line
+  followups: ["Time to hire by department this year", "What is the internal fill rate this year?"]
+  expect: { rows: 3 }
+
+- id: SC-GEN-010
+  agent: AG-GEN-002
+  pattern: 14
+  question: "What is our Net Promoter Score this quarter?"
+  paraphrases:
+    - "What is our NPS this quarter?"
+    - "likelihood to recommend score last quarter"
+  kind: answer
+  query: { view: CUSTOMER_EXPERIENCE, metrics: [net_promoter_score], timeRange: { last: { n: 1, unit: quarter } } }
+  answer:
+    headline: "Net Promoter Score was {{top.net_promoter_score}} last quarter — {{vsTarget.top}} target."
+    narrative: "Customer Experience is still in certification, so treat this figure as provisional. Promoters (9–10) minus detractors (0–6) among post-ticket survey responses (BR-GEN-009)."
+    chart: kpi
+  followups: ["Which ticket categories drove SLA breaches last quarter?", "When will Customer Experience be certified?"]
+  expect: { rows: 1, certified: false }
+  personas_expect: { A: { kind: decline } }
+
+- id: SC-GEN-011
+  agent: AG-GEN-002
+  pattern: 5
+  question: "Which ticket categories had the worst SLA breach rate last quarter?"
+  paraphrases:
+    - "Rank ticket categories by missed SLAs last quarter"
+    - "sla breaches by issue type last qtr"
+  kind: answer
+  query: { view: CUSTOMER_EXPERIENCE, metrics: [sla_breach_pct], dimensions: [category], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: sla_breach_pct, dir: desc }], analysis: rank }
+  answer:
+    headline: "{{top.category}} tickets had the worst SLA breach rate last quarter at {{top.sla_breach_pct}}%."
+    narrative: "Share of tickets resolved after their priority's target (BR-GEN-013), excluding auto-closed spam (BR-GEN-010). {{bottom.category}} was best at {{bottom.sla_breach_pct}}%; overall {{total.sla_breach_pct}}%."
+    chart: bar
+  followups: ["Average resolution time by priority this year", "What is our Net Promoter Score this quarter?"]
+  expect: { rows: 5, top: { category: Billing }, rules: [BR-GEN-010] }
+
+- id: SC-GEN-012
+  agent: AG-GEN-002
+  pattern: 10
+  question: "What was the attrition rate over the last 12 months, including contractors?"
+  paraphrases:
+    - "Attrition over the last 12 months including contractors and interns"
+    - "staff turnover last 12 months all workers"
+  kind: answer
+  query: { view: WORKFORCE, metrics: [attrition_rate], timeRange: { last: { n: 12, unit: month } } }
+  answer:
+    headline: "Including contractors and interns, attrition was {{top.attrition_rate}}% over the past year."
+    narrative: "You asked for all workers, so the permanent-employees-only rule (BR-GEN-007) is not applied. Contractors and interns turn over by design — compare with the standard rate for permanent staff."
+    chart: kpi
+  followups: ["What is the attrition rate over the last 12 months?", "Voluntary attrition by department over the last 12 months"]
+  expect: { rows: 1 }
+
+- id: SC-GEN-013
+  agent: AG-GEN-002
+  pattern: 11
+  question: "How are our people numbers looking?"
+  paraphrases:
+    - "people update"
+  kind: clarify
+  query: null
+  answer:
+    headline: "\"People numbers\" can mean a few things — which one do you need?"
+    narrative: "I can show average headcount, attrition (all or voluntary), time to hire or the internal fill rate. Pick one and a period."
+    chart: none
+  followups: ["What was average headcount last month?", "What is the attrition rate over the last 12 months?", "Time to hire by department this year"]
+
+- id: SC-GEN-014
+  agent: AG-GEN-002
+  pattern: 15
+  question: "Show me the salary and performance rating of a named employee."
+  paraphrases:
+    - "What does this employee earn?"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't look up individual employees — workforce answers are aggregate only."
+    narrative: "Salaries, ratings and records of named people are never available through this agent, whoever asks (BR-GEN-008). Your HR business partner can help with an individual case."
+    chart: none
+  followups: ["Average headcount by department last month", "Voluntary attrition by department over the last 12 months"]
+
+- id: SC-GEN-016
+  agent: AG-GEN-002
+  pattern: 15
+  question: "What was gross margin last quarter?"
+  paraphrases:
+    - "How profitable were we last quarter?"
+  kind: redirect
+  query: null
+  redirect_to: AG-GEN-001
+  answer:
+    headline: "That's a finance question — the Finance Analyst answers it."
+    narrative: "I cover the workforce and customer service. The Finance Analyst is certified on revenue, margin, budget and working capital."
+    chart: none
+  followups: ["Ask the Finance Analyst", "What can you answer?"]

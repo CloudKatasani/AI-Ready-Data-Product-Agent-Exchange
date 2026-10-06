@@ -1,0 +1,25 @@
+id: DP-GEN-001
+name: Financial Performance
+domain: Finance
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 2.0.0
+owner: _generic:corporate-dpo
+steward: _generic:data-steward
+description: Group P&L at journal-line grain — revenue, cost of sales, operating expense, margins and variance to budget by entity, region and business unit, with intercompany eliminated.
+purpose: One certified margin and revenue definition for the management pack, regional reviews and agents (converted from the ADPM Product Margin seed).
+decision: { persona: Group Chief Financial Officer, decision: "Which regions and business units need a re-forecast or a pricing review next quarter", cadence: Monthly, workaround: "Ledger extracts reconciled by hand against the budget workbook at month end", consequence: "Repricing and re-forecast decisions are made on stale and inconsistent margin figures" }
+sample_questions: ["What was net revenue by region last quarter?", "Is gross margin within target this year?", "Revenue vs budget by region this year"]
+semantic_view: FINANCE
+output_ports:
+  - { kind: semantic, ref: FINANCE }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_GEN_001_FINANCIAL_PERFORMANCE }
+  - { kind: agent, ref: AG-GEN-001 }
+sla: { freshness_minutes: 1440, availability_pct: 99.5, max_null_rate_pct: 0.5 }
+kpis: [KPI-GEN-NET-REV, KPI-GEN-GROSS-MARGIN, KPI-GEN-OP-MARGIN, KPI-GEN-REV-VS-BUDGET, KPI-GEN-OPEX-VS-BUDGET, KPI-GEN-OPEX, KPI-GEN-COGS]
+upstream: [CONFORMED_GOLD.FCT_FINANCIALS, CONFORMED_GOLD.DIM_LEGAL_ENTITY]
+consumers: [Group finance, Regional finance managers, Finance Analyst agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-GEN-001

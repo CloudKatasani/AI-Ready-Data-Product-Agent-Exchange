@@ -1,0 +1,41 @@
+id: _generic
+name: Generic (cross-industry)
+version: 1.0.0
+depth: standard
+code: GEN
+industry: Cross-industry back office
+company:
+  name: Acme Holdings
+  short: ACM
+  hq: Kestrel Bay
+  description: Diversified mid-market group of 16 operating companies across four regions, with shared finance, people and customer-service functions
+database: ACM_AI_PLATFORM
+locale: en-US
+currency: USD
+asOf: 2026-09-30
+seed: 20261006
+regions: [North America, Latin America, EMEA, APAC]
+overridable:
+  regions: true
+  companyName: true
+  terms: [legal entity, business unit, cost center]
+home:
+  heroQuestion: "What was net revenue by region last quarter, excluding intercompany sales?"
+  heroAgent: AG-GEN-001
+  headlineKpis: [KPI-GEN-NET-REV, KPI-GEN-GROSS-MARGIN, KPI-GEN-DSO, KPI-GEN-VOL-ATTRITION]
+  theatreScenarios: [SC-GEN-001, SC-GEN-008, SC-GEN-010]
+icon: building-2
+hook: Finance, people and customer data — governed for AI
+# Standard pack: four products (3 Certified + 1 In certification) and no In-development product, so the
+# lifecycle story role points at the certification demo product (standard packs accept IN_CERTIFICATION).
+story_roles:
+  heroScenario: SC-GEN-001
+  certDemoProduct: DP-GEN-004
+  lifecycleDemoProduct: DP-GEN-004
+  incidentForStory: INC-GEN-LATE-FEED
+  knockoutKpi: KPI-GEN-NET-REV
+  qualityFixAgent: AG-GEN-001
+# Only words that are unmistakably this pack's content; generic finance/HR/service English stays out.
+lint_terms:
+  - Kestrel Bay
+  - acmeholdings

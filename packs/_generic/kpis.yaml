@@ -1,0 +1,266 @@
+# KPIs with target bands, calibrated against the scale-M warehouse (ADPM `_generic` starter metrics, extended).
+# `window` is evaluated relative to pack asOf; `last n unit` = the n most recent complete units (ADR-0011).
+- id: KPI-GEN-NET-REV
+  name: Net revenue
+  definition: "Revenue from external customers, net of intercompany sales"
+  formula: "sum of revenue journal lines, intercompany eliminated (BR-GEN-001)"
+  unit: "USD"
+  direction: higher_is_better
+  target: { min: 340000000, max: 400000000 }
+  window: { ytd: true }
+  term: GT-GEN-NET-REVENUE
+  metric: net_revenue
+  products: [DP-GEN-001]
+- id: KPI-GEN-GROSS-MARGIN
+  name: Gross margin
+  definition: "Net revenue less cost of sales, as a share of net revenue"
+  formula: "(net revenue − cost of sales) ÷ net revenue, intercompany eliminated"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 42, max: 48 }
+  window: { ytd: true }
+  term: GT-GEN-GROSS-MARGIN
+  metric: gross_margin_pct
+  products: [DP-GEN-001]
+- id: KPI-GEN-OP-MARGIN
+  name: Operating margin
+  definition: "Net revenue less cost of sales and operating expense, as a share of net revenue"
+  formula: "(net revenue − cost of sales − operating expense) ÷ net revenue"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 12, max: 18 }
+  window: { ytd: true }
+  term: GT-GEN-OPERATING-MARGIN
+  metric: operating_margin_pct
+  products: [DP-GEN-001]
+- id: KPI-GEN-REV-VS-BUDGET
+  name: Revenue vs budget
+  definition: "How far net revenue is above or below the approved budget"
+  formula: "(net revenue − budgeted revenue) ÷ budgeted revenue"
+  unit: "%"
+  direction: target_band
+  target: { min: -3, max: 5 }
+  window: { ytd: true }
+  term: GT-GEN-BUDGET-VARIANCE
+  metric: revenue_vs_budget_pct
+  products: [DP-GEN-001]
+- id: KPI-GEN-OPEX-VS-BUDGET
+  name: Opex vs budget
+  definition: "How far operating expense is above or below the approved budget"
+  formula: "(operating expense − budgeted operating expense) ÷ budgeted operating expense"
+  unit: "%"
+  direction: target_band
+  target: { min: -5, max: 2 }
+  window: { ytd: true }
+  term: GT-GEN-BUDGET-VARIANCE
+  metric: opex_vs_budget_pct
+  products: [DP-GEN-001]
+- id: KPI-GEN-DSO
+  name: Days sales outstanding
+  definition: "Average days customers take to pay, weighted by invoice value, excluding disputed invoices"
+  formula: "Σ(invoice amount × days to settle) ÷ Σ invoice amount, receivables only (BR-GEN-005)"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 38, max: 46 }
+  window: { ytd: true }
+  term: GT-GEN-DSO
+  metric: dso_days
+  products: [DP-GEN-002]
+- id: KPI-GEN-DPO
+  name: Days payables outstanding
+  definition: "Average days Acme takes to pay suppliers, weighted by invoice value"
+  formula: "Σ(invoice amount × days to settle) ÷ Σ invoice amount, payables only"
+  unit: "days"
+  direction: target_band
+  target: { min: 32, max: 40 }
+  window: { ytd: true }
+  term: GT-GEN-DPO
+  metric: dpo_days
+  products: [DP-GEN-002]
+- id: KPI-GEN-AR-OVERDUE
+  name: Overdue receivables
+  definition: "Share of open customer receivables that are past due"
+  formula: "past-due open receivables ÷ open receivables"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 20, max: 35 }
+  window: { ytd: true }
+  term: GT-GEN-OVERDUE-AR
+  metric: overdue_receivables_pct
+  products: [DP-GEN-002]
+- id: KPI-GEN-AP-ON-TIME
+  name: Supplier payments on time
+  definition: "Share of paid supplier invoices settled by their due date"
+  formula: "supplier invoices paid on or before due date ÷ supplier invoices paid"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 75, max: 90 }
+  window: { ytd: true }
+  term: GT-GEN-ON-TIME-PAYMENT
+  metric: supplier_on_time_pct
+  products: [DP-GEN-002]
+- id: KPI-GEN-HEADCOUNT
+  name: Average headcount
+  definition: "Average month-end headcount of permanent employees"
+  formula: "Σ month-end active permanent employees ÷ months in period (BR-GEN-007)"
+  unit: "employees"
+  direction: target_band
+  target: { min: 3000, max: 3400 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-GEN-HEADCOUNT
+  metric: headcount
+  products: [DP-GEN-003]
+- id: KPI-GEN-ATTRITION
+  name: Attrition rate
+  definition: "Annualised leavers as a share of average permanent headcount"
+  formula: "leavers ÷ employee-months × 12, permanent employees only"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 10, max: 14 }
+  window: { last: { n: 12, unit: month } }
+  term: GT-GEN-ATTRITION
+  metric: attrition_rate
+  products: [DP-GEN-003]
+- id: KPI-GEN-VOL-ATTRITION
+  name: Voluntary attrition
+  definition: "Annualised resignations as a share of average permanent headcount"
+  formula: "voluntary leavers ÷ employee-months × 12, permanent employees only"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 7, max: 10 }
+  window: { last: { n: 12, unit: month } }
+  term: GT-GEN-VOLUNTARY-ATTRITION
+  metric: voluntary_attrition_rate
+  products: [DP-GEN-003]
+- id: KPI-GEN-TIME-TO-HIRE
+  name: Time to hire
+  definition: "Average days from requisition opening to the hire date"
+  formula: "Σ (hire date − requisition opened) ÷ hires"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 50, max: 62 }
+  window: { ytd: true }
+  term: GT-GEN-TIME-TO-HIRE
+  metric: time_to_hire_days
+  products: [DP-GEN-003]
+- id: KPI-GEN-INTERNAL-FILL
+  name: Internal fill rate
+  definition: "Share of hires filled by an internal move"
+  formula: "internal hires ÷ all hires"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 20, max: 30 }
+  window: { ytd: true }
+  term: GT-GEN-INTERNAL-FILL
+  metric: internal_fill_pct
+  products: [DP-GEN-003]
+- id: KPI-GEN-NPS
+  name: Net Promoter Score
+  definition: "Promoters minus detractors among post-ticket survey responses"
+  formula: "% scoring 9–10 − % scoring 0–6"
+  unit: "points"
+  direction: higher_is_better
+  target: { min: 30, max: 45 }
+  window: { ytd: true }
+  term: GT-GEN-NPS
+  metric: net_promoter_score
+  products: [DP-GEN-004]
+- id: KPI-GEN-CSAT
+  name: Customer satisfaction
+  definition: "Average post-ticket satisfaction rating on a 1–5 scale"
+  formula: "Σ rating ÷ rated tickets, spam excluded (BR-GEN-010)"
+  unit: "score"
+  direction: higher_is_better
+  target: { min: 3.8, max: 4.3 }
+  window: { ytd: true }
+  term: GT-GEN-CSAT
+  metric: csat_score
+  products: [DP-GEN-004]
+- id: KPI-GEN-FCR
+  name: First contact resolution
+  definition: "Share of tickets resolved in the first contact"
+  formula: "tickets resolved first time ÷ tickets, spam excluded"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 60, max: 70 }
+  window: { ytd: true }
+  term: GT-GEN-FCR
+  metric: first_contact_resolution_pct
+  products: [DP-GEN-004]
+- id: KPI-GEN-RESOLUTION
+  name: Average resolution time
+  definition: "Mean hours from ticket opening to resolution"
+  formula: "Σ resolution hours ÷ tickets, spam excluded"
+  unit: "hours"
+  direction: lower_is_better
+  target: { min: 24, max: 32 }
+  window: { ytd: true }
+  term: GT-GEN-RESOLUTION-TIME
+  metric: avg_resolution_hours
+  products: [DP-GEN-004]
+- id: KPI-GEN-SLA-BREACH
+  name: SLA breach rate
+  definition: "Share of tickets resolved after their priority's service-level target"
+  formula: "tickets resolved after SLA ÷ tickets, spam excluded"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 8, max: 14 }
+  window: { ytd: true }
+  term: GT-GEN-SLA-BREACH
+  metric: sla_breach_pct
+  products: [DP-GEN-004]
+- id: KPI-GEN-OPEX
+  name: Operating expense
+  definition: "Selling, general, administrative and engineering expense, net of intercompany"
+  formula: "sum of operating-expense journal lines, intercompany eliminated"
+  unit: "USD"
+  direction: lower_is_better
+  target: { min: 100000000, max: 115000000 }
+  window: { ytd: true }
+  term: GT-GEN-OPEX
+  metric: operating_expense
+  products: [DP-GEN-001]
+- id: KPI-GEN-COGS
+  name: Cost of sales
+  definition: "Direct cost of goods and services sold, net of intercompany"
+  formula: "sum of cost-of-sales journal lines, intercompany eliminated"
+  unit: "USD"
+  direction: lower_is_better
+  target: { min: 190000000, max: 220000000 }
+  window: { ytd: true }
+  term: GT-GEN-COST-OF-SALES
+  metric: cost_of_sales
+  products: [DP-GEN-001]
+- id: KPI-GEN-OPEN-AR
+  name: Open receivables
+  definition: "Value of customer invoices not yet paid at the as-of date"
+  formula: "sum of open receivable invoice amounts"
+  unit: "USD"
+  direction: lower_is_better
+  target: { min: 38000000, max: 48000000 }
+  window: {}
+  term: GT-GEN-OPEN-AR
+  metric: open_receivables
+  products: [DP-GEN-002]
+- id: KPI-GEN-HIRES
+  name: Hires
+  definition: "Employees who joined in the period"
+  formula: "count of employees whose start date falls in the period"
+  unit: "hires"
+  direction: target_band
+  target: { min: 380, max: 480 }
+  window: { ytd: true }
+  term: GT-GEN-HIRE
+  metric: hires
+  products: [DP-GEN-003]
+- id: KPI-GEN-TICKETS
+  name: Support tickets
+  definition: "Support tickets opened by customer accounts in the period"
+  formula: "count of tickets opened"
+  unit: "tickets"
+  direction: target_band
+  target: { min: 3800, max: 4600 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-GEN-SUPPORT-TICKET
+  metric: tickets_opened
+  products: [DP-GEN-004]

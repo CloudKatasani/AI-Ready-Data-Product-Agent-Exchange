@@ -1,0 +1,49 @@
+# Receivables and payables DQ rules (FCT_INVOICE and its Silver sources).
+- id: DQ-GEN-010
+  object: CONFORMED_GOLD.FCT_INVOICE
+  column: amount_usd
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every invoice has an amount (the DSO and DPO weights).
+- id: DQ-GEN-011
+  object: CONFORMED_GOLD.FCT_INVOICE
+  column: amount_usd
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: Invoice amounts are positive; credit notes are handled outside this product.
+- id: DQ-GEN-012
+  object: CONFORMED_GOLD.FCT_INVOICE
+  column: days_to_settle
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: engineering
+  description: No invoice is settled before it was issued.
+- id: DQ-GEN-013
+  object: CONFORMED_GOLD.FCT_INVOICE
+  column: disputed
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: The dispute flag is always set, so BR-GEN-005 can exclude disputed invoices from DSO.
+- id: DQ-GEN-014
+  object: CONFORMED_GOLD.FCT_INVOICE
+  column: invoice_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per receivable or payable invoice.
+- id: DQ-GEN-015
+  object: CONFORMED_GOLD.FCT_INVOICE
+  column: invoice_date
+  dimension: timeliness
+  assertion: "freshness_min <= 5760"
+  severity: medium
+  alert_route: engineering
+  description: Invoices from the latest business days have arrived (no more than four days behind, covering weekends).

@@ -1,0 +1,42 @@
+# "Break something" templates (05 §2.4) for Acme Holdings. Effects are applied as overlay views in the
+# _INCIDENT schema while an incident is open.
+- id: INC-GEN-LATE-FEED
+  kind: late_feed
+  title: General ledger feed two days late
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_FINANCIALS
+  column: posting_date
+  params: { lag_hours: 48 }
+  affects: { products: [DP-GEN-001], agents: [AG-GEN-001] }
+  narrative: >-
+    The nightly extract from the ERP general ledger failed after a month-end patch, and two days of journal lines
+    have not landed. The Financial Performance product is behind its 24-hour freshness SLA, so quarter-to-date
+    revenue and margin understate the latest postings and any agent answer about recent results is stale.
+  detection: Freshness rule DQ-GEN-007 on FCT_FINANCIALS.posting_date fails and the product moves to Degraded.
+  resolution: Re-run the ledger extract for the missing days, re-run the DQ rules and confirm the product returns to Healthy.
+- id: INC-GEN-DUP-LOAD
+  kind: duplicate_load
+  title: Duplicate receivables load
+  severity: SEV3
+  object: CONFORMED_GOLD.FCT_INVOICE
+  params: { duplicate_pct: 10 }
+  affects: { products: [DP-GEN-002], agents: [AG-GEN-001] }
+  narrative: >-
+    A replayed batch from the order-to-cash system loaded 10% of invoices twice. Open receivables and invoice counts
+    are inflated while the duplicates remain, and DSO shifts towards the duplicated invoices.
+  detection: Uniqueness rule DQ-GEN-014 on invoice_id fails and the invoice count jumps against the trailing average.
+  resolution: Delete the replayed batch by load id, re-run deduplication and confirm dup_rate returns to zero.
+- id: INC-GEN-NULL-SPIKE
+  kind: null_spike
+  title: Null spike in ticket resolution time
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_SUPPORT_TICKET
+  column: resolution_hours
+  params: { null_pct: 20 }
+  affects: { products: [DP-GEN-004], agents: [AG-GEN-002] }
+  narrative: >-
+    A service-desk upgrade stopped writing the resolved timestamp for one in five tickets, so resolution time — a
+    critical data element — arrives empty. Average resolution time and SLA breach rates are understated for the
+    affected tickets.
+  detection: Completeness rule DQ-GEN-022 on resolution_hours fails; the Customer Experience product is Degraded.
+  resolution: Backfill resolved timestamps from the service-desk audit log and confirm the null rate is back to zero.

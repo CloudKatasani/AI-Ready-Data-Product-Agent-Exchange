@@ -1,0 +1,48 @@
+# Five demo identities, one per archetype (01-functional-spec §2.2). People are generated, not real.
+- id: _generic:finance-manager-emea
+  archetype: A
+  name: Sofia Marchetti
+  title: Regional Finance Manager, EMEA
+  domain: Finance
+  roles: [DATA_CONSUMER]
+  row_filter: { dimension: region, allowed: [EMEA] }
+  unmasked: []
+  cares: Revenue, margin, cash collection and team stability in EMEA; wants plain answers she can take into the monthly business review.
+  sees: EMEA entities only; personal data masked.
+- id: _generic:fpa-analyst
+  archetype: B
+  name: Daniel Osei
+  title: FP&A Analyst
+  domain: Finance
+  roles: [DATA_CONSUMER, ANALYST]
+  unmasked: []
+  cares: Budget variance, margin drivers, working capital and the monthly management pack.
+  sees: All regions; personal data masked.
+- id: _generic:corporate-dpo
+  archetype: C
+  name: Mei Lin Tan
+  title: Data Product Owner, Corporate Functions
+  domain: Shared services
+  roles: [DOMAIN_PRODUCT_OWNER, DATA_ENGINEER]
+  unmasked: []
+  cares: Shipping certified finance, workforce and customer products that agents can answer from.
+  sees: All regions; personal data masked; can build and submit products for review.
+- id: _generic:data-steward
+  archetype: D
+  name: Ruth Adeyemi
+  title: Enterprise Data Steward
+  domain: Governance
+  roles: [DATA_STEWARD, GOVERNANCE_COUNCIL, PRIVACY_OFFICER]
+  unmasked: [PII]
+  cares: Glossary health, critical data elements, masking coverage, disclosure control and certification decisions.
+  sees: Everything, unmasked; approves access requests and certification gates.
+- id: _generic:cfo
+  archetype: E
+  name: Thomas Brennan
+  title: Group Chief Financial Officer
+  domain: Executive
+  roles: [EXECUTIVE, PORTFOLIO_LEAD, GOVERNANCE_COUNCIL]
+  unmasked: []
+  aggregates_only: true
+  cares: Revenue against plan, margin, cash conversion, people cost and customer loyalty across the group.
+  sees: Aggregates only; portfolio, value and readiness.

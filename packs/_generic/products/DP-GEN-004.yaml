@@ -1,0 +1,29 @@
+id: DP-GEN-004
+name: Customer Experience
+domain: Customer
+archetype: CONSUMER_ALIGNED
+initial_status: IN_CERTIFICATION
+seed_stage: 11
+version: 1.0.0-rc.1
+owner: _generic:corporate-dpo
+steward: _generic:data-steward
+description: Support tickets joined to the customer account — volumes, resolution time, first contact resolution, SLA breaches, satisfaction and Net Promoter Score.
+purpose: Give service leaders and the People & Customer Insights agent a certified view of service quality and loyalty (converted from the ADPM Case SLA Watch and Customer Single View seeds).
+decision: { persona: Director of Customer Service, decision: "Which ticket categories and segments to fix first, and where service commitments are breached", cadence: Weekly, workaround: "Service-desk exports and survey CSVs matched on email in a spreadsheet", consequence: "Commitments are breached and detractors are discovered after the fact" }
+sample_questions: ["What is our Net Promoter Score this quarter?", "Which ticket categories drive SLA breaches?", "Average resolution time by priority"]
+semantic_view: CUSTOMER_EXPERIENCE
+output_ports:
+  - { kind: semantic, ref: CUSTOMER_EXPERIENCE }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_GEN_004_CUSTOMER_EXPERIENCE }
+  - { kind: agent, ref: AG-GEN-002 }
+sla: { freshness_minutes: 60, availability_pct: 99.5, max_null_rate_pct: 1.0 }
+kpis: [KPI-GEN-NPS, KPI-GEN-CSAT, KPI-GEN-FCR, KPI-GEN-RESOLUTION, KPI-GEN-SLA-BREACH, KPI-GEN-TICKETS]
+upstream: [CONFORMED_GOLD.FCT_SUPPORT_TICKET, CONFORMED_GOLD.DIM_CUSTOMER]
+consumers: [Customer service, Account management, People & Customer Insights agent]
+lifecycle_seed: { artifacts: auto }
+certification_script:
+  initial: { gate4: warn, gate6: fail }
+  fixes:
+    - { id: FIX-1, check: semantic.verified_queries, label: "Add 3 verified queries for Net Promoter Score", effect: { overlay: VERIFIED_QUERY, keys: [VQ-GEN-038, VQ-GEN-039, VQ-GEN-040] } }
+    - { id: FIX-2, check: governance.masking, label: "Attach PII masking to customer contact email and phone", effect: { policy_attach: { policy: MASK_EMAIL, columns: [CONFORMED_GOLD.DIM_CUSTOMER.contact_email, CONFORMED_GOLD.DIM_CUSTOMER.contact_phone] } } }
+value_case: VC-GEN-004

@@ -1,0 +1,6 @@
+# Readiness preset labels for Acme Holdings (preset ids from the ported readiness engine: early, mid, advanced).
+preset_labels:
+  early: Spreadsheet close
+  mid: Mid-migration
+  advanced: Governed shared services
+question_overrides: []

@@ -1,0 +1,256 @@
+# Verified queries — curated question -> MetricQuery pairs signed off by the business. Every query compiles
+# through compileMetricQuery() on the named view. CUSTOMER_EXPERIENCE deliberately has only 7 active entries
+# and no active NPS query: the DP-GEN-004 certification story (gate 4, 7 of 10) activates VQ-GEN-038..040 via FIX-1.
+
+# ---------------------------------------------------------------- FINANCE (AG-GEN-001)
+- id: VQ-GEN-001
+  question: "What was net revenue by quarter for the last four quarters?"
+  query: { view: FINANCE, metrics: [net_revenue], timeGrain: quarter, timeRange: { last: { n: 4, unit: quarter } }, analysis: trend }
+  agent: AG-GEN-001
+  verified_by: _generic:fpa-analyst
+  verified_at: 2026-06-15
+- id: VQ-GEN-002
+  question: "Net revenue by business unit this year"
+  query: { view: FINANCE, metrics: [net_revenue], dimensions: [business_unit], timeRange: { ytd: true }, orderBy: [{ field: net_revenue, dir: desc }] }
+  agent: AG-GEN-001
+  verified_by: _generic:fpa-analyst
+  verified_at: 2026-06-22
+- id: VQ-GEN-003
+  question: "What is gross margin by region this year?"
+  query: { view: FINANCE, metrics: [gross_margin_pct], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: gross_margin_pct, dir: asc }] }
+  agent: AG-GEN-001
+  verified_by: _generic:fpa-analyst
+  verified_at: 2026-06-29
+- id: VQ-GEN-004
+  question: "Gross margin by month this year"
+  query: { view: FINANCE, metrics: [gross_margin_pct], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-GEN-001
+  verified_by: _generic:fpa-analyst
+  verified_at: 2026-07-06
+- id: VQ-GEN-005
+  question: "What was operating margin last quarter?"
+  query: { view: FINANCE, metrics: [operating_margin_pct], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-GEN-001
+  verified_by: _generic:fpa-analyst
+  verified_at: 2026-07-13
+- id: VQ-GEN-006
+  question: "Operating expense by cost center this year"
+  query: { view: FINANCE, metrics: [operating_expense], dimensions: [cost_center], timeRange: { ytd: true }, orderBy: [{ field: operating_expense, dir: desc }] }
+  agent: AG-GEN-001
+  verified_by: _generic:corporate-dpo
+  verified_at: 2026-07-20
+- id: VQ-GEN-007
+  question: "Revenue vs budget by region this year"
+  query: { view: FINANCE, metrics: [revenue_vs_budget_pct], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: revenue_vs_budget_pct, dir: asc }] }
+  agent: AG-GEN-001
+  verified_by: _generic:fpa-analyst
+  verified_at: 2026-07-27
+- id: VQ-GEN-008
+  question: "Opex vs budget by region this year"
+  query: { view: FINANCE, metrics: [opex_vs_budget_pct], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: opex_vs_budget_pct, dir: desc }] }
+  agent: AG-GEN-001
+  verified_by: _generic:fpa-analyst
+  verified_at: 2026-08-03
+- id: VQ-GEN-009
+  question: "Cost of sales by business unit last quarter"
+  query: { view: FINANCE, metrics: [cost_of_sales], dimensions: [business_unit], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: cost_of_sales, dir: desc }] }
+  agent: AG-GEN-001
+  verified_by: _generic:corporate-dpo
+  verified_at: 2026-08-10
+- id: VQ-GEN-010
+  question: "Which legal entities had the highest net revenue this year?"
+  query: { view: FINANCE, metrics: [net_revenue], dimensions: [legal_entity], timeRange: { ytd: true }, orderBy: [{ field: net_revenue, dir: desc }], limit: 5, analysis: rank }
+  agent: AG-GEN-001
+  verified_by: _generic:fpa-analyst
+  verified_at: 2026-08-17
+
+# ---------------------------------------------------------------- WORKING_CAPITAL (AG-GEN-001)
+- id: VQ-GEN-011
+  question: "What is days sales outstanding this year?"
+  query: { view: WORKING_CAPITAL, metrics: [dso_days], timeRange: { ytd: true } }
+  agent: AG-GEN-001
+  verified_by: _generic:fpa-analyst
+  verified_at: 2026-08-24
+- id: VQ-GEN-012
+  question: "DSO by region this year"
+  query: { view: WORKING_CAPITAL, metrics: [dso_days], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: dso_days, dir: desc }] }
+  agent: AG-GEN-001
+  verified_by: _generic:fpa-analyst
+  verified_at: 2026-08-31
+- id: VQ-GEN-013
+  question: "DSO by quarter for the last four quarters"
+  query: { view: WORKING_CAPITAL, metrics: [dso_days], timeGrain: quarter, timeRange: { last: { n: 4, unit: quarter } }, analysis: trend }
+  agent: AG-GEN-001
+  verified_by: _generic:fpa-analyst
+  verified_at: 2026-09-07
+- id: VQ-GEN-014
+  question: "What is days payables outstanding this year?"
+  query: { view: WORKING_CAPITAL, metrics: [dpo_days], timeRange: { ytd: true } }
+  agent: AG-GEN-001
+  verified_by: _generic:fpa-analyst
+  verified_at: 2026-09-14
+- id: VQ-GEN-015
+  question: "DPO by business unit this year"
+  query: { view: WORKING_CAPITAL, metrics: [dpo_days], dimensions: [business_unit], timeRange: { ytd: true }, orderBy: [{ field: dpo_days, dir: desc }] }
+  agent: AG-GEN-001
+  verified_by: _generic:corporate-dpo
+  verified_at: 2026-06-08
+- id: VQ-GEN-016
+  question: "What share of open receivables is overdue this year?"
+  query: { view: WORKING_CAPITAL, metrics: [overdue_receivables_pct], timeRange: { ytd: true } }
+  agent: AG-GEN-001
+  verified_by: _generic:fpa-analyst
+  verified_at: 2026-06-15
+- id: VQ-GEN-017
+  question: "Overdue receivables by region this year"
+  query: { view: WORKING_CAPITAL, metrics: [overdue_receivables_pct], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: overdue_receivables_pct, dir: desc }] }
+  agent: AG-GEN-001
+  verified_by: _generic:fpa-analyst
+  verified_at: 2026-06-22
+- id: VQ-GEN-018
+  question: "Open receivables by legal entity"
+  query: { view: WORKING_CAPITAL, metrics: [open_receivables], dimensions: [legal_entity], orderBy: [{ field: open_receivables, dir: desc }], limit: 10, analysis: rank }
+  agent: AG-GEN-001
+  verified_by: _generic:corporate-dpo
+  verified_at: 2026-06-29
+- id: VQ-GEN-019
+  question: "Supplier payments on time by spend category this year"
+  query: { view: WORKING_CAPITAL, metrics: [supplier_on_time_pct], dimensions: [spend_category], timeRange: { ytd: true }, orderBy: [{ field: supplier_on_time_pct, dir: asc }] }
+  agent: AG-GEN-001
+  verified_by: _generic:fpa-analyst
+  verified_at: 2026-07-06
+- id: VQ-GEN-020
+  question: "How many customer invoices were issued last quarter?"
+  query: { view: WORKING_CAPITAL, metrics: [invoices_issued], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-GEN-001
+  verified_by: _generic:corporate-dpo
+  verified_at: 2026-07-13
+
+# ---------------------------------------------------------------- WORKFORCE (AG-GEN-002)
+- id: VQ-GEN-021
+  question: "What was average headcount last month?"
+  query: { view: WORKFORCE, metrics: [headcount], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-GEN-002
+  verified_by: _generic:corporate-dpo
+  verified_at: 2026-07-20
+- id: VQ-GEN-022
+  question: "Average headcount by department last month"
+  query: { view: WORKFORCE, metrics: [headcount], dimensions: [department], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: headcount, dir: desc }] }
+  agent: AG-GEN-002
+  verified_by: _generic:corporate-dpo
+  verified_at: 2026-07-27
+- id: VQ-GEN-023
+  question: "What is the attrition rate over the last 12 months?"
+  query: { view: WORKFORCE, metrics: [attrition_rate], timeRange: { last: { n: 12, unit: month } } }
+  agent: AG-GEN-002
+  verified_by: _generic:corporate-dpo
+  verified_at: 2026-08-03
+- id: VQ-GEN-024
+  question: "Attrition rate by region over the last 12 months"
+  query: { view: WORKFORCE, metrics: [attrition_rate], dimensions: [region], timeRange: { last: { n: 12, unit: month } }, orderBy: [{ field: attrition_rate, dir: desc }] }
+  agent: AG-GEN-002
+  verified_by: _generic:corporate-dpo
+  verified_at: 2026-08-10
+- id: VQ-GEN-025
+  question: "Voluntary attrition by quarter for the last four quarters"
+  query: { view: WORKFORCE, metrics: [voluntary_attrition_rate], timeGrain: quarter, timeRange: { last: { n: 4, unit: quarter } }, analysis: trend }
+  agent: AG-GEN-002
+  verified_by: _generic:corporate-dpo
+  verified_at: 2026-08-17
+- id: VQ-GEN-026
+  question: "Voluntary attrition by job level over the last 12 months"
+  query: { view: WORKFORCE, metrics: [voluntary_attrition_rate], dimensions: [job_level], timeRange: { last: { n: 12, unit: month } }, orderBy: [{ field: voluntary_attrition_rate, dir: desc }] }
+  agent: AG-GEN-002
+  verified_by: _generic:corporate-dpo
+  verified_at: 2026-08-24
+- id: VQ-GEN-027
+  question: "How many hires did we make this year?"
+  query: { view: WORKFORCE, metrics: [hires], timeRange: { ytd: true } }
+  agent: AG-GEN-002
+  verified_by: _generic:corporate-dpo
+  verified_at: 2026-08-31
+- id: VQ-GEN-028
+  question: "Time to hire by department this year"
+  query: { view: WORKFORCE, metrics: [time_to_hire_days], dimensions: [department], timeRange: { ytd: true }, orderBy: [{ field: time_to_hire_days, dir: desc }] }
+  agent: AG-GEN-002
+  verified_by: _generic:corporate-dpo
+  verified_at: 2026-09-07
+- id: VQ-GEN-029
+  question: "What is the internal fill rate this year?"
+  query: { view: WORKFORCE, metrics: [internal_fill_pct], timeRange: { ytd: true } }
+  agent: AG-GEN-002
+  verified_by: _generic:corporate-dpo
+  verified_at: 2026-09-14
+- id: VQ-GEN-030
+  question: "Internal fill rate by business unit this year"
+  query: { view: WORKFORCE, metrics: [internal_fill_pct], dimensions: [business_unit], timeRange: { ytd: true }, orderBy: [{ field: internal_fill_pct, dir: desc }] }
+  agent: AG-GEN-002
+  verified_by: _generic:corporate-dpo
+  verified_at: 2026-06-08
+
+# ---------------------------------------------------------------- CUSTOMER_EXPERIENCE (AG-GEN-002) — 7 active; NPS queries pending certification FIX-1 (DP-GEN-004)
+- id: VQ-GEN-031
+  question: "How many support tickets were opened last quarter?"
+  query: { view: CUSTOMER_EXPERIENCE, metrics: [tickets_opened], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-GEN-002
+  verified_by: _generic:data-steward
+  verified_at: 2026-06-15
+- id: VQ-GEN-032
+  question: "Support tickets by ticket category last quarter"
+  query: { view: CUSTOMER_EXPERIENCE, metrics: [tickets_opened], dimensions: [category], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: tickets_opened, dir: desc }] }
+  agent: AG-GEN-002
+  verified_by: _generic:data-steward
+  verified_at: 2026-06-22
+- id: VQ-GEN-033
+  question: "What was average resolution time last quarter?"
+  query: { view: CUSTOMER_EXPERIENCE, metrics: [avg_resolution_hours], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-GEN-002
+  verified_by: _generic:data-steward
+  verified_at: 2026-06-29
+- id: VQ-GEN-034
+  question: "Average resolution time by priority this year"
+  query: { view: CUSTOMER_EXPERIENCE, metrics: [avg_resolution_hours], dimensions: [priority], timeRange: { ytd: true } }
+  agent: AG-GEN-002
+  verified_by: _generic:data-steward
+  verified_at: 2026-07-06
+- id: VQ-GEN-035
+  question: "What is first contact resolution by channel this year?"
+  query: { view: CUSTOMER_EXPERIENCE, metrics: [first_contact_resolution_pct], dimensions: [channel], timeRange: { ytd: true }, orderBy: [{ field: first_contact_resolution_pct, dir: desc }] }
+  agent: AG-GEN-002
+  verified_by: _generic:data-steward
+  verified_at: 2026-07-13
+- id: VQ-GEN-036
+  question: "SLA breach rate by month this year"
+  query: { view: CUSTOMER_EXPERIENCE, metrics: [sla_breach_pct], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-GEN-002
+  verified_by: _generic:data-steward
+  verified_at: 2026-07-20
+- id: VQ-GEN-037
+  question: "Customer satisfaction by customer segment this year"
+  query: { view: CUSTOMER_EXPERIENCE, metrics: [csat_score], dimensions: [segment], timeRange: { ytd: true }, orderBy: [{ field: csat_score, dir: desc }] }
+  agent: AG-GEN-002
+  verified_by: _generic:data-steward
+  verified_at: 2026-07-27
+
+# ---------------------------------------------------------------- NPS — pending certification FIX-1 (DP-GEN-004)
+- id: VQ-GEN-038
+  question: "What is our Net Promoter Score this year?"
+  query: { view: CUSTOMER_EXPERIENCE, metrics: [net_promoter_score], timeRange: { ytd: true } }
+  agent: AG-GEN-002
+  verified_by: _generic:data-steward
+  verified_at: 2026-09-22
+  status: pending_fix
+- id: VQ-GEN-039
+  question: "Net Promoter Score by month for the last six months"
+  query: { view: CUSTOMER_EXPERIENCE, metrics: [net_promoter_score], timeGrain: month, timeRange: { last: { n: 6, unit: month } }, analysis: trend }
+  agent: AG-GEN-002
+  verified_by: _generic:data-steward
+  verified_at: 2026-09-22
+  status: pending_fix
+- id: VQ-GEN-040
+  question: "Net Promoter Score by ticket category last quarter"
+  query: { view: CUSTOMER_EXPERIENCE, metrics: [net_promoter_score], dimensions: [category], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: net_promoter_score, dir: asc }] }
+  agent: AG-GEN-002
+  verified_by: _generic:data-steward
+  verified_at: 2026-09-22
+  status: pending_fix

@@ -1,0 +1,72 @@
+# Acme Holdings synonyms (synthetic): back-office jargon → governed metric, dimension, value or glossary term.
+
+# ── Finance ──────────────────────────────────────────────────────────────────────────────────────
+- term: Net revenue
+  synonyms: [external revenue, consolidated revenue, group revenue]
+  maps_to: { kind: metric, ref: net_revenue }
+- term: Gross margin
+  synonyms: [gross margin percent, gross profit margin, gm percent]
+  maps_to: { kind: metric, ref: gross_margin_pct }
+- term: Operating margin
+  synonyms: [ebit margin, operating profit margin, op margin]
+  maps_to: { kind: metric, ref: operating_margin_pct }
+- term: Operating expense
+  synonyms: [opex, overheads, sg&a]
+  maps_to: { kind: metric, ref: operating_expense }
+- term: Revenue vs budget
+  synonyms: [revenue variance, revenue against plan, revenue versus plan, revenue versus budget]
+  maps_to: { kind: metric, ref: revenue_vs_budget_pct }
+- term: Intercompany
+  synonyms: [intercompany sales, internal recharges, ic eliminations]
+  maps_to: { kind: dimension, ref: intercompany }
+- term: Business unit
+  synonyms: [division, line of business, bu]
+  maps_to: { kind: dimension, ref: business_unit }
+
+# ── Working capital ──────────────────────────────────────────────────────────────────────────────
+- term: Days sales outstanding
+  synonyms: [dso, debtor days, receivable days, how long customers take to pay]
+  maps_to: { kind: metric, ref: dso_days }
+- term: Days payables outstanding
+  synonyms: [dpo, creditor days, how long we take to pay suppliers]
+  maps_to: { kind: metric, ref: dpo_days }
+- term: Overdue receivables
+  synonyms: [past due receivables, overdue ar, aged debt]
+  maps_to: { kind: metric, ref: overdue_receivables_pct }
+- term: Disputed invoice
+  synonyms: [invoice in dispute, contested invoice]
+  maps_to: { kind: term, ref: GT-GEN-DISPUTED-INVOICE }
+
+# ── Workforce ────────────────────────────────────────────────────────────────────────────────────
+- term: Attrition rate
+  synonyms: [staff turnover, employee turnover, churn of staff]
+  maps_to: { kind: metric, ref: attrition_rate }
+- term: Voluntary attrition
+  synonyms: [resignation rate, quit rate, regretted leavers]
+  maps_to: { kind: metric, ref: voluntary_attrition_rate }
+- term: Time to hire
+  synonyms: [time to fill, days to fill a role, vacancy open days]
+  maps_to: { kind: metric, ref: time_to_hire_days }
+- term: Customer Support
+  synonyms: [service desk team, support team]
+  maps_to: { kind: value, ref: department=Customer Support }
+- term: Engineering
+  synonyms: [engineers, r&d team]
+  maps_to: { kind: value, ref: department=Engineering }
+
+# ── Customer ─────────────────────────────────────────────────────────────────────────────────────
+- term: Net Promoter Score
+  synonyms: [nps, promoter score, likelihood to recommend]
+  maps_to: { kind: metric, ref: net_promoter_score }
+- term: First contact resolution
+  synonyms: [fcr, one-touch resolution, fixed first time]
+  maps_to: { kind: metric, ref: first_contact_resolution_pct }
+- term: SLA breach rate
+  synonyms: [missed slas, sla misses, service level breaches]
+  maps_to: { kind: metric, ref: sla_breach_pct }
+- term: Billing
+  synonyms: [invoice queries, billing tickets, invoicing problems]
+  maps_to: { kind: value, ref: category=Billing }
+- term: Enterprise
+  synonyms: [enterprise customers, large accounts, key accounts]
+  maps_to: { kind: value, ref: segment=Enterprise }

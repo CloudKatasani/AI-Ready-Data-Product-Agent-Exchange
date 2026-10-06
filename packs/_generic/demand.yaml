@@ -1,0 +1,82 @@
+# Seeded intake requests and demand-board items. REQ-GEN-001 deliberately near-duplicates DP-GEN-001
+# (Financial Performance) so the intake duplicate detector fires (AC5.1). The remaining ADPM `_generic` seed
+# products (Risk Register View, Product & Service Catalogue, Customer Single View) arrive here as demand.
+requests:
+  - id: REQ-GEN-001
+    title: Regional revenue and margin scorecard
+    requester: _generic:finance-manager-emea
+    decision: Which entities in my region need a pricing review or a re-forecast next quarter
+    decider: Regional Finance Manager
+    cadence: Monthly, before the business review
+    workaround: Ledger extracts pasted into a workbook and reconciled against the budget by hand
+    questions:
+      - What was net revenue by region last quarter?
+      - Which entities have gross margin below target?
+      - How does revenue compare with budget this year?
+      - What is operating margin by business unit?
+    stakes: Pricing and re-forecast decisions are made on stale margin figures that do not match the group pack
+    freshness: Daily by 08:00
+    status: SUBMITTED
+  - id: REQ-GEN-002
+    title: Risk register view
+    requester: _generic:cfo
+    decision: Which open risk items require escalation to the board this month
+    decider: Chief Risk Officer
+    cadence: Monthly
+    workaround: A manually maintained risk register spreadsheet
+    questions:
+      - Which risk items are open beyond their target close date?
+      - Which have increased in severity since last month?
+      - Which controls have failed testing?
+    stakes: Material risks reach the board late or not at all
+    freshness: Weekly
+    status: IN_TRIAGE
+  - id: REQ-GEN-003
+    title: Product and service catalogue
+    requester: _generic:corporate-dpo
+    decision: Which catalogue entries to retire, merge or reassign an owner to
+    decider: Product Data Steward
+    cadence: Monthly
+    workaround: Several catalogue extracts, none of them agreed to be the definitive one
+    questions:
+      - Which catalogue entries have no named owner?
+      - Which products are marked active but have had no sales in a year?
+      - Which entries appear under more than one identifier?
+    stakes: Reporting disagrees between teams because each counts a different product list
+    freshness: Weekly, Monday 06:00
+    status: APPROVED
+  - id: REQ-GEN-004
+    title: Customer single view
+    requester: _generic:data-steward
+    decision: Which customers to contact about a service change, and through which channel
+    decider: Customer Operations Lead
+    cadence: Weekly
+    workaround: Customer lists exported per system and matched on email in a spreadsheet
+    questions:
+      - Which customers exist in more than one source system?
+      - Which have no reachable contact channel?
+      - Which have withdrawn consent for one purpose but not another?
+    stakes: The same customer is contacted three times, or not at all
+    freshness: Daily by 07:00
+    status: SUBMITTED
+  - id: REQ-GEN-005
+    title: Monthly attrition report for EMEA
+    requester: _generic:finance-manager-emea
+    decision: Where to focus retention budget in EMEA
+    decider: HR Business Partner, EMEA
+    cadence: Monthly
+    workaround: A monthly email from HR with a pivot table
+    questions:
+      - Which departments in EMEA have the highest voluntary attrition?
+      - How long do EMEA vacancies stay open?
+      - What share of EMEA hires are internal moves?
+    stakes: Retention budget spent on teams that are not losing people
+    freshness: Monthly
+    status: MERGED
+
+demand_items:
+  - { id: DM-GEN-001, title: Cash forecast product, kind: product, description: "Thirteen-week cash forecast by entity from open receivables, payables and payroll, for treasury.", requested_by: _generic:cfo, votes: 13 }
+  - { id: DM-GEN-002, title: Month-end close assistant agent, kind: agent, description: "Answers which entities and accounts are behind in the close and which reconciliations are open, from certified finance data.", requested_by: _generic:fpa-analyst, votes: 10 }
+  - { id: DM-GEN-003, title: Case SLA watch, kind: product, description: "Open tickets ranked by how close they are to breaching their service commitment, refreshed hourly.", requested_by: _generic:data-steward, votes: 8 }
+  - { id: DM-GEN-004, title: Retention risk insights, kind: product, description: "Team-level resignation risk from tenure, mobility and engagement signals, aggregated to groups of five or more.", requested_by: _generic:corporate-dpo, votes: 6 }
+  - { id: DM-GEN-005, title: Detractor themes agent, kind: agent, description: "Explains why customers become detractors and which ticket categories drive it, once Customer Experience is certified.", requested_by: _generic:data-steward, votes: 5 }

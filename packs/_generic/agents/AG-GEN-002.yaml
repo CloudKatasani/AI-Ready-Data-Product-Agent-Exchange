@@ -1,0 +1,37 @@
+id: AG-GEN-002
+name: People & Customer Insights
+domain: Workforce
+status: PRODUCTION
+owner: _generic:corporate-dpo
+on_call: People & Service Analytics
+avatar: { icon: users, hue: 160 }
+capability: "Answers questions on headcount, attrition, hiring and time to hire, and on support tickets, resolution time, SLA breaches, satisfaction and Net Promoter Score."
+personas_served: [Chief People Officer, HR Business Partner, Director of Customer Service, Group Chief Financial Officer]
+out_of_scope: ["individual employee records or salaries", "hiring, firing or compensation decisions", "contacting customers or marketing outreach", "performance reviews"]
+products:
+  - { id: DP-GEN-003, columns: "*" }
+  - { id: DP-GEN-004, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [WORKFORCE, CUSTOMER_EXPERIENCE], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-GEN-PEOPLE-REPORTING, DOC-GEN-SERVICE-STANDARD, DOC-GEN-DATA-GOVERNANCE] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+  - { tool: request_access_link }
+kpi_coverage:
+  - { kpi: KPI-GEN-HEADCOUNT, grains: [month, quarter], slices: [region, business_unit, department, job_level], depth: rank_drivers }
+  - { kpi: KPI-GEN-ATTRITION, grains: [quarter, month], slices: [region, business_unit, department, job_level], depth: rank_drivers }
+  - { kpi: KPI-GEN-VOL-ATTRITION, grains: [quarter, month], slices: [region, business_unit, department, job_level], depth: rank_drivers }
+  - { kpi: KPI-GEN-TIME-TO-HIRE, grains: [quarter, month], slices: [region, department, hire_source], depth: explain }
+  - { kpi: KPI-GEN-INTERNAL-FILL, grains: [quarter, month], slices: [region, business_unit, department], depth: explain }
+  - { kpi: KPI-GEN-HIRES, grains: [quarter, month], slices: [region, business_unit, department, hire_source], depth: trend }
+  - { kpi: KPI-GEN-NPS, grains: [month, quarter], slices: [region, segment, industry, category, channel], depth: rank_drivers }
+  - { kpi: KPI-GEN-CSAT, grains: [month, quarter], slices: [region, segment, category, channel], depth: explain }
+  - { kpi: KPI-GEN-FCR, grains: [month, quarter], slices: [region, category, channel, priority], depth: explain }
+  - { kpi: KPI-GEN-RESOLUTION, grains: [month, quarter], slices: [region, category, channel, priority], depth: rank_drivers }
+  - { kpi: KPI-GEN-SLA-BREACH, grains: [month, quarter], slices: [region, segment, category, priority], depth: rank_drivers }
+  - { kpi: KPI-GEN-TICKETS, grains: [month, quarter], slices: [region, segment, category, channel, priority], depth: trend }
+instructions: [INS-GEN-002-P, INS-GEN-002-R, INS-GEN-002-G, INS-GEN-002-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-GEN-008, SC-GEN-009, SC-GEN-010, SC-GEN-011, SC-GEN-012, SC-GEN-013, SC-GEN-014, SC-GEN-016]

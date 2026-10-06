@@ -1,0 +1,67 @@
+# Customer and service DQ rules (FCT_SUPPORT_TICKET, DIM_CUSTOMER and Silver sources).
+- id: DQ-GEN-022
+  object: CONFORMED_GOLD.FCT_SUPPORT_TICKET
+  column: resolution_hours
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every ticket records its resolution time (average resolution time and SLA breach).
+- id: DQ-GEN-023
+  object: CONFORMED_GOLD.FCT_SUPPORT_TICKET
+  column: resolution_hours
+  dimension: accuracy
+  assertion: "max <= 1440"
+  severity: medium
+  alert_route: engineering
+  description: No ticket stays open longer than 60 days; longer values indicate a missing resolution timestamp.
+- id: DQ-GEN-024
+  object: CONFORMED_GOLD.FCT_SUPPORT_TICKET
+  column: nps_score
+  dimension: validity
+  assertion: "invalid_rate == 0"
+  allowed: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+  severity: critical
+  alert_route: steward
+  description: NPS answers are integers from 0 to 10 (null when the ticket was not surveyed).
+- id: DQ-GEN-025
+  object: CONFORMED_GOLD.FCT_SUPPORT_TICKET
+  column: csat
+  dimension: completeness
+  assertion: "null_rate <= 0.01"
+  severity: high
+  alert_route: steward
+  description: Satisfaction ratings are present on almost every resolved ticket.
+- id: DQ-GEN-026
+  object: CONFORMED_GOLD.FCT_SUPPORT_TICKET
+  column: ticket_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per support ticket.
+- id: DQ-GEN-027
+  object: CONFORMED_GOLD.FCT_SUPPORT_TICKET
+  column: opened_ts
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: medium
+  alert_route: engineering
+  description: Tickets from the latest business day have arrived.
+- id: DQ-GEN-028
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: customer_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: One account record per customer after CDC deduplication — the key every customer metric joins on.
+- id: DQ-GEN-029
+  object: CONFORMED_GOLD.DIM_CUSTOMER
+  column: contact_email
+  dimension: validity
+  assertion: "regex_rate >= 0.99"
+  pattern: "^[a-z0-9.]+@[a-z0-9.]+$"
+  severity: low
+  alert_route: steward
+  description: Contact emails are well formed after lower-casing in Silver.

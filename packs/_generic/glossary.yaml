@@ -1,0 +1,466 @@
+# Acme Holdings business glossary (synthetic). Converted from the ADPM `_generic` glossary and starter metrics,
+# extended to the finance, working-capital, workforce and customer metrics in this pack's semantic views.
+
+# ── Finance ─────────────────────────────────────────────────────────────────────────────────────────────
+- id: GT-GEN-REGION
+  name: Region
+  definition: "The reporting region of a legal entity or customer account: North America, Latin America, EMEA or APAC. Regional personas see only their own region's rows."
+  domain: Finance
+  owner: _generic:cfo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [geography, territory]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_LEGAL_ENTITY.region, CONFORMED_GOLD.DIM_CUSTOMER.region]
+    metrics: []
+
+- id: GT-GEN-LEGAL-ENTITY
+  name: Legal entity
+  definition: "One of Acme Holdings' sixteen operating companies. Every journal line, invoice and employee belongs to exactly one legal entity."
+  domain: Finance
+  owner: _generic:cfo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [operating company, subsidiary]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_LEGAL_ENTITY.entity_id]
+    metrics: []
+
+- id: GT-GEN-BUSINESS-UNIT
+  name: Business unit
+  definition: "The line of business a legal entity reports into: Industrial Products, Consumer Brands, Business Services or Software & Data."
+  domain: Finance
+  owner: _generic:cfo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [division, line of business]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_LEGAL_ENTITY.business_unit]
+    metrics: []
+
+- id: GT-GEN-INTERCOMPANY
+  name: Intercompany sale
+  definition: "A sale or recharge between two Acme legal entities. It is eliminated on consolidation and never counts as revenue to the group."
+  domain: Finance
+  owner: _generic:cfo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [intercompany, internal recharge, ic sale]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_FINANCIALS.is_intercompany]
+    metrics: []
+
+- id: GT-GEN-NET-REVENUE
+  name: Net revenue
+  definition: "Revenue earned from external customers in the period, after eliminating intercompany sales between Acme entities."
+  formula: "Σ revenue journal lines where intercompany = false"
+  domain: Finance
+  owner: _generic:cfo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [external revenue, consolidated revenue]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_FINANCIALS.actual_usd, CONFORMED_GOLD.FCT_FINANCIALS.account_type]
+    metrics: [net_revenue]
+
+- id: GT-GEN-COST-OF-SALES
+  name: Cost of sales
+  definition: "The direct cost of the goods and services sold in the period: materials, freight, direct labour and hosting."
+  formula: "Σ COGS journal lines where intercompany = false"
+  domain: Finance
+  owner: _generic:cfo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [cogs, cost of goods sold]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_FINANCIALS.actual_usd]
+    metrics: [cost_of_sales]
+
+- id: GT-GEN-GROSS-MARGIN
+  name: Gross margin
+  definition: "Net revenue less cost of sales, expressed as a share of net revenue."
+  formula: "(net revenue − cost of sales) ÷ net revenue"
+  domain: Finance
+  owner: _generic:cfo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [gross margin percent, gross profit margin]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_FINANCIALS.actual_usd]
+    metrics: [gross_margin_pct]
+
+- id: GT-GEN-OPEX
+  name: Operating expense
+  definition: "Selling, general, administrative and engineering costs that are not part of cost of sales."
+  formula: "Σ Opex journal lines where intercompany = false"
+  domain: Finance
+  owner: _generic:cfo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [opex, overheads]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_FINANCIALS.actual_usd]
+    metrics: [operating_expense]
+
+- id: GT-GEN-OPERATING-MARGIN
+  name: Operating margin
+  definition: "Net revenue less cost of sales and operating expense, as a share of net revenue — the group's operating profitability before interest and tax."
+  formula: "(net revenue − cost of sales − operating expense) ÷ net revenue"
+  domain: Finance
+  owner: _generic:cfo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [ebit margin, operating profit margin]
+  mappings:
+    columns: []
+    metrics: [operating_margin_pct]
+
+- id: GT-GEN-BUDGET-VARIANCE
+  name: Budget variance
+  definition: "The difference between actual results and the approved annual budget, as a share of budget. Positive revenue variance is favourable; positive cost variance is adverse."
+  formula: "(actual − budget) ÷ budget"
+  domain: Finance
+  owner: _generic:cfo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [variance to budget, variance to plan]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_FINANCIALS.budget_usd]
+    metrics: [revenue_vs_budget_pct, opex_vs_budget_pct]
+
+
+# ── Working Capital ─────────────────────────────────────────────────────────────────────────────────────
+- id: GT-GEN-DSO
+  name: Days sales outstanding
+  definition: "How long, on average, customers take to pay Acme, weighted by invoice value. Open invoices count the days elapsed so far; disputed invoices are excluded."
+  formula: "Σ(invoice amount × days to settle) ÷ Σ invoice amount, receivables, disputes excluded"
+  domain: Working Capital
+  owner: _generic:cfo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [dso, debtor days, receivable days]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INVOICE.days_to_settle, CONFORMED_GOLD.FCT_INVOICE.amount_usd]
+    metrics: [dso_days]
+
+- id: GT-GEN-DPO
+  name: Days payables outstanding
+  definition: "How long, on average, Acme takes to pay its suppliers, weighted by invoice value."
+  formula: "Σ(invoice amount × days to settle) ÷ Σ invoice amount, payables"
+  domain: Working Capital
+  owner: _generic:cfo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [dpo, creditor days]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INVOICE.days_to_settle]
+    metrics: [dpo_days]
+
+- id: GT-GEN-OVERDUE-AR
+  name: Overdue receivables
+  definition: "Open customer invoices that are past their due date, as a share of all open receivables."
+  formula: "past-due open receivables ÷ open receivables"
+  domain: Working Capital
+  owner: _generic:cfo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [past due receivables, aged debt]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INVOICE.is_overdue]
+    metrics: [overdue_receivables_pct]
+
+- id: GT-GEN-OPEN-AR
+  name: Open receivables
+  definition: "The value of customer invoices not yet paid at the reporting date."
+  domain: Working Capital
+  owner: _generic:cfo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [ar balance, accounts receivable balance]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INVOICE.is_open]
+    metrics: [open_receivables]
+
+- id: GT-GEN-ON-TIME-PAYMENT
+  name: Supplier payment on time
+  definition: "A supplier invoice paid on or before its due date."
+  formula: "paid on or before due date ÷ paid supplier invoices"
+  domain: Working Capital
+  owner: _generic:cfo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [on-time payment, payment timeliness]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INVOICE.paid_on_time]
+    metrics: [supplier_on_time_pct]
+
+- id: GT-GEN-INVOICE
+  name: Customer invoice
+  definition: "A request for payment raised to a customer account by one Acme legal entity."
+  domain: Working Capital
+  owner: _generic:cfo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [invoice, bill to customer]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INVOICE.invoice_id]
+    metrics: [invoices_issued]
+
+- id: GT-GEN-DISPUTED-INVOICE
+  name: Disputed invoice
+  definition: "A customer invoice whose amount or delivery is formally contested. It is managed by the disputes team and excluded from DSO and overdue measures until resolved."
+  domain: Working Capital
+  owner: _generic:cfo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [invoice in dispute, contested invoice]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INVOICE.disputed]
+    metrics: []
+
+
+# ── Workforce ───────────────────────────────────────────────────────────────────────────────────────────
+- id: GT-GEN-HEADCOUNT
+  name: Headcount
+  definition: "The number of permanent employees employed at month end, averaged over the months in the period. Contractors and interns are excluded."
+  formula: "Σ month-end active permanent employees ÷ months"
+  domain: Workforce
+  owner: _generic:corporate-dpo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [employee count, staff numbers]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORKFORCE_MONTH.employment_type]
+    metrics: [headcount]
+
+- id: GT-GEN-ATTRITION
+  name: Attrition rate
+  definition: "Leavers in the period as an annualised share of average permanent headcount."
+  formula: "leavers ÷ employee-months × 12"
+  domain: Workforce
+  owner: _generic:corporate-dpo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [staff turnover, employee turnover]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORKFORCE_MONTH.is_leaver]
+    metrics: [attrition_rate]
+
+- id: GT-GEN-VOLUNTARY-ATTRITION
+  name: Voluntary attrition
+  definition: "Resignations (leavers who chose to leave) as an annualised share of average permanent headcount."
+  formula: "voluntary leavers ÷ employee-months × 12"
+  domain: Workforce
+  owner: _generic:corporate-dpo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [resignation rate, voluntary turnover]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORKFORCE_MONTH.is_voluntary_leaver]
+    metrics: [voluntary_attrition_rate]
+
+- id: GT-GEN-HIRE
+  name: Hire
+  definition: "An employee who joined Acme in the period, whether from outside or by internal move into a new requisition."
+  domain: Workforce
+  owner: _generic:corporate-dpo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [joiner, new hire]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORKFORCE_MONTH.is_hire]
+    metrics: [hires]
+
+- id: GT-GEN-TIME-TO-HIRE
+  name: Time to hire
+  definition: "Days from the opening of a requisition to the start date of the person who filled it."
+  formula: "hire date − requisition opened date"
+  domain: Workforce
+  owner: _generic:corporate-dpo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [time to fill, vacancy open days]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORKFORCE_MONTH.time_to_fill_days]
+    metrics: [time_to_hire_days]
+
+- id: GT-GEN-INTERNAL-FILL
+  name: Internal fill rate
+  definition: "The share of hires filled by moving an existing employee into the role."
+  domain: Workforce
+  owner: _generic:corporate-dpo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [internal mobility, internal fill share]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORKFORCE_MONTH.hire_source]
+    metrics: [internal_fill_pct]
+
+- id: GT-GEN-EMPLOYMENT-TYPE
+  name: Employment type
+  definition: "Whether a worker is a permanent employee, a contractor or an intern. Workforce KPIs count permanent employees only."
+  domain: Workforce
+  owner: _generic:corporate-dpo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [worker type, contract type]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORKFORCE_MONTH.employment_type]
+    metrics: []
+
+- id: GT-GEN-DEPARTMENT
+  name: Department
+  definition: "The function an employee works in, such as Sales, Engineering or Customer Support."
+  domain: Workforce
+  owner: _generic:corporate-dpo
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [team, function]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORKFORCE_MONTH.department]
+    metrics: []
+
+
+# ── Customer ────────────────────────────────────────────────────────────────────────────────────────────
+- id: GT-GEN-NPS
+  name: Net Promoter Score
+  definition: "Promoters (scores 9–10) minus detractors (scores 0–6), as a share of survey responses, on a −100 to +100 scale."
+  formula: "% promoters − % detractors"
+  domain: Customer
+  owner: _generic:data-steward
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [nps, promoter score]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUPPORT_TICKET.nps_score]
+    metrics: [net_promoter_score]
+
+- id: GT-GEN-CSAT
+  name: Customer satisfaction
+  definition: "The 1–5 satisfaction rating a customer gives after a ticket is resolved."
+  domain: Customer
+  owner: _generic:data-steward
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [csat, satisfaction score]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUPPORT_TICKET.csat]
+    metrics: [csat_score]
+
+- id: GT-GEN-FCR
+  name: First contact resolution
+  definition: "A ticket resolved in the customer's first contact, with no follow-up needed."
+  domain: Customer
+  owner: _generic:data-steward
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [fcr, resolved first time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUPPORT_TICKET.first_contact_resolved]
+    metrics: [first_contact_resolution_pct]
+
+- id: GT-GEN-RESOLUTION-TIME
+  name: Resolution time
+  definition: "Hours from a ticket being opened to its resolution."
+  domain: Customer
+  owner: _generic:data-steward
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [time to resolve, handling time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUPPORT_TICKET.resolution_hours]
+    metrics: [avg_resolution_hours]
+
+- id: GT-GEN-SLA-BREACH
+  name: SLA breach
+  definition: "A ticket resolved after the service-level target for its priority (P1 4h, P2 24h, P3 72h, P4 120h)."
+  domain: Customer
+  owner: _generic:data-steward
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [missed sla, service level breach]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUPPORT_TICKET.sla_breached]
+    metrics: [sla_breach_pct]
+
+- id: GT-GEN-SUPPORT-TICKET
+  name: Support ticket
+  definition: "A service request raised by a customer account through email, phone, chat or the portal."
+  domain: Customer
+  owner: _generic:data-steward
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [service request, support case]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUPPORT_TICKET.ticket_id]
+    metrics: [tickets_opened]
+
+- id: GT-GEN-CUSTOMER-SEGMENT
+  name: Customer segment
+  definition: "The size tier of a customer account: Enterprise, Mid-market or Small business."
+  domain: Customer
+  owner: _generic:data-steward
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [account tier, customer size]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.segment]
+    metrics: []
+
+- id: GT-GEN-CUSTOMER-ACCOUNT
+  name: Customer account
+  definition: "An organisation that buys from Acme, identified by its CRM customer id."
+  domain: Customer
+  owner: _generic:data-steward
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [account, customer record]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.customer_id]
+    metrics: []
+
+- id: GT-GEN-CONTACT-DETAILS
+  name: Customer contact details
+  definition: "The name, email and phone of a customer account's primary contact. Personal data: masked for every persona without PII clearance and never used for outreach from a service product."
+  domain: Customer
+  owner: _generic:data-steward
+  steward: _generic:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [contact email, contact phone]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.contact_email, CONFORMED_GOLD.DIM_CUSTOMER.contact_phone]
+    metrics: []

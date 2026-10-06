@@ -1,0 +1,75 @@
+sensitivity_classes:
+  - { class: PII, description: "Personal information about employees, candidates and customer contacts" }
+
+masking_policies:
+  - { id: MASK_PII, class: PII, macro: mask_pii, description: "Replace personal data with ••• unless the persona is cleared for PII" }
+  - { id: MASK_EMAIL, class: PII, macro: mask_email, description: "Hash the local part of email addresses" }
+  - { id: MASK_PHONE, class: PII, macro: mask_phone, description: "Show only the last four digits of phone numbers" }
+
+row_access_policies:
+  - id: RAP_REGION
+    dimension: region
+    description: "Regional personas see only rows for the legal entities and customers in their region"
+    bindings:
+      - { object: CONFORMED_GOLD.DIM_LEGAL_ENTITY, column: region }
+      - { object: CONFORMED_GOLD.DIM_CUSTOMER, column: region }
+      - { object: CURATED_SILVER.LEGAL_ENTITY, column: region }
+      - { object: CURATED_SILVER.CUSTOMER, column: region }
+
+column_tags:
+  # Customer contact PII — masked for every persona without PII clearance.
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.contact_first_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.contact_last_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.contact_full_name, classes: [PII], masking: MASK_PII }
+  # Certification demo (DP-GEN-004 gate 6): contact email and phone masking is not attached until FIX-2.
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.contact_email, classes: [PII], masking: MASK_EMAIL, mask_pending_fix: FIX-2 }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.contact_phone, classes: [PII], masking: MASK_PHONE, mask_pending_fix: FIX-2 }
+  - { column: CONFORMED_GOLD.FCT_SUPPORT_TICKET.agent_notes, classes: [PII], masking: MASK_PII }
+  # Employee PII — never exposed through a semantic view; masked in Explorer and worksheets.
+  - { column: CONFORMED_GOLD.DIM_EMPLOYEE.first_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_EMPLOYEE.last_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_EMPLOYEE.full_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_EMPLOYEE.work_email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.CUSTOMER.contact_first_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.CUSTOMER.contact_last_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.CUSTOMER.contact_email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.CUSTOMER.contact_phone, classes: [PII], masking: MASK_PHONE }
+  - { column: CURATED_SILVER.EMPLOYEE.first_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.EMPLOYEE.last_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.EMPLOYEE.work_email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.REQUISITION.recruiter, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.SUPPORT_TICKET.agent_notes, classes: [PII], masking: MASK_PII }
+  # Critical data elements (each has DQ rules in warehouse/dq).
+  - { column: CONFORMED_GOLD.FCT_FINANCIALS.actual_usd, cde: true }
+  - { column: CONFORMED_GOLD.FCT_FINANCIALS.budget_usd, cde: true }
+  - { column: CONFORMED_GOLD.FCT_FINANCIALS.account_type, cde: true }
+  - { column: CONFORMED_GOLD.FCT_FINANCIALS.is_intercompany, cde: true }
+  - { column: CONFORMED_GOLD.DIM_LEGAL_ENTITY.region, cde: true }
+  - { column: CONFORMED_GOLD.FCT_INVOICE.amount_usd, cde: true }
+  - { column: CONFORMED_GOLD.FCT_INVOICE.days_to_settle, cde: true }
+  - { column: CONFORMED_GOLD.FCT_INVOICE.disputed, cde: true }
+  - { column: CONFORMED_GOLD.FCT_WORKFORCE_MONTH.is_leaver, cde: true }
+  - { column: CONFORMED_GOLD.FCT_WORKFORCE_MONTH.employment_type, cde: true }
+  - { column: CONFORMED_GOLD.FCT_SUPPORT_TICKET.nps_score, cde: true }
+  - { column: CONFORMED_GOLD.FCT_SUPPORT_TICKET.resolution_hours, cde: true }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.customer_id, cde: true }
+
+grants:
+  - persona: _generic:finance-manager-emea
+    products: [DP-GEN-001, DP-GEN-002, DP-GEN-003]
+    agents: [AG-GEN-001, AG-GEN-002]
+  - persona: _generic:fpa-analyst
+    products: [DP-GEN-001, DP-GEN-002, DP-GEN-003]
+    agents: [AG-GEN-001, AG-GEN-002]
+  - persona: _generic:corporate-dpo
+    products: [DP-GEN-001, DP-GEN-002, DP-GEN-003, DP-GEN-004]
+    agents: [AG-GEN-001, AG-GEN-002]
+  - persona: _generic:data-steward
+    products: [DP-GEN-001, DP-GEN-002, DP-GEN-003, DP-GEN-004]
+    agents: [AG-GEN-001, AG-GEN-002]
+  - persona: _generic:cfo
+    # Aggregates only (archetype E): sees every headline KPI tile, never row-level data.
+    products: [DP-GEN-001, DP-GEN-002, DP-GEN-003, DP-GEN-004]
+    agents: [AG-GEN-001, AG-GEN-002]
+
+public_products: []

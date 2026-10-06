@@ -1,0 +1,89 @@
+# Control library for Acme Holdings (fictional), converted from the eight ADPM `_generic` controls and
+# mapped to the four back-office domains. Frameworks are named for the public practices they are modelled
+# on; jurisdictions and regulators are invented. Illustrative, not legal advice.
+jurisdictions:
+  - { id: JUR-ACM-GROUP, name: "Group policy (all regions)", regulator: "Acme Holdings Audit & Risk Committee" }
+  - { id: JUR-ACM-EU, name: "EMEA operating companies", regulator: "Regional data protection authority (GDPR-style)" }
+  - { id: JUR-ACM-NA, name: "North American operating companies", regulator: "State consumer privacy regulators (CCPA-style)" }
+
+controls:
+  - id: CTL-GEN-001
+    name: Lawful basis for processing
+    framework: Privacy by design (GDPR-style Art. 6)
+    description: >-
+      Personal data about employees and customer contacts is processed only for a recorded, lawful purpose. Each data
+      product that reads personal data names its purpose in the product charter before it can leave Design.
+    jurisdiction: JUR-ACM-EU
+    applies_to: { classes: [PII], domains: [workforce, customer] }
+    evidence: Purpose statement in the product charter and the approved Design gate decision.
+    stage: 3
+  - id: CTL-GEN-002
+    name: Consent record
+    framework: Privacy by design (GDPR-style Art. 7)
+    description: >-
+      Marketing use of customer contact details requires current recorded consent; service data products may use
+      contact details only to deliver service and never for outreach.
+    jurisdiction: JUR-ACM-EU
+    applies_to: { classes: [PII], domains: [customer] }
+    evidence: Consent coverage report for customer contacts and the product's declared purpose.
+    stage: 6
+  - id: CTL-GEN-003
+    name: Retention schedule
+    framework: Records retention schedule
+    description: >-
+      Financial records are kept for seven years, personnel records for six years after leaving and support tickets
+      for three years; history in the platform is append-only so retained records cannot be silently altered.
+    jurisdiction: JUR-ACM-GROUP
+    applies_to: { domains: [finance, working-capital, workforce, customer] }
+    evidence: Retention configuration per object and the most recent purge certificate.
+    stage: 9
+  - id: CTL-GEN-004
+    name: Data residency
+    framework: Cross-border transfer policy
+    description: >-
+      Personal data stays in its primary operating region unless a documented transfer basis exists; group-level
+      products receive aggregates or masked values only.
+    jurisdiction: JUR-ACM-EU
+    applies_to: { classes: [PII], domains: [workforce, customer] }
+    evidence: Region of storage per object and the masking report for group-level products.
+    stage: 6
+  - id: CTL-GEN-005
+    name: Least privilege
+    framework: Access management standard (ISO 27001-style A.5.15)
+    description: >-
+      Access to a data product is granted for the narrowest purpose that satisfies the need, approved by its steward,
+      time-limited and reviewed quarterly. Regional personas see only their region's entities.
+    jurisdiction: JUR-ACM-GROUP
+    applies_to: { domains: [finance, working-capital, workforce, customer] }
+    evidence: Access grants per product with approver, purpose and expiry; the row-access policy bindings.
+    stage: 11
+  - id: CTL-GEN-006
+    name: Data minimisation
+    framework: Privacy by design (GDPR-style Art. 5)
+    description: >-
+      Analytical products exclude identifiers unless a stated purpose requires them. Workforce products publish
+      aggregates only, with a minimum group size of five, so no individual can be identified.
+    jurisdiction: JUR-ACM-GROUP
+    applies_to: { classes: [PII], domains: [workforce, customer] }
+    evidence: Column inventory of each output port and the disclosure-control review for workforce breakdowns.
+    stage: 4
+  - id: CTL-GEN-007
+    name: Audit trail
+    framework: Internal control over financial reporting (SOX-style)
+    description: >-
+      Revenue, margin, budget variance and working-capital figures used in management and statutory reporting come
+      from one certified product version; every decision affecting them is auditable to a named human.
+    jurisdiction: JUR-ACM-GROUP
+    applies_to: { domains: [finance, working-capital] }
+    evidence: Certified product version, metric definitions, lineage to the general ledger and the gate decision log.
+    stage: 11
+  - id: CTL-GEN-008
+    name: Automated decision explainability
+    framework: Responsible AI policy
+    description: >-
+      Agent answers are explainable — every number cites its product, version, metric definition and query — and
+      agents never take decisions about individuals; a named human can override any recommendation.
+    jurisdiction: JUR-ACM-GROUP
+    applies_to: { domains: [finance, working-capital, workforce, customer] }
+    evidence: Agent evaluation report, grounding validator results and the audit stream of agent actions.
+    stage: 10

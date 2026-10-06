@@ -1,0 +1,25 @@
+id: DP-GEN-002
+name: Working Capital
+domain: Working Capital
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 1.2.0
+owner: _generic:corporate-dpo
+steward: _generic:data-steward
+description: Receivable and payable invoices with settlement, ageing and disputes — DSO, DPO, overdue receivables and supplier payment timeliness.
+purpose: Show where cash is tied up across the order-to-cash and procure-to-pay handovers (converted from the ADPM Order to Cash seed).
+decision: { persona: Group Treasurer, decision: "Which regions and entities get collections focus and which payables practices to fix", cadence: Weekly, workaround: "Aged-debt and AP reports pulled from each entity's ERP separately", consequence: "Cash is delayed by a handover nobody owns because nobody can see it end to end" }
+sample_questions: ["What is days sales outstanding this year?", "Which regions have the highest DSO?", "Supplier payments on time by spend category"]
+semantic_view: WORKING_CAPITAL
+output_ports:
+  - { kind: semantic, ref: WORKING_CAPITAL }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_GEN_002_WORKING_CAPITAL }
+  - { kind: agent, ref: AG-GEN-001 }
+sla: { freshness_minutes: 1440, availability_pct: 99.5, max_null_rate_pct: 0.5 }
+kpis: [KPI-GEN-DSO, KPI-GEN-DPO, KPI-GEN-AR-OVERDUE, KPI-GEN-AP-ON-TIME, KPI-GEN-OPEN-AR]
+upstream: [CONFORMED_GOLD.FCT_INVOICE, CONFORMED_GOLD.DIM_LEGAL_ENTITY]
+consumers: [Treasury, Credit control, Accounts payable, Finance Analyst agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-GEN-002

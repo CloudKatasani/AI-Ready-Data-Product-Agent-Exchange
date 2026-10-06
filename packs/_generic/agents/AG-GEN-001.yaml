@@ -1,0 +1,42 @@
+id: AG-GEN-001
+name: Finance Analyst
+domain: Finance
+status: PRODUCTION
+owner: _generic:corporate-dpo
+on_call: Finance Data Ops
+avatar: { icon: landmark, hue: 215 }
+capability: "Answers questions on net revenue, cost of sales, gross and operating margin, variance to budget, DSO, DPO, overdue receivables and supplier payment timeliness."
+personas_served: [Group Chief Financial Officer, Regional Finance Manager, FP&A Analyst, Group Treasurer]
+out_of_scope: ["posting or reversing journal entries", "changing budgets or forecasts", "tax advice or statutory filings", "credit decisions on individual customers"]
+products:
+  - { id: DP-GEN-001, columns: "*" }
+  - { id: DP-GEN-002, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [FINANCE, WORKING_CAPITAL], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-GEN-FINANCE-POLICY, DOC-GEN-WORKING-CAPITAL, DOC-GEN-DATA-GOVERNANCE] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+  - { tool: request_access_link }
+kpi_coverage:
+  - { kpi: KPI-GEN-NET-REV, grains: [month, quarter, year], slices: [region, business_unit, legal_entity, cost_center], depth: rank_drivers }
+  - { kpi: KPI-GEN-GROSS-MARGIN, grains: [month, quarter, year], slices: [region, business_unit, legal_entity], depth: explain }
+  - { kpi: KPI-GEN-OP-MARGIN, grains: [month, quarter, year], slices: [region, business_unit], depth: explain }
+  - { kpi: KPI-GEN-REV-VS-BUDGET, grains: [month, quarter], slices: [region, business_unit, legal_entity], depth: rank_drivers }
+  - { kpi: KPI-GEN-OPEX-VS-BUDGET, grains: [month, quarter], slices: [region, business_unit, cost_center], depth: rank_drivers }
+  - { kpi: KPI-GEN-DSO, grains: [month, quarter], slices: [region, business_unit, legal_entity], depth: rank_drivers }
+  - { kpi: KPI-GEN-DPO, grains: [month, quarter], slices: [region, business_unit, spend_category], depth: explain }
+  - { kpi: KPI-GEN-AR-OVERDUE, grains: [month, quarter], slices: [region, business_unit, legal_entity], depth: rank_drivers }
+  - { kpi: KPI-GEN-AP-ON-TIME, grains: [month, quarter], slices: [region, spend_category], depth: explain }
+  - { kpi: KPI-GEN-OPEX, grains: [month, quarter, year], slices: [region, business_unit, cost_center], depth: rank_drivers }
+  - { kpi: KPI-GEN-COGS, grains: [month, quarter, year], slices: [region, business_unit], depth: trend }
+  - { kpi: KPI-GEN-OPEN-AR, grains: [], slices: [region, business_unit, legal_entity], depth: rank_drivers }
+instructions: [INS-GEN-001-P, INS-GEN-001-R, INS-GEN-001-G, INS-GEN-001-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-GEN-001, SC-GEN-002, SC-GEN-003, SC-GEN-004, SC-GEN-005, SC-GEN-006, SC-GEN-007, SC-GEN-015]
+quality_fix:
+  feedback_question: "What was our top line last quarter?"
+  fix: { type: synonym, payload: { term: top line, synonyms: [topline, top-line revenue], maps_to: { kind: metric, ref: net_revenue } } }
+  eval_before_pct: 88
+  eval_after_pct: 94

@@ -1,0 +1,85 @@
+name: CUSTOMER_EXPERIENCE
+description: Support tickets, service levels, satisfaction and Net Promoter Score by customer region and segment
+tables:
+  - { alias: t, fqn: CONFORMED_GOLD.FCT_SUPPORT_TICKET, pk: ticket_key }
+  - { alias: c, fqn: CONFORMED_GOLD.DIM_CUSTOMER, pk: customer_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: t.customer_key, to: c.customer_key }
+  - { from: t.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: c.region, label: Region, synonyms: [geography, territory, area], term: GT-GEN-REGION }
+  - { name: segment, expr: c.segment, label: Customer segment, synonyms: [customer size, account tier], term: GT-GEN-CUSTOMER-SEGMENT }
+  - { name: industry, expr: c.industry, label: Industry, synonyms: [vertical, sector] }
+  - { name: channel, expr: t.channel, label: Channel, synonyms: [contact channel] }
+  - { name: priority, expr: t.priority, label: Priority, synonyms: [severity] }
+  - { name: category, expr: t.category, label: Ticket category, synonyms: [issue type, ticket reason, contact reason], term: GT-GEN-SUPPORT-TICKET }
+  - { name: auto_closed_spam, expr: t.auto_closed_spam, label: Auto-closed spam, synonyms: [spam tickets, spam] }
+  - { name: contact_email, expr: c.contact_email, label: Contact email, synonyms: [email, customer email], term: GT-GEN-CONTACT-DETAILS }
+time_dimensions:
+  - { name: ticket_date, expr: d.date, default: true }
+facts:
+  - { name: resolution_hours, expr: t.resolution_hours, description: Hours from ticket opening to resolution }
+  - { name: nps_score, expr: t.nps_score, description: 0-10 likelihood-to-recommend answer (null when not surveyed) }
+metrics:
+  - name: tickets_opened
+    label: Support tickets
+    expr: COUNT(*)
+    unit: tickets
+    decimals: 0
+    direction: neutral
+    synonyms: [ticket volume, tickets opened, service requests]
+    term: GT-GEN-SUPPORT-TICKET
+    description: Support tickets opened in the period
+  - name: avg_resolution_hours
+    label: Average resolution time
+    expr: AVG(t.resolution_hours)
+    unit: hours
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [resolution time, time to resolve, hours to resolve]
+    term: GT-GEN-RESOLUTION-TIME
+    description: Mean hours from ticket opening to resolution
+    default_filters: [ { rule: BR-GEN-010 } ]
+    naive_expr: MEDIAN(t.resolution_hours)
+  - name: first_contact_resolution_pct
+    label: First contact resolution
+    expr: 100.0 * AVG(CASE WHEN t.first_contact_resolved THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [fcr, resolved first time, one-touch resolution]
+    term: GT-GEN-FCR
+    description: Share of tickets resolved in the first contact
+    default_filters: [ { rule: BR-GEN-010 } ]
+  - name: sla_breach_pct
+    label: SLA breach rate
+    expr: 100.0 * AVG(CASE WHEN t.sla_breached THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [sla breaches, missed slas, service level breaches]
+    term: GT-GEN-SLA-BREACH
+    description: Share of tickets resolved after their priority's service-level target
+    default_filters: [ { rule: BR-GEN-010 } ]
+  - name: csat_score
+    label: Customer satisfaction
+    expr: AVG(t.csat)
+    unit: score
+    decimals: 2
+    direction: higher_is_better
+    synonyms: [csat, satisfaction score, customer satisfaction score]
+    term: GT-GEN-CSAT
+    description: Mean post-ticket satisfaction rating on a 1-5 scale
+    default_filters: [ { rule: BR-GEN-010 } ]
+  - name: net_promoter_score
+    label: Net Promoter Score
+    expr: 100.0 * (COUNT_IF(t.nps_score >= 9) - COUNT_IF(t.nps_score <= 6)) / NULLIF(COUNT(t.nps_score), 0)
+    unit: points
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [nps, promoter score, likelihood to recommend]
+    term: GT-GEN-NPS
+    description: Share of promoters (9-10) minus share of detractors (0-6) among survey responses
+    naive_expr: AVG(t.nps_score) * 10
+products: [DP-GEN-004]

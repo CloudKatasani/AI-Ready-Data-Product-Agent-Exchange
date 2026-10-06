@@ -1,0 +1,47 @@
+# Domains, conformed backbone entities and links (converted from the ADPM `_generic` pack: Finance,
+# Order & Transaction, People and Customer, narrowed to the four back-office domains Acme Holdings runs
+# as shared services). Owners are persona refs; golden sources are Gold objects in ACM_AI_PLATFORM.
+domains:
+  - id: finance
+    name: Finance
+    description: General ledger actuals, budgets, revenue, cost of sales, operating expense and margin by legal entity, region and business unit, with intercompany eliminations.
+    owner: _generic:cfo
+    entities: [Legal entity, Journal line, Budget line]
+  - id: working-capital
+    name: Working Capital
+    description: Order-to-cash receivables and procure-to-pay payables — invoices, settlement, overdue balances, disputes, DSO and DPO.
+    owner: _generic:cfo
+    entities: [Receivable invoice, Payable invoice]
+  - id: workforce
+    name: Workforce
+    description: Employees, joiners, leavers and requisitions — headcount, attrition and time to hire, reported at a grain that never identifies an individual.
+    owner: _generic:corporate-dpo
+    entities: [Employee, Requisition]
+  - id: customer
+    name: Customer
+    description: Customer accounts and their contacts, support tickets, service levels, satisfaction and Net Promoter Score.
+    owner: _generic:data-steward
+    entities: [Customer account, Support ticket, Survey response]
+
+backbone:
+  entities:
+    - { name: Legal entity, description: "One of Acme Holdings' operating companies, with its region and business unit", key: entity_id, domain: finance, golden_source: CONFORMED_GOLD.DIM_LEGAL_ENTITY }
+    - { name: Journal line, description: "One posted general-ledger line (revenue, cost of sales or operating expense)", key: journal_line_id, domain: finance, golden_source: CONFORMED_GOLD.FCT_FINANCIALS }
+    - { name: Budget line, description: "One approved budget line for an entity, month, account type and cost center", key: budget_line_id, domain: finance, golden_source: CONFORMED_GOLD.FCT_FINANCIALS }
+    - { name: Receivable invoice, description: "An invoice raised to a customer, with its due date, settlement and dispute status", key: ar_invoice_id, domain: working-capital, golden_source: CONFORMED_GOLD.FCT_INVOICE }
+    - { name: Payable invoice, description: "A supplier invoice received by an entity, with its due date and payment", key: ap_invoice_id, domain: working-capital, golden_source: CONFORMED_GOLD.FCT_INVOICE }
+    - { name: Employee, description: "A member of the workforce employed by one legal entity", key: employee_id, domain: workforce, golden_source: CONFORMED_GOLD.DIM_EMPLOYEE }
+    - { name: Requisition, description: "An approved vacancy, from opening to the hire that filled it", key: requisition_id, domain: workforce, golden_source: CURATED_SILVER.REQUISITION }
+    - { name: Customer account, description: "An organisation that buys from Acme, with one primary contact", key: customer_id, domain: customer, golden_source: CONFORMED_GOLD.DIM_CUSTOMER }
+    - { name: Support ticket, description: "One service request raised by a customer account", key: ticket_id, domain: customer, golden_source: CONFORMED_GOLD.FCT_SUPPORT_TICKET }
+    - { name: Survey response, description: "A post-resolution Net Promoter Score survey answer", key: response_id, domain: customer, golden_source: CURATED_SILVER.SURVEY_RESPONSE }
+  links:
+    - { from: Legal entity, to: Journal line, cardinality: 1:N, via: entity_id }
+    - { from: Legal entity, to: Budget line, cardinality: 1:N, via: entity_id }
+    - { from: Legal entity, to: Receivable invoice, cardinality: 1:N, via: entity_id }
+    - { from: Legal entity, to: Payable invoice, cardinality: 1:N, via: entity_id }
+    - { from: Legal entity, to: Employee, cardinality: 1:N, via: entity_id }
+    - { from: Customer account, to: Receivable invoice, cardinality: 1:N, via: customer_id }
+    - { from: Customer account, to: Support ticket, cardinality: 1:N, via: customer_id }
+    - { from: Support ticket, to: Survey response, cardinality: 1:1, via: ticket_id }
+    - { from: Requisition, to: Employee, cardinality: 1:1, via: hired_employee_id }

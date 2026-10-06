@@ -1,0 +1,20 @@
+# Silver/Gold object metadata for Explorer display and lineage (upstream edges).
+objects:
+  - { fqn: CURATED_SILVER.LEGAL_ENTITY, kind: DYNAMIC TABLE, description: "Conformed operating companies", target_lag: 1 day, upstream: [RAW_BRONZE.ERP_LEGAL_ENTITY], grain: one row per legal entity }
+  - { fqn: CURATED_SILVER.GL_JOURNAL_LINE, kind: DYNAMIC TABLE, description: "Deduplicated posted journal lines", target_lag: 1 hour, upstream: [RAW_BRONZE.ERP_GL_JOURNAL], grain: one row per journal line }
+  - { fqn: CURATED_SILVER.BUDGET_LINE, kind: DYNAMIC TABLE, description: "Approved budget lines by month", target_lag: 1 day, upstream: [RAW_BRONZE.FPA_BUDGET], grain: one row per budget line }
+  - { fqn: CURATED_SILVER.AR_INVOICE, kind: DYNAMIC TABLE, description: "Customer invoices with settlement", target_lag: 1 hour, upstream: [RAW_BRONZE.ERP_AR_INVOICE], grain: one row per receivable invoice }
+  - { fqn: CURATED_SILVER.AP_INVOICE, kind: DYNAMIC TABLE, description: "Supplier invoices with payment", target_lag: 1 hour, upstream: [RAW_BRONZE.ERP_AP_INVOICE], grain: one row per payable invoice }
+  - { fqn: CURATED_SILVER.EMPLOYEE, kind: DYNAMIC TABLE, description: "Employee master, deduplicated and conformed", target_lag: 1 day, upstream: [RAW_BRONZE.HRIS_EMPLOYEE], grain: one row per employee }
+  - { fqn: CURATED_SILVER.REQUISITION, kind: DYNAMIC TABLE, description: "Filled requisitions with time to fill", target_lag: 1 day, upstream: [RAW_BRONZE.ATS_REQUISITION], grain: one row per requisition }
+  - { fqn: CURATED_SILVER.CUSTOMER, kind: DYNAMIC TABLE, description: "Customer accounts and primary contacts", target_lag: 15 minutes, upstream: [RAW_BRONZE.CRM_ACCOUNT], grain: one row per customer account }
+  - { fqn: CURATED_SILVER.SUPPORT_TICKET, kind: DYNAMIC TABLE, description: "Support tickets with SLA hours", target_lag: 15 minutes, upstream: [RAW_BRONZE.SVC_TICKET], grain: one row per ticket }
+  - { fqn: CURATED_SILVER.SURVEY_RESPONSE, kind: DYNAMIC TABLE, description: "Latest NPS survey answer per ticket", target_lag: 1 hour, upstream: [RAW_BRONZE.SURVEY_RESPONSE], grain: one row per surveyed ticket }
+  - { fqn: CONFORMED_GOLD.DIM_DATE, kind: TABLE, description: "Calendar 2019-2026", upstream: [CURATED_SILVER.GL_JOURNAL_LINE], grain: one row per day }
+  - { fqn: CONFORMED_GOLD.DIM_LEGAL_ENTITY, kind: TABLE, description: "Legal entity dimension with region and business unit", target_lag: 1 day, upstream: [CURATED_SILVER.LEGAL_ENTITY], grain: one row per legal entity }
+  - { fqn: CONFORMED_GOLD.DIM_CUSTOMER, kind: TABLE, description: "Customer account dimension with primary contact", target_lag: 15 minutes, upstream: [CURATED_SILVER.CUSTOMER], grain: one row per customer account }
+  - { fqn: CONFORMED_GOLD.DIM_EMPLOYEE, kind: TABLE, description: "Employee dimension (personal data masked)", target_lag: 1 day, upstream: [CURATED_SILVER.EMPLOYEE, CONFORMED_GOLD.DIM_LEGAL_ENTITY], grain: one row per employee }
+  - { fqn: CONFORMED_GOLD.FCT_FINANCIALS, kind: DYNAMIC TABLE, description: "Actuals and budget at journal/budget line grain", target_lag: 1 hour, upstream: [CURATED_SILVER.GL_JOURNAL_LINE, CURATED_SILVER.BUDGET_LINE, CONFORMED_GOLD.DIM_LEGAL_ENTITY], grain: one row per journal or budget line }
+  - { fqn: CONFORMED_GOLD.FCT_INVOICE, kind: DYNAMIC TABLE, description: "Receivable and payable invoices with ageing and settlement", target_lag: 1 hour, upstream: [CURATED_SILVER.AR_INVOICE, CURATED_SILVER.AP_INVOICE, CONFORMED_GOLD.DIM_LEGAL_ENTITY, CONFORMED_GOLD.DIM_CUSTOMER], grain: one row per invoice }
+  - { fqn: CONFORMED_GOLD.FCT_WORKFORCE_MONTH, kind: DYNAMIC TABLE, description: "Employee-month snapshot with joiners, leavers and time to fill", target_lag: 1 day, upstream: [CONFORMED_GOLD.DIM_EMPLOYEE, CURATED_SILVER.REQUISITION], grain: one row per employee per month employed }
+  - { fqn: CONFORMED_GOLD.FCT_SUPPORT_TICKET, kind: DYNAMIC TABLE, description: "Support tickets with SLA outcome and NPS answer", target_lag: 15 minutes, upstream: [CURATED_SILVER.SUPPORT_TICKET, CURATED_SILVER.SURVEY_RESPONSE, CONFORMED_GOLD.DIM_CUSTOMER], grain: one row per ticket }

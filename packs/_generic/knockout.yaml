@@ -1,0 +1,101 @@
+# Knockout (Why AI-Ready): four governed answers and how each degrades when a layer is switched off.
+# declared_delta_pct is computed through the real knockout query path at scale M (pnpm knockout:deltas --update).
+answers:
+  - id: KO-GEN-01
+    kpi: KPI-GEN-NET-REV
+    question: "What was net revenue last quarter, excluding intercompany sales?"
+    query: { view: FINANCE, metrics: [net_revenue], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # CDC duplicates counted twice and mixed-case account types fall out of revenue
+      gold: unverified     # same journals read from Silver, but no certified entity conformance or lineage
+      semantic: wrong      # naive formula sums every journal line — cost and expense counted as revenue
+      glossary: ambiguous  # "external revenue" no longer resolves to net revenue
+      context: wrong       # intercompany recharges (BR-GEN-001) are no longer eliminated
+      governance: unsafe   # no certification, row access or lineage on the answer
+    declared_delta_pct: { silver: 0.1, gold: 0, semantic: 116, glossary: 0, context: 25.6, governance: 0 }
+  - id: KO-GEN-02
+    kpi: KPI-GEN-DSO
+    question: "What was days sales outstanding this year?"
+    query: { view: WORKING_CAPITAL, metrics: [dso_days], timeRange: { ytd: true } }
+    failure_by_layer:
+      silver: wrong        # duplicate invoice updates and tombstoned invoices counted; future payment dates read as paid
+      gold: unverified     # computed from Silver receivables without the certified invoice conformance
+      semantic: wrong      # naive formula averages contractual payment terms instead of actual days to settle
+      glossary: ambiguous  # "debtor days" does not resolve to DSO
+      context: wrong       # disputed invoices (BR-GEN-005) are no longer excluded
+      governance: unsafe   # customer contact details reachable from the receivables join unmasked
+    declared_delta_pct: { silver: 0.5, gold: 0, semantic: -5.9, glossary: 0, context: 5.9, governance: 0 }
+  - id: KO-GEN-03
+    kpi: KPI-GEN-VOL-ATTRITION
+    question: "What was voluntary attrition over the last 12 months?"
+    query: { view: WORKFORCE, metrics: [voluntary_attrition_rate], timeRange: { last: { n: 12, unit: month } } }
+    failure_by_layer:
+      silver: unverified   # the employee-month snapshot has no Silver equivalent; lineage cannot be shown
+      gold: unverified     # same snapshot, but uncertified
+      semantic: wrong      # naive formula divides resignations by everyone who ever appeared in the period
+      glossary: ambiguous  # "quit rate" does not resolve to voluntary attrition
+      context: wrong       # contractors and interns (BR-GEN-007) are counted
+      governance: unsafe   # small groups are no longer suppressed (BR-GEN-008) — individuals become identifiable
+    declared_delta_pct: { silver: 0, gold: 0, semantic: -1.2, glossary: 0, context: 14.1, governance: 0 }
+  - id: KO-GEN-04
+    kpi: KPI-GEN-RESOLUTION
+    question: "What was average resolution time last quarter?"
+    query: { view: CUSTOMER_EXPERIENCE, metrics: [avg_resolution_hours], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # duplicate ticket updates and mixed-case statuses let spam back in
+      gold: unverified     # computed from Silver tickets without the certified customer join
+      semantic: wrong      # naive formula reports the median, not the mean the service standard defines
+      glossary: ambiguous  # "handling time" does not resolve to resolution time
+      context: wrong       # auto-closed spam tickets (BR-GEN-010) are counted and flatter the desk
+      governance: unsafe   # customer contact emails reachable from the ticket view unmasked
+    declared_delta_pct: { silver: -0.8, gold: 0, semantic: -45.4, glossary: 0, context: -5.3, governance: 0 }
+
+# Silver equivalents the compiler uses when the Gold layer is off (05 §1 step 7). column_map maps a Gold column
+# name to the Silver column (or Silver expression) that replaces it; Gold surrogate keys map to natural keys on
+# both sides of a join. DIM_DATE is a generated calendar and FCT_WORKFORCE_MONTH an expansion with no Silver
+# equivalent, so both stay in place.
+gold_fallbacks:
+  - gold: CONFORMED_GOLD.FCT_FINANCIALS
+    silver: CURATED_SILVER.GL_JOURNAL_LINE
+    column_map:
+      line_key: journal_line_id
+      entity_key: entity_id
+      date_key: "CAST(strftime(posting_date, '%Y%m%d') AS INTEGER)"
+      actual_usd: amount_usd
+      budget_usd: "0.0"
+      is_intercompany: intercompany_flag
+      account_label: "CASE account_type WHEN 'COGS' THEN 'Cost of sales' WHEN 'Opex' THEN 'Operating expense' ELSE 'Revenue' END"
+  - gold: CONFORMED_GOLD.DIM_LEGAL_ENTITY
+    silver: CURATED_SILVER.LEGAL_ENTITY
+    column_map:
+      entity_key: entity_id
+      entity_name: "concat('Acme ', business_unit, ' ', replace(entity_id, 'LE-', ''))"
+  - gold: CONFORMED_GOLD.FCT_INVOICE
+    silver: CURATED_SILVER.AR_INVOICE
+    column_map:
+      invoice_key: ar_invoice_id
+      invoice_id: ar_invoice_id
+      ledger: "'Receivable'"
+      entity_key: entity_id
+      customer_key: customer_id
+      spend_category: "'Customer sales'"
+      date_key: "CAST(strftime(invoice_date, '%Y%m%d') AS INTEGER)"
+      disputed: dispute_flag
+      is_open: "paid_date IS NULL"
+      is_overdue: "paid_date IS NULL AND due_date < GOVERNANCE.as_of()"
+      paid_on_time: "paid_date IS NOT NULL AND paid_date <= due_date"
+      days_to_settle: "date_diff('day', invoice_date, coalesce(paid_date, GOVERNANCE.as_of()))"
+  - gold: CONFORMED_GOLD.FCT_SUPPORT_TICKET
+    silver: CURATED_SILVER.SUPPORT_TICKET
+    column_map:
+      ticket_key: ticket_id
+      customer_key: customer_id
+      date_key: "CAST(strftime(CAST(opened_ts AS DATE), '%Y%m%d') AS INTEGER)"
+      auto_closed_spam: "ticket_status = 'Auto-closed spam'"
+      sla_breached: "resolution_hours > CASE priority WHEN 'P1' THEN 4 WHEN 'P2' THEN 24 WHEN 'P3' THEN 72 ELSE 120 END"
+      nps_score: "CAST(NULL AS INTEGER)"
+  - gold: CONFORMED_GOLD.DIM_CUSTOMER
+    silver: CURATED_SILVER.CUSTOMER
+    column_map:
+      customer_key: customer_id
+      contact_full_name: "concat(contact_first_name, ' ', contact_last_name)"

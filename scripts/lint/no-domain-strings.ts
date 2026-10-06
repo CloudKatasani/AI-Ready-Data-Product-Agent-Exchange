@@ -4,7 +4,7 @@
  * Terms come from validator category 10 (`lintTerms`): company, products, agents, KPIs, views, tables,
  * personas, domains and each pack's `lint_terms`.
  */
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { readPack } from '../../src/lib/packs/loader';
 import { lintTerms } from '../../src/lib/packs/validate/policy-checks';
@@ -25,7 +25,7 @@ function walk(dir: string, filter: (path: string) => boolean): string[] {
 /** Installed pack directories: everything under packs/ except `_shared`, `_schema` and other `_`-prefixed folders. */
 export function packDirs(packsDir = PACKS_DIR): string[] {
   return readdirSync(packsDir)
-    .filter((name) => !name.startsWith('_') && statSync(join(packsDir, name)).isDirectory())
+    .filter((name) => existsSync(join(packsDir, name, 'pack.yaml')) && statSync(join(packsDir, name)).isDirectory())
     .map((name) => join(packsDir, name));
 }
 

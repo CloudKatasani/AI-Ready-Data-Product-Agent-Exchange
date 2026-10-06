@@ -1,0 +1,81 @@
+name: WORKFORCE
+description: Headcount, attrition, hiring and time to hire from the employee-month snapshot (aggregates only)
+tables:
+  - { alias: w, fqn: CONFORMED_GOLD.FCT_WORKFORCE_MONTH, pk: employee_month_key }
+  - { alias: e, fqn: CONFORMED_GOLD.DIM_LEGAL_ENTITY, pk: entity_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: w.entity_key, to: e.entity_key }
+  - { from: w.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: e.region, label: Region, synonyms: [geography, territory, area], term: GT-GEN-REGION }
+  - { name: business_unit, expr: e.business_unit, label: Business unit, synonyms: [bu, division, line of business], term: GT-GEN-BUSINESS-UNIT }
+  - { name: department, expr: w.department, label: Department, synonyms: [team, function], term: GT-GEN-DEPARTMENT }
+  - { name: job_level, expr: w.job_level, label: Job level, synonyms: [grade, seniority, level] }
+  - { name: employment_type, expr: w.employment_type, label: Employment type, synonyms: [worker type, contract type], term: GT-GEN-EMPLOYMENT-TYPE }
+  - { name: hire_source, expr: w.hire_source, label: Hire source, synonyms: [source of hire, hiring source] }
+time_dimensions:
+  - { name: month, expr: d.date, default: true }
+facts:
+  - { name: fte, expr: w.fte, description: Contracted full-time equivalent of the employee in the month }
+metrics:
+  - name: headcount
+    label: Average headcount
+    expr: 1.0 * SUM(CASE WHEN w.active_at_end THEN 1 ELSE 0 END) / NULLIF(COUNT(DISTINCT w.month_start), 0)
+    unit: employees
+    decimals: 0
+    direction: neutral
+    synonyms: [headcount, number of employees, staff numbers, employee count]
+    term: GT-GEN-HEADCOUNT
+    description: Average month-end headcount over the months in the period
+    default_filters: [ { rule: BR-GEN-007 } ]
+  - name: attrition_rate
+    label: Attrition rate
+    expr: 1200.0 * SUM(CASE WHEN w.is_leaver THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN w.active_at_start THEN 1 ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [attrition, staff turnover, employee turnover, leaver rate]
+    term: GT-GEN-ATTRITION
+    description: Annualised leavers as a share of average headcount
+    default_filters: [ { rule: BR-GEN-007 } ]
+    naive_expr: 100.0 * SUM(CASE WHEN w.is_leaver THEN 1 ELSE 0 END) / COUNT(DISTINCT w.employee_key)
+  - name: voluntary_attrition_rate
+    label: Voluntary attrition
+    expr: 1200.0 * SUM(CASE WHEN w.is_voluntary_leaver THEN 1 ELSE 0 END) / NULLIF(SUM(CASE WHEN w.active_at_start THEN 1 ELSE 0 END), 0)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [voluntary attrition rate, resignation rate, voluntary leaver rate, voluntary turnover]
+    term: GT-GEN-VOLUNTARY-ATTRITION
+    description: Annualised resignations as a share of average headcount
+    default_filters: [ { rule: BR-GEN-007 } ]
+    naive_expr: 100.0 * SUM(CASE WHEN w.is_voluntary_leaver THEN 1 ELSE 0 END) / COUNT(DISTINCT w.employee_key)
+  - name: hires
+    label: Hires
+    expr: SUM(CASE WHEN w.is_hire THEN 1 ELSE 0 END)
+    unit: hires
+    decimals: 0
+    direction: neutral
+    synonyms: [new hires, joiners, starters]
+    term: GT-GEN-HIRE
+    description: Employees who joined in the period
+  - name: time_to_hire_days
+    label: Time to hire
+    expr: AVG(w.time_to_fill_days)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [time to fill, days to hire, vacancy open days]
+    term: GT-GEN-TIME-TO-HIRE
+    description: Average days from requisition opening to the hire date, for hires in the period
+  - name: internal_fill_pct
+    label: Internal fill rate
+    expr: 100.0 * AVG(CASE WHEN w.is_hire THEN CASE WHEN w.hire_source = 'Internal' THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [internal fill share, internal mobility rate, internal hire share]
+    term: GT-GEN-INTERNAL-FILL
+    description: Share of hires in the period filled by an internal move
+products: [DP-GEN-003]

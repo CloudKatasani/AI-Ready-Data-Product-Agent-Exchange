@@ -1,0 +1,50 @@
+# Workforce DQ rules (FCT_WORKFORCE_MONTH, DIM_EMPLOYEE and Silver sources).
+- id: DQ-GEN-016
+  object: CONFORMED_GOLD.FCT_WORKFORCE_MONTH
+  column: is_leaver
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every employee-month says whether the employee left in that month (attrition numerator).
+- id: DQ-GEN-017
+  object: CONFORMED_GOLD.FCT_WORKFORCE_MONTH
+  column: employment_type
+  dimension: validity
+  assertion: "invalid_rate == 0"
+  allowed: [Permanent, Contractor, Intern]
+  severity: critical
+  alert_route: steward
+  description: Employment type is one of the three conformed values, so BR-GEN-007 can restrict to permanent staff.
+- id: DQ-GEN-018
+  object: CONFORMED_GOLD.FCT_WORKFORCE_MONTH
+  column: employee_month_key
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per employee per month.
+- id: DQ-GEN-019
+  object: CONFORMED_GOLD.FCT_WORKFORCE_MONTH
+  column: month_start
+  dimension: timeliness
+  assertion: "freshness_min <= 46080"
+  severity: medium
+  alert_route: engineering
+  description: The snapshot includes the as-of month (refreshed at least monthly).
+- id: DQ-GEN-020
+  object: CONFORMED_GOLD.DIM_EMPLOYEE
+  column: employee_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per employee after CDC deduplication.
+- id: DQ-GEN-021
+  object: CURATED_SILVER.REQUISITION
+  column: time_to_fill_days
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: medium
+  alert_route: owner
+  description: Every requisition was opened before the hire that filled it.

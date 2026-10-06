@@ -1,0 +1,289 @@
+# Bronze source tables for Acme Holdings (ACM_AI_PLATFORM). Converted from the ADPM `_generic` seed products
+# (Product Margin, Order to Cash, Workforce Composition, Customer Single View, Case SLA Watch) into one
+# cross-industry back office: general ledger and budgets, receivables and payables, HR and recruiting,
+# CRM accounts, support tickets and NPS surveys. Reference tables are full populations at every scale;
+# transactional tables scale S/M/L. Amounts are synthetic and in USD.
+tables:
+  - name: ERP_LEGAL_ENTITY
+    system: ERP (group consolidation)
+    description: Operating companies (legal entities) with their region and business unit
+    key: entity_id
+    rows: { S: 16, M: 16, L: 16 }
+    columns:
+      - { name: entity_id, type: VARCHAR, gen: { seq: { prefix: "LE-", pad: 3 } } }
+      - { name: region, type: VARCHAR, gen: { choice: { values: [North America, Latin America, EMEA, APAC], weights: [38, 14, 28, 20] } }, dirty: false }
+      - { name: business_unit, type: VARCHAR, gen: { choice: { values: [Industrial Products, Consumer Brands, Business Services, Software & Data], weights: [30, 28, 24, 18] } }, dirty: false }
+      - { name: incorporated_year, type: INTEGER, gen: { uniform: { min: 1978, max: 2021 } } }
+    # The group structure is fixed (not random): five North American, five EMEA, three APAC and three Latin
+    # American companies. LE-001 is the industrial parent; LE-002 is the EMEA treasury and shared-services hub.
+    plant:
+      - id: P-GEN-01
+        description: "North America: LE-001 (industrial parent), LE-005, LE-007, LE-009, LE-014"
+        where: { entity_id: { in: [LE-001, LE-005, LE-007, LE-009, LE-014] } }
+        adjust: { region: { set: North America } }
+      - id: P-GEN-02
+        description: "EMEA: LE-002 (treasury and shared-services hub), LE-008, LE-011, LE-012, LE-015"
+        where: { entity_id: { in: [LE-002, LE-008, LE-011, LE-012, LE-015] } }
+        adjust: { region: { set: EMEA } }
+      - id: P-GEN-03
+        description: "APAC: LE-003, LE-010, LE-013"
+        where: { entity_id: { in: [LE-003, LE-010, LE-013] } }
+        adjust: { region: { set: APAC } }
+      - id: P-GEN-04
+        description: "Latin America: LE-004, LE-006, LE-016"
+        where: { entity_id: { in: [LE-004, LE-006, LE-016] } }
+        adjust: { region: { set: Latin America } }
+      - id: P-GEN-05
+        description: "Business units: Industrial (001, 005, 008, 013), Consumer (003, 004, 011, 015, 016), Services (002, 006, 009, 014), Software & Data (007, 010, 012)"
+        where: { entity_id: { in: [LE-001, LE-005, LE-008, LE-013] } }
+        adjust: { business_unit: { set: Industrial Products } }
+      - id: P-GEN-18
+        description: "Consumer Brands companies"
+        where: { entity_id: { in: [LE-003, LE-004, LE-011, LE-015, LE-016] } }
+        adjust: { business_unit: { set: Consumer Brands } }
+      - id: P-GEN-19
+        description: "Business Services companies"
+        where: { entity_id: { in: [LE-002, LE-006, LE-009, LE-014] } }
+        adjust: { business_unit: { set: Business Services } }
+      - id: P-GEN-20
+        description: "Software & Data companies"
+        where: { entity_id: { in: [LE-007, LE-010, LE-012] } }
+        adjust: { business_unit: { set: Software & Data } }
+
+  - name: ERP_GL_JOURNAL
+    system: ERP general ledger
+    description: Posted general-ledger journal lines (revenue, cost of sales, operating expense), incl. intercompany
+    key: journal_line_id
+    rows: { S: 8000, M: 80000, L: 400000 }
+    loaded_at_from: posting_date
+    cdc_noise: { duplicate_updates_pct: 3, deletes_pct: 0.5, dirty_strings_pct: 3, late_arrivals_pct: 1 }
+    columns:
+      - { name: journal_line_id, type: VARCHAR, gen: { seq: { prefix: "JL-", pad: 8 } } }
+      - { name: entity_id, type: VARCHAR, gen: { fk: { table: ERP_LEGAL_ENTITY, column: entity_id, dist: zipf, s: 0.6 } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: entity_id, parent_column: region } }, dirty: false }
+      - { name: posting_date, type: DATE, gen: { date: { from: "2024-01-01", to: asOf, seasonality: { month: [0.92, 0.9, 1.0, 0.95, 0.97, 1.02, 0.95, 0.93, 1.02, 1.04, 1.08, 1.25] } } } }
+      - { name: account_type, type: VARCHAR, gen: { choice: { values: [Revenue, COGS, Opex], weights: [42, 30, 28] } } }
+      - { name: cost_center, type: VARCHAR, gen: { choice: { values: [Sales, Marketing, Operations, Engineering, Finance & Admin], weights: [26, 12, 34, 14, 14] } } }
+      - { name: intercompany_flag, type: BOOLEAN, gen: { bernoulli: 0.06 } }
+      - { name: base_amount, type: DOUBLE, gen: { lognormal: { mu: 10.3, sigma: 0.9, min: 50, max: 5000000, decimals: 2 } } }
+      - { name: amount_usd, type: DOUBLE, gen: { formula: "if(account_type == 'COGS', base_amount * 0.78, if(account_type == 'Opex', base_amount * 0.45, base_amount))", decimals: 2 } }
+      - { name: memo, type: VARCHAR, gen: { template: "{account_type} {cost_center} {entity_id}" } }
+    plant:
+      - id: P-GEN-06
+        description: "The EMEA hub (LE-002) books large intercompany recharges in Q3 2026 — the hero ranking flips when they are included"
+        where: { entity_id: LE-002, intercompany_flag: true }
+        window: { column: posting_date, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { account_type: { set: Revenue }, amount_usd: { multiply: 14 } }
+      - id: P-GEN-07
+        description: "Intercompany lines elsewhere are routine management recharges (a few per entity per month)"
+        where: { intercompany_flag: true, account_type: Revenue }
+        window: { column: posting_date, from: "2024-01-01", to: "2026-06-30" }
+        adjust: { amount_usd: { multiply: 1.5 } }
+      - id: P-GEN-08
+        description: "APAC margin squeeze: cost of sales up 25% in Q3 2026 (freight and input costs)"
+        where: { region: APAC, account_type: COGS }
+        window: { column: posting_date, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { amount_usd: { multiply: 1.25 } }
+      - id: P-GEN-09
+        description: "Latin America revenue runs about 15% below budget through 2026"
+        where: { region: Latin America, account_type: Revenue }
+        window: { column: posting_date, from: "2026-01-01", to: "2026-09-30" }
+        adjust: { amount_usd: { multiply: 0.85 } }
+
+  - name: FPA_BUDGET
+    system: FP&A planning
+    description: Approved annual budget lines by entity, month, account type and cost center
+    key: budget_line_id
+    rows: { S: 2400, M: 24000, L: 120000 }
+    loaded_at_from: budget_month
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 2 }
+    columns:
+      - { name: budget_line_id, type: VARCHAR, gen: { seq: { prefix: "BL-", pad: 6 } } }
+      - { name: entity_id, type: VARCHAR, gen: { fk: { table: ERP_LEGAL_ENTITY, column: entity_id, dist: zipf, s: 0.6 } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: entity_id, parent_column: region } }, dirty: false }
+      - { name: budget_month, type: DATE, gen: { date: { from: "2024-01-01", to: "2026-12-31", seasonality: { month: [0.92, 0.9, 1.0, 0.95, 0.97, 1.02, 0.95, 0.93, 1.02, 1.04, 1.08, 1.25] } } } }
+      - { name: account_type, type: VARCHAR, gen: { choice: { values: [Revenue, COGS, Opex], weights: [42, 30, 28] } } }
+      - { name: cost_center, type: VARCHAR, gen: { choice: { values: [Sales, Marketing, Operations, Engineering, Finance & Admin], weights: [26, 12, 34, 14, 14] } } }
+      - { name: base_amount, type: DOUBLE, gen: { lognormal: { mu: 11.81, sigma: 0.3, min: 1000, decimals: 2 } } }
+      - { name: budget_usd, type: DOUBLE, gen: { formula: "if(account_type == 'COGS', base_amount * 0.78, if(account_type == 'Opex', base_amount * 0.48, base_amount))", decimals: 2 } }
+      - { name: plan_version, type: VARCHAR, gen: { const: "FY plan v1" }, dirty: false }
+    plant:
+      - id: P-GEN-21
+        description: "The 2026 plan asked Latin America for 10% more revenue (the region is now well behind budget)"
+        where: { region: Latin America, account_type: Revenue }
+        window: { column: budget_month, from: "2026-01-01", to: "2026-12-31" }
+        adjust: { budget_usd: { multiply: 1.1 } }
+
+  - name: ERP_AR_INVOICE
+    system: ERP order-to-cash
+    description: Customer invoices with due date, settlement date and dispute flag
+    key: ar_invoice_id
+    rows: { S: 4000, M: 40000, L: 200000 }
+    loaded_at_from: invoice_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.3, late_arrivals_pct: 1 }
+    columns:
+      - { name: ar_invoice_id, type: VARCHAR, gen: { seq: { prefix: "AR-", pad: 7 } } }
+      - { name: customer_id, type: VARCHAR, gen: { fk: { table: CRM_ACCOUNT, column: customer_id, dist: zipf, s: 0.7 } } }
+      - { name: entity_id, type: VARCHAR, gen: { fk: { table: ERP_LEGAL_ENTITY, column: entity_id, dist: zipf, s: 0.6 } } }
+      - { name: entity_region, type: VARCHAR, gen: { derive_from: { fk_column: entity_id, parent_column: region } }, dirty: false }
+      - { name: invoice_date, type: DATE, gen: { date: { from: "2024-07-01", to: asOf, seasonality: { weekday: [1, 1, 1, 1, 1, 0.1, 0.1] } } } }
+      - { name: due_date, type: DATE, gen: { date_offset: { from_column: invoice_date, days: { min: 30, max: 45 } } } }
+      - { name: amount_usd, type: DOUBLE, gen: { lognormal: { mu: 9.4, sigma: 1.0, min: 100, max: 2000000, decimals: 2 } } }
+      - { name: dispute_flag, type: BOOLEAN, gen: { bernoulli: 0.05 } }
+      - { name: paid_date, type: DATE, gen: { date_offset: { from_column: invoice_date, days: { min: 8, max: 80 }, clamp_to_as_of: true } } }
+      - { name: payment_method, type: VARCHAR, gen: { choice: { values: [Bank transfer, Direct debit, Card, Cheque], weights: [62, 22, 10, 6] } } }
+    plant:
+      - id: P-GEN-10
+        description: "Disputed invoices sit unpaid for months (DSO rule BR-GEN-005 excludes them)"
+        where: { dispute_flag: true }
+        adjust: { paid_date: { add: 95, pct: 80 } }
+      - id: P-GEN-11
+        description: "Customers of the Latin American companies pay about three weeks slower"
+        where: { entity_region: Latin America }
+        adjust: { paid_date: { add: 22, pct: 85 } }
+
+  - name: ERP_AP_INVOICE
+    system: ERP procure-to-pay
+    description: Supplier invoices received, with due date and payment date
+    key: ap_invoice_id
+    rows: { S: 2000, M: 20000, L: 100000 }
+    loaded_at_from: invoice_date
+    cdc_noise: { duplicate_updates_pct: 3, deletes_pct: 0.3, dirty_strings_pct: 4 }
+    columns:
+      - { name: ap_invoice_id, type: VARCHAR, gen: { seq: { prefix: "AP-", pad: 7 } } }
+      - { name: supplier_name, type: VARCHAR, gen: { company: true } }
+      - { name: entity_id, type: VARCHAR, gen: { fk: { table: ERP_LEGAL_ENTITY, column: entity_id, dist: zipf, s: 0.6 } } }
+      - { name: spend_category, type: VARCHAR, gen: { choice: { values: [Raw materials, Logistics, IT & software, Facilities, Professional services, Marketing services], weights: [26, 18, 16, 14, 14, 12] } } }
+      - { name: invoice_date, type: DATE, gen: { date: { from: "2024-07-01", to: asOf, seasonality: { weekday: [1, 1, 1, 1, 1, 0.1, 0.1] } } } }
+      - { name: due_date, type: DATE, gen: { date_offset: { from_column: invoice_date, days: { min: 30, max: 60 } } } }
+      - { name: amount_usd, type: DOUBLE, gen: { lognormal: { mu: 8.7, sigma: 1.1, min: 50, max: 1500000, decimals: 2 } } }
+      - { name: paid_date, type: DATE, gen: { date_offset: { from_column: invoice_date, days: { min: 15, max: 56 }, clamp_to_as_of: true } } }
+    plant:
+      - id: P-GEN-12
+        description: "Facilities invoices are paid late from April 2026 after an AP team change"
+        where: { spend_category: Facilities }
+        window: { column: invoice_date, from: "2026-04-01", to: "2026-09-30" }
+        adjust: { paid_date: { add: 30, pct: 65 } }
+
+  - name: HRIS_EMPLOYEE
+    system: HRIS
+    description: Employee master with hire, termination and employment details
+    key: employee_id
+    rows: { S: 1800, M: 9000, L: 45000 }
+    loaded_at_from: hire_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.2, dirty_strings_pct: 4, late_arrivals_pct: 1 }
+    columns:
+      - { name: employee_id, type: VARCHAR, gen: { seq: { prefix: "E", pad: 6 } } }
+      - { name: first_name, type: VARCHAR, gen: { person: first }, tags: [PII] }
+      - { name: last_name, type: VARCHAR, gen: { person: last }, tags: [PII] }
+      - { name: work_email, type: VARCHAR, gen: { email: { first: first_name, last: last_name, domain: acmeholdings.example } }, tags: [PII], null_pct: 1 }
+      - { name: entity_id, type: VARCHAR, gen: { fk: { table: ERP_LEGAL_ENTITY, column: entity_id, dist: zipf, s: 0.6 } } }
+      - { name: department, type: VARCHAR, gen: { choice: { values: [Sales, Marketing, Operations, Engineering, Finance, People & Culture, Customer Support], weights: [18, 7, 26, 16, 8, 5, 20] } } }
+      - { name: job_level, type: VARCHAR, gen: { choice: { values: [Individual contributor, Manager, Senior manager, Director, Executive], weights: [70, 18, 7, 4, 1] } } }
+      - { name: employment_type, type: VARCHAR, gen: { choice: { values: [Permanent, Contractor, Intern], weights: [85, 12, 3] } } }
+      - { name: hire_date, type: DATE, gen: { date: { from: "2010-01-01", to: asOf } } }
+      - { name: tenure_days, type: INTEGER, gen: { lognormal: { mu: 7.75, sigma: 0.7, min: 45, max: 9000 } } }
+      # Contractors and interns stay a fraction as long; Customer Support turns over fastest.
+      - { name: tenure_adj, type: INTEGER, gen: { formula: "if(employment_type == 'Permanent', if(department == 'Customer Support', tenure_days * 0.55, tenure_days), tenure_days * 0.22)" } }
+      # 20726 = pack asOf (2026-09-30) as an epoch day: anyone whose tenure runs past it is still employed.
+      - { name: termination_date, type: DATE, gen: { formula: "hire_date + tenure_adj > 20726 ? null : hire_date + tenure_adj" } }
+      - { name: termination_type, type: VARCHAR, gen: { choice: { values: [Voluntary, Involuntary], weights: [70, 30] } } }
+      - { name: fte, type: DOUBLE, gen: { choice: { values: [1.0, 0.8, 0.6, 0.5], weights: [88, 6, 4, 2] } } }
+    plant:
+      - id: P-GEN-13
+        description: "Engineering leavers in 2026 are almost all voluntary (competitor hiring)"
+        where: { department: Engineering }
+        window: { column: termination_date, from: "2026-01-01", to: "2026-09-30" }
+        adjust: { termination_type: { set: Voluntary, pct: 85 } }
+
+  - name: ATS_REQUISITION
+    system: Applicant tracking
+    description: Requisitions from opening to the hire that filled them (one per hire)
+    key: requisition_id
+    rows: { S: 1800, M: 9000, L: 45000 }
+    loaded_at_from: opened_date
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 4 }
+    columns:
+      - { name: requisition_id, type: VARCHAR, gen: { seq: { prefix: "RQ-", pad: 6 } } }
+      - { name: hired_employee_id, type: VARCHAR, gen: { fk: { table: HRIS_EMPLOYEE, column: employee_id, dist: sequential } } }
+      - { name: hire_date, type: DATE, gen: { derive_from: { fk_column: hired_employee_id, parent_column: hire_date } } }
+      - { name: department, type: VARCHAR, gen: { derive_from: { fk_column: hired_employee_id, parent_column: department } }, dirty: false }
+      - { name: opened_date, type: DATE, gen: { date_offset: { from_column: hire_date, days: { min: -92, max: -21 } } } }
+      - { name: hire_source, type: VARCHAR, gen: { choice: { values: [External, Internal, Referral], weights: [60, 25, 15] } } }
+      - { name: recruiter, type: VARCHAR, gen: { person: full }, tags: [PII] }
+    plant:
+      - id: P-GEN-14
+        description: "Engineering requisitions take about a month longer to fill"
+        where: { department: Engineering }
+        adjust: { opened_date: { add: -32 } }
+
+  - name: CRM_ACCOUNT
+    system: CRM
+    description: Customer accounts and their primary contact
+    key: customer_id
+    rows: { S: 800, M: 5000, L: 25000 }
+    loaded_at_from: created_date
+    cdc_noise: { duplicate_updates_pct: 5, deletes_pct: 0.4, dirty_strings_pct: 6, late_arrivals_pct: 1 }
+    columns:
+      - { name: customer_id, type: VARCHAR, gen: { seq: { prefix: "CU-", pad: 6 } } }
+      - { name: account_name, type: VARCHAR, gen: { company: true } }
+      - { name: contact_first_name, type: VARCHAR, gen: { person: first }, tags: [PII] }
+      - { name: contact_last_name, type: VARCHAR, gen: { person: last }, tags: [PII] }
+      - { name: contact_email, type: VARCHAR, gen: { email: { first: contact_first_name, last: contact_last_name, domain: customer.example } }, tags: [PII], null_pct: 6 }
+      - { name: contact_phone, type: VARCHAR, gen: { phone: true }, tags: [PII], null_pct: 9 }
+      - { name: region, type: VARCHAR, gen: { choice: { values: [North America, Latin America, EMEA, APAC], weights: [36, 14, 30, 20] } } }
+      - { name: segment, type: VARCHAR, gen: { choice: { values: [Enterprise, Mid-market, Small business], weights: [12, 33, 55] } } }
+      - { name: industry, type: VARCHAR, gen: { choice: { values: [Manufacturing, Retail, Healthcare, Financial services, Public sector, Technology], weights: [24, 20, 14, 16, 10, 16] } } }
+      - { name: created_date, type: DATE, gen: { date: { from: "2015-01-01", to: "2026-08-31" } } }
+
+  - name: SVC_TICKET
+    system: Service desk
+    description: Customer support tickets with priority, resolution time and first-contact resolution
+    key: ticket_id
+    rows: { S: 3000, M: 30000, L: 150000 }
+    loaded_at_from: opened_ts
+    cdc_noise: { duplicate_updates_pct: 3, deletes_pct: 0.3, dirty_strings_pct: 5, late_arrivals_pct: 1 }
+    columns:
+      - { name: ticket_id, type: VARCHAR, gen: { seq: { prefix: "TK-", pad: 7 } } }
+      - { name: customer_id, type: VARCHAR, gen: { fk: { table: CRM_ACCOUNT, column: customer_id, dist: zipf, s: 0.7 } } }
+      - { name: opened_ts, type: TIMESTAMP, gen: { datetime: { from: "2025-01-01", to: asOf, business_hours: true } } }
+      - { name: channel, type: VARCHAR, gen: { choice: { values: [Email, Phone, Chat, Portal], weights: [34, 26, 24, 16] } } }
+      - { name: priority, type: VARCHAR, gen: { choice: { values: [P1, P2, P3, P4], weights: [4, 16, 46, 34] } } }
+      - { name: category, type: VARCHAR, gen: { choice: { values: [Billing, Product issue, How-to, Account access, Delivery], weights: [22, 28, 22, 14, 14] } } }
+      - { name: ticket_status, type: VARCHAR, gen: { choice: { values: [Resolved, Auto-closed spam], weights: [95, 5] } } }
+      - { name: resolution_hours, type: DOUBLE, gen: { lognormal: { mu: 2.9, sigma: 0.95, min: 0.2, max: 720, decimals: 1 } } }
+      - { name: first_contact_resolved, type: BOOLEAN, gen: { bernoulli: 0.66 } }
+      - { name: csat, type: INTEGER, gen: { choice: { values: [1, 2, 3, 4, 5], weights: [5, 7, 15, 35, 38] } } }
+      - { name: agent_notes, type: VARCHAR, gen: { template: "Account {customer_id} raised a {category} ticket via {channel}" }, tags: [PII] }
+    plant:
+      - id: P-GEN-15
+        description: "Spam tickets are auto-closed in minutes and always count as first-contact resolved (BR-GEN-010 excludes them)"
+        where: { ticket_status: Auto-closed spam }
+        adjust: { resolution_hours: { set: 0.1 }, first_contact_resolved: { set: true }, csat: { set: 5 } }
+      - id: P-GEN-16
+        description: "Billing tickets take twice as long after the August 2026 invoicing-system change"
+        where: { category: Billing, ticket_status: Resolved }
+        window: { column: opened_ts, from: "2026-08-01", to: "2026-09-30" }
+        adjust: { resolution_hours: { multiply: 2.4 }, first_contact_resolved: { set: false, pct: 45 }, csat: { set: 2, pct: 40 } }
+
+  - name: SURVEY_RESPONSE
+    system: Survey platform
+    description: Post-resolution Net Promoter Score survey responses (about one ticket in three)
+    key: response_id
+    rows: { S: 900, M: 9000, L: 45000 }
+    loaded_at_from: response_ts
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 3 }
+    columns:
+      - { name: response_id, type: VARCHAR, gen: { seq: { prefix: "SR-", pad: 7 } } }
+      - { name: ticket_id, type: VARCHAR, gen: { fk: { table: SVC_TICKET, column: ticket_id, dist: sequential } } }
+      - { name: ticket_category, type: VARCHAR, gen: { derive_from: { fk_column: ticket_id, parent_column: category } }, dirty: false }
+      - { name: ticket_opened_ts, type: TIMESTAMP, gen: { derive_from: { fk_column: ticket_id, parent_column: opened_ts } } }
+      - { name: response_ts, type: TIMESTAMP, gen: { formula: "ticket_opened_ts + 172800" } }
+      - { name: nps_score, type: INTEGER, gen: { choice: { values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], weights: [2, 1, 2, 2, 3, 4, 6, 12, 18, 24, 26] } } }
+      - { name: survey_channel, type: VARCHAR, gen: { choice: { values: [Email, In-app, SMS], weights: [62, 30, 8] } } }
+    plant:
+      - id: P-GEN-17
+        description: "Billing-ticket respondents turn into detractors after the August 2026 invoicing change"
+        where: { ticket_category: Billing }
+        window: { column: ticket_opened_ts, from: "2026-08-01", to: "2026-09-30" }
+        adjust: { nps_score: { set: 3, pct: 55 } }
