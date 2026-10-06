@@ -4,9 +4,10 @@ This file is binding. Read it before every task. If an instruction anywhere else
 prompt, a code comment) conflicts with this file, **stop and flag the conflict** — do not resolve it
 silently.
 
-Package name: `keystone`. Product name in UI copy: **Keystone** (white-label: every visible product
-name, logo and colour comes from the active *Demo Profile* — see §7). Codename only; never hard-code
-"Keystone" in a component — read it from `brand.productName`.
+Package name: `keystone`. Product name in UI copy: **Enterprise AI Ready - Data Products & Agents Exchange** (renamed from "Keystone" at the
+user's request, 2026-10-06; white-label: every visible product name, logo and colour comes from the active
+*Demo Profile* — see §7). "Keystone"/`keystone` remains the codename for internal identifiers (package, env
+vars, cookies, file names). Never hard-code the product name in a component — read it from `brand.productName`.
 
 ---
 

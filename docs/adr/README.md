@@ -25,5 +25,7 @@
 | [0021](0021-presenter-profiles-reset-stories.md) | Demo Profiles, in-place snapshot reset and story Go URLs | Accepted |
 | [0022](0022-packaging-and-hardening.md) | Packaging, readiness probes and hardening | Accepted |
 | [0023](0023-standard-packs-and-pack-authoring.md) | Standard-pack rules and pack-authoring guard rails | Accepted |
+| [0024](0024-one-database-per-profile.md) | One app database per Demo Profile (shared server) | Accepted |
+| [0025](0025-snowflake-adapter.md) | Snowflake adapter over the SQL API (experimental) | Accepted |
 
 New decisions: copy the shape of an existing ADR, take the next number, add a row here.

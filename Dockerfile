@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-# Keystone demo image (12-deployment §2). Multi-stage: deps → build (Next standalone + seeded template data)
+# Enterprise AI Ready - Data Products & Agents Exchange demo image (12-deployment §2). Multi-stage: deps → build (Next standalone + seeded template data)
 # → runtime (distroless Node 22, non-root, no shell, HEALTHCHECK). /app/data is the volume (app DB, warehouses,
 # snapshots). Size budget < 300 MB (11-build-plan Phase 11), checked by the CI docker job.
 #

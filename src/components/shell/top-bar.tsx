@@ -20,7 +20,7 @@ interface TopBarProps {
 export function TopBar({ brand, pack, mode, personas, activePersonaId, onSwitchPersona, locked = false }: TopBarProps) {
   return (
     <header className="flex h-14 items-center gap-4 border-b border-border bg-surface px-4">
-      <Link href={`/${encodeURIComponent(pack)}/home`} className="flex items-center gap-2 font-semibold">
+      <Link href={`/${encodeURIComponent(pack)}/home`} className="flex min-w-0 items-center gap-2 font-semibold" title={brand.companyName ? `${brand.companyName} · ${brand.productName}` : brand.productName}>
         {brand.logoSvg ? (
           // eslint-disable-next-line @next/next/no-img-element -- presenter-uploaded data URL, never fetched
           <img src={brand.logoSvg} alt="" className="size-7 rounded object-contain" />
@@ -29,7 +29,7 @@ export function TopBar({ brand, pack, mode, personas, activePersonaId, onSwitchP
             {brand.productName.charAt(0)}
           </span>
         )}
-        <span data-testid="brand-name">{brand.companyName ? `${brand.companyName} · ${brand.productName}` : brand.productName}</span>
+        <span data-testid="brand-name" className="truncate max-w-[22rem] lg:max-w-[36rem]">{brand.companyName ? `${brand.companyName} · ${brand.productName}` : brand.productName}</span>
       </Link>
       {locked ? (
         <span data-testid="active-pack" className="rounded-md border border-border px-2 py-1 text-sm">

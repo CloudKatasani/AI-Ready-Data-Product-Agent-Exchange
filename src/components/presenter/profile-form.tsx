@@ -47,7 +47,7 @@ export function ProfileForm({ action, packId, defaults, terms, stories, liveAvai
         </label>
         <label className="flex flex-col gap-1 text-sm">
           {c.productName}
-          <input name="productName" defaultValue={defaults.productName} required maxLength={40} className={field} />
+          <input name="productName" defaultValue={defaults.productName} required maxLength={80} className={field} />
         </label>
       </div>
       <div className="flex flex-wrap gap-6">

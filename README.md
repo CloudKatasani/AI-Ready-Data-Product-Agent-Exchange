@@ -1,4 +1,6 @@
-# Keystone — AI-Ready Data Product & Agent Exchange
+# Enterprise AI Ready - Data Products & Agents Exchange
+
+Codename `keystone` (package, env vars, file names).
 
 A cross-industry customer-demo prototype: raw data → governed data products → AI agents that answer
 with cited, policy-checked numbers → an estate that is operated and improved.

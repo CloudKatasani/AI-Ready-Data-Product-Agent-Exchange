@@ -1,4 +1,4 @@
-# Running Keystone
+# Running Enterprise AI Ready - Data Products & Agents Exchange
 
 ## Prerequisites
 - Node ≥ 22, pnpm 10 (`corepack enable`).
@@ -46,6 +46,7 @@ open http://localhost:3000/launch
 | `WAREHOUSE_DIR` / `DEMO_SCALE` | `./data/warehouse` / `M` | Where warehouses live, and their size (S ≈ 50K, M ≈ 500K, L ≈ 5M rows per pack) |
 | `KEYSTONE_WAREHOUSE_AUTOBUILD` | unset | `1` builds a missing warehouse on first use (set in the container image) |
 | `AGENT_MODE_DEFAULT` | `scripted` | `scripted`, `auto` (live, falling back visibly to scripted) or `live` |
+| `WAREHOUSE_ADAPTER` | `duckdb` | `snowflake` runs governed queries on the pack's Snowflake database over the SQL API (key-pair auth: `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, `SNOWFLAKE_PRIVATE_KEY_PATH`, optional `SNOWFLAKE_WAREHOUSE` / `SNOWFLAKE_ROLE` / `SNOWFLAKE_HOST`). Experimental: mock-tested only, and the pack must already be deployed to Snowflake (ADR-0025) |
 | `ANTHROPIC_API_KEY` | — | Read only by `src/lib/config/env.ts`. Never logged, persisted or sent to the browser |
 | `KEYSTONE_MODEL_*` | see `.env.example` | Model IDs are configuration, never literals in code |
 | `LLM_TIMEOUT_MS` · `LLM_MAX_TOOL_ROUNDS` · `LLM_BUDGET_USD_PER_SESSION` | 12000 · 6 · 5 | Live-mode limits |
@@ -61,7 +62,7 @@ SESSION_SECRET=… docker compose up                     # http://localhost:3000
 
 ## Data and reset
 - `data/` holds the app DB, the per-pack warehouses (read-only at runtime) and `snapshots/`. It is never committed.
-- Saving a Demo Profile snapshots the app DB. **Reset** in the presenter overlay restores that snapshot in place in well under 3 s and keeps the profile (ADR-0021).
+- Each Demo Profile has its own app DB (`data/keystone-profiles/<profileId>.db`), so several presenters can share one server without seeing each other's changes (ADR-0024). Saving a profile creates it and snapshots it. **Reset** in the presenter overlay restores that snapshot in place in well under 3 s and keeps the profile (ADR-0021).
 - Re-seeding (`pnpm db:seed`) rebuilds every pack's demo state through the lifecycle. Answer records are append-only and are kept.
 
 ## Troubleshooting

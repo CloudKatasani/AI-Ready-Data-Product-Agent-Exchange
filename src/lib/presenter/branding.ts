@@ -11,9 +11,12 @@ export interface Brand {
   font?: string;
 }
 
-/** Neutral default used until a Demo Profile is active (Phase 9). Codename only — components read brand.productName. */
+/**
+ * Neutral default used until a Demo Profile is active (Phase 9). The product name shown in the UI; the
+ * codename "keystone" stays in internal identifiers only (package, env vars, cookies, file names).
+ */
 export const DEFAULT_BRAND: Brand = {
-  productName: 'Keystone',
+  productName: 'Enterprise AI Ready - Data Products & Agents Exchange',
   companyName: '',
   primary: '#1d4ed8',
   accent: '#0f766e',

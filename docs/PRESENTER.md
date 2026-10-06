@@ -1,6 +1,6 @@
 # Presenter guide
 
-Keystone tells one story four ways: raw data becomes **governed data products**, and **AI agents** answer
+The product tells one story four ways: raw data becomes **governed data products**, and **AI agents** answer
 business questions with **cited, policy-checked numbers**, run by an operator and steered by leadership.
 Three promises carry every demo:
 - **Agents act, humans decide.**
