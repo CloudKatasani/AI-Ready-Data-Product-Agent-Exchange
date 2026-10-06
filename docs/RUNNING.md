@@ -33,6 +33,7 @@ open http://localhost:3000/launch
 | `pnpm golden [--pack id] [--update]` | Records or compares golden answers (scale M) |
 | `pnpm knockout:deltas [--pack id] [--update]` | Computes Knockout single-layer deltas through the governed path, or checks them against `knockout.yaml` |
 | `pnpm pack:draft --from utilities --id water --code WTR --company "…" --short ABC` | Pack Drafter, offline mode: a re-skinned **draft** pack (also available in Admin) |
+| `pnpm snowflake:bundle --pack <id> [--out dir]` | Snowflake deploy bundle (ADR-0025): Parquet of every built object plus `deploy.sql` / `verify.sql`. Then `cd data/snowflake/<id> && snowsql -f deploy.sql && snowsql -f verify.sql`, and set `WAREHOUSE_ADAPTER=snowflake` |
 | `pnpm lint` · `pnpm typecheck` | ESLint (boundaries, no-DuckDB-import, determinism) plus the domain-string lint; TypeScript |
 | `pnpm test` | Unit, invariant, golden, integration, security and performance suites (Vitest) |
 | `pnpm test:e2e` | Playwright. The `chromium` project (features and axe, light and dark) runs first, then `stories` (6 stories × deep packs), then `presenter` (launch and reset) |
@@ -46,7 +47,7 @@ open http://localhost:3000/launch
 | `WAREHOUSE_DIR` / `DEMO_SCALE` | `./data/warehouse` / `M` | Where warehouses live, and their size (S ≈ 50K, M ≈ 500K, L ≈ 5M rows per pack) |
 | `KEYSTONE_WAREHOUSE_AUTOBUILD` | unset | `1` builds a missing warehouse on first use (set in the container image) |
 | `AGENT_MODE_DEFAULT` | `scripted` | `scripted`, `auto` (live, falling back visibly to scripted) or `live` |
-| `WAREHOUSE_ADAPTER` | `duckdb` | `snowflake` runs governed queries on the pack's Snowflake database over the SQL API (key-pair auth: `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, `SNOWFLAKE_PRIVATE_KEY_PATH`, optional `SNOWFLAKE_WAREHOUSE` / `SNOWFLAKE_ROLE` / `SNOWFLAKE_HOST`). Experimental: mock-tested only, and the pack must already be deployed to Snowflake (ADR-0025) |
+| `WAREHOUSE_ADAPTER` | `duckdb` | `snowflake` runs governed queries on the pack's Snowflake database over the SQL API (key-pair auth: `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, `SNOWFLAKE_PRIVATE_KEY_PATH`, optional `SNOWFLAKE_WAREHOUSE` / `SNOWFLAKE_ROLE` / `SNOWFLAKE_HOST`). Experimental: mock-tested only; deploy the pack first with `pnpm snowflake:bundle` (ADR-0025) |
 | `ANTHROPIC_API_KEY` | — | Read only by `src/lib/config/env.ts`. Never logged, persisted or sent to the browser |
 | `KEYSTONE_MODEL_*` | see `.env.example` | Model IDs are configuration, never literals in code |
 | `LLM_TIMEOUT_MS` · `LLM_MAX_TOOL_ROUNDS` · `LLM_BUDGET_USD_PER_SESSION` | 12000 · 6 · 5 | Live-mode limits |

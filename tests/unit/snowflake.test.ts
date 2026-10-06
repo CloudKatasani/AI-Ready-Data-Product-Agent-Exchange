@@ -61,6 +61,8 @@ describe('Snowflake adapter (mocked SQL API)', () => {
     expect(post).toMatchObject({ database: 'UTL_AI_PLATFORM', warehouse: 'WH_DEMO', role: 'DEMO_ROLE', timeout: 4 });
     expect(post.bindings).toEqual({ '1': { type: 'TEXT', value: 'East' }, '2': { type: 'FIXED', value: '3' }, '3': { type: 'BOOLEAN', value: 'true' } });
     expect(calls.map((c) => `${c.method} ${c.url.split('/statements')[1]}`)).toEqual(['POST ', 'GET /H1', 'GET /H1?partition=1']);
+    expect(r.columns.map((c) => c.name)).toEqual(['region', 'n', 'pct', 'avg', 'flag', 'day', 'ts']);
+    expect(post.parameters).toEqual({ QUOTED_IDENTIFIERS_IGNORE_CASE: 'TRUE' });
     expect(r.columns.map((c) => c.type)).toEqual(['VARCHAR', 'BIGINT', 'DECIMAL', 'DOUBLE', 'BOOLEAN', 'DATE', 'TIMESTAMP']);
     expect(r.rows).toEqual([
       ['East', '9007199254740993', 98.1, 12.5, true, '2024-01-01', '2024-01-01 00:00:00'],
@@ -91,8 +93,8 @@ describe('Snowflake adapter (mocked SQL API)', () => {
     }));
     const a = new SnowflakeAdapter(cfg, { database: 'UTL_AI_PLATFORM', fetch, privateKeyPem: pem });
     expect(await a.describe('CONFORMED_GOLD.DIM_CUSTOMER')).toEqual([
-      { name: 'ID', type: 'NUMBER(38,0)', nullable: false },
-      { name: 'NAME', type: 'VARCHAR(100)', nullable: true },
+      { name: 'id', type: 'NUMBER(38,0)', nullable: false },
+      { name: 'name', type: 'VARCHAR(100)', nullable: true },
     ]);
     expect(calls[0]?.body?.statement).toBe('DESCRIBE TABLE UTL_AI_PLATFORM.CONFORMED_GOLD.DIM_CUSTOMER');
     await expect(a.describe('X; DROP TABLE Y')).rejects.toBeInstanceOf(SnowflakeError);

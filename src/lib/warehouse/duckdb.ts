@@ -126,3 +126,33 @@ export async function openDuckDb(path: string, opts: OpenOptions = {}): Promise<
   for (const s of SAFE_SETTINGS) await conn.run(s);
   return new DuckDbWarehouse(instance, conn);
 }
+
+export interface ParquetJob {
+  /** SELECT statement whose rows are exported. */
+  select: string;
+  /** Absolute output path. */
+  file: string;
+}
+
+/**
+ * Exports query results to Parquet (Snowflake deploy bundles, ADR-0025). The only connection with file
+ * access: read-only on the warehouse, opened for the export and closed again; request-time connections keep
+ * external access disabled. Each file is read back, and its row count returned, so the bundle is verified.
+ */
+export async function exportParquet(path: string, jobs: ParquetJob[]): Promise<{ file: string; rows: number }[]> {
+  const instance = await DuckDBInstance.create(path, { access_mode: 'READ_ONLY' });
+  const conn = await instance.connect();
+  try {
+    const out: { file: string; rows: number }[] = [];
+    for (const j of jobs) {
+      const target = j.file.replace(/'/g, "''");
+      await conn.run(`COPY (${j.select}) TO '${target}' (FORMAT PARQUET, COMPRESSION ZSTD)`);
+      const r = await conn.runAndReadAll(`SELECT count(*) FROM read_parquet('${target}')`);
+      out.push({ file: j.file, rows: Number(r.getRows()[0]?.[0] ?? 0) });
+    }
+    return out;
+  } finally {
+    conn.closeSync();
+    instance.closeSync();
+  }
+}

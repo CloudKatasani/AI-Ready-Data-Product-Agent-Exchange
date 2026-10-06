@@ -124,6 +124,14 @@ export function columnType(t: RowType): string {
   return type.toUpperCase();
 }
 
+/**
+ * Snowflake upper-cases unquoted identifiers; DuckDB (and every pack) uses lower-case column names. Names
+ * that come back entirely upper-case are reported in lower case so results and column lists line up.
+ */
+export function localName(name: string): string {
+  return name === name.toUpperCase() ? name.toLowerCase() : name;
+}
+
 export class SnowflakeAdapter implements WarehouseAdapter {
   readonly dialect = 'snowflake' as const;
   private readonly key: KeyObject;
@@ -169,6 +177,8 @@ export class SnowflakeAdapter implements WarehouseAdapter {
       statement: sql,
       ...(opts.timeoutMs ? { timeout: Math.ceil(opts.timeoutMs / 1000) } : {}),
       database: this.opts.database,
+      // Deployed tables use unquoted (upper-case) names; the governed path quotes lower-case identifiers.
+      parameters: { QUOTED_IDENTIFIERS_IGNORE_CASE: 'TRUE' },
       ...(this.cfg.warehouse ? { warehouse: this.cfg.warehouse } : {}),
       ...(this.cfg.role ? { role: this.cfg.role } : {}),
       ...(params.length ? { bindings: Object.fromEntries(params.map((p, i) => [String(i + 1), binding(p)])) } : {}),
@@ -189,7 +199,7 @@ export class SnowflakeAdapter implements WarehouseAdapter {
     }
     const rows = raw.slice(0, limit).map((row) => row.map((cell, i) => convertCell(cell, rowType[i] ?? { name: '', type: 'text' })));
     return {
-      columns: rowType.map((t) => ({ name: t.name, type: columnType(t) })),
+      columns: rowType.map((t) => ({ name: localName(t.name), type: columnType(t) })),
       rows,
       rowCount: rows.length,
       elapsedMs: Math.round(performance.now() - started),
@@ -203,7 +213,7 @@ export class SnowflakeAdapter implements WarehouseAdapter {
     const r = await this.query(`DESCRIBE TABLE ${this.opts.database}.${fqn}`);
     const col = (n: string) => r.columns.findIndex((c) => c.name.toLowerCase() === n);
     const [name, type, nul] = [col('name'), col('type'), col('null?')];
-    return r.rows.map((row) => ({ name: String(row[name] ?? ''), type: String(row[type] ?? ''), nullable: String(row[nul] ?? 'Y') === 'Y' }));
+    return r.rows.map((row) => ({ name: localName(String(row[name] ?? '')), type: String(row[type] ?? ''), nullable: String(row[nul] ?? 'Y') === 'Y' }));
   }
 
   /** Stateless HTTP: nothing to close. */

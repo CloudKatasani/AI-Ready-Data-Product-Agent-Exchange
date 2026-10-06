@@ -22,7 +22,13 @@ describe('I02 one governed query path', () => {
 
   it('only QueryService (and the build/validator tooling) opens warehouse connections', () => {
     const openers = src.filter((f) => /openWarehouseReadOnly|openDuckDb\(/.test(readFileSync(f, 'utf8'))).map(rel).sort();
-    expect(openers).toEqual(['src/lib/query/connections.ts', 'src/lib/warehouse/build.ts', 'src/lib/warehouse/duckdb.ts']);
+    // snowflake-deploy.ts is deploy tooling (ADR-0025): it exports built tables to files, never serves a request.
+    expect(openers).toEqual(['src/lib/query/connections.ts', 'src/lib/warehouse/build.ts', 'src/lib/warehouse/duckdb.ts', 'src/lib/warehouse/snowflake-deploy.ts']);
+  });
+
+  it('deploy tooling is unreachable from the app: only scripts use the Snowflake bundle and the Parquet export', () => {
+    const users = src.filter((f) => /from ['"][^'"]*snowflake-deploy['"]|\bexportParquet\(/.test(readFileSync(f, 'utf8'))).map(rel).sort();
+    expect(users).toEqual(['src/lib/warehouse/duckdb.ts', 'src/lib/warehouse/snowflake-deploy.ts']);
   });
 
   it('UI code never touches warehouse connections directly', () => {

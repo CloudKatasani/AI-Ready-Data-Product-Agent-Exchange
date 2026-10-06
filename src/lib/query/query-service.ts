@@ -7,6 +7,7 @@ import type { IncidentTemplate, Pack } from '@/lib/packs/schema';
 import type { Rubrics } from '@/lib/packs/schema';
 import type { CellValue, WarehouseAdapter } from '@/lib/warehouse/adapter';
 import { compileMetricQuery } from './compiler';
+import { toSnowflakeSql } from './dialect';
 import { toDisplaySql } from './display-sql';
 import { type ColumnInfo, IncidentBlocked, incidentSource, openTemplates, productHealth } from './incidents';
 import { checkEntitlement, EMPTY_STATE, governedSource, maskFor, type PolicyState, productsForObject, rowFilterFor } from './policies';
@@ -116,10 +117,15 @@ export class QueryService {
     return openTemplates(this.deps.pack, this.state.incidents);
   }
 
+  /** The statement in the active warehouse's dialect (DuckDB as compiled; Snowflake rewritten, ADR-0025). */
+  private dialect(sql: string): string {
+    return this.deps.warehouse.dialect === 'snowflake' ? toSnowflakeSql(sql) : sql;
+  }
+
   /** Every queryable object (schema-qualified) in the warehouse. */
   async objects(): Promise<Set<string>> {
     if (!this.objectsCache) {
-      const r = await this.deps.warehouse.query('SELECT table_schema, table_name FROM information_schema.tables');
+      const r = await this.deps.warehouse.query(this.dialect('SELECT table_schema, table_name FROM information_schema.tables'));
       this.objectsCache = new Set(r.rows.map(([s, t]) => `${String(s)}.${String(t)}`));
     }
     return this.objectsCache;
@@ -128,7 +134,7 @@ export class QueryService {
   /** Catalog metadata (no row data): objects per schema with kind, and column types. Not logged. */
   async catalog(): Promise<{ schema: string; name: string; kind: 'TABLE' | 'VIEW' }[]> {
     const r = await this.deps.warehouse.query(
-      "SELECT table_schema, table_name, table_type FROM information_schema.tables WHERE table_schema <> 'information_schema' ORDER BY table_schema, table_name",
+      this.dialect("SELECT table_schema, table_name, table_type FROM information_schema.tables WHERE table_schema <> 'information_schema' ORDER BY table_schema, table_name"),
     );
     return r.rows.map(([schema, name, type]) => ({ schema: String(schema), name: String(name), kind: String(type) === 'VIEW' ? 'VIEW' : 'TABLE' }));
   }
@@ -260,7 +266,7 @@ export class QueryService {
     policies.push({ kind: 'limit', target: req.kind, detail: `max ${maxRows} rows, ${rubrics.query.statement_timeout_ms} ms timeout` });
     let result: Awaited<ReturnType<typeof warehouse.query>>;
     try {
-      result = await warehouse.query(sql, params, { timeoutMs: rubrics.query.statement_timeout_ms, maxRows });
+      result = await warehouse.query(this.dialect(sql), params, { timeoutMs: rubrics.query.statement_timeout_ms, maxRows });
     } catch (e) {
       // A worksheet that names a column an open schema-drift incident renamed fails like production would.
       const r = renamed.find((x) => e instanceof Error && e.message.includes(`"${x.from}"`));
