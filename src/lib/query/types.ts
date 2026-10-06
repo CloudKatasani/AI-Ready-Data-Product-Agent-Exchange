@@ -1,4 +1,4 @@
-import type { MetricQuery, Role, SensitiveClass } from '@/lib/packs/schema';
+import type { KnockoutLayer, MetricQuery, Role, SensitiveClass } from '@/lib/packs/schema';
 import type { QueryResult } from '@/lib/warehouse/adapter';
 
 /** Who is asking (02-architecture §4). Resolved server-side from the signed persona cookie. */
@@ -17,10 +17,10 @@ export interface Principal {
 export type QueryRequest =
   | { kind: 'preview'; fqn: string; limit?: number }
   | { kind: 'sql'; sql: string; source: 'worksheet' | 'profiling' | 'dq-rule' }
-  | { kind: 'metric'; query: MetricQuery; purpose: 'agent' | 'playground' | 'kpi-tile' | 'knockout' | 'eval'; question?: string; includeExcluded?: string[] };
+  | { kind: 'metric'; query: MetricQuery; purpose: 'agent' | 'playground' | 'kpi-tile' | 'knockout' | 'eval'; question?: string; includeExcluded?: string[]; knockout?: KnockoutLayer[] };
 
 export interface PolicyApplication {
-  kind: 'entitlement' | 'row_access' | 'masking' | 'incident' | 'limit' | 'rule';
+  kind: 'entitlement' | 'row_access' | 'masking' | 'incident' | 'limit' | 'rule' | 'knockout';
   target: string;
   detail: string;
   ruleOrPolicyId?: string;

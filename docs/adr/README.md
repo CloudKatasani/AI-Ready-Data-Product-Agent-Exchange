@@ -21,5 +21,6 @@
 | [0017](0017-gate-roles-and-quorum.md) | Gate roles, quorum and the governance-council persona | Accepted |
 | [0018](0018-verified-query-path.md) | Verified queries as a scripted answer path | Accepted |
 | [0019](0019-operate-overlays-and-quality-calibration.md) | Incident overlays at query time; calibrated agent-quality score | Accepted |
+| [0020](0020-knockout-and-strategy-engines.md) | Knockout through the real query path; evidence-based maturity | Accepted |
 
 New decisions: copy the shape of an existing ADR, take the next number, add a row here.

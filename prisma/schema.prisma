@@ -587,3 +587,33 @@ model QualityFixRun {
 
   @@index([packId, agentId])
 }
+
+// ───────── Strategy (Phase 8) ─────────
+
+/// A named readiness assessment (answers to the 21 ported questions) with its computed scores.
+model ReadinessAssessment {
+  id          String   @id @default(cuid())
+  packId      String
+  name        String
+  answersJson String
+  scoresJson  String
+  band        String
+  createdBy   String
+  createdAt   DateTime @default(now())
+
+  @@index([packId])
+}
+
+/// A human override of a product's prioritisation score, with the reason (advisory scoring, ADPM).
+model PrioritisationOverride {
+  id        String   @id @default(cuid())
+  packId    String
+  productId String
+  model     String // WSJF|RICE
+  score     Float
+  reason    String
+  personaId String
+  createdAt DateTime @default(now())
+
+  @@index([packId, productId])
+}

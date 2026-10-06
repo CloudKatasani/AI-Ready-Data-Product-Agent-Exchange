@@ -1,7 +1,7 @@
-import { EyeOff, Filter, KeyRound, ScrollText, Timer } from 'lucide-react';
+import { EyeOff, Filter, KeyRound, PowerOff, ScrollText, Timer } from 'lucide-react';
 import type { PolicyApplication } from '@/lib/query/types';
 
-const ICON = { entitlement: KeyRound, row_access: Filter, masking: EyeOff, incident: Timer, limit: Timer, rule: ScrollText } as const;
+const ICON = { entitlement: KeyRound, row_access: Filter, masking: EyeOff, incident: Timer, limit: Timer, rule: ScrollText, knockout: PowerOff } as const;
 const TONE: Record<PolicyApplication['kind'], string> = {
   entitlement: 'border-human text-human',
   row_access: 'border-in-certification text-in-certification',
@@ -9,6 +9,7 @@ const TONE: Record<PolicyApplication['kind'], string> = {
   incident: 'border-fail text-fail',
   limit: 'border-border text-muted-foreground',
   rule: 'border-accent text-accent',
+  knockout: 'border-fail text-fail',
 };
 
 /** Governance made visible (07 §1.3): one chip per applied policy, deduplicated. */

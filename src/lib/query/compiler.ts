@@ -1,6 +1,8 @@
 /**
  * Metric compiler (05 §1) — the ONLY producer of metric SQL (invariant I03). MetricQuery + pack →
- * DuckDB SQL with bound parameters. Knockout rewrites arrive in Phase 8.
+ * DuckDB SQL with bound parameters. Knockout rewrites (05 §1 step 7): `semantic` off → naive formulas and
+ * no business rules; `context` off → no business rules. Source rewiring (Gold → Silver → Bronze) and the
+ * governance switch are applied by QueryService.
  */
 import type { MetricQuery, Pack, SemanticView } from '@/lib/packs/schema';
 import type { CellValue } from '@/lib/warehouse/adapter';
@@ -22,6 +24,8 @@ export interface CompileOptions {
   /** Dimensions the principal is row-filtered on (forces bound tables into the join, picks scope denominators). */
   rowFilterDims?: string[];
   maxRows?: number;
+  /** Layers switched off in Knockout (Why AI-Ready). */
+  knockout?: readonly string[];
 }
 
 export interface RenderHooks {
@@ -187,6 +191,9 @@ export function compileMetricQuery(q: MetricQuery, pack: Pack, opts: CompileOpti
 
   // Business rules (default filters) unless the question or the caller opts out.
   const question = (opts.question ?? '').toLowerCase();
+  const knockout = new Set(opts.knockout ?? []);
+  const naive = knockout.has('semantic');
+  const noRules = naive || knockout.has('context');
   const ruleRefs: string[] = [];
   const rulesSkipped: string[] = [];
   for (const m of metrics) {
@@ -194,7 +201,7 @@ export function compileMetricQuery(q: MetricQuery, pack: Pack, opts: CompileOpti
       if (ruleRefs.includes(id) || rulesSkipped.includes(id)) continue;
       const rule = pack.rules.find((r) => r.id === id);
       if (!rule?.apply) continue;
-      const skip = opts.includeExcluded?.includes(id) || rule.apply.unless_question_mentions.some((p) => question.includes(p.toLowerCase()));
+      const skip = noRules || opts.includeExcluded?.includes(id) || rule.apply.unless_question_mentions.some((p) => question.includes(p.toLowerCase()));
       if (skip) {
         rulesSkipped.push(id);
         continue;
@@ -224,7 +231,7 @@ export function compileMetricQuery(q: MetricQuery, pack: Pack, opts: CompileOpti
 
   // Scope-aware metric expressions (e.g. ratio denominators per slice).
   const scopeDims = new Set([...dims.map((d) => d.name), ...(q.filters ?? []).map((f) => f.dimension), ...rowDims]);
-  const metricExpr = (m: (typeof metrics)[number]) => m.scope_exprs.find((s) => scopeDims.has(s.dimension))?.expr ?? m.expr;
+  const metricExpr = (m: (typeof metrics)[number]) => (naive ? (m.naive_expr ?? m.expr) : (m.scope_exprs.find((s) => scopeDims.has(s.dimension))?.expr ?? m.expr));
 
   const select: { expr: string; as: string; field?: OutputField }[] = [];
   const groupExprs: string[] = [];

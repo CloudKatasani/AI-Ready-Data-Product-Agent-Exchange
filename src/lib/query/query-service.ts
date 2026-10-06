@@ -50,6 +50,15 @@ export class SqlRejected extends Error {
 
 const hash = (s: string) => createHash('sha256').update(s).digest('hex').slice(0, 16);
 
+const KNOCKOUT_DETAIL: Record<string, string> = {
+  silver: 'Silver off: computed from raw Bronze (CDC duplicates and deletes included)',
+  gold: 'Gold off: computed from Silver without the conformed model',
+  semantic: 'Semantic layer off: naive formula, no governed metric definition',
+  glossary: 'Glossary off: business terms no longer resolve',
+  context: 'Context off: business rules and verified queries not applied',
+  governance: 'Governance off: masking and row access skipped — answer is unsafe',
+};
+
 export class QueryService {
   private columnsCache = new Map<string, ColumnInfo[]>();
   private objectsCache: Set<string> | null = null;
@@ -81,6 +90,26 @@ export class QueryService {
     const o = incidentSource(fqn, fqn, info, this.incidents);
     const rename = new Map(o.renamed.map((r) => [r.from, r.to]));
     return { ...o, columns: info.map((c) => rename.get(c.name) ?? c.name) };
+  }
+
+  /**
+   * Knockout source for a Gold or Silver object: Gold → its declared Silver fallback (Gold-shaped through
+   * `column_map`), and with Silver off as well, Silver → its raw Bronze upstream (CDC duplicates included).
+   */
+  private async knockoutSource(fqn: string, silverOff: boolean): Promise<string | null> {
+    const { pack } = this.deps;
+    const bronzeOf = (silver: string) => pack.objects.find((o) => o.fqn === silver)?.upstream.find((u) => u.startsWith('RAW_BRONZE.'));
+    const fb = pack.knockout.gold_fallbacks.find((f) => f.gold === fqn);
+    if (fb) {
+      const src = (silverOff ? bronzeOf(fb.silver) : undefined) ?? fb.silver;
+      const cols = new Set((await this.columnInfo(src)).map((c) => c.name));
+      const entries = Object.entries(fb.column_map).filter(([gold, expr]) => gold !== expr);
+      const replace = entries.filter(([gold]) => cols.has(gold)).map(([gold, expr]) => `${expr} AS "${gold}"`);
+      const extra = entries.filter(([gold]) => !cols.has(gold)).map(([gold, expr]) => `${expr} AS "${gold}"`);
+      return `(SELECT *${replace.length ? ` REPLACE (${replace.join(', ')})` : ''}${extra.length ? `, ${extra.join(', ')}` : ''} FROM ${src})`;
+    }
+    if (silverOff && fqn.startsWith('CURATED_SILVER.')) return bronzeOf(fqn) ?? null;
+    return null;
   }
 
   private get incidents(): IncidentTemplate[] {
@@ -136,16 +165,21 @@ export class QueryService {
     if (req.kind === 'metric') {
       purpose = req.purpose;
       maxRows = rubrics.query.max_rows_agent;
+      // Knockout (Why AI-Ready) only ever applies to the knockout purpose.
+      const ko = new Set(req.purpose === 'knockout' ? (req.knockout ?? []) : []);
+      const governanceOff = ko.has('governance');
       const compiled = compileMetricQuery(req.query, pack, {
         question: req.question,
         includeExcluded: req.includeExcluded,
-        rowFilterDims: who.rowFilters.map((r) => r.dimension),
+        rowFilterDims: governanceOff ? [] : who.rowFilters.map((r) => r.dimension),
         maxRows,
+        knockout: [...ko],
       });
+      for (const layer of [...ko].sort()) policies.push({ kind: 'knockout', target: layer, detail: KNOCKOUT_DETAIL[layer] ?? layer });
       productIds = compiled.productIds;
       policies.push(...checkEntitlement(pack, who, compiled.fqnsTouched, { rowLevel: false, requiredProducts: compiled.productIds }));
       for (const r of compiled.ruleRefs) policies.push({ kind: 'rule', target: compiled.view, detail: pack.rules.find((x) => x.id === r)?.text ?? r, ruleOrPolicyId: r });
-      const filtered = new Map(compiled.sources.map((s) => [s.alias, rowFilterFor(pack, who, s.fqn)]));
+      const filtered = new Map(compiled.sources.map((s) => [s.alias, governanceOff ? null : rowFilterFor(pack, who, s.fqn)]));
       for (const [alias, rf] of filtered) {
         if (!rf) continue;
         rowFiltered = true;
@@ -162,6 +196,8 @@ export class QueryService {
           }
         }
         if (o.sql !== fqn) overlays.set(fqn, o.sql);
+        const rewired = ko.has('gold') || ko.has('silver') ? await this.knockoutSource(fqn, ko.has('silver')) : null;
+        if (rewired) overlays.set(fqn, rewired);
       }
       sql = compiled.render({
         source: (s) => {
@@ -171,7 +207,7 @@ export class QueryService {
           return `${base ?? s.fqn} ${s.alias}`;
         },
         project: (field, expr) => {
-          const mask = field.lineage ? maskFor(pack, who, field.lineage, this.state) : null;
+          const mask = field.lineage && !governanceOff ? maskFor(pack, who, field.lineage, this.state) : null;
           if (!mask) return expr;
           maskedColumns.push(field.name);
           policies.push({ kind: 'masking', target: field.lineage ?? field.name, detail: `${mask.classes.join(', ')} masked with ${mask.macro}`, ruleOrPolicyId: mask.policyId });

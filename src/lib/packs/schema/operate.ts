@@ -29,7 +29,8 @@ export type IncidentTemplate = z.infer<typeof IncidentTemplate>;
 export const IncidentsFile = z.array(IncidentTemplate);
 
 export const KNOCKOUT_LAYERS = ['silver', 'gold', 'semantic', 'glossary', 'context', 'governance'] as const;
-const KnockoutLayer = z.enum(KNOCKOUT_LAYERS);
+export const KnockoutLayer = z.enum(KNOCKOUT_LAYERS);
+export type KnockoutLayer = z.infer<typeof KnockoutLayer>;
 
 /** `knockout.yaml` — the governed answers Knockout degrades, and Silver fallbacks for "Gold off". */
 export const KnockoutFile = z

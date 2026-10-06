@@ -56,6 +56,8 @@ export async function seedPack(prisma: PrismaClient, pack: Pack, opts: { rubrics
   await prisma.persona.deleteMany({ where: { packId } });
   await prisma.incident.deleteMany({ where: { packId } });
   await prisma.qualityFixRun.deleteMany({ where: { packId } });
+  await prisma.readinessAssessment.deleteMany({ where: { packId } });
+  await prisma.prioritisationOverride.deleteMany({ where: { packId } });
 
   await prisma.persona.createMany({
     data: pack.personas.map((p) => ({

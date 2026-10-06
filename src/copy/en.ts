@@ -4,10 +4,12 @@
  */
 import { factoryCopy } from './en-factory';
 import { operateCopy } from './en-operate';
+import { strategyCopy } from './en-strategy';
 
 export const copy = {
   factory: factoryCopy,
   operate: operateCopy,
+  strategy: strategyCopy,
   doors: {
     home: 'Home',
     consume: 'Consume',

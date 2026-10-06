@@ -1,5 +1,5 @@
 # Knockout (Why AI-Ready): four governed answers and how each degrades when a layer is switched off.
-# declared_delta_pct is computed against the warehouse in Phase 8 and left empty here.
+# declared_delta_pct is computed through the real knockout query path at scale M (pnpm knockout:deltas --update).
 answers:
   - id: KO-HC-01
     kpi: KPI-HC-READMIT
@@ -12,7 +12,7 @@ answers:
       glossary: ambiguous  # "bounce-back rate" no longer resolves to the readmission rate
       context: wrong       # planned readmissions (BR-HC-012) are no longer excluded
       governance: unsafe   # no certification, row access or lineage on the answer
-    declared_delta_pct: {}
+    declared_delta_pct: { gold: 0, semantic: 28.5, glossary: 0, context: 31.3, governance: 0 }
   - id: KO-HC-02
     kpi: KPI-HC-AR-DAYS
     question: "What were days in A/R last quarter?"
@@ -24,7 +24,7 @@ answers:
       glossary: ambiguous  # "AR days" does not resolve to days in A/R
       context: wrong       # immature claims inside the 60-day window (BR-HC-021) included
       governance: unsafe   # patient emails reachable from the claims view unmasked
-    declared_delta_pct: {}
+    declared_delta_pct: { silver: 4.4, gold: 4.4, semantic: 48.3, glossary: 0, context: 48.3, governance: 0 }
   - id: KO-HC-03
     kpi: KPI-HC-ON-CONTRACT
     question: "What share of supply spend was on contract this year?"
@@ -36,7 +36,7 @@ answers:
       glossary: ambiguous  # "GPO compliance" no longer maps to the metric
       context: unverified  # purchasing policy definition of off-contract spend not cited
       governance: unsafe   # supplier tax ids and buyer names unmasked
-    declared_delta_pct: {}
+    declared_delta_pct: { silver: 0.2, gold: 0, semantic: 0, glossary: 0, context: 0, governance: 0 }
   - id: KO-HC-04
     kpi: KPI-HC-D2P
     question: "What was door-to-provider time last month?"
@@ -48,7 +48,7 @@ answers:
       glossary: ambiguous  # "door to doc" does not resolve
       context: unverified  # LWBS exclusion (BR-HC-006) not cited
       governance: unsafe   # patient-level tracking board rows exposed without aggregation or row access
-    declared_delta_pct: {}
+    declared_delta_pct: { silver: -0.2, gold: 0, semantic: 0, glossary: 0, context: 0, governance: 0 }
 
 # Silver equivalents the compiler uses when the Gold layer is off (05 §1 step 7). column_map maps a Gold column
 # name to the Silver column (or Silver expression) that replaces it. Gold surrogate keys map to natural keys on both

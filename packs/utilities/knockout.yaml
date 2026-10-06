@@ -1,5 +1,5 @@
 # Knockout (Why AI-Ready): four governed answers and how each degrades when a layer is switched off.
-# declared_delta_pct is computed against the warehouse in Phase 8 and left empty here.
+# declared_delta_pct is computed through the real knockout query path at scale M (pnpm knockout:deltas --update).
 answers:
   - id: KO-UTL-01
     kpi: KPI-UTL-SAIDI
@@ -12,7 +12,7 @@ answers:
       glossary: ambiguous  # "outage minutes per customer" no longer resolves to SAIDI
       context: wrong       # major event days (BR-UTL-012) are no longer excluded
       governance: unsafe   # no certification, row access or lineage on the answer
-    declared_delta_pct: {}
+    declared_delta_pct: { gold: 7922.4, semantic: 257.5, glossary: 0, context: 80, governance: 0 }
   - id: KO-UTL-02
     kpi: KPI-UTL-DSO
     question: "What was days sales outstanding last quarter?"
@@ -24,7 +24,7 @@ answers:
       glossary: ambiguous  # "receivable days" does not resolve to DSO
       context: wrong       # immature statements inside the 60-day window (BR-UTL-021) included
       governance: unsafe   # customer emails reachable from the receivables view unmasked
-    declared_delta_pct: {}
+    declared_delta_pct: { silver: -38.5, gold: -38.5, semantic: 48, glossary: 0, context: 48, governance: 0 }
   - id: KO-UTL-03
     kpi: KPI-UTL-SUC
     question: "What share of spend was under contract this year?"
@@ -36,7 +36,7 @@ answers:
       glossary: ambiguous  # "contracted spend" no longer maps to the metric
       context: unverified  # procurement policy definition of maverick spend not cited
       governance: unsafe   # supplier tax ids and buyer names unmasked
-    declared_delta_pct: {}
+    declared_delta_pct: { silver: -0.3, gold: 0, semantic: 0, glossary: 0, context: 0, governance: 0 }
   - id: KO-UTL-04
     kpi: KPI-UTL-AMI-READ
     question: "What was the AMI read success rate last month?"
@@ -48,7 +48,7 @@ answers:
       glossary: ambiguous  # "meter read rate" does not resolve
       context: unverified  # head-end firmware incident context not available
       governance: unsafe   # premise-level reads exposed without aggregation or row access
-    declared_delta_pct: {}
+    declared_delta_pct: { silver: 0, gold: 0, semantic: 0, glossary: 0, context: 0, governance: 0 }
 
 # Silver equivalents the compiler uses when the Gold layer is off (05 §1 step 7). column_map maps a Gold column
 # name to the Silver column (or Silver expression) that replaces it. Gold surrogate keys map to natural keys on both
