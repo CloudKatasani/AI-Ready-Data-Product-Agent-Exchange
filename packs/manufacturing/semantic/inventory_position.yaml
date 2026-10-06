@@ -1,0 +1,71 @@
+name: INVENTORY_POSITION
+description: Daily material-plant inventory positions with cover, turns, stockouts and value at standard cost
+tables:
+  - { alias: i, fqn: CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT, pk: snapshot_key }
+  - { alias: pl, fqn: CONFORMED_GOLD.DIM_PLANT, pk: plant_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: i.plant_key, to: pl.plant_key }
+  - { from: i.date_key, to: d.date_key }
+dimensions:
+  - { name: plant, expr: pl.plant_name, label: Plant, synonyms: [site, factory, plants, sites], term: GT-MFG-PLANT }
+  - { name: business_unit, expr: pl.business_unit, label: Business unit, synonyms: [bu, division, segment, business units], term: GT-MFG-BUSINESS-UNIT }
+  - { name: material_class, expr: i.material_class, label: Material class, synonyms: [material type, stock type, inventory class] }
+  - { name: material_status, expr: i.material_status, label: Material status, synonyms: [obsolete or active, stock status], term: GT-MFG-OBSOLETE }
+  - { name: abc_class, expr: i.abc_class, label: ABC class, synonyms: [abc, abc category, value class] }
+time_dimensions:
+  - { name: snapshot_date, expr: d.date, default: true }
+facts:
+  - { name: on_hand_value, expr: i.on_hand_value_usd, description: On-hand quantity at standard unit cost }
+metrics:
+  - name: days_of_supply
+    label: Days of supply
+    expr: SUM(i.on_hand_value_usd) / NULLIF(SUM(i.daily_usage_value_usd), 0)
+    unit: days
+    decimals: 1
+    direction: neutral
+    synonyms: [days of cover, inventory cover, stock cover, days on hand]
+    term: GT-MFG-DOS
+    description: On-hand value divided by the daily usage value, active materials only unless obsolete stock is requested
+    default_filters: [ { rule: BR-MFG-020 } ]
+    naive_expr: AVG(i.on_hand_qty / NULLIF(i.daily_usage_qty, 0))
+  - name: inventory_turns
+    label: Inventory turns
+    expr: 365.0 * SUM(i.daily_usage_value_usd) / NULLIF(SUM(i.on_hand_value_usd), 0)
+    unit: turns
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [stock turns, inventory turnover, turnover]
+    term: GT-MFG-TURNS
+    description: Annualised usage value divided by on-hand value, active materials only unless obsolete stock is requested
+    default_filters: [ { rule: BR-MFG-020 } ]
+  - name: avg_inventory_value
+    label: Average inventory value
+    expr: SUM(i.on_hand_value_usd) / COUNT(DISTINCT i.snapshot_date)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [inventory value, stock value, inventory on hand value]
+    term: GT-MFG-INVENTORY-VALUE
+    description: On-hand value at standard cost per snapshot day in the period, all materials (sampled positions)
+  - name: stockout_rate_pct
+    label: Stockout rate
+    expr: 100.0 * AVG(CASE WHEN i.stocked_out THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [stockouts, stock out rate, zero stock rate]
+    term: GT-MFG-STOCKOUT
+    description: Material-plant-days with nothing on hand, active materials only
+    default_filters: [ { rule: BR-MFG-020 } ]
+  - name: below_safety_stock_pct
+    label: Below safety stock
+    expr: 100.0 * AVG(CASE WHEN i.below_safety_stock THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [below safety stock share, under safety stock]
+    term: GT-MFG-STOCKOUT
+    description: Material-plant-days with less on hand than the safety stock cover, active materials only
+    default_filters: [ { rule: BR-MFG-020 } ]
+products: [DP-MFG-006]

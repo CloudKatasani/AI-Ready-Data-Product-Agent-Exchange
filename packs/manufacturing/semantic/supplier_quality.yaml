@@ -1,0 +1,73 @@
+name: SUPPLIER_QUALITY
+description: Inbound goods receipts with on-time-in-full, incoming-inspection rejects and lead time by supplier, commodity and receiving plant
+tables:
+  - { alias: r, fqn: CONFORMED_GOLD.FCT_GOODS_RECEIPT, pk: receipt_key }
+  - { alias: s, fqn: CONFORMED_GOLD.DIM_SUPPLIER, pk: supplier_key }
+  - { alias: pl, fqn: CONFORMED_GOLD.DIM_PLANT, pk: plant_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: r.supplier_key, to: s.supplier_key }
+  - { from: r.plant_key, to: pl.plant_key }
+  - { from: r.date_key, to: d.date_key }
+dimensions:
+  - { name: supplier, expr: s.supplier_name, label: Supplier, synonyms: [suppliers, vendor, vendors], term: GT-MFG-SUPPLIER }
+  - { name: commodity, expr: s.category, label: Commodity, synonyms: [commodities, supplier category, purchase category, material category] }
+  - { name: supplier_country, expr: s.country, label: Supplier country, synonyms: [country of origin, origin country] }
+  - { name: preferred_supplier, expr: s.preferred, label: Preferred supplier, synonyms: [preferred, preferred vendors] }
+  - { name: plant, expr: pl.plant_name, label: Receiving plant, synonyms: [site, factory, plants, receiving site], term: GT-MFG-PLANT }
+  - { name: business_unit, expr: pl.business_unit, label: Business unit, synonyms: [bu, division, segment, business units], term: GT-MFG-BUSINESS-UNIT }
+  - { name: buyer_rescheduled, expr: r.buyer_rescheduled, label: Promise date rescheduled by buyer, synonyms: [rescheduled receipts, pull-ins] }
+time_dimensions:
+  - { name: receipt_date, expr: d.date, default: true }
+facts:
+  - { name: qty_received, expr: r.qty_received, description: Units received }
+  - { name: receipt_value, expr: r.receipt_value_usd, description: Value received }
+metrics:
+  - name: supplier_otif_pct
+    label: Supplier OTIF
+    expr: 100.0 * AVG(CASE WHEN r.otif THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [supplier on time in full, inbound otif, supplier delivery performance]
+    term: GT-MFG-SUPPLIER-OTIF
+    description: Receipts delivered on or before the promise date and in full, excluding buyer-rescheduled receipts unless requested
+    default_filters: [ { rule: BR-MFG-015 } ]
+    naive_expr: 100.0 * AVG(CASE WHEN r.on_time THEN 1 ELSE 0 END)
+  - name: supplier_ppm
+    label: Supplier PPM
+    expr: 1000000.0 * SUM(r.qty_rejected) / SUM(r.qty_received)
+    unit: ppm
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [incoming ppm, supplier defect ppm, supplier reject rate, supplier defect rate]
+    term: GT-MFG-SUPPLIER-PPM
+    description: Parts rejected at incoming inspection per million received
+  - name: supplier_lead_time_days
+    label: Supplier lead time
+    expr: AVG(r.lead_time_days)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [inbound lead time, po to receipt days, replenishment lead time]
+    term: GT-MFG-SUPPLIER-LEAD-TIME
+    description: Mean days from purchase order to goods receipt
+  - name: receipts
+    label: Goods receipts
+    expr: COUNT(*)
+    unit: receipts
+    decimals: 0
+    direction: neutral
+    synonyms: [number of receipts, deliveries received, inbound deliveries]
+    term: GT-MFG-GOODS-RECEIPT
+    description: Goods receipts posted in the period
+  - name: receipt_value_usd
+    label: Inbound receipt value
+    expr: SUM(r.receipt_value_usd)
+    unit: USD
+    decimals: 0
+    direction: neutral
+    synonyms: [receipt value, inbound spend, purchased value received]
+    term: GT-MFG-GOODS-RECEIPT
+    description: Value of goods received in the period
+products: [DP-MFG-004]

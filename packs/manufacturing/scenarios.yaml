@@ -1,0 +1,426 @@
+# Scripted scenarios for Forgepoint Industries — ported from the AI-Ready manufacturing scenarios (S-01..S-15) and
+# the Marketplace MFG demo exchanges. Numbers come from golden.json; `expect` holds shape assertions only. Together
+# the 26 scenarios cover all 15 patterns (04 §6).
+
+# ================================================================ AG-MFG-001 Plant Performance Analyst
+- id: SC-MFG-001
+  agent: AG-MFG-001
+  pattern: 3
+  question: "What was OEE by business unit last quarter?"
+  paraphrases:
+    - "What was OEE by business unit last quarter, excluding trial runs?"
+    - "overall equipment effectiveness per business unit last qtr"
+    - "OEE by division for Q3"
+  kind: answer
+  query: { view: PLANT_PERFORMANCE, metrics: [oee_pct], dimensions: [business_unit], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: oee_pct, dir: desc }] }
+  answer:
+    headline: "{{top.business_unit}} had the highest OEE last quarter at {{top.oee_pct}}% — {{vsTarget.top}} target."
+    narrative: "OEE = availability × performance × quality, with planned downtime excluded (BR-MFG-001) and engineering trial runs excluded (BR-MFG-012). {{bottom.business_unit}} was lowest at {{bottom.oee_pct}}% across {{rows}} business units; company OEE was {{total.oee_pct}}%."
+    chart: bar
+  followups: ["Which lines drove the losses in Aerospace Components?", "Include trial runs", "OEE trend month by month this year"]
+  expect: { rows: 4, top: { business_unit: Industrial Controls }, rules: [BR-MFG-012] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-MFG-002
+  agent: AG-MFG-001
+  pattern: 10
+  question: "What was OEE by business unit last quarter, including trial runs?"
+  paraphrases:
+    - "OEE by business unit last quarter including trial and NPI runs"
+    - "OEE per division last qtr with trial runs"
+  kind: answer
+  query: { view: PLANT_PERFORMANCE, metrics: [oee_pct], dimensions: [business_unit], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: oee_pct, dir: desc }] }
+  answer:
+    headline: "Including trial runs, {{top.business_unit}} had the highest OEE last quarter at {{top.oee_pct}}%."
+    narrative: "You asked to include trial runs, so BR-MFG-012 is not applied. Industrial Controls ran new-product trials on about a quarter of its shifts in Q3, which pulls its OEE down and reorders the ranking — compare with the standard production-only view. Company OEE including trials was {{total.oee_pct}}%."
+    chart: bar
+  followups: ["OEE by business unit, production runs only", "Scrap rate on trial runs"]
+  expect: { rows: 4, top: { business_unit: Fluid Power } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-MFG-003
+  agent: AG-MFG-001
+  pattern: 6
+  question: "What drove unplanned downtime last quarter, by loss reason?"
+  paraphrases:
+    - "Which loss reasons contribute most to unplanned downtime?"
+    - "downtime hours by stoppage reason last quarter"
+  kind: answer
+  query: { view: PLANT_PERFORMANCE, metrics: [unplanned_downtime_hours], dimensions: [loss_reason], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: unplanned_downtime_hours, dir: desc }], analysis: contribution }
+  answer:
+    headline: "{{top.loss_reason}} drove the most unplanned downtime last quarter: {{top.unplanned_downtime_hours}} hours."
+    narrative: "That is {{top.unplanned_downtime_hours_share_pct}}% of {{total.unplanned_downtime_hours}} unplanned hours across {{rows}} loss reasons. Changeover overruns count as unplanned; changeovers up to standard are planned downtime (BR-MFG-003)."
+    chart: bar
+  followups: ["Which lines had the most breakdown hours?", "Unplanned downtime by business unit"]
+  expect: { rows: 5, top: { loss_reason: Breakdown } }
+
+- id: SC-MFG-004
+  agent: AG-MFG-001
+  pattern: 4
+  question: "How has OEE trended month by month this year?"
+  paraphrases:
+    - "Monthly OEE year to date"
+    - "OEE trend ytd by month"
+  kind: answer
+  query: { view: PLANT_PERFORMANCE, metrics: [oee_pct], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "OEE is {{total.oee_pct}}% year to date."
+    narrative: "Monthly OEE over {{rows}} months, production runs only (BR-MFG-012). It moved {{delta.oee_pct}} points from the first to the latest month."
+    chart: line
+  followups: ["OEE by business unit last quarter", "Which loss reasons drove the latest month?"]
+  expect: { rows: 9, rules: [BR-MFG-012] }
+
+- id: SC-MFG-005
+  agent: AG-MFG-001
+  pattern: 12
+  question: "Which shift leads had the lowest OEE last month?"
+  paraphrases:
+    - "Shift leads with the lowest OEE in September"
+    - "lowest OEE by shift lead last month"
+  kind: answer
+  query: { view: PLANT_PERFORMANCE, metrics: [oee_pct], dimensions: [shift_lead], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: oee_pct, dir: asc }], limit: 5, analysis: rank }
+  answer:
+    headline: "The lowest shift-lead OEE last month was {{top.oee_pct}}%."
+    narrative: "Shift-lead names are personal data and are masked unless your persona is cleared for PII. Low OEE usually follows the line, not the person — compare with the line's own trend before drawing conclusions. Showing the {{rows}} lowest of last month's shift leads."
+    chart: table
+  followups: ["OEE by line last month", "Which loss reasons drove those shifts?"]
+  expect: { rows: 5 }
+  personas_expect: { A: { masked: [shift_lead], rowFiltered: true }, D: { masked: [] } }
+
+- id: SC-MFG-006
+  agent: AG-MFG-001
+  pattern: 14
+  question: "What was our on-time delivery rate last month?"
+  paraphrases:
+    - "on-time delivery to distributors last month"
+    - "what was OTD in September"
+  kind: answer
+  query: { view: ORDER_DELIVERY, metrics: [on_time_delivery_pct], timeRange: { last: { n: 1, unit: month } } }
+  answer:
+    headline: "On-time delivery was {{top.on_time_delivery_pct}}% last month — {{vsTarget.top}} target."
+    narrative: "Order to Delivery is still in certification, so treat this figure as provisional. Measured on delivered order lines against the first confirmed promise date (BR-MFG-017, BR-MFG-018)."
+    chart: kpi
+  followups: ["On-time delivery by business unit last quarter", "When will Order to Delivery be certified?"]
+  expect: { rows: 1, certified: false, rules: [BR-MFG-018] }
+  personas_expect: { A: { kind: decline } }
+
+- id: SC-MFG-007
+  agent: AG-MFG-001
+  pattern: 7
+  question: "How have units produced changed quarter over quarter this year?"
+  paraphrases:
+    - "Units produced by quarter year to date"
+    - "is our output growing quarter on quarter?"
+  kind: answer
+  query: { view: PLANT_PERFORMANCE, metrics: [units_produced], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "Units produced moved by {{delta.units_produced}} from the first to the latest quarter this year."
+    narrative: "Good units on every run type (BR-MFG-006) for each of the {{rows}} quarters this year; {{total.units_produced}} good units year to date."
+    chart: line
+  followups: ["Units produced by business unit last quarter", "OEE trend by month"]
+  expect: { rows: 3 }
+
+- id: SC-MFG-008
+  agent: AG-MFG-001
+  pattern: 15
+  question: "Increase the line speed on LN-017 to clear the backlog."
+  paraphrases:
+    - "Speed up line LN-017"
+    - "Can you change the cycle time on the Aerospace lines?"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't change line speeds or machine settings — that is outside what this agent is allowed to do."
+    narrative: "Line speeds and cycle times are set by process engineering under change control, against the controlled process recipe. I can show you OEE, availability and the top loss reasons for the line so the engineer has the evidence."
+    chart: none
+  followups: ["OEE by line last month", "Unplanned downtime by loss reason last quarter"]
+
+# ================================================================ AG-MFG-002 Quality Copilot
+- id: SC-MFG-009
+  agent: AG-MFG-002
+  pattern: 5
+  question: "Top 5 defect codes by cost of poor quality last quarter"
+  paraphrases:
+    - "Which defect codes cost us the most last quarter?"
+    - "highest COPQ by defect type last qtr"
+  kind: answer
+  query: { view: QUALITY_DEFECTS, metrics: [copq_usd], dimensions: [defect_code], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: copq_usd, dir: desc }], limit: 5, analysis: rank }
+  answer:
+    headline: "{{top.defect_code}} cost the most last quarter: {{top.copq_usd}} in cost of poor quality."
+    narrative: "Ranked over the top {{rows}} defect codes; total cost of poor quality was {{total.copq_usd}} (BR-MFG-008 — scrap, rework labour and investigation; warranty reported separately)."
+    chart: bar
+  followups: ["Nonconformance reports by defect code", "Cost of poor quality by plant this year"]
+  expect: { rows: 5, top: { defect_code: Dimensional out of tolerance } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-MFG-010
+  agent: AG-MFG-002
+  pattern: 9
+  question: "How does scrap rate compare across shifts last quarter?"
+  paraphrases:
+    - "Compare scrap rate by shift"
+    - "day vs swing vs night shift scrap last qtr"
+  kind: answer
+  query: { view: PLANT_PERFORMANCE, metrics: [scrap_rate_pct, rework_rate_pct], dimensions: [shift], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: scrap_rate_pct, dir: desc }] }
+  answer:
+    headline: "The {{top.shift}} shift scraps the most at {{top.scrap_rate_pct}}% of units started."
+    narrative: "{{bottom.shift}} is lowest at {{bottom.scrap_rate_pct}}%. Rework follows the same pattern ({{top.rework_rate_pct}}% on {{top.shift}}). Production runs only (BR-MFG-012)."
+    chart: bar
+  followups: ["Scrap rate by plant last quarter", "Night shift scrap trend this year"]
+  expect: { rows: 3, top: { shift: Night }, rules: [BR-MFG-012] }
+
+- id: SC-MFG-011
+  agent: AG-MFG-002
+  pattern: 11
+  question: "What was our right-first-time rate by plant last quarter?"
+  paraphrases:
+    - "right first time by site last quarter"
+    - "fpy per factory last qtr"
+  kind: answer
+  query: { view: QUALITY_DEFECTS, metrics: [first_pass_yield_pct], dimensions: [plant], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: first_pass_yield_pct, dir: asc }] }
+  answer:
+    headline: "{{top.plant}} had the lowest right-first-time rate last quarter at {{top.first_pass_yield_pct}}%."
+    narrative: "\"Right first time\" maps to first-pass yield: lots accepted at first inspection with no defects, concessions counted as failures (BR-MFG-007), trial lots excluded (BR-MFG-012). Across {{rows}} plants first-pass yield was {{total.first_pass_yield_pct}}%."
+    chart: bar
+  followups: ["Defect codes at the lowest plant", "First-pass yield by month this year"]
+  expect: { rows: 22, top: { plant: Kovalam Park }, rules: [BR-MFG-012] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-MFG-012
+  agent: AG-MFG-002
+  pattern: 1
+  question: "What is the warranty claim rate this year?"
+  paraphrases:
+    - "warranty claims per thousand units year to date"
+    - "field failure rate ytd"
+  kind: answer
+  query: { view: FIELD_WARRANTY, metrics: [warranty_claim_rate], timeRange: { ytd: true }, analysis: value }
+  answer:
+    headline: "The warranty claim rate is {{top.warranty_claim_rate}} claims per thousand units shipped this year."
+    narrative: "Only lots shipped more than 90 days ago are included, so the early-life claim window is complete (BR-MFG-021)."
+    chart: kpi
+  followups: ["Warranty claim rate by product family this year", "Warranty cost by business unit"]
+  expect: { rows: 1, rules: [BR-MFG-021] }
+
+- id: SC-MFG-013
+  agent: AG-MFG-002
+  pattern: 11
+  question: "How is quality looking?"
+  paraphrases:
+    - "quality update"
+  kind: clarify
+  query: null
+  answer:
+    headline: "\"Quality\" can mean a few things — which one do you need?"
+    narrative: "I can show first-pass yield, scrap rate, cost of poor quality or the field warranty claim rate. Pick one and a period."
+    chart: none
+  followups: ["First-pass yield by business unit last quarter", "Scrap rate by plant last quarter", "Warranty claim rate by product family this year"]
+
+# ================================================================ AG-MFG-003 Maintenance Planner
+- id: SC-MFG-014
+  agent: AG-MFG-003
+  pattern: 2
+  question: "Is planned maintenance on target this year?"
+  paraphrases:
+    - "Are we hitting the planned maintenance target year to date?"
+    - "planned maintenance share vs target ytd"
+  kind: answer
+  query: { view: ASSET_RELIABILITY, metrics: [planned_maintenance_pct], timeRange: { ytd: true }, analysis: compare_target }
+  answer:
+    headline: "Planned maintenance is {{top.planned_maintenance_pct}}% of work orders this year — {{vsTarget.top}} target."
+    narrative: "Preventive work orders as a share of all maintenance work orders; maintenance standard MS-201 asks for at least 80% (BR-MFG-011)."
+    chart: kpi
+  followups: ["Planned maintenance share by business unit", "Unplanned failures by failure cause last quarter"]
+  expect: { rows: 1 }
+
+- id: SC-MFG-015
+  agent: AG-MFG-003
+  pattern: 5
+  question: "Which five assets had the lowest MTBF last quarter?"
+  paraphrases:
+    - "Bottom 5 assets by mean time between failures last quarter"
+    - "least reliable machines last qtr"
+  kind: answer
+  query: { view: ASSET_RELIABILITY, metrics: [mtbf_hours, failures], dimensions: [asset], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: mtbf_hours, dir: asc }], limit: 5, analysis: rank }
+  answer:
+    headline: "{{top.asset}} had the lowest MTBF last quarter at {{top.mtbf_hours}} hours between failures."
+    narrative: "{{top.asset}} failed {{top.failures}} times. Only corrective work orders count as failures (BR-MFG-010); a criticality A asset below 150 hours enters a reliability review (BR-MFG-011)."
+    chart: bar
+  followups: ["MTTR by asset type", "Unplanned failures by failure cause last quarter"]
+  expect: { rows: 5, top: { asset: AS-0042 } }
+
+- id: SC-MFG-016
+  agent: AG-MFG-003
+  pattern: 8
+  question: "How is MTTR distributed across asset types last quarter?"
+  paraphrases:
+    - "Spread of mean time to repair by asset type"
+    - "mttr percentiles across equipment types"
+  kind: answer
+  query: { view: ASSET_RELIABILITY, metrics: [mttr_hours], dimensions: [asset_type], timeRange: { last: { n: 1, unit: quarter } }, analysis: distribution }
+  answer:
+    headline: "Across {{top.asset_type_count}} asset types, the median MTTR is {{top.mttr_hours_p50}} hours."
+    narrative: "The middle 80% of asset types sit between {{top.mttr_hours_p10}} and {{top.mttr_hours_p90}} hours; the slowest type averages {{top.mttr_hours_max}} hours to repair (BR-MFG-013)."
+    chart: table
+  followups: ["MTTR by business unit last quarter", "Which assets had the lowest MTBF?"]
+  expect: { rows: 1 }
+
+- id: SC-MFG-017
+  agent: AG-MFG-003
+  pattern: 13
+  question: "How many unplanned failures did we have by business unit last quarter?"
+  paraphrases:
+    - "breakdowns per division last quarter"
+    - "corrective work orders by business unit last qtr"
+  kind: answer
+  query: { view: ASSET_RELIABILITY, metrics: [failures], dimensions: [business_unit], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: failures, dir: desc }] }
+  answer:
+    headline: "{{top.business_unit}} had the most unplanned failures last quarter: {{top.failures}}."
+    narrative: "Corrective work orders across {{rows}} business units you are entitled to see; the business-unit row access policy applies."
+    chart: bar
+  followups: ["Failures by failure cause", "MTBF by business unit"]
+  expect: { rows: 4 }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-MFG-018
+  agent: AG-MFG-003
+  pattern: 15
+  question: "What was supplier OTIF last quarter?"
+  paraphrases:
+    - "How are our suppliers delivering?"
+  kind: redirect
+  query: null
+  redirect_to: AG-MFG-004
+  answer:
+    headline: "That's a supply chain question — the Supply Chain Analyst answers it."
+    narrative: "I cover asset reliability and maintenance. The Supply Chain Analyst is certified on supplier OTIF, incoming PPM and lead time, including the spares suppliers maintenance depends on."
+    chart: none
+  followups: ["Ask the Supply Chain Analyst", "What can you answer?"]
+
+# ================================================================ AG-MFG-004 Supply Chain Analyst
+- id: SC-MFG-019
+  agent: AG-MFG-004
+  pattern: 1
+  question: "What was supplier OTIF last quarter?"
+  paraphrases:
+    - "supplier on time in full last quarter"
+    - "inbound otif last qtr"
+  kind: answer
+  query: { view: SUPPLIER_QUALITY, metrics: [supplier_otif_pct], timeRange: { last: { n: 1, unit: quarter } }, analysis: value }
+  answer:
+    headline: "Supplier OTIF was {{top.supplier_otif_pct}}% last quarter."
+    narrative: "Receipts on or before the promise date and in full, excluding receipts whose promise date the buyer rescheduled (BR-MFG-015). Suppliers below 90% for the quarter receive a SCAR (BR-MFG-014)."
+    chart: kpi
+  followups: ["Which suppliers had the lowest OTIF?", "Supplier OTIF including rescheduled receipts"]
+  expect: { rows: 1, rules: [BR-MFG-015] }
+
+- id: SC-MFG-020
+  agent: AG-MFG-004
+  pattern: 5
+  question: "Which five suppliers had the worst PPM this year?"
+  paraphrases:
+    - "Bottom 5 suppliers by incoming PPM"
+    - "suppliers with the most incoming rejects ytd"
+  kind: answer
+  query: { view: SUPPLIER_QUALITY, metrics: [supplier_ppm], dimensions: [supplier], timeRange: { ytd: true }, orderBy: [{ field: supplier_ppm, dir: desc }], limit: 5, analysis: rank }
+  answer:
+    headline: "{{top.supplier}} has the worst incoming quality this year at {{top.supplier_ppm}} PPM."
+    narrative: "Parts rejected at incoming inspection per million received (BR-MFG-016); overall supplier PPM is {{total.supplier_ppm}}. The supplier quality manual targets 250 PPM for electronic components."
+    chart: bar
+  followups: ["Supplier PPM by commodity", "Supplier OTIF for these suppliers"]
+  expect: { rows: 5 }
+
+- id: SC-MFG-021
+  agent: AG-MFG-004
+  pattern: 10
+  question: "What were days of supply by material class last month, including obsolete stock?"
+  paraphrases:
+    - "Days of supply by material class including obsolete materials"
+    - "inventory cover by material class last month with all materials"
+  kind: answer
+  query: { view: INVENTORY_POSITION, metrics: [days_of_supply], dimensions: [material_class], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: days_of_supply, dir: desc }] }
+  answer:
+    headline: "Including obsolete stock, {{top.material_class}} carries the most cover at {{top.days_of_supply}} days of supply."
+    narrative: "You asked to include obsolete stock, so BR-MFG-020 is not applied. Obsolete materials have no usage, so every class looks longer-covered than it is — company cover including obsolete stock was {{total.days_of_supply}} days. Compare with the standard active-materials view."
+    chart: bar
+  followups: ["Days of supply by material class, active materials only", "Inventory turns by business unit"]
+  expect: { rows: 5 }
+
+- id: SC-MFG-022
+  agent: AG-MFG-004
+  pattern: 3
+  question: "What were days of supply by material class last month?"
+  paraphrases:
+    - "inventory cover per material class last month"
+    - "days on hand by stock type for September"
+  kind: answer
+  query: { view: INVENTORY_POSITION, metrics: [days_of_supply], dimensions: [material_class], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: days_of_supply, dir: desc }] }
+  answer:
+    headline: "{{top.material_class}} carries the most cover at {{top.days_of_supply}} days of supply."
+    narrative: "Active materials only (BR-MFG-020). {{bottom.material_class}} is leanest at {{bottom.days_of_supply}} days; company cover was {{total.days_of_supply}} days across {{rows}} material classes."
+    chart: bar
+  followups: ["Include obsolete stock", "Stockout rate by plant last month"]
+  expect: { rows: 5, top: { material_class: MRO spare }, rules: [BR-MFG-020] }
+
+- id: SC-MFG-023
+  agent: AG-MFG-004
+  pattern: 7
+  question: "How has supplier lead time changed quarter over quarter this year?"
+  paraphrases:
+    - "Supplier lead time by quarter year to date"
+    - "is inbound lead time improving quarter on quarter?"
+  kind: answer
+  query: { view: SUPPLIER_QUALITY, metrics: [supplier_lead_time_days], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "Supplier lead time moved {{delta.supplier_lead_time_days}} days from the first to the latest quarter this year."
+    narrative: "Average days from purchase order to goods receipt for each of the {{rows}} quarters this year."
+    chart: line
+  followups: ["Supplier lead time by commodity", "Which suppliers have the worst OTIF?"]
+  expect: { rows: 3 }
+
+- id: SC-MFG-024
+  agent: AG-MFG-004
+  pattern: 6
+  question: "Where is inbound receipt value concentrated by commodity this year?"
+  paraphrases:
+    - "Which commodities make up most of our inbound receipt value?"
+    - "receipt value share by purchase category ytd"
+  kind: answer
+  query: { view: SUPPLIER_QUALITY, metrics: [receipt_value_usd], dimensions: [commodity], timeRange: { ytd: true }, orderBy: [{ field: receipt_value_usd, dir: desc }], analysis: contribution }
+  answer:
+    headline: "{{top.commodity}} accounts for the largest share of inbound receipt value this year: {{top.receipt_value_usd_share_pct}}%."
+    narrative: "Total inbound receipt value was {{total.receipt_value_usd}} across {{rows}} commodities. Prices and standard costs are not disclosed (BR-MFG-026)."
+    chart: bar
+  followups: ["Supplier PPM by commodity", "Supplier lead time by commodity"]
+  expect: { rows: 10 }
+
+# ================================================================ AG-MFG-005 Data Steward Assistant (no semantic views)
+- id: SC-MFG-025
+  agent: AG-MFG-005
+  pattern: 15
+  question: "What can you answer?"
+  paraphrases:
+    - "What can you help me with?"
+    - "help"
+  kind: help
+  query: null
+  answer:
+    headline: "I explain governance across the manufacturing data estate — I don't analyse business KPIs."
+    narrative: "Ask me what a glossary term or metric means, the certification status of a data product, or where governance gaps such as missing stewards or masking sit. For KPI numbers, ask the domain agents."
+    chart: none
+  followups: ["Which products are not yet certified?", "How is OEE defined?", "Which critical data elements lack a quality rule?"]
+
+- id: SC-MFG-026
+  agent: AG-MFG-005
+  pattern: 15
+  question: "Certify the Order to Delivery product for me."
+  paraphrases:
+    - "Publish DP-MFG-005 to the marketplace"
+    - "Can you approve my access request?"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't certify or publish products — agents act, humans decide."
+    narrative: "Certification is decided by the governance council at gate 11 and access by the product's steward through the access workflow. I can show you which certification checks are still open and who must approve them."
+    chart: none
+  followups: ["What is the certification status of Order to Delivery?", "Who can approve access to Order to Delivery?"]

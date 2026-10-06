@@ -1,0 +1,23 @@
+id: DP-MFG-008
+name: Energy & Emissions
+domain: Safety & Sustainability
+archetype: CONSUMER_ALIGNED
+initial_status: DRAFT
+seed_stage: 2
+version: 0.1.0
+owner: manufacturing:ops-dpo
+steward: null
+description: Metered energy per line and day, energy per good unit and location-based scope 2 emissions by plant.
+purpose: Energy-efficiency projects and scope 2 reporting from metered line energy rather than utility invoices.
+decision: { persona: Head of Sustainability, decision: "Which plants and line types get energy-efficiency capital first", cadence: Quarterly, workaround: "Utility invoices allocated to plants by floor area in a spreadsheet", consequence: "Capital goes to the plants with the biggest bills rather than the worst energy per unit" }
+sample_questions: ["What was energy per unit and scope 2 emissions by business unit last quarter?", "Energy per unit by line type"]
+semantic_view: null
+output_ports:
+  - { kind: sql, ref: DATA_PRODUCTS.DP_MFG_008_ENERGY_EMISSIONS }
+sla: { freshness_minutes: 1440, availability_pct: 98.0, max_null_rate_pct: 2.0 }
+kpis: []
+upstream: [CONFORMED_GOLD.FCT_LINE_SHIFT, CONFORMED_GOLD.DIM_LINE]
+consumers: [EHS & sustainability]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: null

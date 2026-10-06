@@ -1,0 +1,24 @@
+id: DP-MFG-007
+name: Workplace Safety
+domain: Safety & Sustainability
+archetype: CONSUMER_ALIGNED
+initial_status: IN_DEVELOPMENT
+seed_stage: 6
+version: 0.4.0
+owner: manufacturing:ops-dpo
+steward: manufacturing:data-steward
+description: Plant-month hours worked and safety incidents by severity — TRIR, lost-time rate and near-miss reporting — without personal data.
+purpose: Give EHS leads and plant managers one governed safety rate per plant to direct safety walks and investments.
+decision: { persona: EHS Director, decision: "Which plants get a safety stand-down and an ergonomic assessment next month", cadence: Monthly, workaround: "Incident logs and HR hours compiled by each plant into a monthly safety deck", consequence: "Rates are computed differently per plant and Oakhurst-style injury clusters are spotted a quarter late" }
+sample_questions: ["What was the total recordable incident rate this year?", "TRIR by plant this year", "Near miss reports by month"]
+semantic_view: WORKPLACE_SAFETY
+output_ports:
+  - { kind: semantic, ref: WORKPLACE_SAFETY }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_MFG_007_WORKPLACE_SAFETY }
+sla: { freshness_minutes: 1440, availability_pct: 98.0, max_null_rate_pct: 2.0 }
+kpis: [KPI-MFG-TRIR, KPI-MFG-LTIR]
+upstream: [CONFORMED_GOLD.FCT_SAFETY_MONTH, CONFORMED_GOLD.DIM_PLANT]
+consumers: [EHS]
+lifecycle_seed: { artifacts: auto, open_proposals: true }
+certification_script: null
+value_case: VC-MFG-007

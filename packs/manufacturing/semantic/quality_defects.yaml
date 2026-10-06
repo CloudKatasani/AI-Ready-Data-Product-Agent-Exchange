@@ -1,0 +1,70 @@
+name: QUALITY_DEFECTS
+description: Inspection lots with first-pass result, defect codes, nonconformance reports and cost of poor quality by line and plant
+tables:
+  - { alias: q, fqn: CONFORMED_GOLD.FCT_INSPECTION_LOT, pk: lot_key }
+  - { alias: l, fqn: CONFORMED_GOLD.DIM_LINE, pk: line_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: q.line_key, to: l.line_key }
+  - { from: q.date_key, to: d.date_key }
+dimensions:
+  - { name: business_unit, expr: l.business_unit, label: Business unit, synonyms: [bu, division, segment, business units], term: GT-MFG-BUSINESS-UNIT }
+  - { name: plant, expr: l.plant_name, label: Plant, synonyms: [site, factory, plants, sites], term: GT-MFG-PLANT }
+  - { name: line, expr: l.line_id, label: Production line, synonyms: [lines, production lines, cell], term: GT-MFG-LINE }
+  - { name: defect_code, expr: q.defect_code, label: Defect code, synonyms: [defect codes, defect type, defect types] }
+  - { name: disposition, expr: q.disposition, label: Usage decision, synonyms: [disposition, mrb decision] }
+  - { name: production_type, expr: q.lot_type, label: Lot type, synonyms: [lot type, trial or production lots], term: GT-MFG-TRIAL-RUN }
+time_dimensions:
+  - { name: inspection_date, expr: d.date, default: true }
+facts:
+  - { name: inspected_qty, expr: q.inspected_qty, description: Units in the inspection sample }
+  - { name: defect_qty, expr: q.defect_qty, description: Defects found }
+metrics:
+  - name: first_pass_yield_pct
+    label: First-pass yield
+    expr: 100.0 * AVG(CASE WHEN q.passed_first THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [fpy, right first time, right-first-time rate, first time right]
+    term: GT-MFG-FPY
+    description: Inspection lots accepted at first inspection with no defects; concessions are failures and trial lots are excluded unless requested
+    default_filters: [ { rule: BR-MFG-012 } ]
+    naive_expr: 100.0 - 100.0 * SUM(q.defect_qty) / SUM(q.inspected_qty)
+  - name: defects_ppm
+    label: Defects per million
+    expr: 1000000.0 * SUM(q.defect_qty) / SUM(q.inspected_qty)
+    unit: ppm
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [dpm, defect rate, defects ppm]
+    term: GT-MFG-DPM
+    description: Defects found per million units inspected
+    default_filters: [ { rule: BR-MFG-012 } ]
+  - name: ncr_count
+    label: Nonconformance reports
+    expr: COUNT_IF(q.ncr_raised)
+    unit: NCRs
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [ncrs, ncr count, nonconformances raised]
+    term: GT-MFG-NCR
+    description: Lots that failed first inspection and were raised on a nonconformance report
+  - name: copq_usd
+    label: Cost of poor quality
+    expr: SUM(q.copq_usd)
+    unit: USD
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [copq, quality cost, failure cost]
+    term: GT-MFG-COPQ
+    description: Scrap, rework labour and investigation cost recorded on nonconformance reports
+  - name: inspection_lots
+    label: Inspection lots
+    expr: COUNT(*)
+    unit: lots
+    decimals: 0
+    synonyms: [lots inspected, inspections]
+    term: GT-MFG-INSPECTION-LOT
+    description: Inspection lots decided in the period
+products: [DP-MFG-002]

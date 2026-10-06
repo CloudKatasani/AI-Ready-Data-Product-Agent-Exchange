@@ -1,0 +1,51 @@
+# Work order and asset DQ rules.
+- id: DQ-MFG-025
+  object: CONFORMED_GOLD.FCT_WORK_ORDER
+  column: wo_type
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Preventive, Corrective]
+  severity: critical
+  alert_route: steward
+  description: "Work order types conform to Preventive and Corrective (MTBF counts corrective only)."
+- id: DQ-MFG-026
+  object: CONFORMED_GOLD.FCT_WORK_ORDER
+  column: repair_hours
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: "Every work order carries repair or service hours (MTTR)."
+- id: DQ-MFG-027
+  object: CONFORMED_GOLD.FCT_WORK_ORDER
+  column: repair_hours
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: "Repair hours are positive."
+- id: DQ-MFG-028
+  object: CONFORMED_GOLD.FCT_WORK_ORDER
+  column: wo_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: "Work orders are no more than one day behind the reporting date."
+- id: DQ-MFG-029
+  object: CONFORMED_GOLD.FCT_WORK_ORDER
+  column: wo_number
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: "One row per work order after CDC deduplication."
+- id: DQ-MFG-030
+  object: CONFORMED_GOLD.DIM_ASSET
+  column: criticality
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [A, B, C]
+  severity: medium
+  alert_route: steward
+  description: "Asset criticality is A, B or C."

@@ -1,0 +1,58 @@
+# Order-to-delivery DQ rules.
+- id: DQ-MFG-038
+  object: CONFORMED_GOLD.FCT_ORDER_LINE
+  column: order_line_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: "One row per order line after CDC deduplication."
+- id: DQ-MFG-039
+  object: CONFORMED_GOLD.FCT_ORDER_LINE
+  column: in_full
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: "Every order line carries an in-full flag (fill rate)."
+- id: DQ-MFG-040
+  object: CONFORMED_GOLD.FCT_ORDER_LINE
+  column: delivered
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: high
+  alert_route: steward
+  description: "Every order line is flagged delivered or open so BR-MFG-018 can be applied."
+- id: DQ-MFG-041
+  object: CONFORMED_GOLD.FCT_ORDER_LINE
+  column: on_time
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: "Every order line carries an on-time flag (on-time delivery)."
+- id: DQ-MFG-042
+  object: CONFORMED_GOLD.FCT_ORDER_LINE
+  column: delivered_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: "Proofs of delivery are no more than one day behind the reporting date."
+- id: DQ-MFG-043
+  object: CONFORMED_GOLD.FCT_ORDER_LINE
+  column: business_unit
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Motion Systems, Fluid Power, Industrial Controls, Aerospace Components]
+  severity: critical
+  alert_route: steward
+  description: "Order business unit is one of the four business units (row access policy RAP_BUSINESS_UNIT)."
+- id: DQ-MFG-044
+  object: CONFORMED_GOLD.FCT_ORDER_LINE
+  column: net_value_usd
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: medium
+  alert_route: steward
+  description: "Net order value is never negative."

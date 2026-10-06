@@ -1,0 +1,98 @@
+sensitivity_classes:
+  - { class: PII, description: "Personal information about operators, injured workers, distributor and supplier contacts" }
+  - { class: TRADE_SECRET, description: "Controlled process recipes and standard costs from the costed bill of materials" }
+  - { class: GOV_ID, description: "Government or tax identifiers, such as supplier tax ids" }
+
+masking_policies:
+  - { id: MASK_PII, class: PII, macro: mask_pii, description: "Replace personal data with ••• unless the persona is cleared for PII" }
+  - { id: MASK_EMAIL, class: PII, macro: mask_email, description: "Hash the local part of email addresses" }
+  - { id: MASK_PHONE, class: PII, macro: mask_phone, description: "Show only the last four digits of phone numbers" }
+  - { id: MASK_TRADE_SECRET, class: TRADE_SECRET, macro: mask_redact, description: "Redact process recipes and standard costs unless the persona is cleared for trade secrets" }
+  - { id: MASK_GOV_ID, class: GOV_ID, macro: mask_gov_id, description: "Show only the last four characters of tax identifiers" }
+
+row_access_policies:
+  - id: RAP_BUSINESS_UNIT
+    dimension: business_unit
+    description: "Business-unit personas see only rows for the business units they support"
+    bindings:
+      - { object: CONFORMED_GOLD.DIM_PLANT, column: business_unit }
+      - { object: CONFORMED_GOLD.DIM_LINE, column: business_unit }
+      - { object: CONFORMED_GOLD.DIM_ASSET, column: business_unit }
+      - { object: CONFORMED_GOLD.DIM_OPERATOR, column: business_unit }
+      - { object: CONFORMED_GOLD.FCT_ORDER_LINE, column: business_unit }
+      - { object: CONFORMED_GOLD.FCT_WARRANTY_LOT, column: business_unit }
+      - { object: CURATED_SILVER.PLANT_SITE, column: business_unit }
+      - { object: CURATED_SILVER.PRODUCTION_LINE, column: business_unit }
+      - { object: CURATED_SILVER.LINE_SHIFT_PRODUCTION, column: business_unit }
+      - { object: CURATED_SILVER.SALES_ORDER_LINE, column: business_unit }
+
+column_tags:
+  # Operator PII — masked for every persona without PII clearance.
+  - { column: CONFORMED_GOLD.DIM_OPERATOR.first_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_OPERATOR.last_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_OPERATOR.full_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_OPERATOR.email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.OPERATOR_ROSTER.first_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.OPERATOR_ROSTER.last_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.OPERATOR_ROSTER.email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.SAFETY_INCIDENT.injured_person, classes: [PII], masking: MASK_PII }
+  # Certification demo (DP-MFG-005 gate 6): distributor order-desk email and phone are exposed by ORDER_DELIVERY
+  # and masking is not attached until FIX-2.
+  - { column: CONFORMED_GOLD.FCT_ORDER_LINE.contact_email, classes: [PII], masking: MASK_EMAIL, mask_pending_fix: FIX-2 }
+  - { column: CONFORMED_GOLD.FCT_ORDER_LINE.contact_phone, classes: [PII], masking: MASK_PHONE, mask_pending_fix: FIX-2 }
+  - { column: CURATED_SILVER.DISTRIBUTOR_MASTER.contact_first_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.DISTRIBUTOR_MASTER.contact_last_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.DISTRIBUTOR_MASTER.contact_email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.DISTRIBUTOR_MASTER.contact_phone, classes: [PII], masking: MASK_PHONE }
+  # Supplier contact and tax identity.
+  - { column: CONFORMED_GOLD.DIM_SUPPLIER.contact_email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CONFORMED_GOLD.DIM_SUPPLIER.tax_id, classes: [GOV_ID], masking: MASK_GOV_ID }
+  - { column: CURATED_SILVER.SUPPLIER_MASTER.contact_email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.SUPPLIER_MASTER.tax_id, classes: [GOV_ID], masking: MASK_GOV_ID }
+  # Trade secrets: controlled process recipes and standard costs.
+  - { column: CONFORMED_GOLD.DIM_LINE.process_recipe_id, classes: [TRADE_SECRET], masking: MASK_TRADE_SECRET }
+  - { column: CURATED_SILVER.PRODUCTION_LINE.process_recipe_id, classes: [TRADE_SECRET], masking: MASK_TRADE_SECRET }
+  - { column: CONFORMED_GOLD.FCT_ORDER_LINE.std_unit_cost_usd, classes: [TRADE_SECRET], masking: MASK_TRADE_SECRET }
+  - { column: CURATED_SILVER.SALES_ORDER_LINE.std_unit_cost_usd, classes: [TRADE_SECRET], masking: MASK_TRADE_SECRET }
+  - { column: CURATED_SILVER.PRODUCT_FAMILY.std_unit_cost_usd, classes: [TRADE_SECRET], masking: MASK_TRADE_SECRET }
+  # Critical data elements (each has DQ rules in warehouse/dq).
+  - { column: CONFORMED_GOLD.FCT_LINE_SHIFT.planned_production_min, cde: true }
+  - { column: CONFORMED_GOLD.FCT_LINE_SHIFT.unplanned_down_min, cde: true }
+  - { column: CONFORMED_GOLD.FCT_LINE_SHIFT.total_units, cde: true }
+  - { column: CONFORMED_GOLD.FCT_LINE_SHIFT.good_units, cde: true }
+  - { column: CONFORMED_GOLD.FCT_LINE_SHIFT.run_type, cde: true }
+  - { column: CONFORMED_GOLD.DIM_LINE.ideal_cycle_sec, cde: true }
+  - { column: CONFORMED_GOLD.DIM_LINE.business_unit, cde: true }
+  - { column: CONFORMED_GOLD.FCT_INSPECTION_LOT.passed_first, cde: true }
+  - { column: CONFORMED_GOLD.FCT_INSPECTION_LOT.copq_usd, cde: true }
+  - { column: CONFORMED_GOLD.FCT_WORK_ORDER.wo_type, cde: true }
+  - { column: CONFORMED_GOLD.FCT_WORK_ORDER.repair_hours, cde: true }
+  - { column: CONFORMED_GOLD.FCT_GOODS_RECEIPT.otif, cde: true }
+  - { column: CONFORMED_GOLD.FCT_GOODS_RECEIPT.qty_rejected, cde: true }
+  - { column: CONFORMED_GOLD.FCT_ORDER_LINE.on_time, cde: true }
+  - { column: CONFORMED_GOLD.FCT_ORDER_LINE.in_full, cde: true }
+  - { column: CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT.on_hand_value_usd, cde: true }
+  - { column: CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT.material_status, cde: true }
+  - { column: CONFORMED_GOLD.FCT_WARRANTY_LOT.claims, cde: true }
+  - { column: CONFORMED_GOLD.FCT_SAFETY_MONTH.recordable_incidents, cde: true }
+  - { column: CONFORMED_GOLD.FCT_SAFETY_MONTH.hours_worked, cde: true }
+
+grants:
+  - persona: manufacturing:plant-analyst
+    products: [DP-MFG-001, DP-MFG-002, DP-MFG-003]
+    agents: [AG-MFG-001, AG-MFG-002, AG-MFG-003]
+  - persona: manufacturing:production-manager
+    products: [DP-MFG-001, DP-MFG-002, DP-MFG-003, DP-MFG-006]
+    agents: [AG-MFG-001, AG-MFG-002, AG-MFG-003, AG-MFG-004]
+  - persona: manufacturing:ops-dpo
+    products: [DP-MFG-001, DP-MFG-002, DP-MFG-003, DP-MFG-004, DP-MFG-006, DP-MFG-007]
+    agents: [AG-MFG-001, AG-MFG-002, AG-MFG-003, AG-MFG-004]
+  - persona: manufacturing:data-steward
+    products: [DP-MFG-001, DP-MFG-002, DP-MFG-003, DP-MFG-004, DP-MFG-005, DP-MFG-006, DP-MFG-007, DP-MFG-008]
+    agents: [AG-MFG-001, AG-MFG-002, AG-MFG-003, AG-MFG-004, AG-MFG-005]
+  - persona: manufacturing:coo
+    # Aggregates only (archetype E): sees every headline KPI tile, never row-level data.
+    products: [DP-MFG-001, DP-MFG-002, DP-MFG-003, DP-MFG-004, DP-MFG-005, DP-MFG-006]
+    agents: [AG-MFG-001, AG-MFG-002, AG-MFG-003, AG-MFG-004]
+
+public_products: []

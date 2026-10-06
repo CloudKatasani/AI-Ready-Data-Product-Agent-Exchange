@@ -1,0 +1,198 @@
+# Forgepoint Industries business rules (synthetic). Ported from the AI-Ready manufacturing context (BR-001..BR-016)
+# and extended. Rules with an `apply` block are applied by the metric compiler as default filters; the rest are
+# definitions, thresholds and policies cited in answers.
+
+# ── Production & OEE ────────────────────────────────────────────────────────────────────────────────
+- id: BR-MFG-001
+  domain: Operations
+  text: "OEE = availability × performance × quality; planned downtime is excluded. Planned production time (scheduled shift time minus planned downtime) is the time base for every OEE number."
+  kind: definition
+  metric: oee_pct
+  source_doc: DOC-MFG-OEE-STANDARD
+- id: BR-MFG-002
+  domain: Operations
+  text: "A line below 65% OEE for a production week is reviewed at the weekly tier-3 meeting with its dominant loss; 85% is the world-class reference, not the target."
+  kind: threshold
+  metric: oee_pct
+  source_doc: DOC-MFG-OEE-STANDARD
+- id: BR-MFG-003
+  domain: Operations
+  text: "Breaks, planned maintenance and changeovers up to the standard changeover time are planned downtime; any changeover overrun, breakdown, material shortage, quality hold or operator unavailability is unplanned downtime and reduces availability."
+  kind: definition
+  metric: availability_pct
+  source_doc: DOC-MFG-OEE-STANDARD
+- id: BR-MFG-004
+  domain: Operations
+  text: "Performance uses the nameplate ideal cycle time held on the production line master, never the average actual cycle time."
+  kind: definition
+  metric: performance_pct
+  source_doc: DOC-MFG-OEE-STANDARD
+- id: BR-MFG-005
+  domain: Operations
+  text: "Quality rate counts only units good first time; reworked units are a quality loss even when they ship."
+  kind: definition
+  metric: quality_rate_pct
+  source_doc: DOC-MFG-OEE-STANDARD
+- id: BR-MFG-006
+  domain: Operations
+  text: "Production weeks run Monday to Sunday; months and quarters follow the calendar. Units produced counts good units on every run type."
+  kind: definition
+  metric: units_produced
+  source_doc: DOC-MFG-OEE-STANDARD
+- id: BR-MFG-012
+  domain: Operations
+  text: "OEE, its components, scrap, rework and first-pass yield exclude engineering trial and new-product-introduction runs, which are reported separately, unless the question explicitly asks to include trial runs."
+  kind: filter
+  metric: oee_pct
+  source_doc: DOC-MFG-OEE-STANDARD
+  apply:
+    filter: { dimension: production_type, op: "=", value: Production }
+    unless_question_mentions: [including trial, include trial, with trial runs, trial runs included, all run types, including npi]
+
+# ── Quality ─────────────────────────────────────────────────────────────────────────────────────────
+- id: BR-MFG-007
+  domain: Quality
+  text: "First-pass yield counts inspection lots accepted at first inspection with no defects; lots released by concession (use as is) or after rework are first-pass failures."
+  kind: definition
+  metric: first_pass_yield_pct
+  source_doc: DOC-MFG-QUALITY-PROCEDURES
+- id: BR-MFG-008
+  domain: Quality
+  text: "Cost of poor quality includes scrapped material and labour, rework labour at standard rate and investigation effort per NCR; warranty cost is reported separately."
+  kind: definition
+  metric: copq_usd
+  source_doc: DOC-MFG-QUALITY-PROCEDURES
+- id: BR-MFG-009
+  domain: Quality
+  text: "A defect code with more than ten NCRs in a quarter requires an 8D corrective action with containment within 24 hours."
+  kind: threshold
+  metric: ncr_count
+  source_doc: DOC-MFG-QUALITY-PROCEDURES
+- id: BR-MFG-021
+  domain: Quality
+  text: "Warranty claim rate only includes lots shipped more than 90 days before the reporting date, so the early-life claim window is complete."
+  kind: filter
+  metric: warranty_claim_rate
+  source_doc: DOC-MFG-QUALITY-PROCEDURES
+  apply:
+    filter: { dimension: mature_lot, op: "=", value: true }
+    unless_question_mentions: []
+
+# ── Maintenance ─────────────────────────────────────────────────────────────────────────────────────
+- id: BR-MFG-010
+  domain: Maintenance
+  text: "MTBF counts only corrective work orders as failures; the operating hours are the asset's run hours since its previous failure. Preventive work never counts as a failure."
+  kind: definition
+  metric: mtbf_hours
+  source_doc: DOC-MFG-MAINTENANCE-STANDARD
+- id: BR-MFG-011
+  domain: Maintenance
+  text: "Planned maintenance should be at least 80% of work orders; a criticality A asset with MTBF below 150 hours in a quarter enters a reliability review and a spare-parts check."
+  kind: threshold
+  metric: planned_maintenance_pct
+  source_doc: DOC-MFG-MAINTENANCE-STANDARD
+- id: BR-MFG-013
+  domain: Maintenance
+  text: "MTTR is repair hours on corrective work orders divided by failures, from the failure until the asset is returned to production, including waiting for spares."
+  kind: definition
+  metric: mttr_hours
+  source_doc: DOC-MFG-MAINTENANCE-STANDARD
+
+# ── Supply chain ────────────────────────────────────────────────────────────────────────────────────
+- id: BR-MFG-014
+  domain: Supply chain
+  text: "Supplier OTIF is measured per receipt against the promise date on the purchase order and the full ordered quantity; a supplier below 90% OTIF for a quarter receives a supplier corrective action request (SCAR)."
+  kind: threshold
+  metric: supplier_otif_pct
+  source_doc: DOC-MFG-SUPPLIER-MANUAL
+- id: BR-MFG-015
+  domain: Supply chain
+  text: "Supplier OTIF excludes receipts whose promise date the buyer pulled in after the order was confirmed, because the supplier was measured against a date it never accepted — unless the question asks to include rescheduled receipts."
+  kind: filter
+  metric: supplier_otif_pct
+  source_doc: DOC-MFG-SUPPLIER-MANUAL
+  apply:
+    filter: { dimension: buyer_rescheduled, op: "=", value: false }
+    unless_question_mentions: [including rescheduled, include rescheduled, including reschedules, including pull-ins, all receipts]
+- id: BR-MFG-016
+  domain: Supply chain
+  text: "Supplier PPM counts parts rejected at incoming inspection only; parts that fail later in production are charged back separately and do not change PPM."
+  kind: definition
+  metric: supplier_ppm
+  source_doc: DOC-MFG-SUPPLIER-MANUAL
+
+# ── Order fulfilment ────────────────────────────────────────────────────────────────────────────────
+- id: BR-MFG-017
+  domain: Order fulfilment
+  text: "On-time delivery is measured at proof of delivery against the first confirmed promise date; re-promised dates do not reset the clock."
+  kind: definition
+  metric: on_time_delivery_pct
+  source_doc: DOC-MFG-DELIVERY-POLICY
+- id: BR-MFG-018
+  domain: Order fulfilment
+  text: "Delivery KPIs (on-time delivery, fill rate, order lead time and lines shipped) are measured on delivered order lines only; open lines are reported in the order book."
+  kind: filter
+  metric: on_time_delivery_pct
+  source_doc: DOC-MFG-DELIVERY-POLICY
+  apply:
+    filter: { dimension: delivered, op: "=", value: true }
+    unless_question_mentions: []
+- id: BR-MFG-019
+  domain: Order fulfilment
+  text: "Fill rate is measured per order line: a line is in full only when the whole ordered quantity shipped."
+  kind: definition
+  metric: order_fill_rate_pct
+  source_doc: DOC-MFG-DELIVERY-POLICY
+
+# ── Inventory ───────────────────────────────────────────────────────────────────────────────────────
+- id: BR-MFG-020
+  domain: Inventory
+  text: "Days of supply, inventory turns, stockout and safety-stock measures cover active materials only; obsolete stock awaiting disposal is reported separately unless the question asks to include it."
+  kind: filter
+  metric: days_of_supply
+  source_doc: DOC-MFG-INVENTORY-POLICY
+  apply:
+    filter: { dimension: material_status, op: "=", value: Active }
+    unless_question_mentions: [including obsolete, include obsolete, obsolete stock included, all materials]
+- id: BR-MFG-023
+  domain: Inventory
+  text: "Active A-class materials above 45 days of supply are reviewed at the monthly inventory meeting; MRO spares are held to criticality-based cover and reviewed separately."
+  kind: threshold
+  metric: days_of_supply
+  source_doc: DOC-MFG-INVENTORY-POLICY
+
+# ── Safety & sustainability ─────────────────────────────────────────────────────────────────────────
+- id: BR-MFG-022
+  domain: Safety
+  text: "TRIR is recordable incidents, including lost-time cases, per 200,000 hours worked; first-aid cases and near misses are not recordable."
+  kind: definition
+  metric: trir
+  source_doc: DOC-MFG-EHS-STANDARD
+- id: BR-MFG-024
+  domain: Sustainability
+  text: "Scope 2 emissions use location-based grid factors per plant, refreshed annually; energy per unit divides metered kWh by good units only."
+  kind: definition
+  metric: scope2_emissions_t
+  source_doc: DOC-MFG-EHS-STANDARD
+
+# ── Governance policies ─────────────────────────────────────────────────────────────────────────────
+- id: BR-MFG-025
+  domain: Governance
+  text: "Operator and shift-lead names, emails, injured-person names and distributor or supplier contacts are PII and are masked for every persona without PII clearance, in every surface including agent answers. Performance analytics attribute losses to lines, reasons and defect codes, not to people."
+  kind: policy
+  source_doc: DOC-MFG-DATA-GOVERNANCE
+- id: BR-MFG-026
+  domain: Governance
+  text: "Process recipes and standard costs from the costed bill of materials are trade secrets; they are masked for every persona without trade-secret clearance and agents never disclose them."
+  kind: policy
+  source_doc: DOC-MFG-DATA-GOVERNANCE
+- id: BR-MFG-027
+  domain: Governance
+  text: "Business-unit personas see only rows for the business units they support; other business units and company totals are not disclosed to them."
+  kind: policy
+  source_doc: DOC-MFG-DATA-GOVERNANCE
+- id: BR-MFG-028
+  domain: Governance
+  text: "Agents answer with aggregates only. Requests for an individual distributor order, an individual employee's record or a named person's performance are declined and routed to the owning team."
+  kind: policy
+  source_doc: DOC-MFG-DATA-GOVERNANCE

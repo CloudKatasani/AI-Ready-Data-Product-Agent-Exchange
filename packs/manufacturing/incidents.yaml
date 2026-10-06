@@ -1,0 +1,67 @@
+# "Break something" templates (05 §2.4). Ported from AI-Ready ext/operate.ts (manufacturing INC-1..INC-5) and
+# retargeted to the Keystone Gold objects. Effects are applied as overlay views in the _INCIDENT schema while an
+# incident is open.
+- id: INC-MFG-LATE-FEED
+  kind: late_feed
+  title: MES shift production feed six hours late
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_LINE_SHIFT
+  params: { lag_hours: 6 }
+  affects: { products: [DP-MFG-001], agents: [AG-MFG-001, AG-MFG-002] }
+  narrative: >-
+    The CDC extract from the plant MES stalled after a historian upgrade and no shift production records have landed
+    for six hours. The Production & OEE product is now behind its 60-minute freshness SLA, so today's OEE, output and
+    downtime understate the current shift and any agent answer about recent production is stale.
+  detection: Freshness rule DQ-MFG-008 on the curated shift production table fails and the product moves to Degraded.
+  resolution: Restart the MES extract, backfill the six-hour gap and re-run the DQ rules; the product returns to Healthy.
+- id: INC-MFG-NULL-SPIKE
+  kind: null_spike
+  title: Null spike in first-pass inspection results
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_INSPECTION_LOT
+  column: passed_first
+  params: { null_pct: 18 }
+  affects: { products: [DP-MFG-002], agents: [AG-MFG-002] }
+  narrative: >-
+    A QMS release changed the usage-decision export and 18% of the latest inspection lots arrive without a first-pass
+    result, so a critical data element is empty. First-pass yield would be overstated or understated depending on
+    which plants are missing.
+  detection: Completeness rule DQ-MFG-016 on passed_first fails; the Quality & Defects product is Degraded.
+  resolution: Revert the export mapping, reload the affected lots and confirm the null rate is back to zero.
+- id: INC-MFG-DUP-LOAD
+  kind: duplicate_load
+  title: Duplicate goods-receipt load
+  severity: SEV3
+  object: CONFORMED_GOLD.FCT_GOODS_RECEIPT
+  params: { duplicate_pct: 12 }
+  affects: { products: [DP-MFG-004], agents: [AG-MFG-004] }
+  narrative: >-
+    A replayed supplier-portal batch loaded 12% of goods receipts twice. Receipt value and receipt counts are inflated
+    while the duplicates remain, and supplier OTIF and PPM shift by supplier.
+  detection: Uniqueness rule DQ-MFG-032 on receipt_id fails and the row count jumps against the trailing average.
+  resolution: Delete the replayed batch by load id, re-run deduplication and confirm dup_rate returns to zero.
+- id: INC-MFG-SCHEMA-DRIFT
+  kind: schema_drift
+  title: On-time flag renamed upstream
+  severity: SEV1
+  object: CONFORMED_GOLD.FCT_ORDER_LINE
+  column: on_time
+  params: { rename_to: on_time_flag }
+  affects: { products: [DP-MFG-005], agents: [AG-MFG-001] }
+  narrative: >-
+    An ERP release renamed the on-time column to on_time_flag without a contract change. On-time delivery cannot be
+    computed, so agents decline with an incident banner instead of answering.
+  detection: Metric compilation for ORDER_DELIVERY fails and DQ-MFG-041 cannot find its column; the contract check flags a breaking change.
+  resolution: Map on_time_flag back to on_time in Silver, raise a contract major version with a 30-day notice, and re-run checks.
+- id: INC-MFG-VOLUME
+  kind: volume_anomaly
+  title: Missing days of maintenance work orders
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_WORK_ORDER
+  params: { missing_days: 2 }
+  affects: { products: [DP-MFG-003], agents: [AG-MFG-003] }
+  narrative: >-
+    Two daily files from the EAM system never arrived, so the most recent two days of work orders are missing. Failure
+    counts and maintenance cost show a false drop at the end of the series and MTBF looks better than it is.
+  detection: Timeliness rule DQ-MFG-028 on wo_date fails and daily work-order volume drops against the trailing average; the product is Degraded.
+  resolution: Request the missing files from the EAM system, load them and confirm daily volumes match the trailing average.

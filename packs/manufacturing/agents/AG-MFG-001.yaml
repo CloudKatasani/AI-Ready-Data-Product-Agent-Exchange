@@ -1,0 +1,37 @@
+id: AG-MFG-001
+name: Plant Performance Analyst
+domain: Production & OEE
+status: PRODUCTION
+owner: manufacturing:ops-dpo
+on_call: Manufacturing Excellence Data Ops
+avatar: { icon: gauge, hue: 210 }
+capability: "Answers questions on OEE and its availability, performance and quality components, output, unplanned downtime, energy and distributor on-time delivery."
+personas_served: [Plant Manager, Plant Performance Analyst, VP Operations]
+out_of_scope: ["changing machine settings or line speeds", "production schedule changes", "expediting or cancelling distributor orders", "individual operator disciplinary matters"]
+products:
+  - { id: DP-MFG-001, columns: "*" }
+  - { id: DP-MFG-005, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [PLANT_PERFORMANCE, ORDER_DELIVERY], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-MFG-OEE-STANDARD, DOC-MFG-DELIVERY-POLICY, DOC-MFG-DATA-GOVERNANCE] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+  - { tool: request_access_link }
+kpi_coverage:
+  - { kpi: KPI-MFG-OEE, grains: [week, month, quarter], slices: [business_unit, plant, line, line_type, shift, shift_lead], depth: rank_drivers }
+  - { kpi: KPI-MFG-AVAILABILITY, grains: [month, quarter], slices: [business_unit, plant, line, line_type], depth: explain }
+  - { kpi: KPI-MFG-PERFORMANCE, grains: [month, quarter], slices: [business_unit, plant, line, line_type], depth: explain }
+  - { kpi: KPI-MFG-QUALITY-RATE, grains: [month, quarter], slices: [business_unit, plant, line], depth: value }
+  - { kpi: KPI-MFG-UNITS, grains: [day, week, month, quarter], slices: [business_unit, plant, line], depth: trend }
+  - { kpi: KPI-MFG-DOWNTIME, grains: [week, month, quarter], slices: [business_unit, plant, line, loss_reason], depth: rank_drivers }
+  - { kpi: KPI-MFG-ENERGY, grains: [month, quarter], slices: [business_unit, plant, line_type], depth: trend }
+  - { kpi: KPI-MFG-SCOPE2, grains: [month, quarter], slices: [business_unit, plant], depth: value }
+  - { kpi: KPI-MFG-OTD, grains: [month, quarter], slices: [business_unit, product_family, sales_region, distributor], depth: trend }
+  - { kpi: KPI-MFG-FILL-RATE, grains: [month, quarter], slices: [business_unit, product_family, sales_region], depth: value }
+  - { kpi: KPI-MFG-ORDER-LEAD-TIME, grains: [month, quarter], slices: [business_unit, product_family], depth: trend }
+  - { kpi: KPI-MFG-ORDER-LINES, grains: [month], slices: [business_unit, sales_region], depth: value }
+instructions: [INS-MFG-001-P, INS-MFG-001-R, INS-MFG-001-G, INS-MFG-001-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: masked, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-MFG-001, SC-MFG-002, SC-MFG-003, SC-MFG-004, SC-MFG-005, SC-MFG-006, SC-MFG-007, SC-MFG-008]

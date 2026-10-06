@@ -1,0 +1,72 @@
+name: ORDER_DELIVERY
+description: Distributor order lines from order to proof of delivery — promise dates, on-time and in-full flags, lead time and value
+tables:
+  - { alias: o, fqn: CONFORMED_GOLD.FCT_ORDER_LINE, pk: order_line_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: o.date_key, to: d.date_key }
+dimensions:
+  - { name: business_unit, expr: o.business_unit, label: Business unit, synonyms: [bu, division, segment, business units], term: GT-MFG-BUSINESS-UNIT }
+  - { name: product_family, expr: o.product_family, label: Product family, synonyms: [product families, product line, family], term: GT-MFG-PRODUCT-FAMILY }
+  - { name: distributor, expr: o.distributor_name, label: Distributor, synonyms: [distributors, channel partner, reseller], term: GT-MFG-DISTRIBUTOR }
+  - { name: sales_region, expr: o.sales_region, label: Sales region, synonyms: [market, sales regions, distributor region] }
+  - { name: distributor_tier, expr: o.distributor_tier, label: Distributor tier, synonyms: [partner tier, tier] }
+  - { name: delivered, expr: o.delivered, label: Delivered, synonyms: [proof of delivery received] }
+  - { name: distributor_email, expr: o.contact_email, label: Distributor contact email, synonyms: [order desk email] }
+  - { name: distributor_phone, expr: o.contact_phone, label: Distributor contact phone, synonyms: [order desk phone] }
+time_dimensions:
+  - { name: delivery_date, expr: d.date, default: true }
+facts:
+  - { name: qty_ordered, expr: o.qty_ordered, description: Units ordered on the line }
+  - { name: net_value, expr: o.net_value_usd, description: Net value of the order line }
+metrics:
+  - name: on_time_delivery_pct
+    label: On-time delivery
+    expr: 100.0 * AVG(CASE WHEN o.on_time THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [otd, on time delivery rate, customer delivery performance, delivered on time]
+    term: GT-MFG-OTD
+    description: Delivered order lines that arrived on or before the first confirmed promise date
+    default_filters: [ { rule: BR-MFG-018 } ]
+  - name: order_fill_rate_pct
+    label: Order fill rate
+    expr: 100.0 * AVG(CASE WHEN o.in_full THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [fill rate, in full rate, line fill rate]
+    term: GT-MFG-FILL-RATE
+    description: Delivered order lines shipped complete
+    default_filters: [ { rule: BR-MFG-018 } ]
+  - name: order_lead_time_days
+    label: Order lead time
+    expr: AVG(o.lead_time_days)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [order cycle time, customer lead time, order to delivery days]
+    term: GT-MFG-ORDER-LEAD-TIME
+    description: Mean days from order to proof of delivery
+    default_filters: [ { rule: BR-MFG-018 } ]
+  - name: order_lines_shipped
+    label: Order lines shipped
+    expr: COUNT(*)
+    unit: lines
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [lines shipped, shipments, order lines delivered]
+    term: GT-MFG-ORDER-LINE
+    description: Order lines delivered in the period
+    default_filters: [ { rule: BR-MFG-018 } ]
+  - name: net_order_value
+    label: Net order value
+    expr: SUM(o.net_value_usd)
+    unit: USD
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [order value, order intake value, sales order value]
+    term: GT-MFG-ORDER-LINE
+    description: Net value of order lines falling due or delivered in the period
+products: [DP-MFG-005]

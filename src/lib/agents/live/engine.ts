@@ -150,8 +150,8 @@ async function groundingContext(deps: LiveDeps, state: ToolState): Promise<Groun
     tolerance: deps.rubrics.grounding.derived_value_tolerance_rel,
     labels: [
       ...[...state.results.values()].flatMap((r) => [...r.rows.flat().filter((v): v is string => typeof v === 'string'), ...r.fields.map((f) => f.label)]),
-      ...pack.kpis.map((k) => k.name),
-      ...pack.semantic.flatMap((v) => v.metrics.map((m) => m.label)),
+      ...pack.kpis.flatMap((k) => [k.name, k.unit]),
+      ...pack.semantic.flatMap((v) => v.metrics.flatMap((m) => [m.label, m.unit])),
     ],
   };
 }

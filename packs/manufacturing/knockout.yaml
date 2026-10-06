@@ -1,0 +1,122 @@
+# Knockout (Why AI-Ready): four governed answers and how each degrades when a layer is switched off (ported from
+# AI-Ready ext/knockout.ts for manufacturing). declared_delta_pct is computed through the real knockout query path at
+# scale M (pnpm knockout:deltas --update).
+answers:
+  - id: KO-MFG-01
+    kpi: KPI-MFG-OEE
+    question: "What was OEE last quarter?"
+    query: { view: PLANT_PERFORMANCE, metrics: [oee_pct], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # CDC duplicates counted and dirty run types ("production ", "TRIAL") mis-filtered by the trial-run rule
+      gold: wrong          # no conformed OEE time base or line master; trial runs not conformed
+      semantic: wrong      # naive formula divides by scheduled time, so planned downtime counts as a loss
+      glossary: ambiguous  # "line efficiency" no longer resolves to OEE
+      context: wrong       # engineering trial runs (BR-MFG-012) are no longer excluded
+      governance: unsafe   # shift-lead names and process recipes reachable unmasked
+    declared_delta_pct: { silver: 0, gold: 0, semantic: -12.6, glossary: 0, context: -4.5, governance: 0 }
+  - id: KO-MFG-02
+    kpi: KPI-MFG-FPY
+    question: "What was first-pass yield last quarter?"
+    query: { view: QUALITY_DEFECTS, metrics: [first_pass_yield_pct], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # duplicate lot updates and deleted lots counted
+      gold: unverified     # same lots from Silver but no certified line conformance
+      semantic: wrong      # naive formula reports unit yield (1 − defect share) instead of lots passed first time
+      glossary: ambiguous  # "right first time" does not resolve to first-pass yield
+      context: wrong       # trial lots (BR-MFG-012) are included
+      governance: unsafe   # no certification, row access or lineage on the answer
+    declared_delta_pct: { silver: 0, gold: 0, semantic: 7.4, glossary: 0, context: -2, governance: 0 }
+  - id: KO-MFG-03
+    kpi: KPI-MFG-SUPPLIER-OTIF
+    question: "What was supplier OTIF last quarter?"
+    query: { view: SUPPLIER_QUALITY, metrics: [supplier_otif_pct], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # duplicate receipt updates counted; receipt dates not derived
+      gold: unverified     # same receipts from Silver without certified supplier conformance
+      semantic: ambiguous  # on-time only versus on-time-in-full both plausible
+      glossary: ambiguous  # "inbound otif" no longer maps to the metric
+      context: wrong       # buyer-rescheduled receipts (BR-MFG-015) are scored against dates the supplier never accepted
+      governance: unsafe   # supplier tax ids and quality contacts unmasked
+    declared_delta_pct: { silver: -0.3, gold: 0, semantic: -1.1, glossary: 0, context: -5.1, governance: 0 }
+  - id: KO-MFG-04
+    kpi: KPI-MFG-DOS
+    question: "What were days of supply last month?"
+    query: { view: INVENTORY_POSITION, metrics: [days_of_supply], timeRange: { last: { n: 1, unit: month } } }
+    failure_by_layer:
+      silver: wrong        # same-day re-sends double count positions and negative stock is not floored
+      gold: unverified     # computed from Silver positions without certified plant conformance
+      semantic: wrong      # naive formula averages per-position cover in units instead of value-weighted cover
+      glossary: ambiguous  # "days of cover" does not resolve
+      context: wrong       # obsolete stock with no usage (BR-MFG-020) inflates cover
+      governance: unsafe   # material-level positions and standard costs exposed without row access
+    declared_delta_pct: { silver: 0.2, gold: 0, semantic: 0.8, glossary: 0, context: 46.4, governance: 0 }
+
+# Silver equivalents the compiler uses when the Gold layer is off (05 §1 step 7). column_map maps a Gold column
+# name to the Silver column (or Silver expression) that replaces it; expressions only use raw columns that exist in
+# both Silver and Bronze, so "Silver off" (Bronze) reuses the same map. Gold surrogate keys map to natural keys on
+# both sides of a join so relationships still resolve; date_key maps to the same integer expression Gold uses.
+# DIM_DATE is a generated calendar with no Silver source and stays in place.
+gold_fallbacks:
+  - gold: CONFORMED_GOLD.FCT_LINE_SHIFT
+    silver: CURATED_SILVER.LINE_SHIFT_PRODUCTION
+    column_map:
+      production_key: event_id
+      line_key: line_id
+      shift_lead_key: lead_badge
+      date_key: "CAST(strftime(shift_date, '%Y%m%d') AS INTEGER)"
+      shift_name: "CASE shift_no WHEN 1 THEN 'Day' WHEN 2 THEN 'Swing' ELSE 'Night' END"
+      planned_production_min: "scheduled_min - planned_down_min"
+      run_min: "scheduled_min - planned_down_min - unplanned_down_min"
+      total_units: units_started
+      good_units: "units_started - scrap_units - rework_units"
+      ideal_total_min: "units_started * ideal_cycle_sec / 60.0"
+      good_ideal_min: "(units_started - scrap_units - rework_units) * ideal_cycle_sec / 60.0"
+  - gold: CONFORMED_GOLD.DIM_LINE
+    silver: CURATED_SILVER.PRODUCTION_LINE
+    column_map:
+      line_key: line_id
+      plant_key: plant_id
+      plant_name: plant_id
+      emission_factor: "0.4"
+  - gold: CONFORMED_GOLD.DIM_OPERATOR
+    silver: CURATED_SILVER.OPERATOR_ROSTER
+    column_map:
+      operator_key: badge_no
+      full_name: "concat(first_name, ' ', last_name)"
+  - gold: CONFORMED_GOLD.FCT_INSPECTION_LOT
+    silver: CURATED_SILVER.INSPECTION_LOT
+    column_map:
+      lot_key: lot_id
+      line_key: line_id
+      date_key: "CAST(strftime(inspection_date, '%Y%m%d') AS INTEGER)"
+      passed_first: "defect_qty = 0"
+      ncr_raised: "defect_qty > 0"
+  - gold: CONFORMED_GOLD.FCT_GOODS_RECEIPT
+    silver: CURATED_SILVER.GOODS_RECEIPT
+    column_map:
+      receipt_key: receipt_id
+      supplier_key: supplier_id
+      plant_key: plant_id
+      date_key: "CAST(strftime(coalesce(promised_date + delay_days, promised_date), '%Y%m%d') AS INTEGER)"
+      on_time: "delay_days <= 0"
+      in_full: "fill_pct = 100"
+      otif: "delay_days <= 0 AND fill_pct = 100"
+      lead_time_days: "date_diff('day', po_date, promised_date + delay_days)"
+  - gold: CONFORMED_GOLD.DIM_SUPPLIER
+    silver: CURATED_SILVER.SUPPLIER_MASTER
+    column_map:
+      supplier_key: supplier_id
+      preferred: preferred_flag
+  - gold: CONFORMED_GOLD.DIM_PLANT
+    silver: CURATED_SILVER.PLANT_SITE
+    column_map:
+      plant_key: plant_id
+  - gold: CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT
+    silver: CURATED_SILVER.INVENTORY_POSITION
+    column_map:
+      snapshot_key: snapshot_id
+      plant_key: plant_id
+      date_key: "CAST(strftime(snapshot_date, '%Y%m%d') AS INTEGER)"
+      on_hand_value_usd: "on_hand_qty * unit_cost_usd"
+      daily_usage_value_usd: "daily_usage_qty * unit_cost_usd"
+      stocked_out: "on_hand_qty = 0"

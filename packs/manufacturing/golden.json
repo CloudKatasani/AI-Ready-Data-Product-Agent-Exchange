@@ -1,0 +1,1006 @@
+{
+  "pack": "manufacturing",
+  "version": "1.0.0",
+  "scale": "M",
+  "scenarios": {
+    "SC-MFG-001": {
+      "agent": "AG-MFG-001",
+      "kind": "answer",
+      "headline": "Industrial Controls had the highest OEE last quarter at 80.3% — within target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "OEE = availability × performance × quality, with planned downtime excluded (BR-MFG-001) and engineering trial runs excluded (BR-MFG-012). Aerospace Components was lowest at 69.9% across 4 business units; company OEE was 75.3%.",
+      "sqlHash": "fd7b08275a13c99d",
+      "columns": [
+        "business_unit",
+        "oee_pct"
+      ],
+      "rows": [
+        [
+          "Industrial Controls",
+          80.3276
+        ],
+        [
+          "Fluid Power",
+          76.0829
+        ],
+        [
+          "Motion Systems",
+          75.6334
+        ],
+        [
+          "Aerospace Components",
+          69.868
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-001@2.1.0",
+        "metric:PLANT_PERFORMANCE.oee_pct",
+        "rule:BR-MFG-012",
+        "verified_query:VQ-MFG-001",
+        "document:DOC-MFG-OEE-STANDARD#5"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Fluid Power had the highest OEE last quarter at 76.2% — within target.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-MFG-002": {
+      "agent": "AG-MFG-001",
+      "kind": "answer",
+      "headline": "Including trial runs, Fluid Power had the highest OEE last quarter at 74.7%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "You asked to include trial runs, so BR-MFG-012 is not applied. Industrial Controls ran new-product trials on about a quarter of its shifts in Q3, which pulls its OEE down and reorders the ranking — compare with the standard production-only view. Company OEE including trials was 71.9%.",
+      "sqlHash": "43751f0dd1052b68",
+      "columns": [
+        "business_unit",
+        "oee_pct"
+      ],
+      "rows": [
+        [
+          "Fluid Power",
+          74.7212
+        ],
+        [
+          "Motion Systems",
+          74.1535
+        ],
+        [
+          "Aerospace Components",
+          68.3106
+        ],
+        [
+          "Industrial Controls",
+          67.7185
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-001@2.1.0",
+        "metric:PLANT_PERFORMANCE.oee_pct",
+        "verified_query:VQ-MFG-001",
+        "document:DOC-MFG-OEE-STANDARD#5"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Including trial runs, Fluid Power had the highest OEE last quarter at 74.8%.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-MFG-003": {
+      "agent": "AG-MFG-001",
+      "kind": "answer",
+      "headline": "Breakdown drove the most unplanned downtime last quarter: 2,281 hours.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "That is 32.8% of 6,948 unplanned hours across 5 loss reasons. Changeover overruns count as unplanned; changeovers up to standard are planned downtime (BR-MFG-003).",
+      "sqlHash": "9b3c76385d071fdd",
+      "columns": [
+        "loss_reason",
+        "unplanned_downtime_hours",
+        "unplanned_downtime_hours_share_pct"
+      ],
+      "rows": [
+        [
+          "Breakdown",
+          2281.37,
+          32.8326
+        ],
+        [
+          "Changeover overrun",
+          1933.83,
+          27.831
+        ],
+        [
+          "Material shortage",
+          1462.27,
+          21.0444
+        ],
+        [
+          "Quality hold",
+          745.25,
+          10.7254
+        ],
+        [
+          "Operator unavailable",
+          525.767,
+          7.56664
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-001@2.1.0",
+        "metric:PLANT_PERFORMANCE.unplanned_downtime_hours",
+        "verified_query:VQ-MFG-004",
+        "document:DOC-MFG-OEE-STANDARD#3"
+      ],
+      "personas": {}
+    },
+    "SC-MFG-004": {
+      "agent": "AG-MFG-001",
+      "kind": "answer",
+      "headline": "OEE is 74.2% year to date.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Monthly OEE over 9 months, production runs only (BR-MFG-012). It moved +3.5 points from the first to the latest month.",
+      "sqlHash": "3a6ef07b8ec4b792",
+      "columns": [
+        "period",
+        "oee_pct"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          71.8056
+        ],
+        [
+          "2026-02-01",
+          71.8493
+        ],
+        [
+          "2026-03-01",
+          71.9675
+        ],
+        [
+          "2026-04-01",
+          75.8591
+        ],
+        [
+          "2026-05-01",
+          75.4174
+        ],
+        [
+          "2026-06-01",
+          75.3951
+        ],
+        [
+          "2026-07-01",
+          75.4511
+        ],
+        [
+          "2026-08-01",
+          75.0435
+        ],
+        [
+          "2026-09-01",
+          75.2815
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-001@2.1.0",
+        "metric:PLANT_PERFORMANCE.oee_pct",
+        "rule:BR-MFG-012",
+        "verified_query:VQ-MFG-010",
+        "document:DOC-MFG-OEE-STANDARD#1"
+      ],
+      "personas": {}
+    },
+    "SC-MFG-005": {
+      "agent": "AG-MFG-001",
+      "kind": "answer",
+      "headline": "The lowest shift-lead OEE last month was 47.0%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Shift-lead names are personal data and are masked unless your persona is cleared for PII. Low OEE usually follows the line, not the person — compare with the line's own trend before drawing conclusions. Showing the 5 lowest of last month's shift leads.",
+      "sqlHash": "18cafa84b72a4e61",
+      "columns": [
+        "shift_lead",
+        "oee_pct"
+      ],
+      "rows": [
+        [
+          "Emily Campbell",
+          46.967
+        ],
+        [
+          "Hana Clark",
+          61.4026
+        ],
+        [
+          "Elizabeth Torres",
+          61.4968
+        ],
+        [
+          "Matthew Campbell",
+          64.8543
+        ],
+        [
+          "Omar Allen",
+          66.6895
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-001@2.1.0",
+        "metric:PLANT_PERFORMANCE.oee_pct",
+        "rule:BR-MFG-012",
+        "document:DOC-MFG-OEE-STANDARD#7"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "The lowest shift-lead OEE last month was 58.6%.",
+          "rowFiltered": true,
+          "masked": [
+            "shift_lead"
+          ]
+        },
+        "D": {
+          "kind": "answer",
+          "headline": "The lowest shift-lead OEE last month was 47.0%.",
+          "rowFiltered": false,
+          "masked": []
+        }
+      }
+    },
+    "SC-MFG-006": {
+      "agent": "AG-MFG-001",
+      "kind": "answer",
+      "headline": "On-time delivery was 86.2% last month — below target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Order to Delivery is still in certification, so treat this figure as provisional. Measured on delivered order lines against the first confirmed promise date (BR-MFG-017, BR-MFG-018).",
+      "sqlHash": "63aafe1112c02266",
+      "columns": [
+        "on_time_delivery_pct"
+      ],
+      "rows": [
+        [
+          86.174
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-005@1.0.0-rc.1",
+        "metric:ORDER_DELIVERY.on_time_delivery_pct",
+        "rule:BR-MFG-018",
+        "verified_query:VQ-MFG-058",
+        "document:DOC-MFG-DELIVERY-POLICY#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "decline",
+          "headline": "You don’t have access to Order to Delivery yet."
+        }
+      }
+    },
+    "SC-MFG-007": {
+      "agent": "AG-MFG-001",
+      "kind": "answer",
+      "headline": "Units produced moved by −15,856 from the first to the latest quarter this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Good units on every run type (BR-MFG-006) for each of the 3 quarters this year; 7,516,170 good units year to date.",
+      "sqlHash": "312dcd0785bb29b1",
+      "columns": [
+        "period",
+        "units_produced"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          2482830
+        ],
+        [
+          "2026-04-01",
+          2566360
+        ],
+        [
+          "2026-07-01",
+          2466980
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-001@2.1.0",
+        "metric:PLANT_PERFORMANCE.units_produced",
+        "verified_query:VQ-MFG-005",
+        "document:DOC-MFG-OEE-STANDARD#7"
+      ],
+      "personas": {}
+    },
+    "SC-MFG-008": {
+      "agent": "AG-MFG-001",
+      "kind": "decline",
+      "headline": "I can't change line speeds or machine settings — that is outside what this agent is allowed to do.",
+      "narrative": "Line speeds and cycle times are set by process engineering under change control, against the controlled process recipe. I can show you OEE, availability and the top loss reasons for the line so the engineer has the evidence.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-MFG-009": {
+      "agent": "AG-MFG-002",
+      "kind": "answer",
+      "headline": "Dimensional out of tolerance cost the most last quarter: $535,248 in cost of poor quality.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Ranked over the top 5 defect codes; total cost of poor quality was $1,659,588 (BR-MFG-008 — scrap, rework labour and investigation; warranty reported separately).",
+      "sqlHash": "1b823c93d2fa8bc2",
+      "columns": [
+        "defect_code",
+        "copq_usd"
+      ],
+      "rows": [
+        [
+          "Dimensional out of tolerance",
+          535248
+        ],
+        [
+          "Burr or sharp edge",
+          240161
+        ],
+        [
+          "Surface finish",
+          176648
+        ],
+        [
+          "Torque out of spec",
+          172943
+        ],
+        [
+          "Leak test failure",
+          165906
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-002@1.6.2",
+        "metric:QUALITY_DEFECTS.copq_usd",
+        "verified_query:VQ-MFG-016",
+        "document:DOC-MFG-QUALITY-PROCEDURES#3"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Dimensional out of tolerance cost the most last quarter: $213,877 in cost of poor quality.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-MFG-010": {
+      "agent": "AG-MFG-002",
+      "kind": "answer",
+      "headline": "The Night shift scraps the most at 3.38% of units started.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Swing is lowest at 2.01%. Rework follows the same pattern (1.45% on Night). Production runs only (BR-MFG-012).",
+      "sqlHash": "76df975e054e9e86",
+      "columns": [
+        "shift",
+        "scrap_rate_pct",
+        "rework_rate_pct"
+      ],
+      "rows": [
+        [
+          "Night",
+          3.38014,
+          1.44695
+        ],
+        [
+          "Day",
+          2.01499,
+          1.10089
+        ],
+        [
+          "Swing",
+          2.01096,
+          1.12414
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-001@2.1.0",
+        "metric:PLANT_PERFORMANCE.scrap_rate_pct",
+        "metric:PLANT_PERFORMANCE.rework_rate_pct",
+        "rule:BR-MFG-012",
+        "document:DOC-MFG-OEE-STANDARD#5"
+      ],
+      "personas": {}
+    },
+    "SC-MFG-011": {
+      "agent": "AG-MFG-002",
+      "kind": "answer",
+      "headline": "Kovalam Park had the lowest right-first-time rate last quarter at 78.0%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "\"Right first time\" maps to first-pass yield: lots accepted at first inspection with no defects, concessions counted as failures (BR-MFG-007), trial lots excluded (BR-MFG-012). Across 22 plants first-pass yield was 92.7%.",
+      "sqlHash": "991304fdc0b7c292",
+      "columns": [
+        "plant",
+        "first_pass_yield_pct"
+      ],
+      "rows": [
+        [
+          "Kovalam Park",
+          78
+        ],
+        [
+          "Oakhurst",
+          90.2174
+        ],
+        [
+          "Harlow Field",
+          90.9091
+        ],
+        [
+          "Rio Verde",
+          91.7808
+        ],
+        [
+          "Dunmore Flats",
+          92.437
+        ],
+        [
+          "Huaxi",
+          92.6357
+        ],
+        [
+          "Linhe",
+          92.7273
+        ],
+        [
+          "San Telmo",
+          92.7907
+        ],
+        [
+          "Quenby",
+          92.887
+        ],
+        [
+          "Montcalm",
+          92.9348
+        ],
+        [
+          "Lesna",
+          93
+        ],
+        [
+          "Glenrock",
+          93.038
+        ],
+        [
+          "Bayan Tinggi",
+          93.0693
+        ],
+        [
+          "Meerbrug",
+          93.1034
+        ],
+        [
+          "Serra Clara",
+          93.7063
+        ],
+        [
+          "Ashby Mills",
+          94.2675
+        ],
+        [
+          "Corran Falls",
+          94.4444
+        ],
+        [
+          "Saint-Aubry",
+          94.6429
+        ],
+        [
+          "Navapur",
+          94.8718
+        ],
+        [
+          "Valle Alto",
+          95.0739
+        ],
+        [
+          "Brackwater",
+          95.4098
+        ],
+        [
+          "Hartwell",
+          95.4128
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-002@1.6.2",
+        "metric:QUALITY_DEFECTS.first_pass_yield_pct",
+        "rule:BR-MFG-012",
+        "verified_query:VQ-MFG-022",
+        "document:DOC-MFG-QUALITY-PROCEDURES#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Kovalam Park had the lowest right-first-time rate last quarter at 78.0%.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-MFG-012": {
+      "agent": "AG-MFG-002",
+      "kind": "answer",
+      "headline": "The warranty claim rate is 4.79 claims per thousand units shipped this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Only lots shipped more than 90 days ago are included, so the early-life claim window is complete (BR-MFG-021).",
+      "sqlHash": "6db874c0c2abbccb",
+      "columns": [
+        "warranty_claim_rate"
+      ],
+      "rows": [
+        [
+          4.78764
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-002@1.6.2",
+        "metric:FIELD_WARRANTY.warranty_claim_rate",
+        "rule:BR-MFG-021",
+        "document:DOC-MFG-QUALITY-PROCEDURES#5"
+      ],
+      "personas": {}
+    },
+    "SC-MFG-013": {
+      "agent": "AG-MFG-002",
+      "kind": "clarify",
+      "headline": "\"Quality\" can mean a few things — which one do you need?",
+      "narrative": "I can show first-pass yield, scrap rate, cost of poor quality or the field warranty claim rate. Pick one and a period.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-MFG-014": {
+      "agent": "AG-MFG-003",
+      "kind": "answer",
+      "headline": "Planned maintenance is 76.2% of work orders this year — below target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Preventive work orders as a share of all maintenance work orders; maintenance standard MS-201 asks for at least 80% (BR-MFG-011).",
+      "sqlHash": "5c0d57ee71d0db4b",
+      "columns": [
+        "planned_maintenance_pct",
+        "planned_maintenance_pct_target_min",
+        "planned_maintenance_pct_target_max"
+      ],
+      "rows": [
+        [
+          76.1998,
+          80,
+          92
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-003@1.3.0",
+        "metric:ASSET_RELIABILITY.planned_maintenance_pct",
+        "document:DOC-MFG-MAINTENANCE-STANDARD#2"
+      ],
+      "personas": {}
+    },
+    "SC-MFG-015": {
+      "agent": "AG-MFG-003",
+      "kind": "answer",
+      "headline": "AS-0042 had the lowest MTBF last quarter at 46.2 hours between failures.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "AS-0042 failed 5 times. Only corrective work orders count as failures (BR-MFG-010); a criticality A asset below 150 hours enters a reliability review (BR-MFG-011).",
+      "sqlHash": "06f777cd8370868d",
+      "columns": [
+        "asset",
+        "mtbf_hours",
+        "failures"
+      ],
+      "rows": [
+        [
+          "AS-0042",
+          46.176,
+          5
+        ],
+        [
+          "AS-0313",
+          59.5,
+          1
+        ],
+        [
+          "AS-0131",
+          85.5,
+          1
+        ],
+        [
+          "AS-0229",
+          99.4,
+          1
+        ],
+        [
+          "AS-0196",
+          102.4,
+          1
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-003@1.3.0",
+        "metric:ASSET_RELIABILITY.mtbf_hours",
+        "metric:ASSET_RELIABILITY.failures",
+        "document:DOC-MFG-MAINTENANCE-STANDARD#4"
+      ],
+      "personas": {}
+    },
+    "SC-MFG-016": {
+      "agent": "AG-MFG-003",
+      "kind": "answer",
+      "headline": "Across 7 asset types, the median MTTR is 4.01 hours.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "The middle 80% of asset types sit between 3.78 and 4.52 hours; the slowest type averages 4.61 hours to repair (BR-MFG-013).",
+      "sqlHash": "40d0b7966e6178d8",
+      "columns": [
+        "asset_type_count",
+        "mttr_hours_p10",
+        "mttr_hours_p50",
+        "mttr_hours_p90",
+        "mttr_hours_min",
+        "mttr_hours_max"
+      ],
+      "rows": [
+        [
+          7,
+          3.78106,
+          4.00865,
+          4.51535,
+          3.64383,
+          4.614
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-003@1.3.0",
+        "metric:ASSET_RELIABILITY.mttr_hours",
+        "verified_query:VQ-MFG-030",
+        "document:DOC-MFG-MAINTENANCE-STANDARD#1"
+      ],
+      "personas": {}
+    },
+    "SC-MFG-017": {
+      "agent": "AG-MFG-003",
+      "kind": "answer",
+      "headline": "Fluid Power had the most unplanned failures last quarter: 173.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Corrective work orders across 4 business units you are entitled to see; the business-unit row access policy applies.",
+      "sqlHash": "29217737e28a8b39",
+      "columns": [
+        "business_unit",
+        "failures"
+      ],
+      "rows": [
+        [
+          "Fluid Power",
+          173
+        ],
+        [
+          "Aerospace Components",
+          94
+        ],
+        [
+          "Motion Systems",
+          89
+        ],
+        [
+          "Industrial Controls",
+          44
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-003@1.3.0",
+        "metric:ASSET_RELIABILITY.failures",
+        "document:DOC-MFG-MAINTENANCE-STANDARD#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Fluid Power had the most unplanned failures last quarter: 173.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-MFG-018": {
+      "agent": "AG-MFG-003",
+      "kind": "redirect",
+      "headline": "That's a supply chain question — the Supply Chain Analyst answers it.",
+      "narrative": "I cover asset reliability and maintenance. The Supply Chain Analyst is certified on supplier OTIF, incoming PPM and lead time, including the spares suppliers maintenance depends on.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-MFG-019": {
+      "agent": "AG-MFG-004",
+      "kind": "answer",
+      "headline": "Supplier OTIF was 87.6% last quarter.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Receipts on or before the promise date and in full, excluding receipts whose promise date the buyer rescheduled (BR-MFG-015). Suppliers below 90% for the quarter receive a SCAR (BR-MFG-014).",
+      "sqlHash": "c09ed274632c1eb3",
+      "columns": [
+        "supplier_otif_pct"
+      ],
+      "rows": [
+        [
+          87.5853
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-004@2.0.1",
+        "metric:SUPPLIER_QUALITY.supplier_otif_pct",
+        "rule:BR-MFG-015",
+        "verified_query:VQ-MFG-038",
+        "document:DOC-MFG-SUPPLIER-MANUAL#1"
+      ],
+      "personas": {}
+    },
+    "SC-MFG-020": {
+      "agent": "AG-MFG-004",
+      "kind": "answer",
+      "headline": "Ironwood Partners has the worst incoming quality this year at 5,109 PPM.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Parts rejected at incoming inspection per million received (BR-MFG-016); overall supplier PPM is 812. The supplier quality manual targets 250 PPM for electronic components.",
+      "sqlHash": "7c8cfc6e2ee8b948",
+      "columns": [
+        "supplier",
+        "supplier_ppm"
+      ],
+      "rows": [
+        [
+          "Ironwood Partners",
+          5109.2
+        ],
+        [
+          "Apex Supply Co.",
+          823.889
+        ],
+        [
+          "Northstar Partners",
+          741.321
+        ],
+        [
+          "Northstar Works",
+          716.723
+        ],
+        [
+          "Granite Partners",
+          686.735
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-004@2.0.1",
+        "metric:SUPPLIER_QUALITY.supplier_ppm",
+        "verified_query:VQ-MFG-045",
+        "document:DOC-MFG-SUPPLIER-MANUAL#1"
+      ],
+      "personas": {}
+    },
+    "SC-MFG-021": {
+      "agent": "AG-MFG-004",
+      "kind": "answer",
+      "headline": "Including obsolete stock, MRO spare carries the most cover at 85.0 days of supply.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "You asked to include obsolete stock, so BR-MFG-020 is not applied. Obsolete materials have no usage, so every class looks longer-covered than it is — company cover including obsolete stock was 45.9 days. Compare with the standard active-materials view.",
+      "sqlHash": "671fd5f105cbe095",
+      "columns": [
+        "material_class",
+        "days_of_supply"
+      ],
+      "rows": [
+        [
+          "MRO spare",
+          85.0014
+        ],
+        [
+          "Purchased component",
+          44.5603
+        ],
+        [
+          "Finished goods",
+          40.5025
+        ],
+        [
+          "Work in progress",
+          36.7255
+        ],
+        [
+          "Raw material",
+          32.4112
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-006@1.4.0",
+        "metric:INVENTORY_POSITION.days_of_supply",
+        "verified_query:VQ-MFG-049",
+        "document:DOC-MFG-INVENTORY-POLICY#2"
+      ],
+      "personas": {}
+    },
+    "SC-MFG-022": {
+      "agent": "AG-MFG-004",
+      "kind": "answer",
+      "headline": "MRO spare carries the most cover at 62.4 days of supply.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Active materials only (BR-MFG-020). Work in progress is leanest at 24.7 days; company cover was 31.4 days across 5 material classes.",
+      "sqlHash": "e5bd3670ad7081c3",
+      "columns": [
+        "material_class",
+        "days_of_supply"
+      ],
+      "rows": [
+        [
+          "MRO spare",
+          62.408
+        ],
+        [
+          "Finished goods",
+          26.8072
+        ],
+        [
+          "Purchased component",
+          26.1356
+        ],
+        [
+          "Raw material",
+          26.0447
+        ],
+        [
+          "Work in progress",
+          24.674
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-006@1.4.0",
+        "metric:INVENTORY_POSITION.days_of_supply",
+        "rule:BR-MFG-020",
+        "verified_query:VQ-MFG-049",
+        "document:DOC-MFG-INVENTORY-POLICY#3"
+      ],
+      "personas": {}
+    },
+    "SC-MFG-023": {
+      "agent": "AG-MFG-004",
+      "kind": "answer",
+      "headline": "Supplier lead time moved +2.4 days from the first to the latest quarter this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Average days from purchase order to goods receipt for each of the 3 quarters this year.",
+      "sqlHash": "64315aa8b5969c40",
+      "columns": [
+        "period",
+        "supplier_lead_time_days"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          23.7714
+        ],
+        [
+          "2026-04-01",
+          24.5606
+        ],
+        [
+          "2026-07-01",
+          26.1394
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-004@2.0.1",
+        "metric:SUPPLIER_QUALITY.supplier_lead_time_days",
+        "document:DOC-MFG-SUPPLIER-MANUAL#1"
+      ],
+      "personas": {}
+    },
+    "SC-MFG-024": {
+      "agent": "AG-MFG-004",
+      "kind": "answer",
+      "headline": "Bar & plate accounts for the largest share of inbound receipt value this year: 21.6%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Total inbound receipt value was $89,914,280 across 10 commodities. Prices and standard costs are not disclosed (BR-MFG-026).",
+      "sqlHash": "a44c7f08510f01d5",
+      "columns": [
+        "commodity",
+        "receipt_value_usd",
+        "receipt_value_usd_share_pct"
+      ],
+      "rows": [
+        [
+          "Bar & plate",
+          19431900,
+          21.6115
+        ],
+        [
+          "Castings & forgings",
+          13249000,
+          14.7351
+        ],
+        [
+          "Printed circuit boards",
+          12713500,
+          14.1396
+        ],
+        [
+          "Shafts & gears",
+          10381600,
+          11.5461
+        ],
+        [
+          "Electronic components",
+          9030160,
+          10.0431
+        ],
+        [
+          "Aerospace alloys",
+          6371760,
+          7.08648
+        ],
+        [
+          "Hydraulic fittings",
+          6267080,
+          6.97006
+        ],
+        [
+          "Fasteners",
+          6251540,
+          6.95278
+        ],
+        [
+          "Bearings",
+          3423580,
+          3.8076
+        ],
+        [
+          "Seals & gaskets",
+          2794160,
+          3.10758
+        ]
+      ],
+      "citations": [
+        "product:DP-MFG-004@2.0.1",
+        "metric:SUPPLIER_QUALITY.receipt_value_usd",
+        "document:DOC-MFG-SUPPLIER-MANUAL#3"
+      ],
+      "personas": {}
+    },
+    "SC-MFG-025": {
+      "agent": "AG-MFG-005",
+      "kind": "help",
+      "headline": "I explain governance across the manufacturing data estate — I don't analyse business KPIs.",
+      "narrative": "Ask me what a glossary term or metric means, the certification status of a data product, or where governance gaps such as missing stewards or masking sit. For KPI numbers, ask the domain agents.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-MFG-026": {
+      "agent": "AG-MFG-005",
+      "kind": "decline",
+      "headline": "I can't certify or publish products — agents act, humans decide.",
+      "narrative": "Certification is decided by the governance council at gate 11 and access by the product's steward through the access workflow. I can show you which certification checks are still open and who must approve them.",
+      "citations": [],
+      "personas": {}
+    }
+  }
+}

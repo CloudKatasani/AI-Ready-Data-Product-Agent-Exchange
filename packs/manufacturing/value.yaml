@@ -1,0 +1,81 @@
+# Value cases per product (marketplace value model, MFG manifests). All figures are illustrative and synthetic.
+- id: VC-MFG-001
+  product: DP-MFG-001
+  hypothesis: One certified OEE, with planned downtime and trial runs handled the same way everywhere, directs engineering support to the lines with the largest recoverable losses.
+  baseline: "Daily stand-ups from each line's own downtime log; about 45 manual minutes per production question; OEE computed three different ways across business units."
+  benefit_model: "recovered_production_hours * contribution_margin_per_hour + questions_per_year * minutes_saved / 60 * loaded_analyst_rate"
+  assumptions:
+    - { text: "Production hours recovered per year on the worst lines", value: 2600, unit: hours, source: "Operations excellence pilot on eight lines, 2026" }
+    - { text: "Contribution margin per line hour (synthetic)", value: 410, unit: usd_per_hour, source: "Synthetic finance summary" }
+    - { text: "Manual minutes per production question", value: 45, unit: minutes, source: "Analyst time study (n=28)" }
+    - { text: "Production questions per year", value: 2400, unit: questions, source: "Operations analytics request log" }
+    - { text: "Fully loaded analyst rate", value: 88, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 1224400
+  measured: { value_usd: 1018000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-MFG-002
+  product: DP-MFG-002
+  hypothesis: Ranking defect codes by cost of poor quality focuses 8D corrective actions on the costliest failure modes and cuts scrap and rework cost.
+  baseline: "Inspection exports pivoted by hand each week; corrective actions opened on the most frequent rather than the costliest defects."
+  benefit_model: "copq_reduction_pct * annual_copq + warranty_cost_avoided"
+  assumptions:
+    - { text: "Reduction in cost of poor quality on targeted defect codes", value: 12, unit: percent, source: "Quality excellence plan FY27" }
+    - { text: "Annual cost of poor quality (synthetic)", value: 6400000, unit: usd, source: "Synthetic finance summary" }
+    - { text: "Warranty cost avoided per year on hydraulic pump seals", value: 380000, unit: usd, source: "Field quality review, 2026" }
+  annual_value_usd: 1148000
+  measured: { value_usd: 902000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-MFG-003
+  product: DP-MFG-003
+  hypothesis: Visible MTBF by asset and criticality moves maintenance effort from calendar PM on reliable assets to the critical assets that keep failing.
+  baseline: "EAM exports reconciled against MES downtime in a desktop database; reliability reviews by rotation."
+  benefit_model: "unplanned_downtime_hours_avoided * contribution_margin_per_hour + maintenance_cost_avoided"
+  assumptions:
+    - { text: "Unplanned downtime hours avoided per year", value: 1400, unit: hours, source: "Reliability engineering pilot, 2026" }
+    - { text: "Contribution margin per line hour (synthetic)", value: 410, unit: usd_per_hour, source: "Synthetic finance summary" }
+    - { text: "Maintenance cost avoided per year", value: 210000, unit: usd, source: "Maintenance budget FY26" }
+  annual_value_usd: 784000
+  measured: { value_usd: 611000, period: "2026-Q1..2026-Q3 annualised", confidence: low }
+- id: VC-MFG-004
+  product: DP-MFG-004
+  hypothesis: Fair supplier OTIF (excluding buyer pull-ins) and incoming PPM by supplier focus SCARs on the suppliers that really underperform.
+  baseline: "Supplier portal exports merged with inspection logs monthly by a commodity analyst; suppliers disputing scores measured against moved dates."
+  benefit_model: "line_stoppage_hours_avoided * contribution_margin_per_hour + incoming_inspection_cost_avoided"
+  assumptions:
+    - { text: "Line stoppage hours avoided per year from material shortages", value: 900, unit: hours, source: "Supply chain review of 2025 shortages" }
+    - { text: "Contribution margin per line hour (synthetic)", value: 410, unit: usd_per_hour, source: "Synthetic finance summary" }
+    - { text: "Incoming inspection and sorting cost avoided per year", value: 160000, unit: usd, source: "Supplier quality cost model FY26" }
+  annual_value_usd: 529000
+  measured: { value_usd: 455000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-MFG-005
+  product: DP-MFG-005
+  hypothesis: A certified on-time delivery measured against the first promise date exposes late Aerospace deliveries early and protects distributor relationships.
+  baseline: "ERP delivery report rebuilt at month-end with re-promised dates mixed in; about 30 analyst hours a month."
+  benefit_model: "late_penalties_avoided + retained_distributor_margin + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Late-delivery penalties avoided per year", value: 240000, unit: usd, source: "Customer operations 2025 penalty summary" }
+    - { text: "Distributor margin retained per year (synthetic)", value: 300000, unit: usd, source: "Synthetic finance summary" }
+    - { text: "Analyst hours saved per year", value: 360, unit: hours, source: "Customer operations time study" }
+    - { text: "Fully loaded analyst rate", value: 88, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 571680
+  measured: null
+- id: VC-MFG-006
+  product: DP-MFG-006
+  hypothesis: Days of supply on active materials, with obsolete stock separated, releases working capital and prevents stockouts on purchased components.
+  baseline: "Manual comparison of the schedule against ERP stock reports; obsolete stock hidden in cover figures."
+  benefit_model: "inventory_reduction * carrying_cost_rate + stockout_hours_avoided * contribution_margin_per_hour"
+  assumptions:
+    - { text: "Inventory reduction on over-covered active materials (synthetic)", value: 2800000, unit: usd, source: "Synthetic finance summary" }
+    - { text: "Annual carrying cost rate", value: 0.2, unit: ratio, source: "Finance planning FY26" }
+    - { text: "Line hours lost to stockouts avoided per year", value: 500, unit: hours, source: "Materials planning review, 2026" }
+    - { text: "Contribution margin per line hour (synthetic)", value: 410, unit: usd_per_hour, source: "Synthetic finance summary" }
+  annual_value_usd: 765000
+  measured: { value_usd: 590000, period: "2026-Q1..2026-Q3 annualised", confidence: low }
+- id: VC-MFG-007
+  product: DP-MFG-007
+  hypothesis: One governed TRIR per plant directs safety stand-downs and ergonomic investment to the plants with emerging injury clusters.
+  baseline: "Each plant compiles a monthly safety deck from incident logs and HR hours with its own definitions."
+  benefit_model: "recordable_incidents_avoided * average_cost_per_recordable"
+  assumptions:
+    - { text: "Recordable incidents avoided per year", value: 9, unit: incidents, source: "EHS improvement plan FY27" }
+    - { text: "Average direct and indirect cost per recordable incident (synthetic)", value: 42000, unit: usd, source: "Synthetic EHS cost model" }
+  annual_value_usd: 378000
+  measured: null

@@ -1,0 +1,82 @@
+# Inspection lot, NCR and warranty DQ rules.
+- id: DQ-MFG-015
+  object: CONFORMED_GOLD.FCT_INSPECTION_LOT
+  column: lot_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: "One row per inspection lot after CDC deduplication."
+- id: DQ-MFG-016
+  object: CONFORMED_GOLD.FCT_INSPECTION_LOT
+  column: passed_first
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: "Every lot carries a first-pass result (first-pass yield)."
+- id: DQ-MFG-017
+  object: CONFORMED_GOLD.FCT_INSPECTION_LOT
+  column: copq_usd
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: "Cost of poor quality is never negative."
+- id: DQ-MFG-018
+  object: CONFORMED_GOLD.FCT_INSPECTION_LOT
+  column: copq_usd
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: "Every lot carries a COPQ value (zero when it passed)."
+- id: DQ-MFG-019
+  object: CONFORMED_GOLD.FCT_INSPECTION_LOT
+  column: inspection_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: "Inspection lots are no more than one day behind the reporting date."
+- id: DQ-MFG-020
+  object: CONFORMED_GOLD.FCT_INSPECTION_LOT
+  column: defect_qty
+  dimension: validity
+  assertion: "min >= 0"
+  severity: medium
+  alert_route: engineering
+  description: "Defect counts are never negative."
+- id: DQ-MFG-021
+  object: CONFORMED_GOLD.FCT_INSPECTION_LOT
+  column: lot_type
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Production, Trial]
+  severity: high
+  alert_route: steward
+  description: "Lot types conform to Production and Trial so BR-MFG-012 can be applied."
+- id: DQ-MFG-022
+  object: CONFORMED_GOLD.FCT_WARRANTY_LOT
+  column: claims
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: "Warranty claim counts are never negative."
+- id: DQ-MFG-023
+  object: CONFORMED_GOLD.FCT_WARRANTY_LOT
+  column: claims
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: "Every shipped lot carries a claim count (zero when none)."
+- id: DQ-MFG-024
+  object: CONFORMED_GOLD.FCT_WARRANTY_LOT
+  column: units_shipped
+  dimension: validity
+  assertion: "min > 0"
+  severity: high
+  alert_route: engineering
+  description: "Every tracked lot shipped at least one unit."

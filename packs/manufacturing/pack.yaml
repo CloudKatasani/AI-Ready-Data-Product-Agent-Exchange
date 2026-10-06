@@ -1,0 +1,50 @@
+id: manufacturing
+name: Manufacturing
+version: 1.0.0
+depth: deep
+code: MFG
+industry: Discrete industrial components manufacturing
+company:
+  name: Forgepoint Industries
+  short: FPI
+  hq: Calderbrook
+  description: Diversified industrial components manufacturer running 22 plants and 80 production lines across four business units, selling through a network of 120 distributors
+database: FPI_AI_PLATFORM
+locale: en-US
+currency: USD
+asOf: 2026-09-30
+seed: 20261009
+regions: [Motion Systems, Fluid Power, Industrial Controls, Aerospace Components]
+overridable:
+  regions: true
+  companyName: true
+  terms: [plant, production line, business unit, distributor]
+home:
+  heroQuestion: "What was OEE by business unit last quarter, excluding trial runs?"
+  heroAgent: AG-MFG-001
+  headlineKpis: [KPI-MFG-OEE, KPI-MFG-FPY, KPI-MFG-OTD, KPI-MFG-MTBF]
+  theatreScenarios: [SC-MFG-001, SC-MFG-009, SC-MFG-019]
+icon: factory
+hook: Production, quality, maintenance and supplier data — governed for AI
+story_roles:
+  heroScenario: SC-MFG-001
+  certDemoProduct: DP-MFG-005
+  lifecycleDemoProduct: DP-MFG-007
+  incidentForStory: INC-MFG-LATE-FEED
+  knockoutKpi: KPI-MFG-OEE
+  qualityFixAgent: AG-MFG-002
+lint_terms:
+  - Forgepoint
+  - Calderbrook
+  - OEE
+  - MTBF
+  - MTTR
+  - first-pass yield
+  - COPQ
+  - nonconformance
+  - shift lead
+  - changeover
+  - TRIR
+  - Motion Systems
+  - Fluid Power
+  - Aerospace Components

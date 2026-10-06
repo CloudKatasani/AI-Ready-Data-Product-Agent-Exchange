@@ -1,0 +1,398 @@
+# KPIs with target bands, calibrated against the scale-M warehouse (AI-Ready manufacturing KPI_RANGES + Marketplace MFG
+# KPI manifests). `window` is evaluated relative to pack asOf; `last n unit` = the n most recent complete units (ADR-0011).
+- id: KPI-MFG-OEE
+  name: OEE
+  definition: "Share of planned production time that produced good units at nameplate speed, production runs only, last quarter"
+  formula: "availability × performance × quality; planned downtime and trial runs excluded"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 72, max: 80 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-OEE
+  metric: oee_pct
+  products: [DP-MFG-001]
+- id: KPI-MFG-AVAILABILITY
+  name: OEE availability
+  definition: "Run time as a share of planned production time, production runs only, last quarter"
+  formula: "run time ÷ planned production time"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 88, max: 94 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-AVAILABILITY
+  metric: availability_pct
+  products: [DP-MFG-001]
+- id: KPI-MFG-PERFORMANCE
+  name: OEE performance
+  definition: "Units started at nameplate cycle time as a share of run time, production runs only, last quarter"
+  formula: "ideal cycle time × units started ÷ run time"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 85, max: 92 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-PERFORMANCE
+  metric: performance_pct
+  products: [DP-MFG-001]
+- id: KPI-MFG-QUALITY-RATE
+  name: OEE quality rate
+  definition: "Units good first time as a share of units started, production runs only, last quarter"
+  formula: "good units ÷ units started"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 95.5, max: 98.5 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-QUALITY-RATE
+  metric: quality_rate_pct
+  products: [DP-MFG-001]
+- id: KPI-MFG-UNITS
+  name: Units produced
+  definition: "Good units completed across all lines in the quarter"
+  formula: "sum of good units"
+  unit: "units"
+  direction: higher_is_better
+  target: { min: 2200000, max: 2900000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-UNITS
+  metric: units_produced
+  products: [DP-MFG-001]
+- id: KPI-MFG-DOWNTIME
+  name: Unplanned downtime hours
+  definition: "Hours of unplanned stoppage inside planned production time in the quarter"
+  formula: "sum of unplanned downtime minutes ÷ 60"
+  unit: "hours"
+  direction: lower_is_better
+  target: { min: 5500, max: 7500 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-UNPLANNED-DOWNTIME
+  metric: unplanned_downtime_hours
+  products: [DP-MFG-001]
+- id: KPI-MFG-SCRAP
+  name: Scrap rate
+  definition: "Scrapped units as a share of units started, production runs only, last quarter"
+  formula: "scrap units ÷ units started"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 1.5, max: 3.0 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-SCRAP
+  metric: scrap_rate_pct
+  products: [DP-MFG-001]
+- id: KPI-MFG-REWORK
+  name: Rework rate
+  definition: "Reworked units as a share of units started, production runs only, last quarter"
+  formula: "rework units ÷ units started"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 0.8, max: 1.6 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-REWORK
+  metric: rework_rate_pct
+  products: [DP-MFG-001]
+- id: KPI-MFG-ENERGY
+  name: Energy per unit
+  definition: "Metered kWh per good unit produced in the quarter"
+  formula: "energy kWh ÷ good units"
+  unit: "kWh"
+  direction: lower_is_better
+  target: { min: 1.6, max: 2.4 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-ENERGY
+  metric: energy_per_unit_kwh
+  products: [DP-MFG-001]
+- id: KPI-MFG-SCOPE2
+  name: Scope 2 emissions
+  definition: "Location-based emissions from purchased electricity in the quarter"
+  formula: "sum of kWh × plant grid factor ÷ 1,000"
+  unit: "tCO2e"
+  direction: lower_is_better
+  target: { min: 1500, max: 2600 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-SCOPE2
+  metric: scope2_emissions_t
+  products: [DP-MFG-001]
+- id: KPI-MFG-FPY
+  name: First-pass yield
+  definition: "Inspection lots accepted at first inspection, production lots only, last quarter"
+  formula: "lots passed first time ÷ lots inspected"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 91, max: 96 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-FPY
+  metric: first_pass_yield_pct
+  products: [DP-MFG-002]
+- id: KPI-MFG-DPM
+  name: Defects per million
+  definition: "Defects found per million units inspected, production lots only, last quarter"
+  formula: "defects ÷ units inspected × 1,000,000"
+  unit: "ppm"
+  direction: lower_is_better
+  target: { min: 1500, max: 3000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-DPM
+  metric: defects_ppm
+  products: [DP-MFG-002]
+- id: KPI-MFG-NCR
+  name: Nonconformances
+  definition: "Nonconformance reports raised in the quarter"
+  formula: "count of lots with an NCR"
+  unit: "NCRs"
+  direction: lower_is_better
+  target: { min: 250, max: 420 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-NCR
+  metric: ncr_count
+  products: [DP-MFG-002]
+- id: KPI-MFG-COPQ
+  name: Cost of poor quality
+  definition: "Scrap, rework and investigation cost of nonconforming lots in the quarter"
+  formula: "sum of COPQ on NCR lots"
+  unit: "USD"
+  direction: lower_is_better
+  target: { min: 1200000, max: 2000000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-COPQ
+  metric: copq_usd
+  products: [DP-MFG-002]
+- id: KPI-MFG-WARRANTY-RATE
+  name: Warranty claim rate
+  definition: "Warranty claims per 1,000 units shipped on lots past their 90-day window, year to date"
+  formula: "claims ÷ units shipped × 1,000"
+  unit: "claims per thousand units"
+  direction: lower_is_better
+  target: { min: 3.5, max: 5.5 }
+  window: { ytd: true }
+  term: GT-MFG-WARRANTY
+  metric: warranty_claim_rate
+  products: [DP-MFG-002]
+- id: KPI-MFG-WARRANTY-COST
+  name: Warranty cost
+  definition: "Cost of warranty claims on lots shipped in the quarter"
+  formula: "sum of claim cost"
+  unit: "USD"
+  direction: lower_is_better
+  target: { min: 700000, max: 1000000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-WARRANTY-COST
+  metric: warranty_cost_usd
+  products: [DP-MFG-002]
+- id: KPI-MFG-MTBF
+  name: MTBF
+  definition: "Mean operating hours between unplanned failures, last quarter"
+  formula: "run hours before each failure ÷ corrective work orders"
+  unit: "hours"
+  direction: higher_is_better
+  target: { min: 280, max: 360 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-MTBF
+  metric: mtbf_hours
+  products: [DP-MFG-003]
+- id: KPI-MFG-MTTR
+  name: MTTR
+  definition: "Mean hours to repair a failed asset, last quarter"
+  formula: "repair hours on failures ÷ failures"
+  unit: "hours"
+  direction: lower_is_better
+  target: { min: 3.5, max: 5.0 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-MTTR
+  metric: mttr_hours
+  products: [DP-MFG-003]
+- id: KPI-MFG-PLANNED-MAINT
+  name: Planned maintenance share
+  definition: "Share of maintenance work orders that were planned, year to date"
+  formula: "preventive work orders ÷ all work orders"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 80, max: 92 }
+  window: { ytd: true }
+  term: GT-MFG-PLANNED-MAINTENANCE
+  metric: planned_maintenance_pct
+  products: [DP-MFG-003]
+- id: KPI-MFG-FAILURES
+  name: Unplanned failures
+  definition: "Corrective work orders raised in the quarter"
+  formula: "count of corrective work orders"
+  unit: "failures"
+  direction: lower_is_better
+  target: { min: 340, max: 460 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-FAILURE
+  metric: failures
+  products: [DP-MFG-003]
+- id: KPI-MFG-PM-COMPLIANCE
+  name: PM schedule compliance
+  definition: "Preventive work orders completed by their scheduled date, last quarter"
+  formula: "on-schedule preventive work orders ÷ preventive work orders"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 76, max: 90 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-PLANNED-MAINTENANCE
+  metric: pm_compliance_pct
+  products: [DP-MFG-003]
+- id: KPI-MFG-MAINT-COST
+  name: Maintenance cost
+  definition: "Labour and parts on maintenance work orders in the quarter"
+  formula: "sum of work-order cost"
+  unit: "USD"
+  direction: lower_is_better
+  target: { min: 1500000, max: 2000000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-MAINTENANCE-COST
+  metric: maintenance_cost_usd
+  products: [DP-MFG-003]
+- id: KPI-MFG-SUPPLIER-OTIF
+  name: Supplier OTIF
+  definition: "Receipts delivered on time and in full, excluding buyer-rescheduled receipts, last quarter"
+  formula: "OTIF receipts ÷ receipts"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 88, max: 95 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-SUPPLIER-OTIF
+  metric: supplier_otif_pct
+  products: [DP-MFG-004]
+- id: KPI-MFG-SUPPLIER-PPM
+  name: Supplier PPM
+  definition: "Parts rejected at incoming inspection per million received, last quarter"
+  formula: "rejected ÷ received × 1,000,000"
+  unit: "ppm"
+  direction: lower_is_better
+  target: { min: 600, max: 1200 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-SUPPLIER-PPM
+  metric: supplier_ppm
+  products: [DP-MFG-004]
+- id: KPI-MFG-SUPPLIER-LEAD-TIME
+  name: Supplier lead time
+  definition: "Average days from purchase order to goods receipt, last quarter"
+  formula: "mean of receipt date − PO date"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 20, max: 28 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-SUPPLIER-LEAD-TIME
+  metric: supplier_lead_time_days
+  products: [DP-MFG-004]
+- id: KPI-MFG-RECEIPT-VALUE
+  name: Inbound receipt value
+  definition: "Value of goods received in the quarter"
+  formula: "sum of receipt value"
+  unit: "USD"
+  direction: target_band
+  target: { min: 26000000, max: 36000000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-GOODS-RECEIPT
+  metric: receipt_value_usd
+  products: [DP-MFG-004]
+- id: KPI-MFG-OTD
+  name: On-time delivery
+  definition: "Delivered order lines that arrived on or before the first promised date, last month"
+  formula: "on-time delivered lines ÷ delivered lines"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 88, max: 95 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-MFG-OTD
+  metric: on_time_delivery_pct
+  products: [DP-MFG-005]
+- id: KPI-MFG-FILL-RATE
+  name: Order fill rate
+  definition: "Delivered order lines shipped complete, last quarter"
+  formula: "in-full delivered lines ÷ delivered lines"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 93, max: 98 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-FILL-RATE
+  metric: order_fill_rate_pct
+  products: [DP-MFG-005]
+- id: KPI-MFG-ORDER-LEAD-TIME
+  name: Order lead time
+  definition: "Average days from distributor order to proof of delivery, last quarter"
+  formula: "mean of delivered date − order date"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 18, max: 26 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-MFG-ORDER-LEAD-TIME
+  metric: order_lead_time_days
+  products: [DP-MFG-005]
+- id: KPI-MFG-ORDER-LINES
+  name: Order lines shipped
+  definition: "Order lines delivered in the month"
+  formula: "count of delivered order lines"
+  unit: "lines"
+  direction: higher_is_better
+  target: { min: 2500, max: 3100 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-MFG-ORDER-LINE
+  metric: order_lines_shipped
+  products: [DP-MFG-005]
+- id: KPI-MFG-TURNS
+  name: Inventory turns
+  definition: "Annualised usage over on-hand value, active materials, last month"
+  formula: "365 × usage value ÷ on-hand value"
+  unit: "turns"
+  direction: higher_is_better
+  target: { min: 10, max: 14 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-MFG-TURNS
+  metric: inventory_turns
+  products: [DP-MFG-006]
+- id: KPI-MFG-DOS
+  name: Days of supply
+  definition: "On-hand value over daily usage value, active materials, last month"
+  formula: "on-hand value ÷ daily usage value"
+  unit: "days"
+  direction: target_band
+  target: { min: 25, max: 35 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-MFG-DOS
+  metric: days_of_supply
+  products: [DP-MFG-006]
+- id: KPI-MFG-INV-VALUE
+  name: Average inventory value
+  definition: "On-hand value at standard cost per snapshot day, last month"
+  formula: "on-hand value ÷ snapshot days"
+  unit: "USD"
+  direction: lower_is_better
+  target: { min: 5500000, max: 7500000 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-MFG-INVENTORY-VALUE
+  metric: avg_inventory_value
+  products: [DP-MFG-006]
+- id: KPI-MFG-STOCKOUT
+  name: Stockout rate
+  definition: "Material-plant-days with nothing on hand, active materials, last month"
+  formula: "stocked-out positions ÷ positions"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 1.5, max: 4.0 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-MFG-STOCKOUT
+  metric: stockout_rate_pct
+  products: [DP-MFG-006]
+- id: KPI-MFG-TRIR
+  name: Total recordable incident rate
+  definition: "Recordable incidents per 200,000 hours worked, year to date"
+  formula: "recordable incidents × 200,000 ÷ hours worked"
+  unit: "per 200,000 hours"
+  direction: lower_is_better
+  target: { min: 0.8, max: 1.5 }
+  window: { ytd: true }
+  term: GT-MFG-TRIR
+  metric: trir
+  products: [DP-MFG-007]
+- id: KPI-MFG-LTIR
+  name: Lost time incident rate
+  definition: "Lost-time incidents per 200,000 hours worked, year to date"
+  formula: "lost-time incidents × 200,000 ÷ hours worked"
+  unit: "per 200,000 hours"
+  direction: lower_is_better
+  target: { min: 0.1, max: 0.4 }
+  window: { ytd: true }
+  term: GT-MFG-TRIR
+  metric: ltir
+  products: [DP-MFG-007]

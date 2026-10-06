@@ -1,0 +1,29 @@
+id: DP-MFG-005
+name: Order to Delivery
+domain: Order Fulfilment & Distribution
+archetype: AGGREGATE
+initial_status: IN_CERTIFICATION
+seed_stage: 11
+version: 1.0.0-rc.1
+owner: manufacturing:ops-dpo
+steward: manufacturing:data-steward
+description: Distributor order lines from order to proof of delivery — promised and delivered dates, on-time and in-full flags, lead time and value.
+purpose: Give customer operations and the Plant Performance Analyst a certified on-time delivery and fill-rate view.
+decision: { persona: VP Customer Operations, decision: "Which business units and distributors get a delivery recovery plan", cadence: Monthly, workaround: "ERP delivery report rebuilt at each month-end with re-promised dates mixed in", consequence: "On-time delivery looks better than distributors experience it and late Aerospace deliveries are noticed only when distributors escalate" }
+sample_questions: ["What was our on-time delivery rate last month?", "On-time delivery by business unit last quarter", "What is the order fill rate this quarter?"]
+semantic_view: ORDER_DELIVERY
+output_ports:
+  - { kind: semantic, ref: ORDER_DELIVERY }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_MFG_005_ORDER_TO_DELIVERY }
+  - { kind: agent, ref: AG-MFG-001 }
+sla: { freshness_minutes: 60, availability_pct: 99.5, max_null_rate_pct: 0.5 }
+kpis: [KPI-MFG-OTD, KPI-MFG-FILL-RATE, KPI-MFG-ORDER-LEAD-TIME, KPI-MFG-ORDER-LINES]
+upstream: [CONFORMED_GOLD.FCT_ORDER_LINE]
+consumers: [Customer operations, Sales & operations planning, Plant Performance Analyst agent]
+lifecycle_seed: { artifacts: auto }
+certification_script:
+  initial: { gate4: warn, gate6: fail }
+  fixes:
+    - { id: FIX-1, check: semantic.verified_queries, label: "Add 3 verified queries for on-time delivery by sales region, distributor and month", effect: { overlay: VERIFIED_QUERY, keys: [VQ-MFG-065, VQ-MFG-066, VQ-MFG-067] } }
+    - { id: FIX-2, check: governance.masking, label: "Attach PII masking to distributor contact email and phone", effect: { policy_attach: { policy: MASK_EMAIL, columns: [CONFORMED_GOLD.FCT_ORDER_LINE.contact_email, CONFORMED_GOLD.FCT_ORDER_LINE.contact_phone] } } }
+value_case: VC-MFG-005

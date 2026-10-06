@@ -1,0 +1,46 @@
+name: FIELD_WARRANTY
+description: Shipped lots by product family with field warranty claims, claim cost and failure mode
+tables:
+  - { alias: w, fqn: CONFORMED_GOLD.FCT_WARRANTY_LOT, pk: warranty_lot_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: w.date_key, to: d.date_key }
+dimensions:
+  - { name: business_unit, expr: w.business_unit, label: Business unit, synonyms: [bu, division, segment, business units], term: GT-MFG-BUSINESS-UNIT }
+  - { name: product_family, expr: w.product_family, label: Product family, synonyms: [product families, product line, family], term: GT-MFG-PRODUCT-FAMILY }
+  - { name: failure_mode, expr: w.top_failure_mode, label: Failure mode, synonyms: [field failure mode, claim reason] }
+  - { name: mature_lot, expr: w.mature, label: Lot shipped more than 90 days ago }
+time_dimensions:
+  - { name: ship_date, expr: d.date, default: true }
+facts:
+  - { name: units_shipped, expr: w.units_shipped, description: Units shipped in the lot }
+metrics:
+  - name: warranty_claim_rate
+    label: Warranty claim rate
+    expr: 1000.0 * SUM(w.claims) / SUM(w.units_shipped)
+    unit: claims per thousand units
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [claim rate, warranty rate, field failure rate]
+    term: GT-MFG-WARRANTY
+    description: Warranty claims per 1,000 units shipped, on lots whose 90-day early-life window is complete
+    default_filters: [ { rule: BR-MFG-021 } ]
+  - name: warranty_claims
+    label: Warranty claims
+    expr: SUM(w.claims)
+    unit: claims
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [claims, field claims, number of claims]
+    term: GT-MFG-WARRANTY
+    description: Warranty claims received against lots shipped in the period
+  - name: warranty_cost_usd
+    label: Warranty cost
+    expr: SUM(w.claim_cost_usd)
+    unit: USD
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [claim cost, warranty spend, cost of claims]
+    term: GT-MFG-WARRANTY-COST
+    description: Cost of warranty claims (repair, replacement and freight) on lots shipped in the period
+products: [DP-MFG-002]

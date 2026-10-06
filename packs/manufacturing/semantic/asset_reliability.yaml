@@ -1,0 +1,89 @@
+name: ASSET_RELIABILITY
+description: Corrective and preventive work orders per asset with criticality, failure causes, repair hours and cost
+tables:
+  - { alias: w, fqn: CONFORMED_GOLD.FCT_WORK_ORDER, pk: work_order_key }
+  - { alias: a, fqn: CONFORMED_GOLD.DIM_ASSET, pk: asset_key }
+  - { alias: l, fqn: CONFORMED_GOLD.DIM_LINE, pk: line_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: w.asset_key, to: a.asset_key }
+  - { from: w.line_key, to: l.line_key }
+  - { from: w.date_key, to: d.date_key }
+dimensions:
+  - { name: business_unit, expr: l.business_unit, label: Business unit, synonyms: [bu, division, segment, business units], term: GT-MFG-BUSINESS-UNIT }
+  - { name: plant, expr: l.plant_name, label: Plant, synonyms: [site, factory, plants, sites], term: GT-MFG-PLANT }
+  - { name: line, expr: l.line_id, label: Production line, synonyms: [lines, production lines, cell], term: GT-MFG-LINE }
+  - { name: asset, expr: a.asset_id, label: Asset, synonyms: [assets, machine, machines, equipment], term: GT-MFG-ASSET }
+  - { name: asset_type, expr: a.asset_type, label: Asset type, synonyms: [asset types, equipment type, machine type] }
+  - { name: criticality, expr: a.criticality, label: Criticality, synonyms: [asset criticality, criticality class], term: GT-MFG-CRITICAL-ASSET }
+  - { name: failure_cause, expr: w.failure_cause, label: Failure cause, synonyms: [failure causes, cause of failure, failure mode] }
+  - { name: work_order_type, expr: w.wo_type, label: Work order type, synonyms: [maintenance type, wo type] }
+time_dimensions:
+  - { name: work_order_date, expr: d.date, default: true }
+facts:
+  - { name: repair_hours, expr: w.repair_hours, description: Hours down for repair or service }
+metrics:
+  - name: mtbf_hours
+    label: MTBF
+    expr: SUM(CASE WHEN w.is_failure THEN w.run_hours_since_last ELSE 0 END) / NULLIF(COUNT_IF(w.is_failure), 0)
+    unit: hours
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [mean time between failures, time between failures, reliability]
+    term: GT-MFG-MTBF
+    description: Mean operating hours an asset ran between unplanned failures (corrective work orders only)
+  - name: mttr_hours
+    label: MTTR
+    expr: SUM(CASE WHEN w.is_failure THEN w.repair_hours ELSE 0 END) / NULLIF(COUNT_IF(w.is_failure), 0)
+    unit: hours
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [mean time to repair, repair time, time to repair]
+    term: GT-MFG-MTTR
+    description: Mean hours from failure to the asset returning to production
+  - name: planned_maintenance_pct
+    label: Planned maintenance share
+    expr: 100.0 * AVG(CASE WHEN w.wo_type = 'Preventive' THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [planned maintenance, preventive maintenance share, pm share, planned work share]
+    term: GT-MFG-PLANNED-MAINTENANCE
+    description: Preventive work orders as a share of all maintenance work orders
+  - name: failures
+    label: Unplanned failures
+    expr: COUNT_IF(w.is_failure)
+    unit: failures
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [breakdowns, corrective work orders, number of failures, asset failures]
+    term: GT-MFG-FAILURE
+    description: Corrective (failure) work orders in the period
+  - name: pm_compliance_pct
+    label: PM schedule compliance
+    expr: 100.0 * COUNT_IF(w.completed_on_schedule) / NULLIF(COUNT_IF(w.wo_type = 'Preventive'), 0)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [pm compliance, preventive maintenance compliance, pm on time, schedule compliance]
+    term: GT-MFG-PLANNED-MAINTENANCE
+    description: Preventive work orders completed by their scheduled date as a share of preventive work orders
+  - name: maintenance_cost_usd
+    label: Maintenance cost
+    expr: SUM(w.cost_usd)
+    unit: USD
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [maintenance spend, repair cost, maintenance costs]
+    term: GT-MFG-MAINTENANCE-COST
+    description: Labour at the standard rate plus parts on all maintenance work orders
+  - name: maintenance_hours
+    label: Maintenance hours
+    expr: SUM(w.repair_hours)
+    unit: hours
+    decimals: 0
+    direction: neutral
+    synonyms: [repair hours, service hours, wrench time]
+    term: GT-MFG-MTTR
+    description: Hours of repair and service work on all work orders
+products: [DP-MFG-003]

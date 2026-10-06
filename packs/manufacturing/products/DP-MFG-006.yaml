@@ -1,0 +1,25 @@
+id: DP-MFG-006
+name: Inventory & Material Availability
+domain: Inventory & Materials
+archetype: SOURCE_ALIGNED
+initial_status: CERTIFIED
+seed_stage: 12
+version: 1.4.0
+owner: manufacturing:ops-dpo
+steward: manufacturing:data-steward
+description: Daily material-plant inventory positions with days of supply, turns, stockouts, safety-stock status and value at standard cost.
+purpose: Materials planning, working-capital reviews and spare-parts readiness from one certified inventory feed.
+decision: { persona: Supply Planner, decision: "Which materials to expedite or rebalance to protect next week's schedule", cadence: Weekly, workaround: "Manual comparison of the schedule against ERP stock reports", consequence: "Lines stop for want of a material that could have been expedited, while obsolete stock inflates cover" }
+sample_questions: ["What were days of supply by material class last month?", "Stockout rate by plant last month", "Inventory turns by business unit"]
+semantic_view: INVENTORY_POSITION
+output_ports:
+  - { kind: semantic, ref: INVENTORY_POSITION }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_MFG_006_INVENTORY_AVAILABILITY }
+  - { kind: agent, ref: AG-MFG-004 }
+sla: { freshness_minutes: 120, availability_pct: 99.0, max_null_rate_pct: 0.5 }
+kpis: [KPI-MFG-TURNS, KPI-MFG-DOS, KPI-MFG-INV-VALUE, KPI-MFG-STOCKOUT]
+upstream: [CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT, CONFORMED_GOLD.DIM_PLANT]
+consumers: [Materials planners, Finance, Supply Chain Analyst agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-MFG-006

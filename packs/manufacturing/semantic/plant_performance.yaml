@@ -1,0 +1,135 @@
+name: PLANT_PERFORMANCE
+description: OEE and its availability, performance and quality components at line × shift grain, with output, downtime losses, scrap, energy and shift leads
+tables:
+  - { alias: p, fqn: CONFORMED_GOLD.FCT_LINE_SHIFT, pk: production_key }
+  - { alias: l, fqn: CONFORMED_GOLD.DIM_LINE, pk: line_key }
+  - { alias: o, fqn: CONFORMED_GOLD.DIM_OPERATOR, pk: operator_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: p.line_key, to: l.line_key }
+  - { from: p.shift_lead_key, to: o.operator_key }
+  - { from: p.date_key, to: d.date_key }
+dimensions:
+  - { name: business_unit, expr: l.business_unit, label: Business unit, synonyms: [bu, division, segment, business units], term: GT-MFG-BUSINESS-UNIT }
+  - { name: plant, expr: l.plant_name, label: Plant, synonyms: [site, factory, plants, sites], term: GT-MFG-PLANT }
+  - { name: line, expr: l.line_id, label: Production line, synonyms: [lines, production lines, cell], term: GT-MFG-LINE }
+  - { name: line_type, expr: l.line_type, label: Line type, synonyms: [process type, process] }
+  - { name: shift, expr: p.shift_name, label: Shift, synonyms: [shifts, crew shift] }
+  - { name: loss_reason, expr: p.top_loss_reason, label: Loss reason, synonyms: [downtime reason, stoppage reason, loss reasons, cause of downtime], term: GT-MFG-UNPLANNED-DOWNTIME }
+  - { name: production_type, expr: p.run_type, label: Run type, synonyms: [run type, trial or production], term: GT-MFG-TRIAL-RUN }
+  - { name: shift_lead, expr: o.full_name, label: Shift lead, synonyms: [shift leads, shift leader, team lead], term: GT-MFG-OPERATOR }
+time_dimensions:
+  - { name: shift_date, expr: d.date, default: true }
+facts:
+  - { name: planned_production_min, expr: p.planned_production_min, description: Scheduled time less planned downtime (the OEE time base) }
+  - { name: good_units, expr: p.good_units, description: Units good first time }
+  - { name: energy_kwh, expr: p.energy_kwh, description: Metered energy for the shift }
+metrics:
+  - name: oee_pct
+    label: OEE
+    expr: 100.0 * SUM(p.good_ideal_min) / SUM(p.planned_production_min)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [overall equipment effectiveness, line efficiency, equipment effectiveness]
+    term: GT-MFG-OEE
+    description: Good units at nameplate speed as a share of planned production time (availability × performance × quality); planned downtime and trial runs excluded
+    default_filters: [ { rule: BR-MFG-012 } ]
+    naive_expr: 100.0 * SUM(p.good_ideal_min) / SUM(p.scheduled_min)
+  - name: availability_pct
+    label: OEE availability
+    expr: 100.0 * SUM(p.run_min) / SUM(p.planned_production_min)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [availability, uptime, availability rate]
+    term: GT-MFG-AVAILABILITY
+    description: Run time as a share of planned production time
+    default_filters: [ { rule: BR-MFG-012 } ]
+    naive_expr: 100.0 * SUM(p.run_min) / SUM(p.scheduled_min)
+  - name: performance_pct
+    label: OEE performance
+    expr: 100.0 * SUM(p.ideal_total_min) / SUM(p.run_min)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [performance rate, speed loss, rate efficiency]
+    term: GT-MFG-PERFORMANCE
+    description: Units started at the nameplate ideal cycle time as a share of run time
+    default_filters: [ { rule: BR-MFG-012 } ]
+  - name: quality_rate_pct
+    label: OEE quality rate
+    expr: 100.0 * SUM(p.good_units) / SUM(p.total_units)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [quality rate, good rate, good unit rate]
+    term: GT-MFG-QUALITY-RATE
+    description: Units good first time as a share of units started
+    default_filters: [ { rule: BR-MFG-012 } ]
+  - name: units_produced
+    label: Units produced
+    expr: SUM(p.good_units)
+    unit: units
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [output, throughput, production volume, good units]
+    term: GT-MFG-UNITS
+    description: Good units completed in the period, all run types
+  - name: unplanned_downtime_hours
+    label: Unplanned downtime
+    expr: SUM(p.unplanned_down_min) / 60.0
+    unit: hours
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [downtime hours, stoppages, lost time, unplanned stops]
+    term: GT-MFG-UNPLANNED-DOWNTIME
+    description: Hours of stoppage inside planned production time
+  - name: planned_downtime_hours
+    label: Planned downtime
+    expr: SUM(p.planned_down_min) / 60.0
+    unit: hours
+    decimals: 0
+    direction: neutral
+    synonyms: [scheduled downtime, planned stops]
+    term: GT-MFG-PLANNED-DOWNTIME
+    description: Breaks, planned maintenance and planned changeovers, excluded from the OEE time base
+  - name: scrap_rate_pct
+    label: Scrap rate
+    expr: 100.0 * SUM(p.scrap_units) / SUM(p.total_units)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [scrap percentage, scrap rates]
+    term: GT-MFG-SCRAP
+    description: Scrapped units as a share of units started, production runs only unless trial runs are requested
+    default_filters: [ { rule: BR-MFG-012 } ]
+  - name: rework_rate_pct
+    label: Rework rate
+    expr: 100.0 * SUM(p.rework_units) / SUM(p.total_units)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [rework percentage, reworked units share]
+    term: GT-MFG-REWORK
+    description: Units sent to rework as a share of units started, production runs only unless trial runs are requested
+    default_filters: [ { rule: BR-MFG-012 } ]
+  - name: energy_per_unit_kwh
+    label: Energy per unit
+    expr: SUM(p.energy_kwh) / SUM(p.good_units)
+    unit: kWh
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [energy intensity, kwh per unit, electricity per unit]
+    term: GT-MFG-ENERGY
+    description: Metered electricity per good unit produced
+  - name: scope2_emissions_t
+    label: Scope 2 emissions
+    expr: SUM(p.energy_kwh * l.emission_factor) / 1000.0
+    unit: tCO2e
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [scope 2, carbon emissions, co2e from electricity]
+    term: GT-MFG-SCOPE2
+    description: Location-based emissions from purchased electricity (kWh × plant grid factor)
+products: [DP-MFG-001]

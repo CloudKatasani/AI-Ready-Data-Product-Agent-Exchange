@@ -1,0 +1,82 @@
+# Seeded intake requests and demand-board items. REQ-MFG-001 deliberately near-duplicates DP-MFG-001
+# (Production & OEE) so the intake duplicate detector fires (AC5.1).
+requests:
+  - id: REQ-MFG-001
+    title: Line OEE scorecard
+    requester: manufacturing:plant-analyst
+    decision: Which lines in Motion Systems and Fluid Power get engineering support first this week
+    decider: Plant Manager
+    cadence: Daily, with a weekly tier-3 review
+    workaround: Each line's downtime log pasted into a spreadsheet and OEE recomputed by hand
+    questions:
+      - What was OEE by business unit last quarter?
+      - Which lines had the lowest OEE last month?
+      - What drove unplanned downtime last quarter?
+      - How did availability and performance compare by line type?
+    stakes: Engineering attention goes to the loudest line instead of the costliest losses
+    freshness: Hourly during the shift
+    status: SUBMITTED
+  - id: REQ-MFG-002
+    title: Changeover time analysis
+    requester: manufacturing:production-manager
+    decision: Whether the changeover standardisation programme should roll out to every machining line
+    decider: VP Operations
+    cadence: Monthly
+    workaround: Engineers time changeovers with a stopwatch on selected lines
+    questions:
+      - Did changeover standardisation reduce changeover time on the pilot lines?
+      - Which line types have the longest changeover overruns?
+      - How much availability would we recover by halving changeover overruns?
+    stakes: The programme is either rolled out without evidence or stopped while it is working
+    freshness: Weekly
+    status: IN_TRIAGE
+  - id: REQ-MFG-003
+    title: Spare parts readiness for critical assets
+    requester: manufacturing:ops-dpo
+    decision: Which MRO spares to stock at each plant for criticality A assets
+    decider: Reliability Engineering Manager
+    cadence: Quarterly
+    workaround: Planners compare failure history with spares stock in two separate systems
+    questions:
+      - Which critical assets failed while their spare was out of stock?
+      - How much longer are repairs when the spare is not on the shelf?
+      - What is the stock cover of spares for criticality A assets?
+    stakes: Critical assets wait days for spares while slow-moving spares fill the stores
+    freshness: Daily
+    status: APPROVED
+  - id: REQ-MFG-004
+    title: Energy cost per unit by line
+    requester: manufacturing:coo
+    decision: Which plants and line types get energy-efficiency capital first
+    decider: Chief Operating Officer
+    cadence: Quarterly
+    workaround: Utility invoices allocated to plants by floor area
+    questions:
+      - What is energy per unit by line type and plant?
+      - How do scope 2 emissions compare across business units?
+      - Which lines use the most idle energy during downtime?
+    stakes: Capital goes to the biggest bills rather than the worst energy intensity
+    freshness: Weekly
+    status: SUBMITTED
+  - id: REQ-MFG-005
+    title: Aerospace OEE by line dashboard
+    requester: manufacturing:production-manager
+    decision: Which Aerospace Components lines need a reliability and changeover improvement plan
+    decider: Production & Quality Manager
+    cadence: Monthly
+    workaround: Monthly email from the plant performance analyst with a pivot table
+    questions:
+      - What was OEE by line in Aerospace Components last quarter?
+      - What were the top loss reasons on the Aerospace lines?
+      - How does Aerospace availability compare with other business units?
+    stakes: Improvement effort spent on lines that are not driving the Aerospace OEE gap
+    freshness: Daily
+    status: MERGED
+
+demand_items:
+  - { id: DM-MFG-001, title: Changeover analytics product, kind: product, description: "Changeover duration against standard by line, product family and crew, to evaluate standardisation programmes.", requested_by: manufacturing:production-manager, votes: 14 }
+  - { id: DM-MFG-002, title: Predictive maintenance agent, kind: agent, description: "Explains which critical assets show rising vibration and temperature before failure, from certified IoT and work-order data.", requested_by: manufacturing:ops-dpo, votes: 12 }
+  - { id: DM-MFG-003, title: Batch genealogy and recall product, kind: product, description: "Traces shipped lots back to input material lots, suppliers and process parameters for recall queries.", requested_by: manufacturing:data-steward, votes: 9 }
+  - { id: DM-MFG-004, title: Schedule adherence product, kind: product, description: "Work orders completed on the planned day by plant and line, for production planning.", requested_by: manufacturing:coo, votes: 8 }
+  - { id: DM-MFG-005, title: Safety insights agent, kind: agent, description: "Answers TRIR, lost-time and near-miss questions once Workplace Safety is certified.", requested_by: manufacturing:coo, votes: 6 }
+  - { id: DM-MFG-006, title: Standard cost variance product, kind: product, description: "Actual against standard cost by material and month, restricted to finance roles.", requested_by: manufacturing:ops-dpo, votes: 4 }

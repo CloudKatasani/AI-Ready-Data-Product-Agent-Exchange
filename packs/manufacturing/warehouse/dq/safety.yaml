@@ -1,0 +1,57 @@
+# Safety DQ rules.
+- id: DQ-MFG-051
+  object: CONFORMED_GOLD.FCT_SAFETY_MONTH
+  column: recordable_incidents
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: "Recordable incident counts are never negative."
+- id: DQ-MFG-052
+  object: CONFORMED_GOLD.FCT_SAFETY_MONTH
+  column: hours_worked
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: critical
+  alert_route: steward
+  description: "Every plant-month has hours worked (TRIR denominator)."
+- id: DQ-MFG-053
+  object: CONFORMED_GOLD.FCT_SAFETY_MONTH
+  column: hours_worked
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: "Hours worked are never missing."
+- id: DQ-MFG-054
+  object: CURATED_SILVER.SAFETY_INCIDENT
+  dimension: timeliness
+  assertion: "freshness_min <= 20160"
+  severity: low
+  alert_route: owner
+  description: "Safety incidents are being recorded (latest load within two weeks)."
+- id: DQ-MFG-055
+  object: CONFORMED_GOLD.FCT_SAFETY_MONTH
+  column: recordable_incidents
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: "Every plant-month carries a recordable incident count (zero when none)."
+- id: DQ-MFG-056
+  object: CURATED_SILVER.SAFETY_INCIDENT
+  column: severity
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Near miss, First aid, Recordable, Lost time]
+  severity: medium
+  alert_route: steward
+  description: "Incident severity conforms to the EHS standard."
+- id: DQ-MFG-057
+  object: CONFORMED_GOLD.FCT_SAFETY_MONTH
+  column: month_start
+  dimension: timeliness
+  assertion: "freshness_min <= 46080"
+  severity: medium
+  alert_route: owner
+  description: "The latest complete month of safety data is loaded."

@@ -1,0 +1,702 @@
+# Forgepoint Industries business glossary (synthetic). Ported from the AI-Ready manufacturing glossary (T-001..T-030)
+# and the ADPM manufacturing pack; ids, owners and mappings adapted to this pack's personas, warehouse and semantic views.
+
+- id: GT-MFG-BUSINESS-UNIT
+  name: Business Unit
+  definition: "One of Forgepoint's four business units — Motion Systems, Fluid Power, Industrial Controls and Aerospace Components. Every plant belongs to exactly one, and lines, assets and orders inherit it."
+  formula: "Derived from the plant (lines, assets, operators) or the product family (orders, warranty lots)"
+  domain: Enterprise
+  owner: manufacturing:coo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [bu, division, segment]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_PLANT.business_unit, CONFORMED_GOLD.DIM_LINE.business_unit, CONFORMED_GOLD.FCT_ORDER_LINE.business_unit]
+    metrics: []
+
+- id: GT-MFG-PLANT
+  name: Plant
+  definition: "A Forgepoint manufacturing site with its business unit, country, headcount and location-based grid emission factor."
+  formula: "One record per plant id in the site register"
+  domain: Enterprise
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [site, factory]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_PLANT.plant_id, CONFORMED_GOLD.DIM_LINE.plant_name]
+    metrics: []
+
+- id: GT-MFG-LINE
+  name: Production Line
+  definition: "A production line or cell within a plant, with its process type, nameplate ideal cycle time and controlled process recipe."
+  formula: "One record per line id in the MES line master"
+  domain: Production
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [line, cell]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_LINE.line_id]
+    metrics: []
+
+- id: GT-MFG-OPERATOR
+  name: Operator
+  definition: "A person badged to run, lead or support a production line. Shift leads are the operators recorded as leading a line shift. Names and emails are personal data."
+  formula: "One record per MES badge number"
+  domain: Production
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [crew member, associate, badge]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_OPERATOR.badge_no, CONFORMED_GOLD.DIM_OPERATOR.full_name]
+    metrics: []
+
+- id: GT-MFG-OEE
+  name: OEE
+  definition: "Overall Equipment Effectiveness: the share of planned production time that produced good units at nameplate speed. OEE = availability × performance × quality; planned downtime is excluded from the time base and engineering trial runs are excluded unless requested."
+  formula: "Σ good units × ideal cycle time ÷ Σ planned production time × 100 (BR-MFG-001, BR-MFG-012)"
+  domain: Production
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [overall equipment effectiveness, line efficiency]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LINE_SHIFT.good_ideal_min, CONFORMED_GOLD.FCT_LINE_SHIFT.planned_production_min, CONFORMED_GOLD.FCT_LINE_SHIFT.run_type]
+    metrics: [oee_pct]
+
+- id: GT-MFG-AVAILABILITY
+  name: Availability
+  definition: "The share of planned production time the line actually ran; lost to breakdowns, material shortages, changeover overruns, quality holds and operator unavailability."
+  formula: "Σ run time ÷ Σ planned production time × 100"
+  domain: Production
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [uptime, availability rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LINE_SHIFT.run_min, CONFORMED_GOLD.FCT_LINE_SHIFT.planned_production_min]
+    metrics: [availability_pct]
+
+- id: GT-MFG-PERFORMANCE
+  name: Performance
+  definition: "How close the line ran to its nameplate ideal cycle time while running; lost to minor stops and reduced speed."
+  formula: "Σ units started × ideal cycle time ÷ Σ run time × 100"
+  domain: Production
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [speed, rate efficiency]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LINE_SHIFT.ideal_total_min, CONFORMED_GOLD.DIM_LINE.ideal_cycle_sec]
+    metrics: [performance_pct]
+
+- id: GT-MFG-QUALITY-RATE
+  name: Quality Rate
+  definition: "The share of units started that were good first time — not scrapped and not reworked."
+  formula: "Σ good units ÷ Σ units started × 100"
+  domain: Production
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [good rate, yield rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LINE_SHIFT.good_units, CONFORMED_GOLD.FCT_LINE_SHIFT.total_units]
+    metrics: [quality_rate_pct]
+
+- id: GT-MFG-PLANNED-DOWNTIME
+  name: Planned Downtime
+  definition: "Time a line is scheduled not to run: breaks, planned maintenance and planned changeovers up to the standard time. It is removed from the OEE time base, so it never counts as a loss."
+  formula: "Σ planned downtime minutes; planned production time = scheduled time − planned downtime"
+  domain: Production
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [scheduled downtime, planned stops]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LINE_SHIFT.planned_down_min, CURATED_SILVER.DOWNTIME_EVENT.category]
+    metrics: [planned_downtime_hours]
+
+- id: GT-MFG-UNPLANNED-DOWNTIME
+  name: Unplanned Downtime
+  definition: "Stoppages during planned production time: breakdowns, material shortages, changeover overruns, quality holds and operator unavailability."
+  formula: "Σ unplanned downtime minutes ÷ 60"
+  domain: Production
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [stoppages, lost time, unplanned stops]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LINE_SHIFT.unplanned_down_min, CONFORMED_GOLD.FCT_LINE_SHIFT.top_loss_reason]
+    metrics: [unplanned_downtime_hours]
+
+- id: GT-MFG-UNITS
+  name: Units Produced
+  definition: "Good units completed in the period, excluding scrap and units still in rework."
+  formula: "Σ good units"
+  domain: Production
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [output, throughput, production volume]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LINE_SHIFT.good_units]
+    metrics: [units_produced]
+
+- id: GT-MFG-TRIAL-RUN
+  name: Trial Run
+  definition: "An engineering trial or new-product-introduction qualification run, recorded with run type Trial. Trial runs are reported separately and excluded from OEE, yield and scrap unless explicitly requested."
+  formula: "run type = 'Trial' (shift production) or lot type = 'Trial' (inspection lots)"
+  domain: Production
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [npi run, engineering trial, qualification run]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LINE_SHIFT.run_type, CONFORMED_GOLD.FCT_INSPECTION_LOT.lot_type]
+    metrics: []
+
+- id: GT-MFG-SCRAP
+  name: Scrap Rate
+  definition: "Units scrapped as a share of units started, on production runs unless trial runs are requested."
+  formula: "Σ scrap units ÷ Σ units started × 100"
+  domain: Quality
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [scrap, scrap percentage]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LINE_SHIFT.scrap_units, CONFORMED_GOLD.FCT_LINE_SHIFT.total_units]
+    metrics: [scrap_rate_pct]
+
+- id: GT-MFG-REWORK
+  name: Rework Rate
+  definition: "Units sent back for rework as a share of units started. Reworked units are a quality loss even when they ship."
+  formula: "Σ rework units ÷ Σ units started × 100"
+  domain: Quality
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [rework]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LINE_SHIFT.rework_units]
+    metrics: [rework_rate_pct]
+
+- id: GT-MFG-ENERGY
+  name: Energy per Unit
+  definition: "Metered electricity used by a line per good unit produced."
+  formula: "Σ energy kWh ÷ Σ good units"
+  domain: Sustainability
+  owner: manufacturing:coo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [energy intensity, kwh per unit]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_LINE_SHIFT.energy_kwh]
+    metrics: [energy_per_unit_kwh]
+
+- id: GT-MFG-SCOPE2
+  name: Scope 2 Emissions
+  definition: "Indirect greenhouse-gas emissions from purchased electricity, location-based method, in tonnes CO2e."
+  formula: "Σ energy kWh × plant grid emission factor ÷ 1,000"
+  domain: Sustainability
+  owner: manufacturing:coo
+  steward: manufacturing:data-steward
+  status: IN_REVIEW
+  cde: false
+  synonyms: [scope 2, co2e]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_PLANT.emission_factor, CONFORMED_GOLD.DIM_LINE.emission_factor]
+    metrics: [scope2_emissions_t]
+
+- id: GT-MFG-FPY
+  name: First-Pass Yield
+  definition: "The share of inspection lots accepted at their first inspection with no defects — no rework, scrap or concession. Trial lots are excluded unless requested."
+  formula: "Lots passed first time ÷ lots inspected × 100 (BR-MFG-007, BR-MFG-012)"
+  domain: Quality
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [fpy, right first time, first pass yield]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INSPECTION_LOT.passed_first, CONFORMED_GOLD.FCT_INSPECTION_LOT.lot_type]
+    metrics: [first_pass_yield_pct]
+
+- id: GT-MFG-DPM
+  name: Defects per Million
+  definition: "Defects found per million units inspected."
+  formula: "Σ defects ÷ Σ units inspected × 1,000,000"
+  domain: Quality
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [dpm, defect rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INSPECTION_LOT.defect_qty, CONFORMED_GOLD.FCT_INSPECTION_LOT.inspected_qty]
+    metrics: [defects_ppm]
+
+- id: GT-MFG-NCR
+  name: Nonconformance
+  definition: "A lot that failed first inspection and was raised on a nonconformance report (NCR) for disposition by the material review board."
+  formula: "NCR number present on the lot"
+  domain: Quality
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [ncr, nonconforming lot]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INSPECTION_LOT.ncr_number]
+    metrics: [ncr_count]
+
+- id: GT-MFG-COPQ
+  name: Cost of Poor Quality
+  definition: "Internal failure cost of nonconforming lots: scrapped material and labour, rework labour at standard rate and investigation effort. Warranty cost is reported separately."
+  formula: "Σ COPQ on lots with an NCR"
+  domain: Quality
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [copq, quality cost, failure cost]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INSPECTION_LOT.copq_usd]
+    metrics: [copq_usd]
+
+- id: GT-MFG-INSPECTION-LOT
+  name: Inspection Lot
+  definition: "A quality inspection of a production lot, with its sample size, defects, usage decision and NCR."
+  formula: "One record per inspection lot id"
+  domain: Quality
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [lots inspected, inspection record]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INSPECTION_LOT.lot_id]
+    metrics: [inspection_lots]
+
+- id: GT-MFG-WARRANTY
+  name: Warranty Claim Rate
+  definition: "Warranty claims per 1,000 units shipped, on lots shipped more than 90 days ago so the early-life claim window is complete."
+  formula: "Σ claims ÷ Σ units shipped × 1,000 (BR-MFG-021)"
+  domain: Quality
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [claim rate, field failure rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WARRANTY_LOT.claims, CONFORMED_GOLD.FCT_WARRANTY_LOT.units_shipped]
+    metrics: [warranty_claim_rate, warranty_claims]
+
+- id: GT-MFG-WARRANTY-COST
+  name: Warranty Cost
+  definition: "Cost of accepted warranty claims — repair, replacement and freight — on lots shipped in the period."
+  formula: "Σ claim cost"
+  domain: Quality
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [claim cost, warranty spend]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WARRANTY_LOT.claim_cost_usd]
+    metrics: [warranty_cost_usd]
+
+- id: GT-MFG-PRODUCT-FAMILY
+  name: Product Family
+  definition: "A family of finished products owned by one business unit, such as servo motors, hydraulic pumps or landing gear fittings."
+  formula: "One record per product family id"
+  domain: Order fulfilment
+  owner: manufacturing:coo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [product line, family]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ORDER_LINE.product_family, CONFORMED_GOLD.FCT_WARRANTY_LOT.product_family]
+    metrics: []
+
+- id: GT-MFG-ASSET
+  name: Asset
+  definition: "A machine or piece of equipment on a production line, maintained through work orders."
+  formula: "One record per asset id in the EAM system"
+  domain: Maintenance
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [machine, equipment]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_ASSET.asset_id]
+    metrics: []
+
+- id: GT-MFG-CRITICAL-ASSET
+  name: Critical Asset
+  definition: "An asset ranked criticality A: its failure stops the line and it has no redundancy."
+  formula: "criticality = 'A'"
+  domain: Maintenance
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [criticality a, bottleneck asset]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_ASSET.criticality]
+    metrics: []
+
+- id: GT-MFG-MTBF
+  name: MTBF
+  definition: "Mean Time Between Failures: average operating hours an asset runs between unplanned failures. Only corrective work orders count as failures."
+  formula: "Σ run hours before each failure ÷ corrective work orders (BR-MFG-010)"
+  domain: Maintenance
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [mean time between failures]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORK_ORDER.run_hours_since_last, CONFORMED_GOLD.FCT_WORK_ORDER.wo_type]
+    metrics: [mtbf_hours]
+
+- id: GT-MFG-MTTR
+  name: MTTR
+  definition: "Mean Time To Repair: average hours from failure to the asset being returned to production."
+  formula: "Σ repair hours on corrective work orders ÷ failures (BR-MFG-013)"
+  domain: Maintenance
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [mean time to repair, repair time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORK_ORDER.repair_hours]
+    metrics: [mttr_hours, maintenance_hours]
+
+- id: GT-MFG-PLANNED-MAINTENANCE
+  name: Planned Maintenance
+  definition: "Maintenance work raised from a schedule or a condition trigger rather than a failure. Planned maintenance share is preventive work orders over all work orders; PM schedule compliance is preventive work done by its scheduled date."
+  formula: "Preventive work orders ÷ all work orders × 100; on-schedule preventive ÷ preventive × 100"
+  domain: Maintenance
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [pm, preventive maintenance, planned work]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORK_ORDER.wo_type, CONFORMED_GOLD.FCT_WORK_ORDER.completed_on_schedule]
+    metrics: [planned_maintenance_pct, pm_compliance_pct]
+
+- id: GT-MFG-FAILURE
+  name: Unplanned Failure
+  definition: "A corrective work order raised because an asset failed in service."
+  formula: "work order type = 'Corrective'"
+  domain: Maintenance
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [breakdown, corrective work order]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORK_ORDER.is_failure]
+    metrics: [failures]
+
+- id: GT-MFG-MAINTENANCE-COST
+  name: Maintenance Cost
+  definition: "Labour at the standard rate plus parts on maintenance work orders."
+  formula: "Σ (repair hours × labour rate + parts cost)"
+  domain: Maintenance
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [maintenance spend]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORK_ORDER.cost_usd]
+    metrics: [maintenance_cost_usd]
+
+- id: GT-MFG-SUPPLIER
+  name: Supplier
+  definition: "A provider of materials or components to Forgepoint plants, classified by commodity."
+  formula: "One record per supplier id in the supplier portal"
+  domain: Supply chain
+  owner: manufacturing:coo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [vendor]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_SUPPLIER.supplier_id, CONFORMED_GOLD.DIM_SUPPLIER.category]
+    metrics: []
+
+- id: GT-MFG-SUPPLIER-OTIF
+  name: Supplier OTIF
+  definition: "The share of inbound receipts a supplier delivered on or before the promise date and in full quantity. Receipts whose promise date the buyer rescheduled are excluded unless requested."
+  formula: "OTIF receipts ÷ receipts × 100 (BR-MFG-014, BR-MFG-015)"
+  domain: Supply chain
+  owner: manufacturing:coo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [otif, supplier on time in full]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_GOODS_RECEIPT.otif, CONFORMED_GOLD.FCT_GOODS_RECEIPT.buyer_rescheduled]
+    metrics: [supplier_otif_pct]
+
+- id: GT-MFG-SUPPLIER-PPM
+  name: Supplier PPM
+  definition: "Parts rejected at incoming inspection per million parts received from a supplier."
+  formula: "Σ rejected ÷ Σ received × 1,000,000 (BR-MFG-016)"
+  domain: Supply chain
+  owner: manufacturing:coo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [incoming ppm, supplier quality]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_GOODS_RECEIPT.qty_rejected, CONFORMED_GOLD.FCT_GOODS_RECEIPT.qty_received]
+    metrics: [supplier_ppm]
+
+- id: GT-MFG-SUPPLIER-LEAD-TIME
+  name: Supplier Lead Time
+  definition: "Days from purchase order to goods receipt."
+  formula: "receipt date − PO date"
+  domain: Supply chain
+  owner: manufacturing:coo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [inbound lead time, replenishment time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_GOODS_RECEIPT.lead_time_days]
+    metrics: [supplier_lead_time_days]
+
+- id: GT-MFG-GOODS-RECEIPT
+  name: Goods Receipt
+  definition: "An inbound receipt posted against a purchase order, with quantity received, rejects and value."
+  formula: "One record per receipt id"
+  domain: Supply chain
+  owner: manufacturing:coo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [inbound delivery, gr posting]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_GOODS_RECEIPT.receipt_id, CONFORMED_GOLD.FCT_GOODS_RECEIPT.receipt_value_usd]
+    metrics: [receipts, receipt_value_usd]
+
+- id: GT-MFG-DISTRIBUTOR
+  name: Distributor
+  definition: "A channel partner that buys Forgepoint products for resale in its sales region. Order-desk contact details are personal data."
+  formula: "One record per distributor id"
+  domain: Order fulfilment
+  owner: manufacturing:coo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [channel partner, reseller]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ORDER_LINE.distributor_id, CONFORMED_GOLD.FCT_ORDER_LINE.distributor_name]
+    metrics: []
+
+- id: GT-MFG-OTD
+  name: On-Time Delivery
+  definition: "The share of delivered order lines that arrived on or before the first confirmed promise date, measured at proof of delivery. Open lines are excluded."
+  formula: "Delivered lines on time ÷ delivered lines × 100 (BR-MFG-017, BR-MFG-018)"
+  domain: Order fulfilment
+  owner: manufacturing:coo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [otd, on time delivery, customer delivery performance]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ORDER_LINE.on_time, CONFORMED_GOLD.FCT_ORDER_LINE.delivered]
+    metrics: [on_time_delivery_pct]
+
+- id: GT-MFG-FILL-RATE
+  name: Order Fill Rate
+  definition: "The share of delivered order lines shipped complete (in full)."
+  formula: "Delivered lines in full ÷ delivered lines × 100 (BR-MFG-019)"
+  domain: Order fulfilment
+  owner: manufacturing:coo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [fill rate, in full]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ORDER_LINE.in_full, CONFORMED_GOLD.FCT_ORDER_LINE.qty_shipped]
+    metrics: [order_fill_rate_pct]
+
+- id: GT-MFG-ORDER-LEAD-TIME
+  name: Order Lead Time
+  definition: "Days from distributor order to proof of delivery."
+  formula: "delivered date − order date"
+  domain: Order fulfilment
+  owner: manufacturing:coo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [order cycle time, customer lead time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ORDER_LINE.lead_time_days]
+    metrics: [order_lead_time_days]
+
+- id: GT-MFG-ORDER-LINE
+  name: Order Line
+  definition: "One product line on a distributor sales order, with its own promise date, quantity and value."
+  formula: "One record per order line id"
+  domain: Order fulfilment
+  owner: manufacturing:coo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [order line, sales order line]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ORDER_LINE.order_line_id, CONFORMED_GOLD.FCT_ORDER_LINE.net_value_usd]
+    metrics: [order_lines_shipped, net_order_value]
+
+- id: GT-MFG-OBSOLETE
+  name: Obsolete Material
+  definition: "A material flagged Obsolete in the material master: no planned usage, held pending disposal. Obsolete stock is excluded from cover, turns and stockout metrics unless requested."
+  formula: "material status = 'Obsolete'"
+  domain: Inventory
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [obsolete stock, dead stock, slow movers]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT.material_status]
+    metrics: []
+
+- id: GT-MFG-DOS
+  name: Days of Supply
+  definition: "How many days current on-hand stock covers at the recent daily usage, measured in value on active materials."
+  formula: "Σ on-hand value ÷ Σ daily usage value (BR-MFG-020)"
+  domain: Inventory
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [days of cover, inventory cover]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT.on_hand_value_usd, CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT.daily_usage_value_usd]
+    metrics: [days_of_supply]
+
+- id: GT-MFG-TURNS
+  name: Inventory Turns
+  definition: "How many times a year the inventory is used up at the current usage rate, on active materials."
+  formula: "365 × Σ daily usage value ÷ Σ on-hand value"
+  domain: Inventory
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [stock turns, inventory turnover]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT.daily_usage_value_usd]
+    metrics: [inventory_turns]
+
+- id: GT-MFG-INVENTORY-VALUE
+  name: Inventory Value
+  definition: "On-hand quantity valued at standard unit cost."
+  formula: "Σ on-hand value ÷ snapshot days"
+  domain: Inventory
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [stock value]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT.on_hand_value_usd]
+    metrics: [avg_inventory_value]
+
+- id: GT-MFG-STOCKOUT
+  name: Stockout
+  definition: "A material-plant-day with nothing on hand. Below safety stock means less on hand than the material's safety stock cover at current usage."
+  formula: "on-hand quantity = 0; on hand < daily usage × safety stock days"
+  domain: Inventory
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [stock out, zero stock]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT.stocked_out, CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT.below_safety_stock]
+    metrics: [stockout_rate_pct, below_safety_stock_pct]
+
+- id: GT-MFG-TRIR
+  name: Total Recordable Incident Rate
+  definition: "Recordable work-related injuries and illnesses (including lost-time cases) per 200,000 hours worked, about 100 full-time employees for a year."
+  formula: "Σ recordable incidents × 200,000 ÷ Σ hours worked (BR-MFG-022)"
+  domain: Safety
+  owner: manufacturing:coo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: true
+  synonyms: [trir, recordable rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SAFETY_MONTH.recordable_incidents, CONFORMED_GOLD.FCT_SAFETY_MONTH.hours_worked]
+    metrics: [trir, ltir, recordable_incidents]
+
+- id: GT-MFG-NEAR-MISS
+  name: Near Miss
+  definition: "An unplanned event that could have caused injury but did not. More near-miss reporting is a sign of a healthy safety culture."
+  formula: "Σ near misses reported"
+  domain: Safety
+  owner: manufacturing:coo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [close call]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SAFETY_MONTH.near_misses, CURATED_SILVER.SAFETY_INCIDENT.severity]
+    metrics: [near_miss_reports]
+
+- id: GT-MFG-MINOR-STOP
+  name: Minor Stop
+  definition: "A short stoppage, typically under five minutes, not logged with a reason code, that shows up as performance loss. Draft: the threshold (three or five minutes) is under review by the OEE working group."
+  formula: "Stops shorter than the threshold inside run time, estimated from PLC cycle gaps"
+  domain: Production
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: DRAFT
+  cde: false
+  synonyms: [micro-stop, small stop]
+  mappings:
+    columns: []
+    metrics: []
+
+- id: GT-MFG-DOWNTIME-EVENT
+  name: Downtime Event
+  definition: "A period when a line was not producing, with its reason code and planned or unplanned category."
+  formula: "One record per MES stop event"
+  domain: Production
+  owner: manufacturing:ops-dpo
+  steward: manufacturing:data-steward
+  status: APPROVED
+  cde: false
+  synonyms: [stop event, stoppage event]
+  mappings:
+    columns: [CURATED_SILVER.DOWNTIME_EVENT.event_id, CURATED_SILVER.DOWNTIME_EVENT.reason]
+    metrics: []

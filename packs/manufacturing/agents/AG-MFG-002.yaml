@@ -1,0 +1,37 @@
+id: AG-MFG-002
+name: Quality Copilot
+domain: Quality & Defects
+status: PRODUCTION
+owner: manufacturing:ops-dpo
+on_call: Quality Data Ops
+avatar: { icon: microscope, hue: 150 }
+capability: "Answers questions on first-pass yield, defects per million, nonconformances, cost of poor quality, scrap, rework and field warranty claims."
+personas_served: [Production & Quality Manager, Plant Quality Engineer, Material Review Board]
+out_of_scope: ["approving material review board dispositions", "supplier corrective action approvals", "customer warranty claim decisions", "releasing quarantined lots"]
+products:
+  - { id: DP-MFG-002, columns: "*" }
+  - { id: DP-MFG-001, columns: [line_id, plant_name, business_unit, shift_name, run_type, total_units, scrap_units, rework_units] }
+tools:
+  - { tool: semantic_query, views: [QUALITY_DEFECTS, FIELD_WARRANTY, PLANT_PERFORMANCE], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-MFG-QUALITY-PROCEDURES, DOC-MFG-OEE-STANDARD] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-MFG-FPY, grains: [month, quarter], slices: [business_unit, plant, line], depth: rank_drivers }
+  - { kpi: KPI-MFG-DPM, grains: [month, quarter], slices: [business_unit, plant, defect_code], depth: explain }
+  - { kpi: KPI-MFG-NCR, grains: [month, quarter], slices: [business_unit, plant, defect_code], depth: value }
+  - { kpi: KPI-MFG-COPQ, grains: [month, quarter], slices: [business_unit, plant, defect_code], depth: rank_drivers }
+  - { kpi: KPI-MFG-WARRANTY-RATE, grains: [quarter], slices: [business_unit, product_family, failure_mode], depth: explain }
+  - { kpi: KPI-MFG-WARRANTY-COST, grains: [quarter], slices: [business_unit, product_family], depth: value }
+  - { kpi: KPI-MFG-SCRAP, grains: [month, quarter], slices: [business_unit, plant, line, shift], depth: rank_drivers }
+  - { kpi: KPI-MFG-REWORK, grains: [month, quarter], slices: [business_unit, plant, shift], depth: value }
+instructions: [INS-MFG-002-P, INS-MFG-002-R, INS-MFG-002-G, INS-MFG-002-O]
+guardrails: { citations_required: true, refuse_customer_level: false, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.05, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-MFG-009, SC-MFG-010, SC-MFG-011, SC-MFG-012, SC-MFG-013]
+quality_fix:
+  feedback_question: "What share of lots were clean passes last quarter?"
+  fix: { type: synonym, payload: { term: clean passes, synonyms: [clean pass, passed clean], maps_to: { kind: metric, ref: first_pass_yield_pct } } }
+  eval_before_pct: 88
+  eval_after_pct: 94

@@ -59,7 +59,7 @@ function evaluator(pack: Pack, agent: AgentManifest): Principal {
 
 function grounded(a: AgentAnswer, tolerance: number, pack: Pack): { ok: boolean; reason?: string } {
   if (a.kind !== 'answer' || !a.result) return { ok: true };
-  const labels = [...a.result.rows.flat().filter((v): v is string => typeof v === 'string'), ...a.result.fields.map((f) => f.label), ...pack.kpis.map((k) => k.name), ...pack.semantic.flatMap((v) => v.metrics.map((m) => m.label))];
+  const labels = [...a.result.rows.flat().filter((v): v is string => typeof v === 'string'), ...a.result.fields.map((f) => f.label), ...pack.kpis.flatMap((k) => [k.name, k.unit]), ...pack.semantic.flatMap((v) => v.metrics.flatMap((m) => [m.label, m.unit]))];
   const cells = [...a.result.rows.flat(), ...Object.values(a.result.totals ?? {})].filter((v): v is number => typeof v === 'number');
   const v = validateGrounding({ kind: a.kind, headline: a.headline, narrative: '', citations: [{ result_id: 'R' }] }, { results: new Map([['R', cells]]), docIds: new Set(), metrics: new Set(), rules: new Set(), maskedValues: [], unentitledProducts: [], tolerance, labels });
   return v.ok ? { ok: true } : { ok: false, reason: v.violations.join(' ') };

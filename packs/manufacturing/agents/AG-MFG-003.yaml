@@ -1,0 +1,29 @@
+id: AG-MFG-003
+name: Maintenance Planner
+domain: Maintenance & Reliability
+status: PRODUCTION
+owner: manufacturing:ops-dpo
+on_call: Reliability Engineering
+avatar: { icon: wrench, hue: 32 }
+capability: "Answers questions on MTBF, MTTR, planned maintenance share, PM schedule compliance, unplanned failures and maintenance cost by asset, line and plant."
+personas_served: [Maintenance Planner, Reliability Engineer, Plant Manager]
+out_of_scope: ["raising, scheduling or closing work orders", "ordering spares or changing stocking policies", "individual technician performance", "machine safety lockout decisions"]
+products:
+  - { id: DP-MFG-003, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [ASSET_RELIABILITY], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-MFG-MAINTENANCE-STANDARD] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-MFG-MTBF, grains: [month, quarter], slices: [business_unit, plant, line, asset, asset_type, criticality], depth: rank_drivers }
+  - { kpi: KPI-MFG-MTTR, grains: [month, quarter], slices: [business_unit, asset_type, criticality, failure_cause], depth: explain }
+  - { kpi: KPI-MFG-PLANNED-MAINT, grains: [month, quarter], slices: [business_unit, plant, criticality], depth: explain }
+  - { kpi: KPI-MFG-FAILURES, grains: [month, quarter], slices: [business_unit, plant, line, asset, failure_cause], depth: rank_drivers }
+  - { kpi: KPI-MFG-PM-COMPLIANCE, grains: [month, quarter], slices: [business_unit, plant], depth: value }
+  - { kpi: KPI-MFG-MAINT-COST, grains: [month, quarter], slices: [business_unit, plant, asset_type], depth: value }
+instructions: [INS-MFG-003-P, INS-MFG-003-R, INS-MFG-003-G, INS-MFG-003-O]
+guardrails: { citations_required: true, refuse_customer_level: false, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.05, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-MFG-014, SC-MFG-015, SC-MFG-016, SC-MFG-017, SC-MFG-018]

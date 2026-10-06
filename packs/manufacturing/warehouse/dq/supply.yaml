@@ -1,0 +1,58 @@
+# Goods receipt and supplier DQ rules.
+- id: DQ-MFG-031
+  object: CONFORMED_GOLD.FCT_GOODS_RECEIPT
+  column: otif
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: "Every receipt carries an OTIF flag (supplier OTIF)."
+- id: DQ-MFG-032
+  object: CONFORMED_GOLD.FCT_GOODS_RECEIPT
+  column: receipt_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: "One row per goods receipt after CDC deduplication."
+- id: DQ-MFG-033
+  object: CONFORMED_GOLD.FCT_GOODS_RECEIPT
+  column: qty_rejected
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: "Rejected quantities are never negative."
+- id: DQ-MFG-034
+  object: CONFORMED_GOLD.FCT_GOODS_RECEIPT
+  column: qty_rejected
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: "Every receipt carries an incoming-inspection reject count (supplier PPM)."
+- id: DQ-MFG-035
+  object: CONFORMED_GOLD.FCT_GOODS_RECEIPT
+  column: receipt_date
+  dimension: timeliness
+  assertion: "freshness_min <= 4320"
+  severity: medium
+  alert_route: engineering
+  description: "Goods receipts are no more than two days behind the reporting date."
+- id: DQ-MFG-036
+  object: CONFORMED_GOLD.FCT_GOODS_RECEIPT
+  column: lead_time_days
+  dimension: validity
+  assertion: "min >= 0"
+  severity: medium
+  alert_route: engineering
+  description: "Receipts never post before their purchase order."
+- id: DQ-MFG-037
+  object: CONFORMED_GOLD.DIM_SUPPLIER
+  column: supplier_id
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^SUP-[0-9]{3}$"
+  severity: low
+  alert_route: engineering
+  description: "Supplier ids follow the supplier portal numbering convention."

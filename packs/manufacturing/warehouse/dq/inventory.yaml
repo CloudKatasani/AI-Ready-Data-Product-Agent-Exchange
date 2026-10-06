@@ -1,0 +1,51 @@
+# Inventory position DQ rules.
+- id: DQ-MFG-045
+  object: CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT
+  column: on_hand_value_usd
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: "Every position carries an on-hand value at standard cost."
+- id: DQ-MFG-046
+  object: CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT
+  column: on_hand_value_usd
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: "On-hand value is never negative (negative stock is floored in Silver)."
+- id: DQ-MFG-047
+  object: CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT
+  column: material_status
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Active, Obsolete]
+  severity: critical
+  alert_route: steward
+  description: "Material status is Active or Obsolete so BR-MFG-020 can be applied."
+- id: DQ-MFG-048
+  object: CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT
+  column: snapshot_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: "Inventory positions are no more than one day behind the reporting date."
+- id: DQ-MFG-049
+  object: CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT
+  column: snapshot_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: "One row per inventory position after CDC deduplication."
+- id: DQ-MFG-050
+  object: CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT
+  column: material_class
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Raw material, Purchased component, Work in progress, Finished goods, MRO spare]
+  severity: medium
+  alert_route: steward
+  description: "Material classes conform to the material master hierarchy."

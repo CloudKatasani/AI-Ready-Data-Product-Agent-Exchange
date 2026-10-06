@@ -1,0 +1,137 @@
+# Forgepoint Industries synonyms (synthetic): shop-floor and supply-chain jargon → governed metric, dimension, value
+# or glossary term. Ported from the AI-Ready manufacturing synonyms and extended.
+
+# ── Production & OEE ────────────────────────────────────────────────────────────────────────────────
+- term: OEE
+  synonyms: [overall equipment effectiveness, line efficiency, equipment efficiency]
+  maps_to: { kind: metric, ref: oee_pct }
+- term: OEE availability
+  synonyms: [machine uptime, line uptime, availability loss]
+  maps_to: { kind: metric, ref: availability_pct }
+- term: OEE performance
+  synonyms: [speed efficiency, rate of run, performance loss]
+  maps_to: { kind: metric, ref: performance_pct }
+- term: OEE quality rate
+  synonyms: [good parts rate, yield on the line]
+  maps_to: { kind: metric, ref: quality_rate_pct }
+- term: Unplanned downtime
+  synonyms: [stoppages, lost time, breakdown hours, unplanned stops]
+  maps_to: { kind: metric, ref: unplanned_downtime_hours }
+- term: Units produced
+  synonyms: [output, throughput, production volume, parts made]
+  maps_to: { kind: metric, ref: units_produced }
+- term: Energy per unit
+  synonyms: [energy intensity, kwh per part, electricity per unit]
+  maps_to: { kind: metric, ref: energy_per_unit_kwh }
+- term: Business unit
+  synonyms: [division, bu, segment]
+  maps_to: { kind: dimension, ref: business_unit }
+- term: Plant
+  synonyms: [site, factory, works]
+  maps_to: { kind: dimension, ref: plant }
+- term: Loss reason
+  synonyms: [downtime reason, stoppage reason, reason code]
+  maps_to: { kind: dimension, ref: loss_reason }
+- term: Night shift
+  synonyms: [third shift, graveyard shift, nights]
+  maps_to: { kind: value, ref: shift=Night }
+- term: Minor stop
+  synonyms: [micro-stop, micro stop, small stop]
+  maps_to: { kind: term, ref: GT-MFG-MINOR-STOP }
+- term: Trial run
+  synonyms: [npi run, engineering trial, qualification run]
+  maps_to: { kind: term, ref: GT-MFG-TRIAL-RUN }
+
+# ── Quality ─────────────────────────────────────────────────────────────────────────────────────────
+- term: First-pass yield
+  synonyms: [right first time, first time through, fpy, right-first-time rate]
+  maps_to: { kind: metric, ref: first_pass_yield_pct }
+- term: Scrap rate
+  synonyms: [scrap, scrap percentage, scrapped share]
+  maps_to: { kind: metric, ref: scrap_rate_pct }
+- term: Rework rate
+  synonyms: [rework, reworked share]
+  maps_to: { kind: metric, ref: rework_rate_pct }
+- term: Cost of poor quality
+  synonyms: [copq, quality cost, cost of quality failures]
+  maps_to: { kind: metric, ref: copq_usd }
+- term: Nonconformance reports
+  synonyms: [ncrs, ncr count, nonconformances]
+  maps_to: { kind: metric, ref: ncr_count }
+- term: Defects per million
+  synonyms: [dpm, defect ppm, defect rate]
+  maps_to: { kind: metric, ref: defects_ppm }
+- term: Warranty claim rate
+  synonyms: [field failure rate, claims per thousand, warranty rate]
+  maps_to: { kind: metric, ref: warranty_claim_rate }
+- term: Defect code
+  synonyms: [defect type, failure code]
+  maps_to: { kind: dimension, ref: defect_code }
+- term: Hydraulic pumps
+  synonyms: [pumps, hydraulic pump range]
+  maps_to: { kind: value, ref: product_family=Hydraulic pumps }
+
+# ── Maintenance ─────────────────────────────────────────────────────────────────────────────────────
+- term: MTBF
+  synonyms: [mean time between failures, time between breakdowns]
+  maps_to: { kind: metric, ref: mtbf_hours }
+- term: MTTR
+  synonyms: [mean time to repair, time to fix, repair turnaround]
+  maps_to: { kind: metric, ref: mttr_hours }
+- term: Planned maintenance share
+  synonyms: [pm ratio, planned work ratio, preventive share]
+  maps_to: { kind: metric, ref: planned_maintenance_pct }
+- term: Unplanned failures
+  synonyms: [breakdowns, corrective jobs, machine failures]
+  maps_to: { kind: metric, ref: failures }
+- term: Critical asset
+  synonyms: [criticality a, a-critical asset, bottleneck machine]
+  maps_to: { kind: value, ref: criticality=A }
+- term: Asset
+  synonyms: [machine, equipment, asset id]
+  maps_to: { kind: dimension, ref: asset }
+
+# ── Supply chain & inventory ────────────────────────────────────────────────────────────────────────
+- term: Supplier OTIF
+  synonyms: [supplier on time in full, vendor otif, inbound otif]
+  maps_to: { kind: metric, ref: supplier_otif_pct }
+- term: Supplier PPM
+  synonyms: [incoming ppm, supplier reject rate, vendor ppm]
+  maps_to: { kind: metric, ref: supplier_ppm }
+- term: Supplier lead time
+  synonyms: [inbound lead time, vendor lead time, po to receipt time]
+  maps_to: { kind: metric, ref: supplier_lead_time_days }
+- term: Commodity
+  synonyms: [purchase category, spend category, supplier category]
+  maps_to: { kind: dimension, ref: commodity }
+- term: Supplier
+  synonyms: [vendor, vendors, suppliers]
+  maps_to: { kind: dimension, ref: supplier }
+- term: Days of supply
+  synonyms: [days of cover, stock cover, days on hand, inventory cover]
+  maps_to: { kind: metric, ref: days_of_supply }
+- term: Inventory turns
+  synonyms: [stock turns, turnover, inventory turnover]
+  maps_to: { kind: metric, ref: inventory_turns }
+- term: Stockout rate
+  synonyms: [stockouts, out of stock rate, zero stock positions]
+  maps_to: { kind: metric, ref: stockout_rate_pct }
+- term: MRO spares
+  synonyms: [maintenance spares, spare parts, mro]
+  maps_to: { kind: value, ref: material_class=MRO spare }
+
+# ── Order fulfilment ────────────────────────────────────────────────────────────────────────────────
+- term: On-time delivery
+  synonyms: [otd, delivery performance, on time to promise]
+  maps_to: { kind: metric, ref: on_time_delivery_pct }
+- term: Order fill rate
+  synonyms: [fill rate, line fill rate, shipped complete rate]
+  maps_to: { kind: metric, ref: order_fill_rate_pct }
+- term: Distributor
+  synonyms: [channel partner, reseller, distributors]
+  maps_to: { kind: dimension, ref: distributor }
+
+# ── Safety ──────────────────────────────────────────────────────────────────────────────────────────
+- term: Total recordable incident rate
+  synonyms: [trir, recordable rate, injury rate]
+  maps_to: { kind: metric, ref: trir }

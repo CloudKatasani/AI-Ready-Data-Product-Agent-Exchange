@@ -1,0 +1,77 @@
+# Domains, conformed backbone entities and links (ported from the ADPM manufacturing pack — plant to line to
+# shift to unit — and adapted to the Forgepoint Industries warehouse). Owners are persona refs; golden sources
+# are Gold (or curated Silver) objects in FPI_AI_PLATFORM.
+domains:
+  - id: production
+    name: Production & OEE
+    description: Plants, production lines and shift production records — scheduled time, planned and unplanned downtime, units started, good units, losses and metered energy.
+    owner: manufacturing:ops-dpo
+    entities: [Plant, Production line, Line shift, Downtime event, Operator]
+  - id: quality
+    name: Quality & Defects
+    description: Inspection lots, defects, nonconformance reports, cost of poor quality and field warranty claims on shipped product.
+    owner: manufacturing:ops-dpo
+    entities: [Inspection lot, Warranty lot]
+  - id: maintenance
+    name: Maintenance & Reliability
+    description: Machines and equipment per line with criticality, and the corrective and preventive work orders raised against them.
+    owner: manufacturing:ops-dpo
+    entities: [Asset, Work order]
+  - id: supply
+    name: Supply & Procurement
+    description: Suppliers by commodity and the goods receipts against purchase orders — promise dates, incoming inspection rejects and lead time.
+    owner: manufacturing:coo
+    entities: [Supplier, Goods receipt]
+  - id: order-fulfilment
+    name: Order Fulfilment & Distribution
+    description: Distributors, product families and customer order lines from order to proof of delivery.
+    owner: manufacturing:coo
+    entities: [Distributor, Product family, Order line]
+  - id: inventory
+    name: Inventory & Materials
+    description: The material master and daily plant inventory positions — on hand, usage, cover, stockouts and obsolete stock.
+    owner: manufacturing:ops-dpo
+    entities: [Material, Inventory position]
+  - id: ehs
+    name: Safety & Sustainability
+    description: Workplace safety incidents and near misses, hours worked, and the energy and emissions of plant operations.
+    owner: manufacturing:coo
+    entities: [Safety incident, Plant safety month]
+
+backbone:
+  entities:
+    - { name: Plant, description: "A Forgepoint manufacturing site with its business unit, country and grid emission factor", key: plant_id, domain: production, golden_source: CONFORMED_GOLD.DIM_PLANT }
+    - { name: Production line, description: "A line or cell within a plant with its process type, nameplate ideal cycle time and controlled process recipe", key: line_id, domain: production, golden_source: CONFORMED_GOLD.DIM_LINE }
+    - { name: Line shift, description: "One shift of one production line: scheduled time, planned and unplanned downtime, units started, scrap, rework and energy", key: event_id, domain: production, golden_source: CONFORMED_GOLD.FCT_LINE_SHIFT }
+    - { name: Downtime event, description: "A period when a line was not producing, with its reason and planned or unplanned category", key: event_id, domain: production, golden_source: CURATED_SILVER.DOWNTIME_EVENT }
+    - { name: Operator, description: "A person badged to run, lead or support a production line", key: badge_no, domain: production, golden_source: CONFORMED_GOLD.DIM_OPERATOR }
+    - { name: Inspection lot, description: "A quality inspection of a production lot with its defects, usage decision, NCR and cost of poor quality", key: lot_id, domain: quality, golden_source: CONFORMED_GOLD.FCT_INSPECTION_LOT }
+    - { name: Warranty lot, description: "A shipped lot of one product family tracked for field warranty claims and claim cost", key: lot_id, domain: quality, golden_source: CONFORMED_GOLD.FCT_WARRANTY_LOT }
+    - { name: Asset, description: "A machine or piece of equipment on a production line, ranked by criticality", key: asset_id, domain: maintenance, golden_source: CONFORMED_GOLD.DIM_ASSET }
+    - { name: Work order, description: "A corrective (failure) or preventive maintenance work order against an asset", key: wo_number, domain: maintenance, golden_source: CONFORMED_GOLD.FCT_WORK_ORDER }
+    - { name: Supplier, description: "A provider of materials or components, by commodity and country", key: supplier_id, domain: supply, golden_source: CONFORMED_GOLD.DIM_SUPPLIER }
+    - { name: Goods receipt, description: "An inbound receipt against a purchase order with promise date, quantity and incoming inspection rejects", key: receipt_id, domain: supply, golden_source: CONFORMED_GOLD.FCT_GOODS_RECEIPT }
+    - { name: Distributor, description: "A channel partner that buys Forgepoint products for resale in its sales region", key: distributor_id, domain: order-fulfilment, golden_source: CURATED_SILVER.DISTRIBUTOR_MASTER }
+    - { name: Product family, description: "A family of finished products owned by one business unit", key: family_id, domain: order-fulfilment, golden_source: CURATED_SILVER.PRODUCT_FAMILY }
+    - { name: Order line, description: "One product line on a distributor sales order, with its promise date, shipped quantity and proof of delivery", key: order_line_id, domain: order-fulfilment, golden_source: CONFORMED_GOLD.FCT_ORDER_LINE }
+    - { name: Material, description: "A raw material, purchased component, work-in-progress, finished good or MRO spare", key: material_id, domain: inventory, golden_source: CURATED_SILVER.MATERIAL_MASTER }
+    - { name: Inventory position, description: "One material-plant-day of on-hand quantity, usage and value", key: snapshot_id, domain: inventory, golden_source: CONFORMED_GOLD.FCT_INVENTORY_SNAPSHOT }
+    - { name: Safety incident, description: "A near miss, first-aid, recordable or lost-time incident at a plant", key: incident_id, domain: ehs, golden_source: CURATED_SILVER.SAFETY_INCIDENT }
+    - { name: Plant safety month, description: "One plant-month of hours worked and safety incidents by severity", key: safety_key, domain: ehs, golden_source: CONFORMED_GOLD.FCT_SAFETY_MONTH }
+  links:
+    - { from: Plant, to: Production line, cardinality: 1:N, via: plant_id }
+    - { from: Production line, to: Line shift, cardinality: 1:N, via: line_id }
+    - { from: Production line, to: Downtime event, cardinality: 1:N, via: line_id }
+    - { from: Production line, to: Asset, cardinality: 1:N, via: line_id }
+    - { from: Production line, to: Inspection lot, cardinality: 1:N, via: line_id }
+    - { from: Operator, to: Line shift, cardinality: 1:N, via: badge_no }
+    - { from: Asset, to: Work order, cardinality: 1:N, via: asset_id }
+    - { from: Supplier, to: Goods receipt, cardinality: 1:N, via: supplier_id }
+    - { from: Plant, to: Goods receipt, cardinality: 1:N, via: plant_id }
+    - { from: Distributor, to: Order line, cardinality: 1:N, via: distributor_id }
+    - { from: Product family, to: Order line, cardinality: 1:N, via: family_id }
+    - { from: Product family, to: Warranty lot, cardinality: 1:N, via: family_id }
+    - { from: Material, to: Inventory position, cardinality: 1:N, via: material_id }
+    - { from: Plant, to: Inventory position, cardinality: 1:N, via: plant_id }
+    - { from: Plant, to: Safety incident, cardinality: 1:N, via: plant_id }
+    - { from: Plant, to: Plant safety month, cardinality: 1:N, via: plant_id }

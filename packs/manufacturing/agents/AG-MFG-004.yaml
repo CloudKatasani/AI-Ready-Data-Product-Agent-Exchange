@@ -1,0 +1,32 @@
+id: AG-MFG-004
+name: Supply Chain Analyst
+domain: Supply & Procurement
+status: PRODUCTION
+owner: manufacturing:ops-dpo
+on_call: Supply Chain Analytics
+avatar: { icon: truck, hue: 265 }
+capability: "Answers questions on supplier OTIF, incoming PPM, supplier lead time, inbound receipt value, days of supply, inventory turns, stockouts and inventory value."
+personas_served: [Supply Chain Manager, Commodity Manager, Materials Planner]
+out_of_scope: ["placing, changing or cancelling purchase orders", "approving supplier corrective actions or deviations", "supplier prices and standard costs", "writing off obsolete stock"]
+products:
+  - { id: DP-MFG-004, columns: "*" }
+  - { id: DP-MFG-006, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [SUPPLIER_QUALITY, INVENTORY_POSITION], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-MFG-SUPPLIER-MANUAL, DOC-MFG-INVENTORY-POLICY] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-MFG-SUPPLIER-OTIF, grains: [month, quarter], slices: [supplier, commodity, plant, business_unit, supplier_country], depth: rank_drivers }
+  - { kpi: KPI-MFG-SUPPLIER-PPM, grains: [month, quarter], slices: [supplier, commodity, supplier_country], depth: rank_drivers }
+  - { kpi: KPI-MFG-SUPPLIER-LEAD-TIME, grains: [month, quarter], slices: [commodity, supplier, supplier_country], depth: trend }
+  - { kpi: KPI-MFG-RECEIPT-VALUE, grains: [month, quarter], slices: [commodity, supplier, plant, business_unit], depth: value }
+  - { kpi: KPI-MFG-TURNS, grains: [month], slices: [plant, business_unit, material_class], depth: value }
+  - { kpi: KPI-MFG-DOS, grains: [month], slices: [plant, business_unit, material_class, abc_class], depth: explain }
+  - { kpi: KPI-MFG-INV-VALUE, grains: [month], slices: [plant, business_unit, material_class], depth: value }
+  - { kpi: KPI-MFG-STOCKOUT, grains: [day, month], slices: [plant, business_unit, material_class], depth: rank_drivers }
+instructions: [INS-MFG-004-P, INS-MFG-004-R, INS-MFG-004-G, INS-MFG-004-O]
+guardrails: { citations_required: true, refuse_customer_level: false, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.05, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-MFG-019, SC-MFG-020, SC-MFG-021, SC-MFG-022, SC-MFG-023, SC-MFG-024]

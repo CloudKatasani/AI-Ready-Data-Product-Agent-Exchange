@@ -1,0 +1,110 @@
+# Control library for Forgepoint Industries (fictional). Regulators and jurisdictions are invented; frameworks are
+# named for the public standards they are modelled on (ADPM manufacturing controls: batch traceability, EHS
+# reporting, recall readiness, supplier confidentiality, record retention, worker privacy, export control,
+# residency). Illustrative, not legal advice.
+jurisdictions:
+  - { id: JUR-FPI-STATE, name: "State of Calder (headquarters and US plants)", regulator: "Calder Department of Labor and Industry" }
+  - { id: JUR-FPI-MULTI, name: "Multi-country privacy regimes (US states, EU, India, Brazil)", regulator: "National data protection authorities" }
+  - { id: JUR-FPI-EXPORT, name: "Export-controlled aerospace programmes", regulator: "National export control agencies (ITAR/EAR-style regimes)" }
+  - { id: JUR-FPI-CORP, name: "Corporate policy", regulator: "Forgepoint Industries Audit & Risk Committee" }
+
+controls:
+  - id: CTL-MFG-001
+    name: Production and quality record traceability
+    framework: ISO 9001 / AS9100-style traceability
+    description: >-
+      Every inspection lot, NCR and shipped lot is traceable to its line, plant and production date, and production
+      and quality records are retained for the regulated life of the product (at least ten years for aerospace parts).
+    jurisdiction: JUR-FPI-CORP
+    applies_to: { domains: [production, quality] }
+    evidence: Lineage from Bronze MES and QMS sources to the certified products and the retention configuration.
+    stage: 11
+  - id: CTL-MFG-002
+    name: Worker personal data protection
+    framework: Multi-country privacy laws (GDPR-style)
+    description: >-
+      Operator, shift-lead and injured-person names and emails are masked for every persona without PII clearance and
+      are excluded from performance analytics unless a stated purpose requires them; losses are attributed to lines,
+      not people.
+    jurisdiction: JUR-FPI-MULTI
+    applies_to: { classes: [PII], domains: [production, ehs] }
+    evidence: Masking policy attachment report for every PII-tagged column and a sample of masked query logs.
+    stage: 6
+  - id: CTL-MFG-003
+    name: Trade secret protection for recipes and standard costs
+    framework: Trade secrets protection policy
+    description: >-
+      Controlled process recipes and costed-BOM standard costs are classified TRADE_SECRET, masked with
+      MASK_TRADE_SECRET and never exposed through semantic views, data products or agent answers.
+    jurisdiction: JUR-FPI-CORP
+    applies_to: { classes: [TRADE_SECRET], domains: [production, order-fulfilment, supply] }
+    evidence: Column classification scan showing TRADE_SECRET only on recipe and cost columns, with masking attached.
+    stage: 6
+  - id: CTL-MFG-004
+    name: Distributor contact data protection
+    framework: Multi-country privacy laws (GDPR-style)
+    description: >-
+      Distributor order-desk names, emails and phone numbers are PII; they are masked in analytical products for
+      anyone without PII clearance and agents answer with aggregates only.
+    jurisdiction: JUR-FPI-MULTI
+    applies_to: { classes: [PII], domains: [order-fulfilment] }
+    evidence: Masking attachment on FCT_ORDER_LINE.contact_email and contact_phone before Order to Delivery is certified.
+    stage: 11
+  - id: CTL-MFG-005
+    name: Supplier terms confidentiality
+    framework: Commercial confidentiality policy
+    description: >-
+      Supplier prices, standard costs, tax identifiers and bank details are restricted to named commercial roles;
+      supplier scorecards report delivery and quality performance only.
+    jurisdiction: JUR-FPI-CORP
+    applies_to: { classes: [GOV_ID, TRADE_SECRET], domains: [supply] }
+    evidence: Masking on DIM_SUPPLIER.tax_id and the supply agent's out-of-scope list and refusal test results.
+    stage: 10
+  - id: CTL-MFG-006
+    name: Recordable incident reporting
+    framework: OSHA-style recordkeeping
+    description: >-
+      Recordable and lost-time incidents are recorded within seven days with auditable lineage; TRIR and LTIR are
+      computed from certified incident and hours data using one definition across plants.
+    jurisdiction: JUR-FPI-STATE
+    applies_to: { domains: [ehs] }
+    evidence: Incident register completeness, the TRIR definition in the glossary and the Workplace Safety contract.
+    stage: 11
+  - id: CTL-MFG-007
+    name: Export control on aerospace programme data
+    framework: ITAR/EAR-style export control
+    description: >-
+      Technical data for export-controlled aerospace programmes is restricted to authorised jurisdictions and
+      personnel; analytical products expose aggregates by product family only, never drawings or recipes.
+    jurisdiction: JUR-FPI-EXPORT
+    applies_to: { classes: [TRADE_SECRET], domains: [production, quality] }
+    evidence: Recipe masking on DIM_LINE and the absence of technical-data columns in Aerospace Components outputs.
+    stage: 5
+  - id: CTL-MFG-008
+    name: Critical data element ownership
+    framework: Enterprise data governance policy
+    description: >-
+      Every critical data element has a named owner and steward, at least one executable data quality rule and a
+      glossary term before the product that exposes it can be certified.
+    jurisdiction: JUR-FPI-CORP
+    applies_to: { domains: [production, quality, maintenance, supply, order-fulfilment, inventory, ehs] }
+    evidence: CDE register with owners, linked DQ rules and their latest results.
+    stage: 8
+  - id: CTL-MFG-009
+    name: Plant data residency
+    framework: Corporate information security standard
+    description: Plant operational and worker data remain within the operating region unless a transfer basis exists.
+    jurisdiction: JUR-FPI-MULTI
+    applies_to: { classes: [PII], domains: [production, ehs] }
+    evidence: Platform region configuration and storage location report.
+    stage: 5
+  - id: CTL-MFG-010
+    name: Recall readiness
+    framework: Product safety policy
+    description: >-
+      A recall query must return affected shipped lots, product families and distributors within four hours, from
+      certified warranty and order data.
+    jurisdiction: JUR-FPI-CORP
+    applies_to: { domains: [quality, order-fulfilment] }
+    evidence: Recall drill results using the Quality & Defects and Order to Delivery products.
+    stage: 11

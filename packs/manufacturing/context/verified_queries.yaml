@@ -1,0 +1,447 @@
+# Verified queries — curated question -> MetricQuery pairs, ported from the AI-Ready manufacturing context (VQ-001..048)
+# and the Marketplace MFG demo exchanges. Every query compiles through compileMetricQuery() on the named view.
+# ORDER_DELIVERY deliberately has only 7 active entries: the DP-MFG-005 certification story (gate 4) activates
+# VQ-MFG-065..067 via FIX-1.
+
+# ---------------------------------------------------------------- PLANT_PERFORMANCE (AG-MFG-001; scrap and rework → AG-MFG-002)
+- id: VQ-MFG-001
+  question: "What was OEE by business unit last quarter?"
+  query: { view: PLANT_PERFORMANCE, metrics: [oee_pct], dimensions: [business_unit], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: oee_pct, dir: desc }] }
+  agent: AG-MFG-001
+  verified_by: manufacturing:production-manager
+  verified_at: 2026-07-05
+- id: VQ-MFG-002
+  question: "What was OEE by plant last month?"
+  query: { view: PLANT_PERFORMANCE, metrics: [oee_pct], dimensions: [plant], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: oee_pct, dir: desc }] }
+  agent: AG-MFG-001
+  verified_by: manufacturing:production-manager
+  verified_at: 2026-07-08
+- id: VQ-MFG-003
+  question: "OEE availability, performance and quality rate by line type last quarter"
+  query: { view: PLANT_PERFORMANCE, metrics: [availability_pct, performance_pct, quality_rate_pct], dimensions: [line_type], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-MFG-001
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-07-11
+- id: VQ-MFG-004
+  question: "Unplanned downtime hours by loss reason last quarter"
+  query: { view: PLANT_PERFORMANCE, metrics: [unplanned_downtime_hours], dimensions: [loss_reason], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: unplanned_downtime_hours, dir: desc }] }
+  agent: AG-MFG-001
+  verified_by: manufacturing:production-manager
+  verified_at: 2026-07-14
+- id: VQ-MFG-005
+  question: "Units produced by month this year"
+  query: { view: PLANT_PERFORMANCE, metrics: [units_produced], timeRange: { ytd: true }, timeGrain: month, analysis: trend }
+  agent: AG-MFG-001
+  verified_by: manufacturing:production-manager
+  verified_at: 2026-07-17
+- id: VQ-MFG-006
+  question: "Which 10 lines had the lowest OEE last month?"
+  query: { view: PLANT_PERFORMANCE, metrics: [oee_pct], dimensions: [line], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: oee_pct, dir: asc }], limit: 10, analysis: rank }
+  agent: AG-MFG-001
+  verified_by: manufacturing:production-manager
+  verified_at: 2026-07-20
+- id: VQ-MFG-007
+  question: "OEE by shift last quarter"
+  query: { view: PLANT_PERFORMANCE, metrics: [oee_pct], dimensions: [shift], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: oee_pct, dir: desc }] }
+  agent: AG-MFG-001
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-07-23
+- id: VQ-MFG-008
+  question: "Energy per unit by business unit last quarter"
+  query: { view: PLANT_PERFORMANCE, metrics: [energy_per_unit_kwh], dimensions: [business_unit], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: energy_per_unit_kwh, dir: desc }] }
+  agent: AG-MFG-001
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-07-26
+- id: VQ-MFG-009
+  question: "Scope 2 emissions by plant this year"
+  query: { view: PLANT_PERFORMANCE, metrics: [scope2_emissions_t], dimensions: [plant], timeRange: { ytd: true }, orderBy: [{ field: scope2_emissions_t, dir: desc }] }
+  agent: AG-MFG-001
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-07-29
+- id: VQ-MFG-010
+  question: "OEE by production week last quarter"
+  query: { view: PLANT_PERFORMANCE, metrics: [oee_pct], timeRange: { last: { n: 1, unit: quarter } }, timeGrain: week, analysis: trend }
+  agent: AG-MFG-001
+  verified_by: manufacturing:production-manager
+  verified_at: 2026-08-01
+- id: VQ-MFG-011
+  question: "How many units were produced last quarter?"
+  query: { view: PLANT_PERFORMANCE, metrics: [units_produced], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-MFG-001
+  verified_by: manufacturing:production-manager
+  verified_at: 2026-08-04
+- id: VQ-MFG-012
+  question: "Scrap rate by plant last quarter"
+  query: { view: PLANT_PERFORMANCE, metrics: [scrap_rate_pct], dimensions: [plant], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: scrap_rate_pct, dir: desc }] }
+  agent: AG-MFG-002
+  verified_by: manufacturing:production-manager
+  verified_at: 2026-08-07
+- id: VQ-MFG-013
+  question: "Rework rate by business unit this year"
+  query: { view: PLANT_PERFORMANCE, metrics: [rework_rate_pct], dimensions: [business_unit], timeRange: { ytd: true }, orderBy: [{ field: rework_rate_pct, dir: desc }] }
+  agent: AG-MFG-002
+  verified_by: manufacturing:production-manager
+  verified_at: 2026-08-10
+
+# ---------------------------------------------------------------- QUALITY_DEFECTS (AG-MFG-002)
+- id: VQ-MFG-014
+  question: "First-pass yield by business unit last quarter"
+  query: { view: QUALITY_DEFECTS, metrics: [first_pass_yield_pct], dimensions: [business_unit], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: first_pass_yield_pct, dir: desc }] }
+  agent: AG-MFG-002
+  verified_by: manufacturing:production-manager
+  verified_at: 2026-08-13
+- id: VQ-MFG-015
+  question: "First-pass yield by month this year"
+  query: { view: QUALITY_DEFECTS, metrics: [first_pass_yield_pct], timeRange: { ytd: true }, timeGrain: month, analysis: trend }
+  agent: AG-MFG-002
+  verified_by: manufacturing:production-manager
+  verified_at: 2026-08-16
+- id: VQ-MFG-016
+  question: "Top 5 defect codes by cost of poor quality last quarter"
+  query: { view: QUALITY_DEFECTS, metrics: [copq_usd], dimensions: [defect_code], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: copq_usd, dir: desc }], limit: 5, analysis: rank }
+  agent: AG-MFG-002
+  verified_by: manufacturing:production-manager
+  verified_at: 2026-08-19
+- id: VQ-MFG-017
+  question: "Defects per million by business unit last quarter"
+  query: { view: QUALITY_DEFECTS, metrics: [defects_ppm], dimensions: [business_unit], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: defects_ppm, dir: desc }] }
+  agent: AG-MFG-002
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-08-22
+- id: VQ-MFG-018
+  question: "How many nonconformance reports were raised last month?"
+  query: { view: QUALITY_DEFECTS, metrics: [ncr_count], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-MFG-002
+  verified_by: manufacturing:production-manager
+  verified_at: 2026-08-25
+- id: VQ-MFG-019
+  question: "Cost of poor quality by plant this year"
+  query: { view: QUALITY_DEFECTS, metrics: [copq_usd], dimensions: [plant], timeRange: { ytd: true }, orderBy: [{ field: copq_usd, dir: desc }] }
+  agent: AG-MFG-002
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-08-28
+- id: VQ-MFG-020
+  question: "Nonconformance reports by defect code last quarter"
+  query: { view: QUALITY_DEFECTS, metrics: [ncr_count], dimensions: [defect_code], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: ncr_count, dir: desc }] }
+  agent: AG-MFG-002
+  verified_by: manufacturing:production-manager
+  verified_at: 2026-07-02
+- id: VQ-MFG-021
+  question: "Cost of poor quality by month this year"
+  query: { view: QUALITY_DEFECTS, metrics: [copq_usd], timeRange: { ytd: true }, timeGrain: month, analysis: trend }
+  agent: AG-MFG-002
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-07-05
+- id: VQ-MFG-022
+  question: "First-pass yield by plant last quarter"
+  query: { view: QUALITY_DEFECTS, metrics: [first_pass_yield_pct], dimensions: [plant], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: first_pass_yield_pct, dir: asc }] }
+  agent: AG-MFG-002
+  verified_by: manufacturing:production-manager
+  verified_at: 2026-07-08
+- id: VQ-MFG-023
+  question: "Defects per million by defect code this year"
+  query: { view: QUALITY_DEFECTS, metrics: [defects_ppm], dimensions: [defect_code], timeRange: { ytd: true }, orderBy: [{ field: defects_ppm, dir: desc }] }
+  agent: AG-MFG-002
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-07-11
+
+# ---------------------------------------------------------------- FIELD_WARRANTY (AG-MFG-002)
+- id: VQ-MFG-024
+  question: "Warranty claim rate by product family this year"
+  query: { view: FIELD_WARRANTY, metrics: [warranty_claim_rate], dimensions: [product_family], timeRange: { ytd: true }, orderBy: [{ field: warranty_claim_rate, dir: desc }] }
+  agent: AG-MFG-002
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-07-14
+- id: VQ-MFG-025
+  question: "Warranty cost by business unit this year"
+  query: { view: FIELD_WARRANTY, metrics: [warranty_cost_usd], dimensions: [business_unit], timeRange: { ytd: true }, orderBy: [{ field: warranty_cost_usd, dir: desc }] }
+  agent: AG-MFG-002
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-07-17
+- id: VQ-MFG-026
+  question: "Warranty claim rate by failure mode this year"
+  query: { view: FIELD_WARRANTY, metrics: [warranty_claim_rate], dimensions: [failure_mode], timeRange: { ytd: true }, orderBy: [{ field: warranty_claim_rate, dir: desc }] }
+  agent: AG-MFG-002
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-07-20
+
+# ---------------------------------------------------------------- ASSET_RELIABILITY (AG-MFG-003)
+- id: VQ-MFG-027
+  question: "What was MTBF last quarter?"
+  query: { view: ASSET_RELIABILITY, metrics: [mtbf_hours], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-MFG-003
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-07-23
+- id: VQ-MFG-028
+  question: "Which five assets had the lowest MTBF last quarter?"
+  query: { view: ASSET_RELIABILITY, metrics: [mtbf_hours], dimensions: [asset], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: mtbf_hours, dir: asc }], limit: 5, analysis: rank }
+  agent: AG-MFG-003
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-07-26
+- id: VQ-MFG-029
+  question: "Planned maintenance share by business unit this year"
+  query: { view: ASSET_RELIABILITY, metrics: [planned_maintenance_pct], dimensions: [business_unit], timeRange: { ytd: true }, orderBy: [{ field: planned_maintenance_pct, dir: desc }] }
+  agent: AG-MFG-003
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-07-29
+- id: VQ-MFG-030
+  question: "MTTR by asset type last quarter"
+  query: { view: ASSET_RELIABILITY, metrics: [mttr_hours], dimensions: [asset_type], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: mttr_hours, dir: desc }] }
+  agent: AG-MFG-003
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-08-01
+- id: VQ-MFG-031
+  question: "MTBF for criticality A assets last quarter"
+  query: { view: ASSET_RELIABILITY, metrics: [mtbf_hours], timeRange: { last: { n: 1, unit: quarter } }, filters: [{ dimension: criticality, op: "=", value: A }] }
+  agent: AG-MFG-003
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-08-04
+- id: VQ-MFG-032
+  question: "Unplanned failures by failure cause last quarter"
+  query: { view: ASSET_RELIABILITY, metrics: [failures], dimensions: [failure_cause], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: failures, dir: desc }] }
+  agent: AG-MFG-003
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-08-07
+- id: VQ-MFG-033
+  question: "MTBF by month this year"
+  query: { view: ASSET_RELIABILITY, metrics: [mtbf_hours], timeRange: { ytd: true }, timeGrain: month, analysis: trend }
+  agent: AG-MFG-003
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-08-10
+- id: VQ-MFG-034
+  question: "Maintenance cost by plant this year"
+  query: { view: ASSET_RELIABILITY, metrics: [maintenance_cost_usd], dimensions: [plant], timeRange: { ytd: true }, orderBy: [{ field: maintenance_cost_usd, dir: desc }] }
+  agent: AG-MFG-003
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-08-13
+- id: VQ-MFG-035
+  question: "PM schedule compliance by business unit last quarter"
+  query: { view: ASSET_RELIABILITY, metrics: [pm_compliance_pct], dimensions: [business_unit], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: pm_compliance_pct, dir: desc }] }
+  agent: AG-MFG-003
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-08-16
+- id: VQ-MFG-036
+  question: "How many unplanned failures did we have last month?"
+  query: { view: ASSET_RELIABILITY, metrics: [failures], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-MFG-003
+  verified_by: manufacturing:production-manager
+  verified_at: 2026-08-19
+- id: VQ-MFG-037
+  question: "MTTR by business unit last quarter"
+  query: { view: ASSET_RELIABILITY, metrics: [mttr_hours], dimensions: [business_unit], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: mttr_hours, dir: desc }] }
+  agent: AG-MFG-003
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-08-22
+
+# ---------------------------------------------------------------- SUPPLIER_QUALITY (AG-MFG-004)
+- id: VQ-MFG-038
+  question: "What was supplier OTIF last quarter?"
+  query: { view: SUPPLIER_QUALITY, metrics: [supplier_otif_pct], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-MFG-004
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-08-25
+- id: VQ-MFG-039
+  question: "Supplier OTIF by supplier last quarter"
+  query: { view: SUPPLIER_QUALITY, metrics: [supplier_otif_pct], dimensions: [supplier], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: supplier_otif_pct, dir: asc }] }
+  agent: AG-MFG-004
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-08-28
+- id: VQ-MFG-040
+  question: "Supplier PPM by commodity this year"
+  query: { view: SUPPLIER_QUALITY, metrics: [supplier_ppm], dimensions: [commodity], timeRange: { ytd: true }, orderBy: [{ field: supplier_ppm, dir: desc }] }
+  agent: AG-MFG-004
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-07-02
+- id: VQ-MFG-041
+  question: "Supplier lead time by commodity last quarter"
+  query: { view: SUPPLIER_QUALITY, metrics: [supplier_lead_time_days], dimensions: [commodity], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: supplier_lead_time_days, dir: desc }] }
+  agent: AG-MFG-004
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-07-05
+- id: VQ-MFG-042
+  question: "Supplier OTIF by month this year"
+  query: { view: SUPPLIER_QUALITY, metrics: [supplier_otif_pct], timeRange: { ytd: true }, timeGrain: month, analysis: trend }
+  agent: AG-MFG-004
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-07-08
+- id: VQ-MFG-043
+  question: "Supplier PPM for preferred versus other suppliers this year"
+  query: { view: SUPPLIER_QUALITY, metrics: [supplier_ppm], dimensions: [preferred_supplier], timeRange: { ytd: true } }
+  agent: AG-MFG-004
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-07-11
+- id: VQ-MFG-044
+  question: "Supplier OTIF by receiving plant last quarter"
+  query: { view: SUPPLIER_QUALITY, metrics: [supplier_otif_pct], dimensions: [plant], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: supplier_otif_pct, dir: asc }] }
+  agent: AG-MFG-004
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-07-14
+- id: VQ-MFG-045
+  question: "Which 10 suppliers had the worst supplier PPM this year?"
+  query: { view: SUPPLIER_QUALITY, metrics: [supplier_ppm], dimensions: [supplier], timeRange: { ytd: true }, orderBy: [{ field: supplier_ppm, dir: desc }], limit: 10, analysis: rank }
+  agent: AG-MFG-004
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-07-17
+- id: VQ-MFG-046
+  question: "Inbound receipt value by business unit this year"
+  query: { view: SUPPLIER_QUALITY, metrics: [receipt_value_usd], dimensions: [business_unit], timeRange: { ytd: true }, orderBy: [{ field: receipt_value_usd, dir: desc }] }
+  agent: AG-MFG-004
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-07-20
+- id: VQ-MFG-047
+  question: "Supplier lead time by supplier country this year"
+  query: { view: SUPPLIER_QUALITY, metrics: [supplier_lead_time_days], dimensions: [supplier_country], timeRange: { ytd: true }, orderBy: [{ field: supplier_lead_time_days, dir: desc }] }
+  agent: AG-MFG-004
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-07-23
+
+# ---------------------------------------------------------------- INVENTORY_POSITION (AG-MFG-004)
+- id: VQ-MFG-048
+  question: "What were days of supply last month?"
+  query: { view: INVENTORY_POSITION, metrics: [days_of_supply], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-MFG-004
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-07-26
+- id: VQ-MFG-049
+  question: "Days of supply by material class last month"
+  query: { view: INVENTORY_POSITION, metrics: [days_of_supply], dimensions: [material_class], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: days_of_supply, dir: desc }] }
+  agent: AG-MFG-004
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-07-29
+- id: VQ-MFG-050
+  question: "Inventory turns by business unit last month"
+  query: { view: INVENTORY_POSITION, metrics: [inventory_turns], dimensions: [business_unit], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: inventory_turns, dir: desc }] }
+  agent: AG-MFG-004
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-08-01
+- id: VQ-MFG-051
+  question: "Stockout rate by plant last month"
+  query: { view: INVENTORY_POSITION, metrics: [stockout_rate_pct], dimensions: [plant], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: stockout_rate_pct, dir: desc }] }
+  agent: AG-MFG-004
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-08-04
+- id: VQ-MFG-052
+  question: "Average inventory value by material class last month"
+  query: { view: INVENTORY_POSITION, metrics: [avg_inventory_value], dimensions: [material_class], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: avg_inventory_value, dir: desc }] }
+  agent: AG-MFG-004
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-08-07
+- id: VQ-MFG-053
+  question: "Days of supply by ABC class last month"
+  query: { view: INVENTORY_POSITION, metrics: [days_of_supply], dimensions: [abc_class], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: days_of_supply, dir: desc }] }
+  agent: AG-MFG-004
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-08-10
+- id: VQ-MFG-054
+  question: "Stockout rate by month this year"
+  query: { view: INVENTORY_POSITION, metrics: [stockout_rate_pct], timeRange: { ytd: true }, timeGrain: month, analysis: trend }
+  agent: AG-MFG-004
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-08-13
+- id: VQ-MFG-055
+  question: "Inventory turns by plant last quarter"
+  query: { view: INVENTORY_POSITION, metrics: [inventory_turns], dimensions: [plant], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: inventory_turns, dir: desc }] }
+  agent: AG-MFG-004
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-08-16
+- id: VQ-MFG-056
+  question: "Share of positions below safety stock by material class last month"
+  query: { view: INVENTORY_POSITION, metrics: [below_safety_stock_pct], dimensions: [material_class], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: below_safety_stock_pct, dir: desc }] }
+  agent: AG-MFG-004
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-08-19
+- id: VQ-MFG-057
+  question: "Average inventory value by month this year"
+  query: { view: INVENTORY_POSITION, metrics: [avg_inventory_value], timeRange: { ytd: true }, timeGrain: month, analysis: trend }
+  agent: AG-MFG-004
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-08-22
+
+# ---------------------------------------------------------------- ORDER_DELIVERY (AG-MFG-001) — deliberately 7 active; FIX-1 activates VQ-MFG-065..067
+- id: VQ-MFG-058
+  question: "What was our on-time delivery rate last month?"
+  query: { view: ORDER_DELIVERY, metrics: [on_time_delivery_pct], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-MFG-001
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-08-25
+- id: VQ-MFG-059
+  question: "On-time delivery by month this year"
+  query: { view: ORDER_DELIVERY, metrics: [on_time_delivery_pct], timeRange: { ytd: true }, timeGrain: month, analysis: trend }
+  agent: AG-MFG-001
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-08-28
+- id: VQ-MFG-060
+  question: "On-time delivery by business unit last quarter"
+  query: { view: ORDER_DELIVERY, metrics: [on_time_delivery_pct], dimensions: [business_unit], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: on_time_delivery_pct, dir: desc }] }
+  agent: AG-MFG-001
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-07-02
+- id: VQ-MFG-061
+  question: "What was the order fill rate last quarter?"
+  query: { view: ORDER_DELIVERY, metrics: [order_fill_rate_pct], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-MFG-001
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-07-05
+- id: VQ-MFG-062
+  question: "Order lead time by product family last quarter"
+  query: { view: ORDER_DELIVERY, metrics: [order_lead_time_days], dimensions: [product_family], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: order_lead_time_days, dir: desc }] }
+  agent: AG-MFG-001
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-07-08
+- id: VQ-MFG-063
+  question: "How many order lines were shipped last month?"
+  query: { view: ORDER_DELIVERY, metrics: [order_lines_shipped], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-MFG-001
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-07-11
+- id: VQ-MFG-064
+  question: "Order fill rate by business unit last quarter"
+  query: { view: ORDER_DELIVERY, metrics: [order_fill_rate_pct], dimensions: [business_unit], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: order_fill_rate_pct, dir: desc }] }
+  agent: AG-MFG-001
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-07-14
+
+# ---------------------------------------------------------------- Pending FIX-1 (DP-MFG-005 certification demo)
+- id: VQ-MFG-065
+  question: "On-time delivery by sales region last quarter"
+  query: { view: ORDER_DELIVERY, metrics: [on_time_delivery_pct], dimensions: [sales_region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: on_time_delivery_pct, dir: desc }] }
+  agent: AG-MFG-001
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-09-21
+  status: pending_fix
+- id: VQ-MFG-066
+  question: "Which 10 distributors had the lowest on-time delivery last quarter?"
+  query: { view: ORDER_DELIVERY, metrics: [on_time_delivery_pct], dimensions: [distributor], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: on_time_delivery_pct, dir: asc }], limit: 10, analysis: rank }
+  agent: AG-MFG-001
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-09-21
+  status: pending_fix
+- id: VQ-MFG-067
+  question: "Order lead time by month this year"
+  query: { view: ORDER_DELIVERY, metrics: [order_lead_time_days], timeRange: { ytd: true }, timeGrain: month, analysis: trend }
+  agent: AG-MFG-001
+  verified_by: manufacturing:data-steward
+  verified_at: 2026-09-21
+  status: pending_fix
+
+# ---------------------------------------------------------------- WORKPLACE_SAFETY (lifecycle demo, no agent yet)
+- id: VQ-MFG-068
+  question: "What was the total recordable incident rate this year?"
+  query: { view: WORKPLACE_SAFETY, metrics: [trir], timeRange: { ytd: true } }
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-07-26
+- id: VQ-MFG-069
+  question: "Total recordable incident rate by plant this year"
+  query: { view: WORKPLACE_SAFETY, metrics: [trir], dimensions: [plant], timeRange: { ytd: true }, orderBy: [{ field: trir, dir: desc }] }
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-07-29
+- id: VQ-MFG-070
+  question: "Lost time incident rate by business unit this year"
+  query: { view: WORKPLACE_SAFETY, metrics: [ltir], dimensions: [business_unit], timeRange: { ytd: true }, orderBy: [{ field: ltir, dir: desc }] }
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-08-01
+- id: VQ-MFG-071
+  question: "Near miss reports by month this year"
+  query: { view: WORKPLACE_SAFETY, metrics: [near_miss_reports], timeRange: { ytd: true }, timeGrain: month, analysis: trend }
+  verified_by: manufacturing:ops-dpo
+  verified_at: 2026-08-04

@@ -1,0 +1,50 @@
+# Five demo identities, one per archetype (01-functional-spec §2.2). People are generated, not real.
+# Converted from the AI-Ready manufacturing personas (plant analyst, production manager, steward) plus a
+# data product owner (C) and an aggregates-only executive (E).
+- id: manufacturing:plant-analyst
+  archetype: A
+  name: Ravi Menon
+  title: Plant Performance Analyst, Motion & Fluid
+  domain: Operations
+  roles: [DATA_CONSUMER]
+  row_filter: { dimension: business_unit, allowed: [Motion Systems, Fluid Power] }
+  unmasked: []
+  cares: OEE, output, downtime and crews in the Motion Systems and Fluid Power plants; wants plain answers for the weekly tier meeting.
+  sees: Motion Systems and Fluid Power rows only; operator names, distributor contacts and process recipes masked.
+- id: manufacturing:production-manager
+  archetype: B
+  name: Carla Jimenez
+  title: Production & Quality Manager
+  domain: Operations & quality
+  roles: [DATA_CONSUMER, ANALYST]
+  unmasked: []
+  cares: OEE losses, first-pass yield, scrap, cost of poor quality, reliability and material cover across every plant.
+  sees: All business units; personal data and trade secrets masked.
+- id: manufacturing:ops-dpo
+  archetype: C
+  name: Dorota Kowalczyk
+  title: Manufacturing Data Product Owner
+  domain: Manufacturing excellence
+  roles: [DOMAIN_PRODUCT_OWNER, DATA_ENGINEER]
+  unmasked: []
+  cares: Shipping certified production, quality, maintenance and supply products that agents can trust.
+  sees: All business units; personal data and trade secrets masked; can build and submit products for review.
+- id: manufacturing:data-steward
+  archetype: D
+  name: Mei Lindgren
+  title: Manufacturing Data Steward
+  domain: Governance
+  roles: [DATA_STEWARD, GOVERNANCE_COUNCIL, PRIVACY_OFFICER]
+  unmasked: [PII, TRADE_SECRET, GOV_ID]
+  cares: Glossary health, CDE ownership, masking coverage and certification decisions.
+  sees: Everything, unmasked; approves access requests and certification gates.
+- id: manufacturing:coo
+  archetype: E
+  name: Henrik Solberg
+  title: Chief Operating Officer, Industrial Group
+  domain: Executive
+  roles: [EXECUTIVE, PORTFOLIO_LEAD, GOVERNANCE_COUNCIL]
+  unmasked: []
+  aggregates_only: true
+  cares: OEE, delivery, quality and safety against plan by business unit, and where to invest next.
+  sees: Aggregates only; portfolio, value and readiness.

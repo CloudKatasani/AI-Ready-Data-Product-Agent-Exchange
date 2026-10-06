@@ -1,0 +1,115 @@
+# Production, line and OEE time-base DQ rules.
+- id: DQ-MFG-001
+  object: CONFORMED_GOLD.FCT_LINE_SHIFT
+  column: planned_production_min
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: "Every line shift has a planned production time (the OEE time base)."
+- id: DQ-MFG-002
+  object: CONFORMED_GOLD.FCT_LINE_SHIFT
+  column: planned_production_min
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: critical
+  alert_route: steward
+  description: "Planned production time is positive: planned downtime never exceeds the scheduled shift."
+- id: DQ-MFG-003
+  object: CONFORMED_GOLD.FCT_LINE_SHIFT
+  column: unplanned_down_min
+  dimension: validity
+  assertion: "min >= 0"
+  severity: high
+  alert_route: engineering
+  description: "Unplanned downtime is never negative."
+- id: DQ-MFG-004
+  object: CONFORMED_GOLD.FCT_LINE_SHIFT
+  column: total_units
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: "Every line shift carries units started (performance and quality rate)."
+- id: DQ-MFG-005
+  object: CONFORMED_GOLD.FCT_LINE_SHIFT
+  column: good_units
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: "Good units are never negative: scrap and rework never exceed units started."
+- id: DQ-MFG-006
+  object: CONFORMED_GOLD.FCT_LINE_SHIFT
+  column: event_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: "One row per line shift after CDC deduplication."
+- id: DQ-MFG-007
+  object: CONFORMED_GOLD.FCT_LINE_SHIFT
+  column: shift_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: "Shift production is no more than one day behind the reporting date."
+- id: DQ-MFG-008
+  object: CURATED_SILVER.LINE_SHIFT_PRODUCTION
+  dimension: timeliness
+  assertion: "freshness_min <= 1440"
+  severity: medium
+  alert_route: engineering
+  description: "The curated shift production table has been refreshed within the last day."
+- id: DQ-MFG-009
+  object: CONFORMED_GOLD.FCT_LINE_SHIFT
+  column: run_type
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Production, Trial]
+  severity: critical
+  alert_route: steward
+  description: "Run types conform to Production and Trial so BR-MFG-012 can be applied."
+- id: DQ-MFG-010
+  object: CONFORMED_GOLD.DIM_LINE
+  column: ideal_cycle_sec
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: "Every line has a nameplate ideal cycle time (performance, BR-MFG-004)."
+- id: DQ-MFG-011
+  object: CONFORMED_GOLD.DIM_LINE
+  column: ideal_cycle_sec
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: "Ideal cycle times are positive."
+- id: DQ-MFG-012
+  object: CONFORMED_GOLD.DIM_LINE
+  column: business_unit
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Motion Systems, Fluid Power, Industrial Controls, Aerospace Components]
+  severity: critical
+  alert_route: steward
+  description: "Line business unit is one of the four business units (row access policy RAP_BUSINESS_UNIT depends on it)."
+- id: DQ-MFG-013
+  object: CONFORMED_GOLD.DIM_LINE
+  column: line_id
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^LN-[0-9]{3}$"
+  severity: low
+  alert_route: engineering
+  description: "Line ids follow the MES numbering convention."
+- id: DQ-MFG-014
+  object: CONFORMED_GOLD.FCT_LINE_SHIFT
+  column: run_min
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: "Run time is never negative: unplanned downtime never exceeds planned production time."

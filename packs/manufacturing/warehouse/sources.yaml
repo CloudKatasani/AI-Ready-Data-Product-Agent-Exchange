@@ -1,0 +1,484 @@
+# Bronze source tables for Forgepoint Industries (FPI_AI_PLATFORM).
+# Converted from the AI-Ready manufacturing generators (generators.config.ts: plants, business units, line
+# types, suppliers, defect codes, failure causes) and the Marketplace MFG manifests. Plant, line, asset,
+# operator, supplier, distributor, product family and material masters are full populations at every scale so
+# rankings stay calibrated; the transactional tables scale S/M/L.
+# Derived quantities (run time, good units, OTIF flags, values) are computed in Silver/Gold SQL from the raw
+# MES/ERP fields below, so the planted patterns stay internally consistent.
+tables:
+  - name: MDM_PLANT
+    system: Enterprise master data (MDM)
+    description: Plant master with business unit, country, headcount and location-based grid emission factor
+    key: plant_id
+    rows: { S: 22, M: 22, L: 22 }
+    cdc_noise: { duplicate_updates_pct: 3 }
+    columns:
+      - { name: plant_id, type: VARCHAR, gen: { seq: { prefix: "PL-", pad: 2 } } }
+      - { name: plant_name, type: VARCHAR, gen: { template: "Plant {plant_id}" }, dirty: false }
+      - { name: business_unit, type: VARCHAR, gen: { choice: { values: [Motion Systems, Fluid Power, Industrial Controls, Aerospace Components] } }, dirty: false }
+      - { name: country, type: VARCHAR, gen: { choice: { values: [US, MX, CZ, IN, CN, BR, FR, NL, MY] } }, dirty: false }
+      - { name: emission_factor, type: DOUBLE, gen: { uniform: { min: 0.05, max: 0.7, decimals: 3 } } }
+      - { name: headcount, type: INTEGER, gen: { uniform: { min: 380, max: 1150 } } }
+      - { name: opened_year, type: INTEGER, gen: { uniform: { min: 1968, max: 2019 } } }
+    plant:
+      # Site register: one fictional site per plant id (AI-Ready PLANTS list, renamed), with its business unit,
+      # country and grid emission factor (kg CO2e per kWh, location-based).
+      - { id: P-MFG-01, description: "PL-01 Ashby Mills (US, Motion Systems)", where: { plant_id: PL-01 }, adjust: { plant_name: { set: Ashby Mills }, business_unit: { set: Motion Systems }, country: { set: US }, emission_factor: { set: 0.39 } } }
+      - { id: P-MFG-02, description: "PL-02 Corran Falls (US, Motion Systems)", where: { plant_id: PL-02 }, adjust: { plant_name: { set: Corran Falls }, business_unit: { set: Motion Systems }, country: { set: US }, emission_factor: { set: 0.39 } } }
+      - { id: P-MFG-03, description: "PL-03 Hartwell (US, Motion Systems)", where: { plant_id: PL-03 }, adjust: { plant_name: { set: Hartwell }, business_unit: { set: Motion Systems }, country: { set: US }, emission_factor: { set: 0.36 } } }
+      - { id: P-MFG-04, description: "PL-04 Valle Alto (MX, Motion Systems)", where: { plant_id: PL-04 }, adjust: { plant_name: { set: Valle Alto }, business_unit: { set: Motion Systems }, country: { set: MX }, emission_factor: { set: 0.42 } } }
+      - { id: P-MFG-05, description: "PL-05 Lesna (CZ, Motion Systems)", where: { plant_id: PL-05 }, adjust: { plant_name: { set: Lesna }, business_unit: { set: Motion Systems }, country: { set: CZ }, emission_factor: { set: 0.45 } } }
+      - { id: P-MFG-06, description: "PL-06 Navapur (IN, Motion Systems)", where: { plant_id: PL-06 }, adjust: { plant_name: { set: Navapur }, business_unit: { set: Motion Systems }, country: { set: IN }, emission_factor: { set: 0.71 } } }
+      - { id: P-MFG-07, description: "PL-07 Linhe (CN, Motion Systems)", where: { plant_id: PL-07 }, adjust: { plant_name: { set: Linhe }, business_unit: { set: Motion Systems }, country: { set: CN }, emission_factor: { set: 0.58 } } }
+      - { id: P-MFG-08, description: "PL-08 Brackwater (US, Fluid Power)", where: { plant_id: PL-08 }, adjust: { plant_name: { set: Brackwater }, business_unit: { set: Fluid Power }, country: { set: US }, emission_factor: { set: 0.41 } } }
+      - { id: P-MFG-09, description: "PL-09 Dunmore Flats (US, Fluid Power)", where: { plant_id: PL-09 }, adjust: { plant_name: { set: Dunmore Flats }, business_unit: { set: Fluid Power }, country: { set: US }, emission_factor: { set: 0.43 } } }
+      - { id: P-MFG-10, description: "PL-10 Serra Clara (BR, Fluid Power)", where: { plant_id: PL-10 }, adjust: { plant_name: { set: Serra Clara }, business_unit: { set: Fluid Power }, country: { set: BR }, emission_factor: { set: 0.09 } } }
+      - { id: P-MFG-11, description: "PL-11 Saint-Aubry (FR, Fluid Power)", where: { plant_id: PL-11 }, adjust: { plant_name: { set: Saint-Aubry }, business_unit: { set: Fluid Power }, country: { set: FR }, emission_factor: { set: 0.05 } } }
+      - { id: P-MFG-12, description: "PL-12 Kovalam Park (IN, Fluid Power)", where: { plant_id: PL-12 }, adjust: { plant_name: { set: Kovalam Park }, business_unit: { set: Fluid Power }, country: { set: IN }, emission_factor: { set: 0.71 } } }
+      - { id: P-MFG-13, description: "PL-13 Huaxi (CN, Fluid Power)", where: { plant_id: PL-13 }, adjust: { plant_name: { set: Huaxi }, business_unit: { set: Fluid Power }, country: { set: CN }, emission_factor: { set: 0.58 } } }
+      - { id: P-MFG-14, description: "PL-14 Glenrock (US, Industrial Controls)", where: { plant_id: PL-14 }, adjust: { plant_name: { set: Glenrock }, business_unit: { set: Industrial Controls }, country: { set: US }, emission_factor: { set: 0.44 } } }
+      - { id: P-MFG-15, description: "PL-15 Quenby (US, Industrial Controls)", where: { plant_id: PL-15 }, adjust: { plant_name: { set: Quenby }, business_unit: { set: Industrial Controls }, country: { set: US }, emission_factor: { set: 0.33 } } }
+      - { id: P-MFG-16, description: "PL-16 Rio Verde (MX, Industrial Controls)", where: { plant_id: PL-16 }, adjust: { plant_name: { set: Rio Verde }, business_unit: { set: Industrial Controls }, country: { set: MX }, emission_factor: { set: 0.42 } } }
+      - { id: P-MFG-17, description: "PL-17 Meerbrug (NL, Industrial Controls)", where: { plant_id: PL-17 }, adjust: { plant_name: { set: Meerbrug }, business_unit: { set: Industrial Controls }, country: { set: NL }, emission_factor: { set: 0.33 } } }
+      - { id: P-MFG-18, description: "PL-18 Bayan Tinggi (MY, Industrial Controls)", where: { plant_id: PL-18 }, adjust: { plant_name: { set: Bayan Tinggi }, business_unit: { set: Industrial Controls }, country: { set: MY }, emission_factor: { set: 0.58 } } }
+      - { id: P-MFG-19, description: "PL-19 Harlow Field (US, Aerospace Components)", where: { plant_id: PL-19 }, adjust: { plant_name: { set: Harlow Field }, business_unit: { set: Aerospace Components }, country: { set: US }, emission_factor: { set: 0.37 } } }
+      - { id: P-MFG-20, description: "PL-20 Oakhurst (US, Aerospace Components)", where: { plant_id: PL-20 }, adjust: { plant_name: { set: Oakhurst }, business_unit: { set: Aerospace Components }, country: { set: US }, emission_factor: { set: 0.25 } } }
+      - { id: P-MFG-21, description: "PL-21 Montcalm (FR, Aerospace Components)", where: { plant_id: PL-21 }, adjust: { plant_name: { set: Montcalm }, business_unit: { set: Aerospace Components }, country: { set: FR }, emission_factor: { set: 0.05 } } }
+      - { id: P-MFG-22, description: "PL-22 San Telmo (MX, Aerospace Components)", where: { plant_id: PL-22 }, adjust: { plant_name: { set: San Telmo }, business_unit: { set: Aerospace Components }, country: { set: MX }, emission_factor: { set: 0.42 } } }
+
+  - name: MDM_LINE
+    system: Manufacturing execution system (MES) line master
+    description: Production lines with plant, process type, nameplate ideal cycle time, running power and controlled process recipe
+    key: line_id
+    rows: { S: 80, M: 80, L: 80 }
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 4 }
+    columns:
+      - { name: line_id, type: VARCHAR, gen: { seq: { prefix: "LN-", pad: 3 } } }
+      - { name: plant_id, type: VARCHAR, gen: { fk: { table: MDM_PLANT, column: plant_id } } }
+      - { name: business_unit, type: VARCHAR, gen: { derive_from: { fk_column: plant_id, parent_column: business_unit } } }
+      - { name: line_type, type: VARCHAR, gen: { choice: { values: [Machining, Assembly, Fabrication, Surface treatment, Test & pack], weights: [30, 28, 16, 10, 16] } } }
+      - { name: line_status, type: VARCHAR, gen: { choice: { values: [Active, Commissioning], weights: [95, 5] } } }
+      - { name: shift_pattern, type: VARCHAR, gen: { choice: { values: [2-shift, 3-shift], weights: [40, 60] } } }
+      - { name: ideal_cycle_sec, type: DOUBLE, gen: { lognormal: { mu: 4.2, sigma: 0.45, min: 12, max: 400, decimals: 1 } } }
+      - { name: kw_run, type: DOUBLE, gen: { uniform: { min: 25, max: 140, decimals: 1 } } }
+      - { name: process_recipe_id, type: VARCHAR, gen: { template: "RCP-{line_id}" }, tags: [TRADE_SECRET], dirty: false }
+    plant:
+      - id: P-MFG-23
+        description: "Aerospace Components lines machine heavy, slow-cycle parts — five times the nameplate cycle time and 1.6x the running power"
+        where: { business_unit: Aerospace Components }
+        adjust: { ideal_cycle_sec: { multiply: 5 }, kw_run: { multiply: 1.6 } }
+
+  - name: EAM_ASSET
+    system: Enterprise asset management (EAM)
+    description: Machines and equipment per production line with criticality ranking and install year
+    key: asset_id
+    rows: { S: 320, M: 320, L: 320 }
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 3 }
+    columns:
+      - { name: asset_id, type: VARCHAR, gen: { seq: { prefix: "AS-", pad: 4 } } }
+      - { name: line_id, type: VARCHAR, gen: { fk: { table: MDM_LINE, column: line_id } } }
+      - { name: business_unit, type: VARCHAR, gen: { derive_from: { fk_column: line_id, parent_column: business_unit } } }
+      - { name: asset_type, type: VARCHAR, gen: { choice: { values: [CNC machine, Robot cell, Press, Conveyor, Test rig, Furnace, Coating booth], weights: [26, 18, 14, 14, 12, 8, 8] } } }
+      - { name: criticality, type: VARCHAR, gen: { choice: { values: [A, B, C], weights: [20, 45, 35] } } }
+      - { name: install_year, type: INTEGER, gen: { uniform: { min: 1998, max: 2025 } } }
+    plant:
+      - id: P-MFG-24
+        description: "AS-0042 is a criticality A CNC machine (anchors the low-MTBF reliability pattern)"
+        where: { asset_id: AS-0042 }
+        adjust: { asset_type: { set: CNC machine }, criticality: { set: A }, install_year: { set: 2003 } }
+
+  - name: HR_OPERATOR
+    system: MES operator roster (HR feed)
+    description: Operators, shift leads, technicians and inspectors badged to production lines
+    key: badge_no
+    rows: { S: 400, M: 400, L: 400 }
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.5, dirty_strings_pct: 6 }
+    columns:
+      - { name: badge_no, type: VARCHAR, gen: { seq: { prefix: "B", pad: 5 } } }
+      - { name: first_name, type: VARCHAR, gen: { person: first }, tags: [PII] }
+      - { name: last_name, type: VARCHAR, gen: { person: last }, tags: [PII] }
+      - { name: email, type: VARCHAR, gen: { email: { first: first_name, last: last_name, domain: fpi-works.example } }, tags: [PII] }
+      - { name: plant_id, type: VARCHAR, gen: { fk: { table: MDM_PLANT, column: plant_id } } }
+      - { name: business_unit, type: VARCHAR, gen: { derive_from: { fk_column: plant_id, parent_column: business_unit } } }
+      - { name: job_role, type: VARCHAR, gen: { choice: { values: [Operator, Shift lead, Technician, Inspector], weights: [55, 20, 15, 10] } } }
+      - { name: cert_level, type: INTEGER, gen: { choice: { values: [1, 2, 3], weights: [35, 45, 20] } } }
+      - { name: emp_status, type: VARCHAR, gen: { choice: { values: [A, L, T], weights: [93, 4, 3] } }, dirty: false }
+      - { name: hire_date, type: DATE, gen: { date: { from: "2004-01-01", to: "2026-06-30" } } }
+
+  - name: MES_SHIFT_PRODUCTION
+    system: Manufacturing execution system (MES)
+    description: Shift production records per line — scheduled time, planned and unplanned downtime, units started, scrap, rework, top loss reason and metered energy
+    key: event_id
+    rows: { S: 6000, M: 60000, L: 400000 }
+    loaded_at_from: shift_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.4, dirty_strings_pct: 4, late_arrivals_pct: 1 }
+    columns:
+      - { name: event_id, type: VARCHAR, gen: { seq: { prefix: "EV-", pad: 8 } } }
+      - { name: line_id, type: VARCHAR, gen: { fk: { table: MDM_LINE, column: line_id } } }
+      - { name: plant_id, type: VARCHAR, gen: { derive_from: { fk_column: line_id, parent_column: plant_id } } }
+      - { name: business_unit, type: VARCHAR, gen: { derive_from: { fk_column: line_id, parent_column: business_unit } } }
+      - { name: ideal_cycle_sec, type: DOUBLE, gen: { derive_from: { fk_column: line_id, parent_column: ideal_cycle_sec } } }
+      - { name: kw_run, type: DOUBLE, gen: { derive_from: { fk_column: line_id, parent_column: kw_run } } }
+      - { name: shift_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf, seasonality: { month: [1.0, 1.0, 1.04, 1.0, 1.0, 1.0, 0.94, 0.94, 1.02, 1.04, 1.0, 0.86] } } } }
+      - { name: shift_no, type: INTEGER, gen: { choice: { values: [1, 2, 3], weights: [40, 35, 25] } } }
+      - { name: run_type, type: VARCHAR, gen: { choice: { values: [Production, Trial], weights: [97, 3] } } }
+      - { name: scheduled_min, type: INTEGER, gen: { const: 480 } }
+      - { name: planned_down_min, type: INTEGER, gen: { lognormal: { mu: 3.6, sigma: 0.45, min: 10, max: 180 } } }
+      - { name: unplanned_down_min, type: INTEGER, gen: { lognormal: { mu: 3.35, sigma: 0.85, min: 1, max: 300 } } }
+      - { name: speed_pct, type: DOUBLE, gen: { normal: { mean: 87, sd: 6, min: 40, max: 100, decimals: 1 } } }
+      - { name: units_started, type: INTEGER, gen: { formula: "max(floor((scheduled_min - planned_down_min - unplanned_down_min) * 60 / ideal_cycle_sec * speed_pct / 100), 0)" } }
+      - { name: scrap_pct, type: DOUBLE, gen: { normal: { mean: 2.0, sd: 0.9, min: 0, max: 20, decimals: 2 } } }
+      - { name: scrap_units, type: INTEGER, gen: { formula: "round(units_started * scrap_pct / 100)" } }
+      - { name: rework_pct, type: DOUBLE, gen: { normal: { mean: 1.1, sd: 0.5, min: 0, max: 10, decimals: 2 } } }
+      - { name: rework_units, type: INTEGER, gen: { formula: "round(units_started * rework_pct / 100)" } }
+      - { name: top_loss_reason, type: VARCHAR, gen: { choice: { values: [Breakdown, Material shortage, Changeover overrun, Quality hold, Operator unavailable], weights: [34, 24, 21, 12, 9] } } }
+      - { name: lead_badge, type: VARCHAR, gen: { fk: { table: HR_OPERATOR, column: badge_no } } }
+      - { name: energy_kwh, type: DOUBLE, gen: { formula: "((scheduled_min - planned_down_min - unplanned_down_min) * kw_run + (planned_down_min + unplanned_down_min) * kw_run * 0.25) / 60", decimals: 1 } }
+    plant:
+      - id: P-MFG-25
+        description: "Industrial Controls lines run with the least unplanned downtime (SMT and box build, short changeovers) — the highest OEE business unit on production runs"
+        where: { business_unit: Industrial Controls }
+        adjust: { unplanned_down_min: { multiply: 0.55 }, units_started: { multiply: 1.05 }, scrap_units: { multiply: 1.05 }, rework_units: { multiply: 1.05 } }
+      - id: P-MFG-26
+        description: "Aerospace Components lines lose the most time to unplanned stops (heat-treat and five-axis set-ups) — the lowest availability"
+        where: { business_unit: Aerospace Components }
+        adjust: { unplanned_down_min: { multiply: 1.7 }, units_started: { multiply: 0.93 }, scrap_units: { multiply: 1.15 }, rework_units: { multiply: 0.93 } }
+      - id: P-MFG-27
+        description: "Night shift (shift 3) scraps and reworks more — the shift cohort pattern"
+        where: { shift_no: 3 }
+        adjust: { scrap_units: { multiply: 1.7 }, rework_units: { multiply: 1.35 } }
+      - id: P-MFG-28
+        description: "Industrial Controls runs new-product-introduction trials on a quarter of its shifts in Q3 2026 (drive and PLC platform launch)"
+        where: { business_unit: Industrial Controls }
+        window: { column: shift_date, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { run_type: { set: Trial, pct: 24 } }
+      - id: P-MFG-29
+        description: "Trial runs are slow, stop often and scrap heavily — why BR-MFG-012 keeps them out of OEE, yield and scrap unless asked"
+        where: { run_type: Trial }
+        adjust: { unplanned_down_min: { multiply: 3.5 }, units_started: { multiply: 0.45 }, scrap_units: { multiply: 2.7 }, rework_units: { multiply: 1.35 }, top_loss_reason: { set: Changeover overrun, pct: 60 } }
+      - id: P-MFG-60
+        description: "Q1 2026 was hit by winter breakdowns before the reliability programme — OEE climbs through the year"
+        window: { column: shift_date, from: "2026-01-01", to: "2026-03-31" }
+        adjust: { unplanned_down_min: { multiply: 1.45 }, units_started: { multiply: 0.955 }, scrap_units: { multiply: 0.955 }, rework_units: { multiply: 0.955 } }
+      - id: P-MFG-30
+        description: "Line LN-017 suffers chronic breakdowns in Q3 2026 (worn spindle bearings) — the largest unplanned downtime on one line"
+        where: { line_id: LN-017 }
+        window: { column: shift_date, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { unplanned_down_min: { multiply: 2.6 }, units_started: { multiply: 0.85 }, top_loss_reason: { set: Breakdown, pct: 85 } }
+
+  - name: MES_DOWNTIME_EVENT
+    system: Manufacturing execution system (MES)
+    description: Line stoppages with start time, duration and reason code as logged by operators and PLC gaps
+    key: event_id
+    rows: { S: 4000, M: 30000, L: 150000 }
+    loaded_at_from: start_ts
+    cdc_noise: { duplicate_updates_pct: 3, deletes_pct: 0.3, dirty_strings_pct: 5, late_arrivals_pct: 1 }
+    columns:
+      - { name: event_id, type: VARCHAR, gen: { seq: { prefix: "DT-", pad: 8 } } }
+      - { name: line_id, type: VARCHAR, gen: { fk: { table: MDM_LINE, column: line_id } } }
+      - { name: business_unit, type: VARCHAR, gen: { derive_from: { fk_column: line_id, parent_column: business_unit } } }
+      - { name: start_ts, type: TIMESTAMP, gen: { datetime: { from: "2025-01-01", to: asOf } } }
+      - { name: duration_min, type: INTEGER, gen: { lognormal: { mu: 3.0, sigma: 0.9, min: 1, max: 600 } } }
+      - { name: reason, type: VARCHAR, gen: { choice: { values: [Breakdown, Material shortage, Changeover overrun, Quality hold, Operator unavailable, Planned maintenance, Planned changeover, Break], weights: [16, 12, 10, 6, 5, 14, 17, 20] } } }
+
+  - name: QMS_INSPECTION_LOT
+    system: Quality management system (QMS)
+    description: Inspection lots with sample size, defects found, defect code, usage decision and NCR number
+    key: lot_id
+    rows: { S: 3000, M: 30000, L: 200000 }
+    loaded_at_from: inspection_date
+    cdc_noise: { duplicate_updates_pct: 3, deletes_pct: 0.3, dirty_strings_pct: 4, late_arrivals_pct: 1 }
+    columns:
+      - { name: lot_id, type: VARCHAR, gen: { seq: { prefix: "IL-", pad: 8 } } }
+      - { name: line_id, type: VARCHAR, gen: { fk: { table: MDM_LINE, column: line_id } } }
+      - { name: plant_id, type: VARCHAR, gen: { derive_from: { fk_column: line_id, parent_column: plant_id } } }
+      - { name: business_unit, type: VARCHAR, gen: { derive_from: { fk_column: line_id, parent_column: business_unit } } }
+      - { name: inspection_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: lot_type, type: VARCHAR, gen: { choice: { values: [Production, Trial], weights: [96, 4] } } }
+      - { name: inspected_qty, type: INTEGER, gen: { lognormal: { mu: 4.0, sigma: 0.6, min: 5, max: 2000 } } }
+      - { name: defect_draw, type: DOUBLE, gen: { uniform: { min: 0, max: 100, decimals: 2 } } }
+      - { name: defect_qty, type: INTEGER, gen: { formula: "if(defect_draw < 7, max(1, round(inspected_qty * (8 - defect_draw) / 130)), 0)" } }
+      - { name: defect_code, type: VARCHAR, gen: { choice: { values: [Dimensional out of tolerance, Surface finish, Porosity, Leak test failure, Solder bridge, Wrong component, Burr or sharp edge, Torque out of spec], weights: [24, 13, 9, 12, 10, 7, 15, 10] } } }
+      - { name: usage_decision, type: VARCHAR, gen: { choice: { values: [R, S, U], weights: [55, 30, 15] } }, dirty: false }
+      - { name: ncr_no, type: VARCHAR, gen: { template: "NCR-{lot_id}" }, dirty: false }
+      - { name: copq_estimate_usd, type: DOUBLE, gen: { lognormal: { mu: 7.4, sigma: 0.8, min: 50, max: 250000, decimals: 2 } } }
+    plant:
+      - id: P-MFG-31
+        description: "Trial lots fail first inspection about half the time"
+        where: { lot_type: Trial }
+        adjust: { defect_qty: { add: 4, pct: 50 } }
+      - id: P-MFG-32
+        description: "Aerospace Components nonconformances are expensive (high-value forgings and NDT investigation)"
+        where: { business_unit: Aerospace Components }
+        adjust: { copq_estimate_usd: { multiply: 3.5 } }
+      - id: P-MFG-33
+        description: "Dimensional out-of-tolerance defects carry the highest scrap and rework cost per NCR"
+        where: { defect_code: Dimensional out of tolerance }
+        adjust: { copq_estimate_usd: { multiply: 1.6 } }
+      - id: P-MFG-34
+        description: "Plant PL-12 Kovalam Park has a recurring burr defect after a deburring cell was moved — the lowest right-first-time plant"
+        where: { plant_id: PL-12 }
+        adjust: { defect_qty: { add: 2, pct: 14 }, defect_code: { set: Burr or sharp edge, pct: 45 } }
+
+  - name: EAM_WORK_ORDER
+    system: Enterprise asset management (EAM)
+    description: Corrective and preventive maintenance work orders with run hours since the last failure, repair hours, cause and cost
+    key: wo_number
+    rows: { S: 3000, M: 12000, L: 60000 }
+    loaded_at_from: wo_date
+    cdc_noise: { duplicate_updates_pct: 3, deletes_pct: 0.3, dirty_strings_pct: 4, late_arrivals_pct: 1 }
+    columns:
+      - { name: wo_number, type: VARCHAR, gen: { seq: { prefix: "WO-", pad: 7 } } }
+      - { name: asset_id, type: VARCHAR, gen: { fk: { table: EAM_ASSET, column: asset_id } } }
+      - { name: line_id, type: VARCHAR, gen: { derive_from: { fk_column: asset_id, parent_column: line_id } } }
+      - { name: business_unit, type: VARCHAR, gen: { derive_from: { fk_column: asset_id, parent_column: business_unit } } }
+      - { name: wo_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: wo_type, type: VARCHAR, gen: { choice: { values: [Preventive, Corrective], weights: [77, 23] } } }
+      - { name: run_hours_since_last, type: DOUBLE, gen: { lognormal: { mu: 5.65, sigma: 0.55, min: 8, max: 3000, decimals: 1 } } }
+      - { name: repair_hours, type: DOUBLE, gen: { lognormal: { mu: 1.1, sigma: 0.55, min: 0.3, max: 72, decimals: 2 } } }
+      - { name: failure_cause, type: VARCHAR, gen: { choice: { values: [Spindle failure, Hydraulic leak, Sensor fault, Servo drive fault, Tooling breakage, Conveyor jam, Electrical fault], weights: [16, 15, 17, 13, 16, 11, 12] } } }
+      - { name: days_late, type: INTEGER, gen: { choice: { values: [-3, -1, 0, 1, 3, 7, 14], weights: [10, 18, 52, 8, 6, 4, 2] } } }
+      - { name: parts_cost_usd, type: DOUBLE, gen: { lognormal: { mu: 5.8, sigma: 0.9, min: 0, max: 60000, decimals: 2 } } }
+      - { name: labour_rate_usd, type: DOUBLE, gen: { const: 92 } }
+    plant:
+      - id: P-MFG-35
+        description: "AS-0042 fails far more often than its peers — mostly corrective work and short runs between failures (lowest MTBF)"
+        where: { asset_id: AS-0042 }
+        adjust: { wo_type: { set: Corrective, pct: 75 }, run_hours_since_last: { multiply: 0.12 }, failure_cause: { set: Spindle failure, pct: 70 } }
+      - id: P-MFG-36
+        description: "Aerospace Components repairs take longer (specialist technicians, long-lead spares) — the highest MTTR"
+        where: { business_unit: Aerospace Components }
+        adjust: { repair_hours: { multiply: 1.9 }, parts_cost_usd: { multiply: 2.2 } }
+
+  - name: SRM_SUPPLIER
+    system: Supplier relationship management (supplier portal)
+    description: Supplier master with commodity, country, preferred status, tax id and quality contact
+    key: supplier_id
+    rows: { S: 40, M: 40, L: 40 }
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 5 }
+    columns:
+      - { name: supplier_id, type: VARCHAR, gen: { seq: { prefix: "SUP-", pad: 3 } } }
+      - { name: supplier_name, type: VARCHAR, gen: { company: true } }
+      - { name: category, type: VARCHAR, gen: { choice: { values: [Castings & forgings, Bearings, Electronic components, Seals & gaskets, Fasteners, Aerospace alloys, Hydraulic fittings, Shafts & gears, Bar & plate, Printed circuit boards] } } }
+      - { name: country, type: VARCHAR, gen: { choice: { values: [US, DE, TW, CN, MX, IT, MY, IN], weights: [28, 12, 10, 16, 12, 8, 6, 8] } }, dirty: false }
+      - { name: preferred_flag, type: BOOLEAN, gen: { bernoulli: 0.4 } }
+      - { name: tax_id, type: VARCHAR, gen: { template: "94-{supplier_id}" }, tags: [GOV_ID], dirty: false }
+      - { name: contact_email, type: VARCHAR, gen: { template: "quality@{supplier_id}.example.com" }, tags: [PII], dirty: false }
+    plant:
+      - id: P-MFG-37
+        description: "SUP-003 is an electronic components supplier (anchors the worst incoming-PPM pattern)"
+        where: { supplier_id: SUP-003 }
+        adjust: { category: { set: Electronic components }, preferred_flag: { set: false }, country: { set: TW } }
+      - id: P-MFG-38
+        description: "SUP-006 supplies aerospace alloys (anchors the worst OTIF pattern)"
+        where: { supplier_id: SUP-006 }
+        adjust: { category: { set: Aerospace alloys }, preferred_flag: { set: true }, country: { set: US } }
+
+  - name: SRM_GOODS_RECEIPT
+    system: Supplier relationship management (supplier portal)
+    description: Goods receipts against purchase orders — PO date, promise date, days early or late at receipt, quantities, incoming rejects and value
+    key: receipt_id
+    rows: { S: 4000, M: 30000, L: 150000 }
+    loaded_at_from: po_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.4, dirty_strings_pct: 4, late_arrivals_pct: 1 }
+    columns:
+      - { name: receipt_id, type: VARCHAR, gen: { seq: { prefix: "GR-", pad: 8 } } }
+      - { name: supplier_id, type: VARCHAR, gen: { fk: { table: SRM_SUPPLIER, column: supplier_id, dist: zipf, s: 0.6 } } }
+      - { name: category, type: VARCHAR, gen: { derive_from: { fk_column: supplier_id, parent_column: category } } }
+      - { name: plant_id, type: VARCHAR, gen: { fk: { table: MDM_PLANT, column: plant_id } } }
+      - { name: business_unit, type: VARCHAR, gen: { derive_from: { fk_column: plant_id, parent_column: business_unit } } }
+      - { name: po_date, type: DATE, gen: { date: { from: "2024-12-01", to: "2026-09-10" } } }
+      - { name: promised_date, type: DATE, gen: { date_offset: { from_column: po_date, days: { min: 10, max: 38 } } } }
+      - { name: delay_days, type: INTEGER, gen: { choice: { values: [-4, -2, -1, 0, 1, 3, 6, 12], weights: [10, 16, 20, 47, 3, 2, 1.5, 0.5] } } }
+      - { name: qty_received, type: INTEGER, gen: { lognormal: { mu: 6.0, sigma: 1.0, min: 10, max: 100000 } } }
+      - { name: fill_pct, type: INTEGER, gen: { choice: { values: [100, 98, 95, 90], weights: [96, 2, 1, 1] } } }
+      - { name: reject_ppm, type: DOUBLE, gen: { lognormal: { mu: 5.9, sigma: 1.1, min: 0, max: 60000, decimals: 1 } } }
+      - { name: qty_rejected, type: INTEGER, gen: { formula: "floor(qty_received * reject_ppm / 1000000 + 0.5)" } }
+      - { name: receipt_value_usd, type: DOUBLE, gen: { lognormal: { mu: 8.4, sigma: 1.0, min: 50, max: 2000000, decimals: 2 } } }
+      - { name: buyer_rescheduled, type: BOOLEAN, gen: { bernoulli: 0.06 } }
+    plant:
+      - id: P-MFG-39
+        description: "SUP-003 ships electronic components with frequent incoming-inspection rejects — the worst supplier PPM"
+        where: { supplier_id: SUP-003 }
+        adjust: { qty_rejected: { add: 6, pct: 55 } }
+      - id: P-MFG-40
+        description: "SUP-006 aerospace alloys arrive late after a mill outage — the worst supplier OTIF"
+        where: { supplier_id: SUP-006 }
+        adjust: { delay_days: { add: 6, pct: 50 } }
+      - id: P-MFG-61
+        description: "Castings and aerospace alloys lead times stretch from May 2026 after a mill outage — supplier lead time rises through the year"
+        where: { category: { in: [Castings & forgings, Aerospace alloys] } }
+        window: { column: po_date, from: "2026-05-01", to: "2026-09-10" }
+        adjust: { promised_date: { add: 10 } }
+      - id: P-MFG-41
+        description: "Receipts whose promise date the buyer pulled in usually land after the new date — BR-MFG-015 keeps them out of supplier OTIF unless asked"
+        where: { buyer_rescheduled: true }
+        adjust: { delay_days: { add: 5, pct: 80 } }
+
+  - name: CRM_DISTRIBUTOR
+    system: Distributor relationship management (CRM)
+    description: Distributors with sales region, tier and order-desk contact
+    key: distributor_id
+    rows: { S: 120, M: 120, L: 120 }
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 5 }
+    columns:
+      - { name: distributor_id, type: VARCHAR, gen: { seq: { prefix: "DST-", pad: 4 } } }
+      - { name: distributor_name, type: VARCHAR, gen: { company: true } }
+      - { name: sales_region, type: VARCHAR, gen: { choice: { values: [Americas, EMEA, APAC], weights: [48, 30, 22] } } }
+      - { name: tier, type: VARCHAR, gen: { choice: { values: [Platinum, Gold, Standard], weights: [12, 33, 55] } } }
+      - { name: contact_first_name, type: VARCHAR, gen: { person: first }, tags: [PII] }
+      - { name: contact_last_name, type: VARCHAR, gen: { person: last }, tags: [PII] }
+      - { name: contact_email, type: VARCHAR, gen: { email: { first: contact_first_name, last: contact_last_name, domain: distrib-partner.example } }, tags: [PII], null_pct: 4 }
+      - { name: contact_phone, type: VARCHAR, gen: { phone: true }, tags: [PII], null_pct: 6 }
+
+  - name: MDM_PRODUCT_FAMILY
+    system: Product lifecycle management (PLM)
+    description: Finished product families with owning business unit, synthetic unit price, standard cost and warranty term
+    key: family_id
+    rows: { S: 12, M: 12, L: 12 }
+    cdc_noise: { duplicate_updates_pct: 2 }
+    columns:
+      - { name: family_id, type: VARCHAR, gen: { seq: { prefix: "PF-", pad: 2 } } }
+      - { name: family_name, type: VARCHAR, gen: { template: "Family {family_id}" }, dirty: false }
+      - { name: business_unit, type: VARCHAR, gen: { choice: { values: [Motion Systems, Fluid Power, Industrial Controls, Aerospace Components] } }, dirty: false }
+      - { name: unit_price_usd, type: DOUBLE, gen: { uniform: { min: 40, max: 1200, decimals: 2 } } }
+      - { name: std_unit_cost_usd, type: DOUBLE, gen: { formula: "unit_price_usd * 0.62", decimals: 2 }, tags: [TRADE_SECRET] }
+      - { name: warranty_months, type: INTEGER, gen: { choice: { values: [12, 24, 36], weights: [30, 50, 20] } } }
+    plant:
+      # Product catalogue (AI-Ready PRODUCT_FAMILIES): three families per business unit; prices are synthetic.
+      - { id: P-MFG-42, description: "PF-01 Servo motors (Motion Systems)", where: { family_id: PF-01 }, adjust: { family_name: { set: Servo motors }, business_unit: { set: Motion Systems }, unit_price_usd: { set: 640 }, std_unit_cost_usd: { set: 402 } } }
+      - { id: P-MFG-43, description: "PF-02 Gearboxes (Motion Systems)", where: { family_id: PF-02 }, adjust: { family_name: { set: Gearboxes }, business_unit: { set: Motion Systems }, unit_price_usd: { set: 910 }, std_unit_cost_usd: { set: 588 } } }
+      - { id: P-MFG-44, description: "PF-03 Linear actuators (Motion Systems)", where: { family_id: PF-03 }, adjust: { family_name: { set: Linear actuators }, business_unit: { set: Motion Systems }, unit_price_usd: { set: 420 }, std_unit_cost_usd: { set: 251 } } }
+      - { id: P-MFG-45, description: "PF-04 Hydraulic pumps (Fluid Power)", where: { family_id: PF-04 }, adjust: { family_name: { set: Hydraulic pumps }, business_unit: { set: Fluid Power }, unit_price_usd: { set: 1280 }, std_unit_cost_usd: { set: 803 } } }
+      - { id: P-MFG-46, description: "PF-05 Directional valves (Fluid Power)", where: { family_id: PF-05 }, adjust: { family_name: { set: Directional valves }, business_unit: { set: Fluid Power }, unit_price_usd: { set: 360 }, std_unit_cost_usd: { set: 214 } } }
+      - { id: P-MFG-47, description: "PF-06 Hose assemblies (Fluid Power)", where: { family_id: PF-06 }, adjust: { family_name: { set: Hose assemblies }, business_unit: { set: Fluid Power }, unit_price_usd: { set: 48 }, std_unit_cost_usd: { set: 27 } } }
+      - { id: P-MFG-48, description: "PF-07 PLC modules (Industrial Controls)", where: { family_id: PF-07 }, adjust: { family_name: { set: PLC modules }, business_unit: { set: Industrial Controls }, unit_price_usd: { set: 520 }, std_unit_cost_usd: { set: 296 } } }
+      - { id: P-MFG-49, description: "PF-08 Variable-speed drives (Industrial Controls)", where: { family_id: PF-08 }, adjust: { family_name: { set: Variable-speed drives }, business_unit: { set: Industrial Controls }, unit_price_usd: { set: 1150 }, std_unit_cost_usd: { set: 702 } } }
+      - { id: P-MFG-50, description: "PF-09 HMI panels (Industrial Controls)", where: { family_id: PF-09 }, adjust: { family_name: { set: HMI panels }, business_unit: { set: Industrial Controls }, unit_price_usd: { set: 780 }, std_unit_cost_usd: { set: 455 } } }
+      - { id: P-MFG-51, description: "PF-10 Actuator housings (Aerospace Components)", where: { family_id: PF-10 }, adjust: { family_name: { set: Actuator housings }, business_unit: { set: Aerospace Components }, unit_price_usd: { set: 4800 }, std_unit_cost_usd: { set: 3150 } } }
+      - { id: P-MFG-52, description: "PF-11 Landing gear fittings (Aerospace Components)", where: { family_id: PF-11 }, adjust: { family_name: { set: Landing gear fittings }, business_unit: { set: Aerospace Components }, unit_price_usd: { set: 9400 }, std_unit_cost_usd: { set: 6020 } } }
+      - { id: P-MFG-53, description: "PF-12 Turbine brackets (Aerospace Components)", where: { family_id: PF-12 }, adjust: { family_name: { set: Turbine brackets }, business_unit: { set: Aerospace Components }, unit_price_usd: { set: 2100 }, std_unit_cost_usd: { set: 1330 } } }
+
+  - name: ERP_SALES_ORDER_LINE
+    system: ERP sales and distribution
+    description: Distributor sales order lines with promise date, days early or late at proof of delivery, quantities and value
+    key: order_line_id
+    rows: { S: 6000, M: 60000, L: 300000 }
+    loaded_at_from: order_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.4, dirty_strings_pct: 3, late_arrivals_pct: 1 }
+    columns:
+      - { name: order_line_id, type: VARCHAR, gen: { seq: { prefix: "SOL-", pad: 8 } } }
+      - { name: distributor_id, type: VARCHAR, gen: { fk: { table: CRM_DISTRIBUTOR, column: distributor_id, dist: zipf, s: 0.6 } } }
+      - { name: family_id, type: VARCHAR, gen: { fk: { table: MDM_PRODUCT_FAMILY, column: family_id } } }
+      - { name: business_unit, type: VARCHAR, gen: { derive_from: { fk_column: family_id, parent_column: business_unit } } }
+      - { name: unit_price_usd, type: DOUBLE, gen: { derive_from: { fk_column: family_id, parent_column: unit_price_usd } } }
+      - { name: std_unit_cost_usd, type: DOUBLE, gen: { derive_from: { fk_column: family_id, parent_column: std_unit_cost_usd } }, tags: [TRADE_SECRET] }
+      - { name: order_date, type: DATE, gen: { date: { from: "2024-12-01", to: "2026-09-25" } } }
+      - { name: promised_date, type: DATE, gen: { date_offset: { from_column: order_date, days: { min: 8, max: 35 } } } }
+      - { name: delay_days, type: INTEGER, gen: { choice: { values: [-3, -1, 0, 1, 2, 5, 10], weights: [10, 16, 63, 4, 3, 2, 2] } } }
+      - { name: qty_ordered, type: INTEGER, gen: { lognormal: { mu: 3.0, sigma: 0.8, min: 1, max: 2000 } } }
+      - { name: fill_pct, type: INTEGER, gen: { choice: { values: [100, 96, 90, 80], weights: [94, 3, 2, 1] } } }
+      - { name: qty_shipped, type: INTEGER, gen: { formula: "round(qty_ordered * fill_pct / 100)" } }
+    plant:
+      - id: P-MFG-54
+        description: "Aerospace Components deliveries slip in July and August 2026 while heat-treat capacity is down — the on-time delivery dip"
+        where: { business_unit: Aerospace Components }
+        window: { column: order_date, from: "2026-06-15", to: "2026-08-20" }
+        adjust: { delay_days: { add: 6, pct: 30 } }
+
+  - name: ERP_MATERIAL
+    system: ERP materials management
+    description: Material master with class, status, ABC class, unit cost and safety stock cover
+    key: material_id
+    rows: { S: 1500, M: 1500, L: 1500 }
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 3 }
+    columns:
+      - { name: material_id, type: VARCHAR, gen: { seq: { prefix: "MAT-", pad: 5 } } }
+      - { name: material_class, type: VARCHAR, gen: { choice: { values: [Raw material, Purchased component, Work in progress, Finished goods, MRO spare], weights: [22, 30, 14, 20, 14] } } }
+      - { name: material_status, type: VARCHAR, gen: { choice: { values: [Active, Obsolete], weights: [91, 9] } } }
+      - { name: abc_class, type: VARCHAR, gen: { choice: { values: [A, B, C], weights: [15, 30, 55] } } }
+      - { name: unit_cost_usd, type: DOUBLE, gen: { lognormal: { mu: 3.0, sigma: 1.1, min: 0.05, max: 25000, decimals: 2 } } }
+      - { name: safety_stock_days, type: INTEGER, gen: { uniform: { min: 5, max: 20 } } }
+
+  - name: ERP_INVENTORY_SNAPSHOT
+    system: ERP materials management
+    description: Daily material-plant inventory positions sampled from the ERP stock ledger
+    key: snapshot_id
+    rows: { S: 8000, M: 60000, L: 300000 }
+    loaded_at_from: snapshot_date
+    cdc_noise: { duplicate_updates_pct: 2, late_arrivals_pct: 2, dirty_strings_pct: 2 }
+    columns:
+      - { name: snapshot_id, type: VARCHAR, gen: { seq: { prefix: "INV-", pad: 9 } } }
+      - { name: material_id, type: VARCHAR, gen: { fk: { table: ERP_MATERIAL, column: material_id } } }
+      - { name: material_class, type: VARCHAR, gen: { derive_from: { fk_column: material_id, parent_column: material_class } } }
+      - { name: material_status, type: VARCHAR, gen: { derive_from: { fk_column: material_id, parent_column: material_status } } }
+      - { name: abc_class, type: VARCHAR, gen: { derive_from: { fk_column: material_id, parent_column: abc_class } } }
+      - { name: unit_cost_usd, type: DOUBLE, gen: { derive_from: { fk_column: material_id, parent_column: unit_cost_usd } } }
+      - { name: safety_stock_days, type: INTEGER, gen: { derive_from: { fk_column: material_id, parent_column: safety_stock_days } } }
+      - { name: plant_id, type: VARCHAR, gen: { fk: { table: MDM_PLANT, column: plant_id } } }
+      - { name: business_unit, type: VARCHAR, gen: { derive_from: { fk_column: plant_id, parent_column: business_unit } } }
+      - { name: snapshot_date, type: DATE, gen: { date: { from: "2026-01-01", to: asOf } } }
+      - { name: daily_usage_qty, type: DOUBLE, gen: { lognormal: { mu: 2.5, sigma: 0.9, min: 0.1, max: 5000, decimals: 1 } } }
+      - { name: cover_days, type: DOUBLE, gen: { lognormal: { mu: 3.15, sigma: 0.55, min: 1, max: 365, decimals: 1 } } }
+      - { name: stockout_draw, type: DOUBLE, gen: { uniform: { min: 0, max: 100, decimals: 2 } } }
+      - { name: on_hand_qty, type: DOUBLE, gen: { formula: "if(stockout_draw < 2.5, 0, round(daily_usage_qty * cover_days))" } }
+    plant:
+      - id: P-MFG-55
+        description: "Obsolete materials sit in stock with no usage — BR-MFG-020 keeps them out of cover, turns and stockout metrics unless asked"
+        where: { material_status: Obsolete }
+        adjust: { daily_usage_qty: { set: 0 }, on_hand_qty: { multiply: 4 } }
+      - id: P-MFG-56
+        description: "MRO spares are held for breakdown cover — two and a half times the stock of production materials"
+        where: { material_class: MRO spare }
+        adjust: { on_hand_qty: { multiply: 2.5 } }
+      - id: P-MFG-57
+        description: "Plant PL-09 Dunmore Flats runs out of purchased components in September 2026 after a carrier failure"
+        where: { plant_id: PL-09 }
+        window: { column: snapshot_date, from: "2026-09-01", to: "2026-09-30" }
+        adjust: { on_hand_qty: { set: 0, pct: 18 } }
+
+  - name: SVC_WARRANTY_LOT
+    system: Service & warranty management
+    description: Shipped lots per product family tracked for field warranty claims, failure mode and claim cost
+    key: lot_id
+    rows: { S: 2000, M: 12000, L: 60000 }
+    loaded_at_from: ship_date
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 3 }
+    columns:
+      - { name: lot_id, type: VARCHAR, gen: { seq: { prefix: "WL-", pad: 7 } } }
+      - { name: family_id, type: VARCHAR, gen: { fk: { table: MDM_PRODUCT_FAMILY, column: family_id } } }
+      - { name: business_unit, type: VARCHAR, gen: { derive_from: { fk_column: family_id, parent_column: business_unit } } }
+      - { name: ship_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: units_shipped, type: INTEGER, gen: { lognormal: { mu: 5.0, sigma: 0.8, min: 10, max: 20000 } } }
+      - { name: claim_per_mille, type: DOUBLE, gen: { lognormal: { mu: 1.2, sigma: 0.6, min: 0, max: 80, decimals: 3 } } }
+      - { name: claim_draw, type: DOUBLE, gen: { uniform: { min: 0, max: 1, decimals: 4 } } }
+      - { name: claims, type: INTEGER, gen: { formula: "floor(units_shipped * claim_per_mille / 1000 + claim_draw)" } }
+      - { name: cost_per_claim_usd, type: DOUBLE, gen: { lognormal: { mu: 6.2, sigma: 0.5, min: 40, max: 40000, decimals: 2 } } }
+      - { name: claim_cost_usd, type: DOUBLE, gen: { formula: "claims * cost_per_claim_usd", decimals: 2 } }
+      - { name: top_failure_mode, type: VARCHAR, gen: { choice: { values: [Seal leak, Bearing wear, Electrical fault, Firmware fault, Corrosion, Fastener loosening], weights: [16, 20, 18, 14, 16, 16] } } }
+    plant:
+      - id: P-MFG-58
+        description: "PF-04 Hydraulic pumps have a seal compound problem — the highest warranty claim rate, mostly seal leaks"
+        where: { family_id: PF-04 }
+        adjust: { claims: { multiply: 3 }, claim_cost_usd: { multiply: 3 }, top_failure_mode: { set: Seal leak, pct: 70 } }
+
+  - name: EHS_INCIDENT
+    system: Environment, health & safety (EHS)
+    description: Safety incidents and near misses by plant with severity and the person involved
+    key: incident_id
+    rows: { S: 1200, M: 1600, L: 1600 }
+    loaded_at_from: incident_date
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 4 }
+    columns:
+      - { name: incident_id, type: VARCHAR, gen: { seq: { prefix: "EHS-", pad: 6 } } }
+      - { name: plant_id, type: VARCHAR, gen: { fk: { table: MDM_PLANT, column: plant_id } } }
+      - { name: business_unit, type: VARCHAR, gen: { derive_from: { fk_column: plant_id, parent_column: business_unit } } }
+      - { name: incident_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: severity, type: VARCHAR, gen: { choice: { values: [Near miss, First aid, Recordable, Lost time], weights: [58, 26, 12, 4] } } }
+      - { name: injured_person, type: VARCHAR, gen: { person: full }, tags: [PII] }
+      - { name: description, type: VARCHAR, gen: { template: "{severity} reported at {plant_id}" } }
+    plant:
+      - id: P-MFG-59
+        description: "PL-20 Oakhurst has a run of recordable hand injuries at the forging press — the highest TRIR"
+        where: { plant_id: PL-20 }
+        adjust: { severity: { set: Recordable, pct: 45 } }

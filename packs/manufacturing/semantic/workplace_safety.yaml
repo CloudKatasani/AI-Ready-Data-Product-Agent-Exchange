@@ -1,0 +1,55 @@
+name: WORKPLACE_SAFETY
+description: Plant-month hours worked and safety incidents by severity
+tables:
+  - { alias: s, fqn: CONFORMED_GOLD.FCT_SAFETY_MONTH, pk: safety_key }
+  - { alias: pl, fqn: CONFORMED_GOLD.DIM_PLANT, pk: plant_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: s.plant_key, to: pl.plant_key }
+  - { from: s.date_key, to: d.date_key }
+dimensions:
+  - { name: plant, expr: pl.plant_name, label: Plant, synonyms: [site, factory, plants, sites], term: GT-MFG-PLANT }
+  - { name: business_unit, expr: pl.business_unit, label: Business unit, synonyms: [bu, division, segment, business units], term: GT-MFG-BUSINESS-UNIT }
+  - { name: country, expr: pl.country, label: Country, synonyms: [plant country] }
+time_dimensions:
+  - { name: month, expr: d.date, default: true }
+facts:
+  - { name: hours_worked, expr: s.hours_worked, description: Hours worked by plant employees in the month }
+metrics:
+  - name: trir
+    label: Total recordable incident rate
+    expr: 200000.0 * SUM(s.recordable_incidents) / SUM(s.hours_worked)
+    unit: rate
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [trir, recordable rate, recordable incident rate, safety incident rate]
+    term: GT-MFG-TRIR
+    description: Recordable incidents (including lost time) per 200,000 hours worked
+  - name: ltir
+    label: Lost time incident rate
+    expr: 200000.0 * SUM(s.lost_time_incidents) / SUM(s.hours_worked)
+    unit: rate
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [ltir, lost time rate, lost time injury rate]
+    term: GT-MFG-TRIR
+    description: Lost-time incidents per 200,000 hours worked
+  - name: recordable_incidents
+    label: Recordable incidents
+    expr: SUM(s.recordable_incidents)
+    unit: incidents
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [recordables, recordable injuries]
+    term: GT-MFG-TRIR
+    description: Recordable and lost-time incidents in the period
+  - name: near_miss_reports
+    label: Near miss reports
+    expr: SUM(s.near_misses)
+    unit: reports
+    decimals: 0
+    direction: higher_is_better
+    synonyms: [near misses, near-miss reports, close calls]
+    term: GT-MFG-NEAR-MISS
+    description: Near misses reported (a leading indicator — more reporting is better)
+products: [DP-MFG-007]

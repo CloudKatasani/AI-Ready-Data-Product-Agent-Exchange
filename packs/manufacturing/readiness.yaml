@@ -1,0 +1,6 @@
+# Readiness preset labels for Forgepoint Industries (preset ids from the ported readiness engine: early, mid, advanced).
+preset_labels:
+  early: Plant spreadsheets and historian exports
+  mid: Mid-migration
+  advanced: Governed manufacturing lakehouse
+question_overrides: []
