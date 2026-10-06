@@ -21,7 +21,7 @@ function fake(turns: Turn[]): LlmClient & { calls: number } {
   return c;
 }
 
-const use = (name: string, input: unknown, id = `tu_${name}`): Anthropic.ContentBlock => ({ type: 'tool_use', id, name, input }) as unknown as Anthropic.ContentBlock;
+const toolUse = (name: string, input: unknown, id = `tu_${name}`): Anthropic.ContentBlock => ({ type: 'tool_use', id, name, input }) as unknown as Anthropic.ContentBlock;
 
 /** Reads the latest tool_result payload (inside <tool_data>) from the conversation. */
 function lastResult(messages: Anthropic.MessageParam[]): { result_id: string; columns: string[]; rows: (string | number)[][] } {
