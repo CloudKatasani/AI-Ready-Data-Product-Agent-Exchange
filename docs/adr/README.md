@@ -14,5 +14,7 @@
 | [0010](0010-database-provider-switch.md) | Database provider switching | Proposed |
 | [0011](0011-relative-time-windows.md) | Relative time windows anchored to the pack clock | Accepted |
 | [0012](0012-pack-schema-additions.md) | Pack schema additions beyond the 04 examples | Accepted |
+| [0013](0013-calibri-font.md) | Calibri as the UI typeface | Accepted |
+| [0014](0014-sql-safety-duckdb-parser.md) | Worksheet SQL safety uses DuckDB's parser | Accepted |
 
 New decisions: copy the shape of an existing ADR, take the next number, add a row here.

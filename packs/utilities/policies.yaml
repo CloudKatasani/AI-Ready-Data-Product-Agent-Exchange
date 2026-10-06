@@ -76,7 +76,8 @@ grants:
     products: [DP-UTL-001, DP-UTL-002, DP-UTL-003, DP-UTL-004, DP-UTL-005, DP-UTL-006, DP-UTL-007, DP-UTL-008]
     agents: [AG-UTL-001, AG-UTL-002, AG-UTL-003, AG-UTL-004, AG-UTL-005]
   - persona: utilities:coo
-    products: [DP-UTL-001, DP-UTL-002, DP-UTL-004, DP-UTL-006]
+    # Aggregates only (archetype E): sees every headline KPI tile, never row-level data.
+    products: [DP-UTL-001, DP-UTL-002, DP-UTL-003, DP-UTL-004, DP-UTL-005, DP-UTL-006]
     agents: [AG-UTL-001, AG-UTL-002, AG-UTL-003, AG-UTL-004]
 
 public_products: []

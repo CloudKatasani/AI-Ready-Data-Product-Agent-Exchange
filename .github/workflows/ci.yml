@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DATABASE_URL: file:./data/keystone.db
+  DATABASE_URL: file:../data/keystone.db
 
 jobs:
   check:

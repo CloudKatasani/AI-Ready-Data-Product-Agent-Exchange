@@ -21,7 +21,12 @@
     "check": "pnpm typecheck && pnpm lint && pnpm test",
     "warehouse:build": "tsx scripts/warehouse-build.ts",
     "pack:validate": "tsx scripts/pack-validate.ts",
-    "pack:schema": "tsx scripts/pack-schema.ts"
+    "pack:schema": "tsx scripts/pack-schema.ts",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "tsx scripts/seed.ts",
+    "db:setup": "pnpm db:migrate && pnpm db:seed",
+    "demo": "pnpm db:setup && pnpm warehouse:build && pnpm build && pnpm start",
+    "postinstall": "prisma generate"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -39,12 +44,16 @@
     "@prisma/client": "^6.19.3",
     "@radix-ui/react-popover": "^1.1.23",
     "@radix-ui/react-slot": "^1.3.3",
+    "@xyflow/react": "^12.12.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.52.0",
+    "mermaid": "^12.1.0",
+    "minisearch": "^7.2.0",
     "next": "^15.5.27",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "recharts": "^3.10.1",
     "tailwind-merge": "^3.7.0",
     "yaml": "^2.9.1",
     "zod": "^4.6.5"

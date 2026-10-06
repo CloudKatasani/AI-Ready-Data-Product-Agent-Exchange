@@ -10,7 +10,7 @@ export type AgentMode = z.infer<typeof AgentMode>;
 const EnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   DATABASE_PROVIDER: z.enum(['sqlite', 'postgresql']).default('sqlite'),
-  DATABASE_URL: z.string().default('file:./data/keystone.db'),
+  DATABASE_URL: z.string().default('file:../data/keystone.db'),
   WAREHOUSE_ADAPTER: z.enum(['duckdb', 'snowflake']).default('duckdb'),
   WAREHOUSE_DIR: z.string().default('./data/warehouse'),
   DEMO_SCALE: z.enum(['S', 'M', 'L']).default('M'),

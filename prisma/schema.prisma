@@ -1,10 +1,8 @@
 // Keystone app-state model — see docs/build-spec/03-data-model.md.
-// Phase 0: datasource + generator only. Models arrive phase by phase (Phase 2: Persona, QueryLog,
-// Entitlement, AuditEvent, KnowledgeOverlay; Phase 3+: answers, lifecycle, marketplace, ...).
+// Models arrive phase by phase. Phase 2: Persona, Entitlement, QueryLog, AuditEvent, KnowledgeOverlay.
 //
 // Prisma does not allow the datasource provider to come from an env var. SQLite is the default;
-// Postgres support (DATABASE_PROVIDER=postgresql) is delivered in Phase 11 by switching provider at
-// build time (see docs/adr/0010-database-provider-switch.md).
+// Postgres support (DATABASE_PROVIDER=postgresql) is delivered in Phase 11 (docs/adr/0010-database-provider-switch.md).
 
 generator client {
   provider = "prisma-client-js"
@@ -13,4 +11,82 @@ generator client {
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
+}
+
+/// Imported from the pack; one row per pack persona.
+model Persona {
+  id            String @id // e.g. "utilities:ops-manager-north"
+  packId        String
+  archetype     String // A|B|C|D|E
+  name          String
+  title         String
+  domain        String
+  rolesJson     String // Role[]
+  rowFilterJson String? // {dimension, allowed[]}
+  unmaskedJson  String // SensitiveClass[]
+  avatarSeed    String
+
+  @@index([packId])
+}
+
+model Entitlement {
+  id          String    @id @default(cuid())
+  personaId   String
+  subjectType String // PRODUCT|AGENT
+  subjectId   String
+  purpose     String
+  grantedVia  String // SEED|REQUEST
+  expiresAt   DateTime?
+  revokedAt   DateTime?
+
+  @@index([personaId])
+}
+
+/// Append-only (invariant I06): one row per QueryService.run().
+model QueryLog {
+  id             String   @id @default(cuid())
+  personaId      String
+  kind           String // preview|sql|metric
+  purpose        String?
+  sqlHash        String
+  displaySql     String
+  productIdsJson String
+  policiesJson   String
+  rowCount       Int
+  elapsedMs      Int
+  createdAt      DateTime @default(now())
+
+  @@index([personaId])
+}
+
+/// Append-only, hash-chained: hash = sha256(prevHash + canonicalJson(event)).
+model AuditEvent {
+  id          String   @id @default(cuid())
+  packId      String
+  actorType   String // HUMAN|AGENT|SYSTEM
+  actorId     String
+  action      String
+  subjectType String
+  subjectId   String
+  detailJson  String
+  hash        String
+  prevHash    String?
+  createdAt   DateTime @default(now())
+
+  @@index([packId])
+}
+
+model KnowledgeOverlay {
+  id               String    @id @default(cuid())
+  packId           String
+  kind             String // SYNONYM|BUSINESS_RULE|VERIFIED_QUERY|INSTRUCTION|GLOSSARY_TERM
+  key              String
+  payloadJson      String
+  version          Int       @default(1)
+  createdBy        String
+  sourceFeedbackId String?
+  createdAt        DateTime  @default(now())
+  supersededAt     DateTime?
+
+  @@index([packId, kind])
 }

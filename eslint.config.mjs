@@ -11,6 +11,7 @@ const compat = new FlatCompat({ baseDirectory: dirname(fileURLToPath(import.meta
  */
 const LIB_DEPS = {
   config: [],
+  db: [],
   utils: [],
   packs: [],
   warehouse: ['packs'],
@@ -25,7 +26,7 @@ const LIB_DEPS = {
   presenter: ['packs', 'warehouse', 'query', 'agents', 'lifecycle', 'marketplace', 'operate', 'strategy', 'standards', 'exports'],
 };
 const LIB = Object.keys(LIB_DEPS);
-const LEAF = ['config', 'utils'];
+const LEAF = ['config', 'utils', 'db'];
 
 /** Next.js file conventions that must default-export. CLAUDE.md §8 allows default exports only here. */
 const NEXT_CONVENTION_FILES = ['page', 'layout', 'template', 'loading', 'error', 'global-error', 'not-found', 'default'].map(

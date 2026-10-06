@@ -4,16 +4,19 @@ import { copy } from '@/copy/en';
 import type { AgentMode } from '@/lib/config/env';
 import type { Brand } from '@/lib/presenter/branding';
 import { ModeBadge } from './mode-badge';
-import { PersonaSwitcher } from './persona-switcher';
+import { type PersonaCard, PersonaSwitcher, type SwitchPersonaAction } from './persona-switcher';
 import { PresenterMenu } from './presenter-menu';
 
 interface TopBarProps {
   brand: Brand;
   pack: string;
   mode: AgentMode;
+  personas: PersonaCard[];
+  activePersonaId: string;
+  onSwitchPersona: SwitchPersonaAction;
 }
 
-export function TopBar({ brand, pack, mode }: TopBarProps) {
+export function TopBar({ brand, pack, mode, personas, activePersonaId, onSwitchPersona }: TopBarProps) {
   return (
     <header className="flex h-14 items-center gap-4 border-b border-border bg-surface px-4">
       <Link href={`/${encodeURIComponent(pack)}/home`} className="flex items-center gap-2 font-semibold">
@@ -39,7 +42,7 @@ export function TopBar({ brand, pack, mode }: TopBarProps) {
       </label>
       <div className="ml-auto flex items-center gap-2">
         <ModeBadge mode={mode} />
-        <PersonaSwitcher />
+        <PersonaSwitcher pack={pack} personas={personas} activeId={activePersonaId} onSwitch={onSwitchPersona} />
         <PresenterMenu pack={pack} />
       </div>
     </header>

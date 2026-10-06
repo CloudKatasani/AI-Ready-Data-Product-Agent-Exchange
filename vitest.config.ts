@@ -6,7 +6,9 @@ export default defineConfig({
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
   test: {
-    include: ['tests/{unit,invariants,golden}/**/*.test.ts'],
+    include: ['tests/{unit,invariants,golden,integration}/**/*.test.ts'],
+    globalSetup: ['tests/setup/global.ts'],
+    testTimeout: 30_000,
     environment: 'node',
     coverage: {
       provider: 'v8',

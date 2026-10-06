@@ -5,10 +5,11 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { getStories, listPackIds, packsDir } from '../src/lib/packs/registry';
+import { getRubrics, getStories, listPackIds, packsDir } from '../src/lib/packs/registry';
 import { Scale } from '../src/lib/packs/schema';
 import { summarise, validatePackStatic } from '../src/lib/packs/validate';
 import { buildWarehouse, openWarehouseReadOnly } from '../src/lib/warehouse/build';
+import { metricChecks } from '../src/lib/query/validate';
 import { warehouseChecks } from '../src/lib/warehouse/validate';
 import { parseArgs } from './cli-args';
 
@@ -28,6 +29,7 @@ for (const id of ids) {
     const w = await openWarehouseReadOnly(built.path);
     try {
       results = await warehouseChecks(pack, w, [...results]);
+      results = await metricChecks(pack, getRubrics(), w, results);
     } finally {
       await w.close();
     }

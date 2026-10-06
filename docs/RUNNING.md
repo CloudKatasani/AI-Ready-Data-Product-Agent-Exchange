@@ -1,8 +1,8 @@
 # Running Keystone
 
-Status: **Phase 1 — packs & warehouse.** The utilities pack loads, validates and builds a DuckDB
-warehouse. Screens are still Phase 0 stubs; governed queries and personas arrive in Phase 2
-(see `docs/build-spec/11-build-plan.md`).
+Status: **Phase 2 — governed query path & knowledge screens.** Explorer, Semantic (with Playground),
+Glossary and Context are live for the utilities pack, all reading through QueryService with persona
+policies. Other modules are still stubs (see `docs/build-spec/11-build-plan.md`).
 
 ## Prerequisites
 
@@ -12,10 +12,17 @@ warehouse. Screens are still Phase 0 stubs; governed queries and personas arrive
 ## First run
 
 ```bash
-pnpm install
+pnpm install                # also runs prisma generate
 cp .env.example .env        # optional in development; defaults match .env.example
-pnpm dev                    # http://localhost:3000 → redirects to /launch
+pnpm db:setup               # SQLite app DB at data/keystone.db: migrate + seed personas/entitlements
+pnpm warehouse:build        # DuckDB warehouse(s) at data/warehouse/ (≈ 6 s, cached)
+pnpm dev                    # http://localhost:3000 → /launch → pick a pack
 ```
+
+Or in one go (production build): `pnpm demo`.
+
+Switch persona from the top bar (or `Ctrl+Shift+P`); every screen re-renders with that identity's
+entitlements, masking and row filters. The persona is a signed, httpOnly cookie.
 
 Build the demo warehouse once (≈ 6 s for the utilities pack at scale M, then cached):
 
@@ -24,8 +31,6 @@ pnpm warehouse:build --pack utilities
 pnpm pack:validate utilities
 ```
 
-The launcher still offers "Open the empty shell" (placeholder pack id `sample`) until Phase 2 wires
-screens to packs.
 
 ### Editing a pack
 
@@ -41,10 +46,12 @@ automatically when any pack file changes.
 | `pnpm build` / `pnpm start` | Production build (`output: 'standalone'`) / serve it. Production refuses the default `SESSION_SECRET`. |
 | `pnpm typecheck` | `tsc --noEmit` (strict) |
 | `pnpm lint` | ESLint (module boundaries, DuckDB-import ban, determinism, no default exports) + `scripts/lint/no-domain-strings.ts` |
-| `pnpm test` | Vitest: `tests/unit`, `tests/invariants` (I01–I11; `todo` until their phase), `tests/golden` |
-| `pnpm test:e2e` | Playwright e2e + axe a11y against `pnpm start` on :3100 (run `pnpm build` first) |
+| `pnpm test` | Vitest: unit, invariants (I01–I03, I08, I11 implemented), integration (builds a scale-S warehouse in `data/test-warehouse/` on first run) |
+| `pnpm test:e2e` | Playwright e2e + axe a11y against `pnpm start` on :3100 (run `pnpm build` first; the web server step builds the warehouse and seeds the DB) |
 | `pnpm check` | typecheck + lint + unit tests |
-| `pnpm db:generate` | `prisma generate` (no models until Phase 2) |
+| `pnpm db:generate` | `prisma generate` |
+| `pnpm db:setup` | `prisma migrate deploy` + seed (personas, entitlements, audit event) for every pack |
+| `pnpm demo` | db:setup → warehouse:build → build → start |
 | `pnpm warehouse:build [--pack id] [--scale S\|M\|L] [--force]` | Builds `data/warehouse/<pack>.duckdb` (cached by pack content hash; `--force` rebuilds) |
 | `pnpm pack:validate [id] [--static] [--json]` | Validator categories 1–6, 9, 10; builds the warehouse at scale M if needed; report in `data/reports/<pack>-validation.json` |
 | `pnpm pack:schema` | Regenerates JSON Schema for pack files into `packs/_schema/` (editor autocompletion) |

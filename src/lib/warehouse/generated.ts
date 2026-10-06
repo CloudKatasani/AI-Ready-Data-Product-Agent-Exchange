@@ -2,6 +2,7 @@ import type { Pack } from '@/lib/packs/schema';
 import type { AppendColumnType, CellValue, WarehouseBuilder } from './adapter';
 import { isoToEpochDay } from './clock';
 import { MASKING_MACROS } from './layout';
+import { chunkDocument } from '@/lib/packs/chunk';
 import { semanticBaseViewSql } from './semantic-base';
 
 interface Table {
@@ -19,22 +20,6 @@ async function load(w: WarehouseBuilder, t: Table): Promise<void> {
 
 const json = (v: unknown): string => JSON.stringify(v);
 
-/** Splits a document into ~600-character chunks on paragraph boundaries (05 §7). */
-export function chunkDocument(body: string, target = 600): string[] {
-  const paras = body.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
-  const chunks: string[] = [];
-  let cur = '';
-  for (const p of paras) {
-    if (cur && cur.length + p.length + 2 > target) {
-      chunks.push(cur);
-      cur = p;
-    } else cur = cur ? `${cur}\n\n${p}` : p;
-  }
-  if (cur) chunks.push(cur);
-  return chunks;
-}
-
-/** Masking macros plus `GOVERNANCE.as_of()` — the pack clock for SQL (Silver/Gold never read the wall clock). */
 export async function createBuildMacros(w: WarehouseBuilder, pack: Pack): Promise<void> {
   for (const [name, body] of Object.entries(MASKING_MACROS)) await w.exec(`CREATE OR REPLACE MACRO GOVERNANCE.${name}(v) AS ${body}`);
   await w.exec(`CREATE OR REPLACE MACRO GOVERNANCE.as_of() AS DATE '${pack.manifest.asOf}'`);
