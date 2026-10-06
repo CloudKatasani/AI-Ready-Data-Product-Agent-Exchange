@@ -1,0 +1,33 @@
+# docker compose up   → the demo on SQLite with a persistent data volume.
+# Postgres 16 is supported for local runs (pnpm db:pg:prepare / db:pg:push, ADR-0010); the image is SQLite-only
+# because snapshot reset (ADR-0021) and the seeded template DB are SQLite. The `postgres` profile below starts a
+# Postgres server for that local workflow.
+services:
+  keystone:
+    build: .
+    image: keystone:latest
+    ports: ["3000:3000"]
+    environment:
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      AGENT_MODE_DEFAULT: ${AGENT_MODE_DEFAULT:-scripted}
+      KEYSTONE_MODEL_ANSWER: ${KEYSTONE_MODEL_ANSWER:-}
+      KEYSTONE_MODEL_LIFECYCLE: ${KEYSTONE_MODEL_LIFECYCLE:-}
+      KEYSTONE_MODEL_FAST: ${KEYSTONE_MODEL_FAST:-}
+    volumes:
+      - keystone-data:/app/data
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: keystone
+      POSTGRES_PASSWORD: keystone
+      POSTGRES_DB: keystone
+    ports: ["5432:5432"]
+    volumes:
+      - keystone-pg:/var/lib/postgresql/data
+    profiles: ["postgres"]
+
+volumes:
+  keystone-data:
+  keystone-pg:

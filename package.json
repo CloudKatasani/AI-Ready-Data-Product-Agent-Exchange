@@ -29,7 +29,11 @@
     "demo": "pnpm warehouse:build && pnpm db:setup && pnpm build && pnpm start",
     "postinstall": "prisma generate",
     "knockout:deltas": "tsx scripts/knockout-deltas.ts",
-    "pack:draft": "tsx scripts/pack-draft.ts"
+    "pack:draft": "tsx scripts/pack-draft.ts",
+    "doctor": "tsx scripts/doctor.ts",
+    "demo:fresh": "pnpm warehouse:build --force && pnpm db:setup && pnpm build && pnpm start",
+    "db:pg:prepare": "tsx scripts/db-provider.ts && prisma generate --schema prisma/postgres/schema.prisma",
+    "db:pg:push": "prisma db push --schema prisma/postgres/schema.prisma --skip-generate"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

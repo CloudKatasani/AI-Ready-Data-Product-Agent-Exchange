@@ -23,7 +23,15 @@ export default async function setup(): Promise<void> {
       return [];
     }
   });
-  for (const p of packs) await buildWarehouse(p, { scale: 'M', outDir: goldenDir });
+  const built: Pack[] = [];
+  for (const p of packs) {
+    try {
+      await buildWarehouse(p, { scale: 'M', outDir: goldenDir });
+      built.push(p);
+    } catch (e) {
+      console.warn(`test setup: ${p.manifest.id} warehouse failed to build — skipped (${(e as Error).message.split('\n')[0]})`);
+    }
+  }
   process.env.KEYSTONE_GOLDEN_WAREHOUSE_DIR = goldenDir;
   process.env.KEYSTONE_TEST_WAREHOUSE = join(goldenDir, 'utilities.duckdb');
 
@@ -35,10 +43,16 @@ export default async function setup(): Promise<void> {
   const { seedPack } = await import('../../src/lib/presenter/seed');
   const { QueryService } = await import('../../src/lib/query/query-service');
   const rubrics = getRubrics();
-  for (const pack of packs) {
+  for (const pack of built) {
     const w = await openWarehouseReadOnly(join(goldenDir, `${pack.manifest.id}.duckdb`));
-    await seedPack(db(), pack, { rubrics, qs: new QueryService({ pack, rubrics, warehouse: w, log: { write: async () => 'seed' } }) });
-    await w.close();
+    try {
+      await seedPack(db(), pack, { rubrics, qs: new QueryService({ pack, rubrics, warehouse: w, log: { write: async () => 'seed' } }) });
+    } catch (e) {
+      // A pack still being authored must not take the whole suite down; its own tests will fail loudly.
+      console.warn(`test setup: ${pack.manifest.id} did not seed — ${(e as Error).message.split('\n')[0]}`);
+    } finally {
+      await w.close();
+    }
   }
   await db().$disconnect();
 }

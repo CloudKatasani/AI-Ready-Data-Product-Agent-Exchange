@@ -49,6 +49,10 @@ export async function checkWorksheetSql(sql: string, w: WarehouseAdapter, knownO
   }
   const statements = parsed.statements ?? [];
   if (statements.length !== 1) return fail('Run one statement at a time.', 'Remove the extra statements (the ";" separators).');
+  // DuckDB parses SUMMARIZE / DESCRIBE / SHOW as SELECTs over catalog helpers; they are not plain queries the
+  // governance rewrite was designed for, so the worksheet refuses them (Explorer's Columns tab covers DESCRIBE).
+  const bare = sql.replace(/--[^\n]*|\/\*[\s\S]*?\*\/|'(?:[^']|'')*'/g, ' ');
+  if (/\b(SUMMARIZE|DESCRIBE|SHOW)\b/i.test(bare)) return fail('Only plain SELECT queries can run in the worksheet.', 'Use the Explorer Columns and Quality tabs for column summaries.');
 
   const cteNames = new Set<string>();
   const tables: { schema: string; table: string; alias: string; location: number }[] = [];

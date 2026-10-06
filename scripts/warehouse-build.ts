@@ -17,7 +17,16 @@ if (ids.length === 0) {
   process.exit(0);
 }
 for (const id of ids) {
-  const r = await buildWarehouse(getPack(id), { scale, outDir, force: flags.force === true });
+  let pack;
+  try {
+    pack = getPack(id);
+  } catch (e) {
+    // A pack being authored may not load yet; an explicitly requested pack must.
+    if (typeof flags.pack === 'string') throw e;
+    console.error(`${id}: skipped — the pack does not load (${(e as Error).message.split('\n')[0]}). Run pnpm pack:validate ${id}.`);
+    continue;
+  }
+  const r = await buildWarehouse(pack, { scale, outDir, force: flags.force === true });
   const rows = Object.values(r.checksums).reduce((n, c) => n + c.rows, 0);
   console.log(
     `${id}: ${r.cached ? 'cached' : 'built'} ${r.path} — scale ${r.scale}, ${Object.keys(r.checksums).length} tables, ${rows.toLocaleString('en-US')} rows, ${(r.elapsedMs / 1000).toFixed(1)} s`,

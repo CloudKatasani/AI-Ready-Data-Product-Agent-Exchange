@@ -49,6 +49,35 @@
   --muted-foreground: #94a3b8;
   --border: #334155;
   --ring: #60a5fa;
+
+  /* Status, actor and layer colours are used as text and borders: lighter variants keep AA on dark surfaces. */
+  --status-certified: #4ade80;
+  --status-in-certification: #fbbf24;
+  --status-draft: #94a3b8;
+  --status-degraded: #fb923c;
+  --status-fail: #f87171;
+  --actor-agent: #c4b5fd;
+  --actor-human: #93c5fd;
+  --layer-bronze: #fdba74;
+  --layer-silver: #cbd5e1;
+  --layer-gold: #fde047;
+  --layer-semantic: #7dd3fc;
+  --layer-glossary: #5eead4;
+  --layer-context: #bef264;
+  --layer-product: #93c5fd;
+  --layer-agent: #c4b5fd;
+  --layer-governance: #fda4af;
+}
+
+/*
+ * Brand colours are chosen for light surfaces (AA against white or ink text on a filled control). Where a
+ * brand colour is used as text on a dark surface, lighten it towards white so it stays readable (07 §2).
+ */
+.dark .text-primary {
+  color: color-mix(in srgb, var(--brand-primary) 40%, white);
+}
+.dark .text-accent {
+  color: color-mix(in srgb, var(--brand-accent) 40%, white);
 }
 
 @theme inline {

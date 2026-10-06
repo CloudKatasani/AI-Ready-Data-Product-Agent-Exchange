@@ -11,7 +11,7 @@
 | [0007](0007-snapshot-based-reset.md) | Snapshot-based reset | Accepted |
 | [0008](0008-agents-never-approve.md) | Agents never approve | Accepted |
 | [0009](0009-default-export-scope.md) | Scope of "no default exports except Next pages" | Accepted |
-| [0010](0010-database-provider-switch.md) | Database provider switching | Proposed |
+| [0010](0010-database-provider-switch.md) | Database provider switching | Accepted |
 | [0011](0011-relative-time-windows.md) | Relative time windows anchored to the pack clock | Accepted |
 | [0012](0012-pack-schema-additions.md) | Pack schema additions beyond the 04 examples | Accepted |
 | [0013](0013-calibri-font.md) | Calibri as the UI typeface | Accepted |
