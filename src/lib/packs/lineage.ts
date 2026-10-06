@@ -34,6 +34,11 @@ export function estateLineage(pack: Pack): { nodes: LineageNode[]; edges: Lineag
     add({ id: p.id, label: `${p.id} ${p.name}`, layer: 'product', kind: 'product' });
     if (p.semantic_view) edges.push({ from: `SEMANTIC.${p.semantic_view}`, to: p.id });
     else for (const u of p.upstream) edges.push({ from: u, to: p.id });
+    // The product's SQL output port (a DATA_PRODUCTS view) is exposed by the product.
+    for (const port of p.output_ports.filter((o) => o.kind === 'sql')) {
+      add({ id: port.ref, label: port.ref.split('.')[1] ?? port.ref, layer: 'product', kind: 'object' });
+      edges.push({ from: p.id, to: port.ref });
+    }
   }
   for (const a of pack.agents) {
     add({ id: a.id, label: `${a.id} ${a.name}`, layer: 'agent', kind: 'agent' });
@@ -65,4 +70,16 @@ export function lineageAround(pack: Pack, id: string, depth = 6): { nodes: Linea
   walk('up');
   walk('down');
   return { nodes: all.nodes.filter((n) => keep.has(n.id)), edges: all.edges.filter((e) => keep.has(e.from) && keep.has(e.to)) };
+}
+
+/** The data product whose SQL output port is `fqn` (a DATA_PRODUCTS view), if any. */
+export function productForObject(pack: Pack, fqn: string): Pack['products'][number] | undefined {
+  return pack.products.find((p) => p.output_ports.some((o) => o.kind === 'sql' && o.ref === fqn));
+}
+
+/** DATA_PRODUCTS.DP_REGISTRY lists every product: its lineage is the registry and the products it lists. */
+export const REGISTRY_FQN = 'DATA_PRODUCTS.DP_REGISTRY';
+export function registryLineage(pack: Pack): { nodes: LineageNode[]; edges: LineageEdge[] } {
+  const nodes: LineageNode[] = [{ id: REGISTRY_FQN, label: 'DP_REGISTRY', layer: 'product', kind: 'object' }, ...pack.products.map((p) => ({ id: p.id, label: `${p.id} ${p.name}`, layer: 'product' as const, kind: 'product' as const }))];
+  return { nodes, edges: pack.products.map((p) => ({ from: p.id, to: REGISTRY_FQN })) };
 }

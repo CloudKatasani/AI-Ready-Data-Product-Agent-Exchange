@@ -65,3 +65,14 @@ test('document search highlights matching passages', async ({ page }) => {
   await expect(page.getByTestId('doc-hits').locator('li').first()).toContainText('IEEE 1366');
   await expect(page.getByTestId('doc-hits').locator('mark').first()).toBeVisible();
 });
+
+test('Explorer DATA_PRODUCTS: a product view shows lineage to its product and the product data quality', async ({ page }) => {
+  await page.goto(`/${PACK}/explorer/DATA_PRODUCTS/DP_UTL_002_RELIABILITY?tab=lineage`);
+  await expect(page.locator('.react-flow__node').first()).toBeVisible();
+  expect(await page.locator('.react-flow__node').count()).toBeGreaterThan(4);
+  await page.goto(`/${PACK}/explorer/DATA_PRODUCTS/DP_UTL_002_RELIABILITY?tab=quality`);
+  await expect(page.getByTestId('quality-dimensions')).toBeVisible();
+  await expect(page.getByTestId('dq-rules').locator('[data-passed]').first()).toBeVisible();
+  await page.goto(`/${PACK}/explorer/CONFORMED_GOLD/FCT_OUTAGE?tab=quality`);
+  await expect(page.getByTestId('dq-rules').locator('[data-passed]').first()).toBeVisible();
+});

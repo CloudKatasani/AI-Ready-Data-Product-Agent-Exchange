@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { type GraphNode, LineageGraph } from '@/components/graph/lineage-graph';
 import { copy } from '@/copy/en';
-import { lineageAround } from '@/lib/packs/lineage';
+import { lineageAround, REGISTRY_FQN, registryLineage } from '@/lib/packs/lineage';
 import type { Pack } from '@/lib/packs/schema';
 
 export function hrefFor(pack: string, id: string): string | undefined {
@@ -14,7 +14,8 @@ export function hrefFor(pack: string, id: string): string | undefined {
 
 export function LineagePanel({ pack, fqn }: { pack: Pack; fqn: string }) {
   const id = pack.manifest.id;
-  const g = lineageAround(pack, fqn);
+  // The registry lists every product; its lineage is the products themselves, not the whole estate.
+  const g = fqn === REGISTRY_FQN ? registryLineage(pack) : lineageAround(pack, fqn);
   const nodes: GraphNode[] = g.nodes.map((n) => ({ id: n.id, label: n.label, layer: n.layer, href: hrefFor(id, n.id), focus: n.id === fqn }));
   const up = g.edges.filter((e) => e.to === fqn).map((e) => e.from);
   const down = g.edges.filter((e) => e.from === fqn).map((e) => e.to);

@@ -37,6 +37,18 @@ export async function qualityHistory(productId: string): Promise<{ score: number
   }
 }
 
+/** Latest result per rule across products (a rule on a shared Gold table is evaluated for each product using it). */
+export async function latestResultsForRules(ruleIds: string[]) {
+  if (!ruleIds.length) return [];
+  try {
+    const rows = await db().qualityRuleResult.findMany({ where: { ruleId: { in: ruleIds } }, orderBy: { evaluatedAt: 'desc' } });
+    const seen = new Set<string>();
+    return rows.filter((r) => !seen.has(r.ruleId) && seen.add(r.ruleId));
+  } catch {
+    return [];
+  }
+}
+
 export async function latestRuleResults(productId: string) {
   try {
     const rows = await db().qualityRuleResult.findMany({ where: { productId }, orderBy: { evaluatedAt: 'desc' } });
