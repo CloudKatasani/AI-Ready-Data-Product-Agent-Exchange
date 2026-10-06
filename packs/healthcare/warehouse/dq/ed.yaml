@@ -1,0 +1,58 @@
+# Emergency department flow DQ rules.
+- id: DQ-HC-013
+  object: CONFORMED_GOLD.FCT_ED_VISIT
+  column: door_to_provider_min
+  dimension: completeness
+  assertion: "null_rate <= 0.05"
+  severity: high
+  alert_route: steward
+  description: Door-to-provider time is recorded for every patient seen (only LWBS visits have none).
+- id: DQ-HC-014
+  object: CONFORMED_GOLD.FCT_ED_VISIT
+  column: door_to_provider_min
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: medium
+  alert_route: engineering
+  description: Door-to-provider time is never negative (provider contact after arrival).
+- id: DQ-HC-015
+  object: CONFORMED_GOLD.FCT_ED_VISIT
+  column: left_without_seen
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every ED visit carries the left-without-being-seen flag.
+- id: DQ-HC-016
+  object: CONFORMED_GOLD.FCT_ED_VISIT
+  column: ed_visit_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per ED visit after CDC deduplication.
+- id: DQ-HC-017
+  object: CONFORMED_GOLD.FCT_ED_VISIT
+  column: arrival_ts
+  dimension: timeliness
+  assertion: "freshness_min <= 240"
+  severity: high
+  alert_route: engineering
+  description: The latest ED arrival is no more than four hours old at the end of the reporting day (tracking board feed is on time).
+- id: DQ-HC-018
+  object: CONFORMED_GOLD.FCT_ED_VISIT
+  column: acuity
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [ESI 1, ESI 2, ESI 3, ESI 4, ESI 5]
+  severity: medium
+  alert_route: steward
+  description: Triage acuity is ESI 1 to 5.
+- id: DQ-HC-019
+  object: CONFORMED_GOLD.FCT_ED_VISIT
+  column: boarding_min
+  dimension: validity
+  assertion: "max <= 4320"
+  severity: medium
+  alert_route: engineering
+  description: Boarding never exceeds three days; longer values indicate a missing departure time.

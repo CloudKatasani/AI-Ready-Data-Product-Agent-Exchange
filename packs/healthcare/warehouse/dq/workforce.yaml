@@ -1,0 +1,40 @@
+# Workforce and capacity DQ rules.
+- id: DQ-HC-048
+  object: CONFORMED_GOLD.FCT_UNIT_DAY
+  column: census
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every care unit day has a midnight census (occupancy and HPPD denominator).
+- id: DQ-HC-049
+  object: CONFORMED_GOLD.FCT_UNIT_DAY
+  column: census
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Census is never negative.
+- id: DQ-HC-050
+  object: CONFORMED_GOLD.FCT_UNIT_DAY
+  column: worked_hours
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every care unit day has nursing hours worked.
+- id: DQ-HC-051
+  object: CONFORMED_GOLD.FCT_UNIT_DAY
+  column: shift_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: medium
+  alert_route: engineering
+  description: Time and attendance data is no more than one day behind.
+- id: DQ-HC-052
+  object: CONFORMED_GOLD.FCT_UNIT_DAY
+  dimension: consistency
+  assertion: "row_count >= 1000"
+  severity: high
+  alert_route: engineering
+  description: The unit-day fact holds a full year of care unit days; a sharp drop indicates a missing time and attendance file.

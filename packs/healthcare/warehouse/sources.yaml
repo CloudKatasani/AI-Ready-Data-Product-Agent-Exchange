@@ -1,0 +1,370 @@
+# Bronze source tables for Crestview Health System (CVH_AI_PLATFORM). Synthetic only — fictional patients,
+# clinicians, payers and suppliers. Reference tables (facilities, units, clinicians, payers, suppliers) and the
+# quality-calibrated facts (inpatient encounters, PO lines) are full populations at every scale; patient-side
+# tables scale S/M/L.
+tables:
+  - name: FAC_FACILITY
+    system: Facility master (MDM)
+    description: Licensed hospital campuses of Crestview Health System
+    key: facility_id
+    rows: { S: 10, M: 10, L: 10 }
+    columns:
+      - { name: facility_id, type: VARCHAR, gen: { seq: { prefix: "FAC-", pad: 2 } } }
+      - { name: facility_name, type: VARCHAR, gen: { template: "Crestview Campus {facility_id}" }, dirty: false }
+      - { name: region, type: VARCHAR, gen: { choice: { values: [Metro, Lakeshore, Riverside, Valley, Highland] } }, dirty: false }
+      - { name: facility_type, type: VARCHAR, gen: { choice: { values: [Academic medical center, Regional hospital, Community hospital, Critical access hospital] } }, dirty: false }
+      - { name: licensed_beds, type: INTEGER, gen: { uniform: { min: 25, max: 640 } } }
+      - { name: opened_year, type: INTEGER, gen: { uniform: { min: 1921, max: 1998 } } }
+    plant:
+      - { id: P-HC-01, description: "FAC-01 is the Metro academic medical center", where: { facility_id: FAC-01 }, adjust: { facility_name: { set: Crestview Medical Center }, region: { set: Metro }, facility_type: { set: Academic medical center }, licensed_beds: { set: 640 } } }
+      - { id: P-HC-02, description: "FAC-02 is a Metro community hospital", where: { facility_id: FAC-02 }, adjust: { facility_name: { set: Harborview Community Hospital }, region: { set: Metro }, facility_type: { set: Community hospital }, licensed_beds: { set: 220 } } }
+      - { id: P-HC-03, description: "FAC-03 is the Lakeshore regional hospital", where: { facility_id: FAC-03 }, adjust: { facility_name: { set: Lakeshore Regional Hospital }, region: { set: Lakeshore }, facility_type: { set: Regional hospital }, licensed_beds: { set: 310 } } }
+      - { id: P-HC-04, description: "FAC-04 is a Lakeshore community hospital", where: { facility_id: FAC-04 }, adjust: { facility_name: { set: Lakeshore Community Hospital }, region: { set: Lakeshore }, facility_type: { set: Community hospital }, licensed_beds: { set: 120 } } }
+      - { id: P-HC-05, description: "FAC-05 is the Riverside regional medical center (anchors the readmission and boarding patterns)", where: { facility_id: FAC-05 }, adjust: { facility_name: { set: Riverside Medical Center }, region: { set: Riverside }, facility_type: { set: Regional hospital }, licensed_beds: { set: 360 } } }
+      - { id: P-HC-06, description: "FAC-06 is a Riverside community hospital", where: { facility_id: FAC-06 }, adjust: { facility_name: { set: Riverside North Hospital }, region: { set: Riverside }, facility_type: { set: Community hospital }, licensed_beds: { set: 140 } } }
+      - { id: P-HC-07, description: "FAC-07 is the Valley regional hospital", where: { facility_id: FAC-07 }, adjust: { facility_name: { set: Valley General Hospital }, region: { set: Valley }, facility_type: { set: Regional hospital }, licensed_beds: { set: 280 } } }
+      - { id: P-HC-08, description: "FAC-08 is the Valley critical access hospital", where: { facility_id: FAC-08 }, adjust: { facility_name: { set: Valley Critical Access Hospital }, region: { set: Valley }, facility_type: { set: Critical access hospital }, licensed_beds: { set: 25 } } }
+      - { id: P-HC-09, description: "FAC-09 is the Highland regional medical center (staged oncology and orthopaedic readmissions)", where: { facility_id: FAC-09 }, adjust: { facility_name: { set: Highland Regional Medical Center }, region: { set: Highland }, facility_type: { set: Regional hospital }, licensed_beds: { set: 300 } } }
+      - { id: P-HC-10, description: "FAC-10 is a Highland community hospital", where: { facility_id: FAC-10 }, adjust: { facility_name: { set: Highland Community Hospital }, region: { set: Highland }, facility_type: { set: Community hospital }, licensed_beds: { set: 90 } } }
+
+  - name: ADT_UNIT
+    system: ADT / bed management
+    description: Staffed inpatient care units and their staffing-plan hours per patient day
+    key: unit_id
+    rows: { S: 48, M: 48, L: 48 }
+    cdc_noise: { duplicate_updates_pct: 2 }
+    columns:
+      - { name: unit_id, type: VARCHAR, gen: { seq: { prefix: "CU-", pad: 3 } } }
+      - { name: facility_id, type: VARCHAR, gen: { fk: { table: FAC_FACILITY, column: facility_id, dist: zipf, s: 0.5 } } }
+      - { name: unit_type, type: VARCHAR, gen: { choice: { values: [Med-surg, ICU, Step-down, Telemetry, Maternity, Behavioral health, Pediatrics], weights: [34, 14, 12, 14, 10, 8, 8] } }, dirty: false }
+      - { name: unit_name, type: VARCHAR, gen: { template: "{unit_type} {unit_id}" }, dirty: false }
+      - { name: staffed_beds, type: INTEGER, gen: { uniform: { min: 14, max: 36 } } }
+      - { name: target_hppd, type: DOUBLE, gen: { formula: "if(unit_type == 'ICU', 16, if(unit_type == 'Step-down', 11, if(unit_type == 'Maternity', 10, if(unit_type == 'Pediatrics', 10, 8))))", decimals: 1 } }
+    plant:
+      - id: P-HC-11
+        description: "CU-005 is the Riverside Medical Center ICU (contract labour pattern)"
+        where: { unit_id: CU-005 }
+        adjust: { facility_id: { set: FAC-05 }, unit_type: { set: ICU }, unit_name: { set: ICU CU-005 }, staffed_beds: { set: 24 }, target_hppd: { set: 16 } }
+
+  - name: EMPI_PATIENT
+    system: EHR registration / EMPI (via CDC)
+    description: Enterprise master patient index with demographics, contact details, coverage and portal enrolment
+    key: mrn
+    rows: { S: 2000, M: 20000, L: 200000 }
+    loaded_at_from: registered_date
+    cdc_noise: { duplicate_updates_pct: 5, deletes_pct: 0.4, dirty_strings_pct: 6, late_arrivals_pct: 1 }
+    columns:
+      - { name: mrn, type: VARCHAR, gen: { seq: { prefix: "MRN-", pad: 8 } } }
+      - { name: first_name, type: VARCHAR, gen: { person: first }, tags: [PII, PHI] }
+      - { name: last_name, type: VARCHAR, gen: { person: last }, tags: [PII, PHI] }
+      - { name: date_of_birth, type: DATE, gen: { date: { from: "1932-01-01", to: "2024-12-31" } }, tags: [PHI] }
+      - { name: sex, type: VARCHAR, gen: { choice: { values: [F, M], weights: [53, 47] } }, dirty: false }
+      - { name: ssn, type: BIGINT, gen: { uniform: { min: 100000000, max: 899999999 } }, tags: [GOV_ID] }
+      - { name: email, type: VARCHAR, gen: { email: { first: first_name, last: last_name, domain: patientmail.example } }, tags: [PII, PHI], null_pct: 18 }
+      - { name: phone, type: VARCHAR, gen: { phone: true }, tags: [PII, PHI], null_pct: 6 }
+      - { name: street_address, type: VARCHAR, gen: { address: true }, tags: [PII, PHI] }
+      - { name: home_facility_id, type: VARCHAR, gen: { fk: { table: FAC_FACILITY, column: facility_id, dist: zipf, s: 0.6 } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: home_facility_id, parent_column: region } } }
+      - { name: payer_class, type: VARCHAR, gen: { choice: { values: [Medicare, Medicaid, Commercial, Self-pay], weights: [38, 21, 35, 6] } } }
+      - { name: status_code, type: VARCHAR, gen: { choice: { values: [A, I], weights: [94, 6] } }, dirty: false }
+      - { name: portal_flag, type: VARCHAR, gen: { choice: { values: [Y, N], weights: [56, 44] } }, dirty: false }
+      - { name: risk_score, type: DOUBLE, gen: { normal: { mean: 31, sd: 17, min: 0, max: 100, decimals: 1 } } }
+      - { name: registered_date, type: DATE, gen: { date: { from: "2000-01-01", to: "2026-08-31" } } }
+    plant:
+      - id: P-HC-12
+        description: "Patient portal adoption is markedly higher in Metro"
+        where: { region: Metro }
+        adjust: { portal_flag: { set: Y, pct: 35 } }
+
+  - name: HR_PROVIDER
+    system: Credentialing / HR
+    description: Physicians and advanced practice providers in the Crestview medical group
+    key: provider_id
+    rows: { S: 320, M: 320, L: 320 }
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 3 }
+    columns:
+      - { name: provider_id, type: VARCHAR, gen: { seq: { prefix: "PRV-", pad: 4 } } }
+      - { name: provider_name, type: VARCHAR, gen: { person: full }, tags: [PII] }
+      - { name: specialty, type: VARCHAR, gen: { choice: { values: [Primary care, Cardiology, Orthopedics, Neurology, Dermatology, Behavioral health, Oncology, Pediatrics, Obstetrics & gynecology, General surgery], weights: [26, 9, 8, 6, 5, 9, 7, 12, 10, 8] } } }
+      - { name: employment_type, type: VARCHAR, gen: { choice: { values: [Employed, Affiliated], weights: [72, 28] } } }
+      - { name: start_date, type: DATE, gen: { date: { from: "2000-01-01", to: "2026-06-30" } } }
+
+  - name: ADT_ENCOUNTER
+    system: EHR ADT (inpatient)
+    description: Inpatient admissions with length of stay, service line, condition cohort, disposition and readmission outcome
+    key: encounter_id
+    rows: { S: 36000, M: 36000, L: 36000 }
+    loaded_at_from: admit_ts
+    cdc_noise: { duplicate_updates_pct: 3, deletes_pct: 0.4, dirty_strings_pct: 4, late_arrivals_pct: 1 }
+    columns:
+      - { name: encounter_id, type: VARCHAR, gen: { seq: { prefix: "ENC-", pad: 8 } } }
+      - { name: patient_mrn, type: VARCHAR, gen: { fk: { table: EMPI_PATIENT, column: mrn } } }
+      - { name: facility_id, type: VARCHAR, gen: { derive_from: { fk_column: patient_mrn, parent_column: home_facility_id } } }
+      - { name: payer_class, type: VARCHAR, gen: { derive_from: { fk_column: patient_mrn, parent_column: payer_class } } }
+      - { name: admit_ts, type: TIMESTAMP, gen: { datetime: { from: "2024-01-01", to: asOf, seasonality: { month: [1.12, 1.1, 1.02, 0.97, 0.95, 0.92, 0.93, 0.95, 0.97, 1.0, 1.03, 1.1] } } } }
+      - { name: los_days, type: INTEGER, gen: { lognormal: { mu: 1.33, sigma: 0.6, min: 1, max: 45 } } }
+      - { name: gmlos_days, type: DOUBLE, gen: { normal: { mean: 4.35, sd: 0.9, min: 1.5, max: 12, decimals: 1 } } }
+      - { name: service_line, type: VARCHAR, gen: { choice: { values: [Medicine, Surgery, Cardiology, Orthopedics, Obstetrics, Oncology, Neurosciences, Behavioral health], weights: [30, 16, 13, 9, 11, 7, 7, 7] } } }
+      - { name: condition_cohort, type: VARCHAR, gen: { choice: { values: [Heart failure, Pneumonia, COPD, Sepsis, Acute MI, Joint replacement, Stroke, All other], weights: [9, 7, 5, 9, 3, 4, 3, 60] } } }
+      - { name: discharge_disposition, type: VARCHAR, gen: { choice: { values: [Home, Home health, Skilled nursing facility, Inpatient rehab, Hospice, Left against medical advice, Expired], weights: [61, 16, 12, 3, 3, 2, 2.2] } } }
+      - { name: readmit_flag, type: BOOLEAN, gen: { bernoulli: 0.125 } }
+      - { name: planned_flag, type: BOOLEAN, gen: { bernoulli: 0.2 } }
+    plant:
+      - id: P-HC-13
+        description: "Riverside Medical Center medicine and cardiology discharges in Q3 2026 bounce back: unplanned readmissions and longer stays"
+        where: { facility_id: FAC-05, service_line: { in: [Medicine, Cardiology] } }
+        window: { column: admit_ts, from: "2026-06-28", to: "2026-09-26" }
+        adjust: { readmit_flag: { set: true, pct: 30 }, los_days: { multiply: 1.7 } }
+      - id: P-HC-14
+        description: "Highland Regional Medical Center stages oncology, orthopaedic and surgical care in Q3 2026 — many planned readmissions"
+        where: { facility_id: FAC-09, service_line: { in: [Oncology, Orthopedics, Surgery] } }
+        window: { column: admit_ts, from: "2026-06-28", to: "2026-09-26" }
+        adjust: { readmit_flag: { set: true, pct: 80 }, planned_flag: { set: true, pct: 92 } }
+
+  - name: ED_TRACKING_VISIT
+    system: ED tracking board
+    description: Emergency department visits with triage acuity, door-to-provider, boarding and departure outcome
+    key: ed_visit_id
+    rows: { S: 6000, M: 60000, L: 300000 }
+    loaded_at_from: arrival_ts
+    cdc_noise: { duplicate_updates_pct: 3, deletes_pct: 0.3, dirty_strings_pct: 4, late_arrivals_pct: 1 }
+    columns:
+      - { name: ed_visit_id, type: VARCHAR, gen: { seq: { prefix: "EDV-", pad: 8 } } }
+      - { name: patient_mrn, type: VARCHAR, gen: { fk: { table: EMPI_PATIENT, column: mrn } } }
+      - { name: facility_id, type: VARCHAR, gen: { derive_from: { fk_column: patient_mrn, parent_column: home_facility_id } } }
+      - { name: arrival_ts, type: TIMESTAMP, gen: { datetime: { from: "2025-10-01", to: asOf, seasonality: { month: [1.1, 1.08, 1.0, 0.95, 0.97, 1.0, 1.02, 1.03, 0.98, 0.97, 1.0, 1.08] } } } }
+      - { name: esi_level, type: INTEGER, gen: { choice: { values: [1, 2, 3, 4, 5], weights: [1, 14, 46, 30, 9] } }, dirty: false }
+      - { name: arrival_mode, type: VARCHAR, gen: { choice: { values: [Walk-in, Ambulance], weights: [78, 22] } } }
+      - { name: door_to_provider_min, type: INTEGER, gen: { lognormal: { mu: 3.15, sigma: 0.62, min: 1, max: 600 } } }
+      - { name: left_without_seen, type: BOOLEAN, gen: { bernoulli: 0.024 } }
+      - { name: ed_disposition, type: VARCHAR, gen: { choice: { values: [Discharged, Admitted, Observation, Transferred], weights: [71, 19, 7, 3] } } }
+      - { name: boarding_min, type: INTEGER, gen: { lognormal: { mu: 4.95, sigma: 0.65, min: 10, max: 2880 } } }
+      - { name: ed_los_min, type: INTEGER, gen: { lognormal: { mu: 5.42, sigma: 0.45, min: 30, max: 2880 } } }
+    plant:
+      - id: P-HC-15
+        description: "High-acuity arrivals (ESI 1-2) are mostly admitted"
+        where: { esi_level: { in: [1, 2] } }
+        adjust: { ed_disposition: { set: Admitted, pct: 50 } }
+      - id: P-HC-16
+        description: "Low-acuity arrivals (ESI 4-5) are mostly discharged"
+        where: { esi_level: { in: [4, 5] } }
+        adjust: { ed_disposition: { set: Discharged, pct: 60 } }
+      - id: P-HC-17
+        description: "Riverside Medical Center admitted patients board far longer in Q3 2026 (inpatient beds full)"
+        where: { facility_id: FAC-05 }
+        window: { column: arrival_ts, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { boarding_min: { multiply: 2.4 }, ed_los_min: { multiply: 1.25 } }
+      - id: P-HC-18
+        description: "Crestview Medical Center left-without-being-seen spike in August 2026 (triage staffing gap)"
+        where: { facility_id: FAC-01 }
+        window: { column: arrival_ts, from: "2026-08-01", to: "2026-08-31" }
+        adjust: { left_without_seen: { set: true, pct: 7 }, door_to_provider_min: { multiply: 1.6 } }
+
+  - name: PM_PAYER
+    system: Patient accounting
+    description: Payer master (insurers and government programmes)
+    key: payer_id
+    rows: { S: 24, M: 24, L: 24 }
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 5 }
+    columns:
+      - { name: payer_id, type: VARCHAR, gen: { seq: { prefix: "PYR-", pad: 3 } } }
+      - { name: payer_name, type: VARCHAR, gen: { company: true } }
+      - { name: financial_class, type: VARCHAR, gen: { choice: { values: [Medicare, Medicare Advantage, Medicaid, Managed Medicaid, Commercial, Self-pay], weights: [8, 18, 6, 14, 48, 6] } } }
+      - { name: tax_id, type: VARCHAR, gen: { template: "86-{payer_id}" }, tags: [GOV_ID], dirty: false }
+      - { name: contact_email, type: VARCHAR, gen: { template: "claims@{payer_id}.example.com" }, tags: [PII], dirty: false }
+    plant:
+      - { id: P-HC-19, description: "PYR-001 is the traditional Medicare programme", where: { payer_id: PYR-001 }, adjust: { payer_name: { set: Federal Medicare Program }, financial_class: { set: Medicare } } }
+      - { id: P-HC-20, description: "PYR-002 is the largest Medicare Advantage plan (authorization denial driver)", where: { payer_id: PYR-002 }, adjust: { payer_name: { set: Summit Advantage Health Plan }, financial_class: { set: Medicare Advantage } } }
+
+  - name: PB_CLAIM
+    system: Patient accounting (837 claims)
+    description: Claims submitted to payers with charges, expected reimbursement, scrubber outcome and initial denial
+    key: claim_id
+    rows: { S: 12000, M: 120000, L: 600000 }
+    loaded_at_from: submit_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.3, late_arrivals_pct: 1 }
+    columns:
+      - { name: claim_id, type: VARCHAR, gen: { seq: { prefix: "CLM-", pad: 9 } } }
+      - { name: patient_mrn, type: VARCHAR, gen: { fk: { table: EMPI_PATIENT, column: mrn } } }
+      - { name: facility_id, type: VARCHAR, gen: { derive_from: { fk_column: patient_mrn, parent_column: home_facility_id } } }
+      - { name: payer_id, type: VARCHAR, gen: { fk: { table: PM_PAYER, column: payer_id, dist: zipf, s: 0.7 } } }
+      - { name: service_date, type: DATE, gen: { date: { from: "2025-01-01", to: "2026-09-28", seasonality: { weekday: [1, 1, 1, 1, 1, 0.4, 0.3] } } } }
+      - { name: submit_date, type: DATE, gen: { date_offset: { from_column: service_date, days: { min: 2, max: 9 }, clamp_to_as_of: true } } }
+      - { name: claim_type, type: VARCHAR, gen: { choice: { values: [Professional, Institutional], weights: [62, 38] } } }
+      - { name: charge_amount, type: DOUBLE, gen: { lognormal: { mu: 7.55, sigma: 1.05, min: 60, max: 750000, decimals: 2 } } }
+      - { name: expected_amount, type: DOUBLE, gen: { formula: "charge_amount * if(claim_type == 'Institutional', 0.38, 0.47)", decimals: 2 } }
+      - { name: scrubber_pass, type: BOOLEAN, gen: { bernoulli: 0.89 } }
+      - { name: denied_flag, type: BOOLEAN, gen: { bernoulli: 0.092 } }
+      - { name: denial_reason, type: VARCHAR, gen: { choice: { values: [Authorization, Eligibility, Coding, Medical necessity, Timely filing, Duplicate claim], weights: [26, 22, 20, 16, 8, 8] } } }
+    plant:
+      - id: P-HC-21
+        description: "Summit Advantage Health Plan authorization denials spike in Q3 2026 after a prior-authorization rule change"
+        where: { payer_id: PYR-002 }
+        window: { column: submit_date, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { denied_flag: { set: true, pct: 14 }, denial_reason: { set: Authorization, pct: 75 } }
+      - id: P-HC-22
+        description: "Valley General Hospital claims fail the scrubber more often in Q3 2026 after a charge-master update"
+        where: { facility_id: FAC-07 }
+        window: { column: submit_date, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { scrubber_pass: { set: false, pct: 12 } }
+
+  - name: PB_REMITTANCE
+    system: Patient accounting (835 remittances)
+    description: Payer remittances applied to claims (at most one remittance per claim)
+    key: remit_id
+    rows: { S: 11640, M: 116400, L: 582000 }
+    loaded_at_from: payment_date
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 3 }
+    columns:
+      - { name: remit_id, type: VARCHAR, gen: { seq: { prefix: "RMT-", pad: 9 } } }
+      - { name: claim_id, type: VARCHAR, gen: { fk: { table: PB_CLAIM, column: claim_id, dist: sequential } } }
+      - { name: submit_date, type: DATE, gen: { derive_from: { fk_column: claim_id, parent_column: submit_date } } }
+      - { name: claim_expected, type: DOUBLE, gen: { derive_from: { fk_column: claim_id, parent_column: expected_amount } } }
+      - { name: claim_denied, type: BOOLEAN, gen: { derive_from: { fk_column: claim_id, parent_column: denied_flag } } }
+      - { name: payment_date, type: DATE, gen: { date_offset: { from_column: submit_date, days: { min: 6, max: 58 }, clamp_to_as_of: true } } }
+      - { name: pay_ratio, type: DOUBLE, gen: { choice: { values: [1.0, 0.92, 0.0], weights: [86, 10, 4] } } }
+      - { name: paid_amount, type: DOUBLE, gen: { formula: "if(claim_denied, claim_expected * 0.3, claim_expected * pay_ratio)", decimals: 2 } }
+      - { name: payment_method, type: VARCHAR, gen: { choice: { values: [EFT, Paper check, Virtual card], weights: [78, 14, 8] } } }
+
+  - name: SCH_APPOINTMENT
+    system: Ambulatory scheduling
+    description: Medical group appointments with lead time, visit type and outcome
+    key: appointment_id
+    rows: { S: 8000, M: 80000, L: 400000 }
+    loaded_at_from: appointment_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.3, dirty_strings_pct: 3, late_arrivals_pct: 1 }
+    columns:
+      - { name: appointment_id, type: VARCHAR, gen: { seq: { prefix: "APT-", pad: 9 } } }
+      - { name: patient_mrn, type: VARCHAR, gen: { fk: { table: EMPI_PATIENT, column: mrn } } }
+      - { name: facility_id, type: VARCHAR, gen: { derive_from: { fk_column: patient_mrn, parent_column: home_facility_id } } }
+      - { name: provider_id, type: VARCHAR, gen: { fk: { table: HR_PROVIDER, column: provider_id, dist: zipf, s: 0.3 } } }
+      - { name: specialty, type: VARCHAR, gen: { derive_from: { fk_column: provider_id, parent_column: specialty } } }
+      - { name: appointment_date, type: DATE, gen: { date: { from: "2025-10-01", to: asOf, seasonality: { weekday: [1, 1, 1, 1, 1, 0.05, 0.02] } } } }
+      - { name: lead_days, type: INTEGER, gen: { lognormal: { mu: 2.55, sigma: 0.85, min: 0, max: 180 } } }
+      - { name: visit_type, type: VARCHAR, gen: { choice: { values: [New patient, Established, Follow-up, Telehealth], weights: [22, 46, 20, 12] } } }
+      - { name: status, type: VARCHAR, gen: { choice: { values: [Completed, No-show, Cancelled, Bumped], weights: [79, 7.5, 11.5, 2] } } }
+    plant:
+      - id: P-HC-23
+        description: "Behavioral health appointments have a much higher no-show rate"
+        where: { specialty: Behavioral health }
+        adjust: { status: { set: No-show, pct: 12 } }
+      - id: P-HC-24
+        description: "New patients wait far longer for neurology and dermatology"
+        where: { specialty: { in: [Neurology, Dermatology] }, visit_type: New patient }
+        adjust: { lead_days: { multiply: 2.5 } }
+
+  - name: WFM_STAFFING_DAY
+    system: Workforce management / time and attendance
+    description: Nursing hours worked per care unit per day with the midnight census
+    key: staffing_id
+    rows: { S: 6000, M: 20000, L: 20000 }
+    loaded_at_from: shift_date
+    cdc_noise: { duplicate_updates_pct: 2, late_arrivals_pct: 2 }
+    columns:
+      - { name: staffing_id, type: VARCHAR, gen: { seq: { prefix: "STF-", pad: 7 } } }
+      - { name: unit_id, type: VARCHAR, gen: { fk: { table: ADT_UNIT, column: unit_id } } }
+      - { name: facility_id, type: VARCHAR, gen: { derive_from: { fk_column: unit_id, parent_column: facility_id } } }
+      - { name: staffed_beds, type: INTEGER, gen: { derive_from: { fk_column: unit_id, parent_column: staffed_beds } } }
+      - { name: target_hppd, type: DOUBLE, gen: { derive_from: { fk_column: unit_id, parent_column: target_hppd } } }
+      - { name: shift_date, type: DATE, gen: { date: { from: "2025-10-01", to: asOf } } }
+      - { name: occupancy_ratio, type: DOUBLE, gen: { normal: { mean: 0.83, sd: 0.08, min: 0.45, max: 1.0, decimals: 3 } } }
+      - { name: census, type: INTEGER, gen: { formula: "round(staffed_beds * occupancy_ratio)" } }
+      - { name: hppd_factor, type: DOUBLE, gen: { normal: { mean: 1.03, sd: 0.07, min: 0.8, max: 1.4, decimals: 3 } } }
+      - { name: worked_hours, type: DOUBLE, gen: { formula: "census * target_hppd * hppd_factor", decimals: 1 } }
+      - { name: overtime_ratio, type: DOUBLE, gen: { normal: { mean: 0.058, sd: 0.022, min: 0, max: 0.25, decimals: 3 } } }
+      - { name: overtime_hours, type: DOUBLE, gen: { formula: "worked_hours * overtime_ratio", decimals: 1 } }
+      - { name: agency_ratio, type: DOUBLE, gen: { choice: { values: [0, 0.04, 0.1, 0.2], weights: [52, 26, 16, 6] } } }
+      - { name: agency_hours, type: DOUBLE, gen: { formula: "worked_hours * agency_ratio", decimals: 1 } }
+    plant:
+      - id: P-HC-25
+        description: "Riverside Medical Center runs over census in Q3 2026 and leans on agency nurses and overtime"
+        where: { facility_id: FAC-05 }
+        window: { column: shift_date, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { agency_hours: { multiply: 4 }, overtime_hours: { multiply: 1.8 }, census: { multiply: 1.08 } }
+
+  - name: PG_SURVEY
+    system: Patient experience survey vendor
+    description: Post-discharge patient experience survey returns with free-text comments
+    key: survey_id
+    rows: { S: 3000, M: 20000, L: 100000 }
+    loaded_at_from: survey_date
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 4 }
+    columns:
+      - { name: survey_id, type: VARCHAR, gen: { seq: { prefix: "SRV-", pad: 8 } } }
+      - { name: patient_mrn, type: VARCHAR, gen: { fk: { table: EMPI_PATIENT, column: mrn } } }
+      - { name: facility_id, type: VARCHAR, gen: { derive_from: { fk_column: patient_mrn, parent_column: home_facility_id } } }
+      - { name: survey_date, type: DATE, gen: { date: { from: "2025-10-01", to: asOf } } }
+      - { name: overall_rating, type: INTEGER, gen: { choice: { values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10], weights: [1, 1, 1, 2, 2, 4, 6, 10, 20, 25, 28] } }, dirty: false }
+      - { name: recommend, type: VARCHAR, gen: { choice: { values: [Definitely yes, Probably yes, Probably no, Definitely no], weights: [68, 22, 6, 4] } } }
+      - { name: nurse_comm_top_box, type: BOOLEAN, gen: { bernoulli: 0.79 } }
+      - { name: comments, type: VARCHAR, gen: { template: "Stay at {facility_id}: rated {overall_rating}" }, tags: [PHI] }
+
+  - name: QM_SAFETY_EVENT
+    system: Safety event reporting
+    description: Patient safety events (falls, pressure injuries, hospital-acquired infections, medication events)
+    key: event_id
+    rows: { S: 1500, M: 6000, L: 6000 }
+    loaded_at_from: event_date
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 4 }
+    columns:
+      - { name: event_id, type: VARCHAR, gen: { seq: { prefix: "SE-", pad: 6 } } }
+      - { name: unit_id, type: VARCHAR, gen: { fk: { table: ADT_UNIT, column: unit_id } } }
+      - { name: event_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: event_type, type: VARCHAR, gen: { choice: { values: [Fall, Pressure injury, CLABSI, CAUTI, Medication event, C. diff infection], weights: [34, 18, 6, 8, 26, 8] } } }
+      - { name: harm_level, type: VARCHAR, gen: { choice: { values: [No harm, Minor harm, Moderate harm, Severe harm], weights: [55, 30, 12, 3] } } }
+      - { name: reporter, type: VARCHAR, gen: { person: full }, tags: [PII] }
+      - { name: narrative, type: VARCHAR, gen: { template: "{event_type} reported on {unit_id}" }, tags: [PHI] }
+
+  - name: ERP_SUPPLIER
+    system: ERP supply chain
+    description: Supplier master
+    key: supplier_id
+    rows: { S: 60, M: 60, L: 60 }
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 5 }
+    columns:
+      - { name: supplier_id, type: VARCHAR, gen: { seq: { prefix: "SUP-", pad: 4 } } }
+      - { name: supplier_name, type: VARCHAR, gen: { company: true } }
+      - { name: category, type: VARCHAR, gen: { choice: { values: [Med-surg supplies, Pharmaceuticals, Implants & devices, Lab & diagnostics, Imaging equipment, Food & nutrition, Environmental services, IT & software], weights: [18, 16, 12, 12, 8, 10, 10, 14] } } }
+      - { name: preferred_flag, type: BOOLEAN, gen: { bernoulli: 0.4 } }
+      - { name: tax_id, type: VARCHAR, gen: { template: "94-{supplier_id}" }, tags: [GOV_ID], dirty: false }
+      - { name: contact_email, type: VARCHAR, gen: { template: "orders@{supplier_id}.example.com" }, tags: [PII], dirty: false }
+
+  - name: ERP_CONTRACT
+    system: ERP supply chain
+    description: Group purchasing and local framework contracts
+    key: contract_id
+    rows: { S: 90, M: 90, L: 90 }
+    columns:
+      - { name: contract_id, type: VARCHAR, gen: { seq: { prefix: "CTR-", pad: 4 } } }
+      - { name: supplier_id, type: VARCHAR, gen: { fk: { table: ERP_SUPPLIER, column: supplier_id } } }
+      - { name: start_date, type: DATE, gen: { date: { from: "2023-01-01", to: "2025-12-31" } } }
+      - { name: end_date, type: DATE, gen: { date_offset: { from_column: start_date, days: { min: 365, max: 1460 } } } }
+      - { name: ceiling_usd, type: DOUBLE, gen: { lognormal: { mu: 14.2, sigma: 0.8, min: 100000, decimals: 0 } } }
+
+  - name: ERP_PO_LINE
+    system: ERP supply chain
+    description: Purchase order lines with goods-receipt outcome
+    key: po_line_id
+    rows: { S: 30000, M: 30000, L: 30000 }
+    loaded_at_from: po_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.5, dirty_strings_pct: 4, late_arrivals_pct: 1 }
+    columns:
+      - { name: po_line_id, type: VARCHAR, gen: { seq: { prefix: "PO-", pad: 8 } } }
+      - { name: supplier_id, type: VARCHAR, gen: { fk: { table: ERP_SUPPLIER, column: supplier_id, dist: zipf, s: 0.8 } } }
+      - { name: category, type: VARCHAR, gen: { derive_from: { fk_column: supplier_id, parent_column: category } } }
+      - { name: po_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: spend_usd, type: DOUBLE, gen: { lognormal: { mu: 8.1, sigma: 1.2, min: 50, max: 2500000, decimals: 2 } } }
+      - { name: on_contract, type: BOOLEAN, gen: { bernoulli: 0.88 } }
+      - { name: receipt_date, type: DATE, gen: { date_offset: { from_column: po_date, days: { min: 2, max: 34 }, clamp_to_as_of: true } } }
+      - { name: on_time_in_full, type: BOOLEAN, gen: { bernoulli: 0.92 } }
+      - { name: buyer, type: VARCHAR, gen: { person: full }, tags: [PII] }
+    plant:
+      - id: P-HC-26
+        description: "Implants and devices are mostly bought off-contract as physician preference items (off-contract spend driver)"
+        where: { category: Implants & devices }
+        adjust: { on_contract: { set: false, pct: 65 } }
+      - id: P-HC-27
+        description: "Pharmaceutical fill rate drops during the 2026 drug shortage"
+        where: { category: Pharmaceuticals }
+        window: { column: po_date, from: "2026-04-01", to: "2026-09-30" }
+        adjust: { on_time_in_full: { set: false, pct: 15 } }

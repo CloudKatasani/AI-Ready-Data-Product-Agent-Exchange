@@ -1,0 +1,93 @@
+name: REVENUE_CYCLE
+description: Claims, initial denials, clean claims, net collections and days in accounts receivable
+tables:
+  - { alias: c, fqn: CONFORMED_GOLD.FCT_CLAIM, pk: claim_key }
+  - { alias: y, fqn: CONFORMED_GOLD.DIM_PAYER, pk: payer_key }
+  - { alias: pt, fqn: CONFORMED_GOLD.DIM_PATIENT, pk: patient_key }
+  - { alias: f, fqn: CONFORMED_GOLD.DIM_FACILITY, pk: facility_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: c.payer_key, to: y.payer_key }
+  - { from: c.patient_key, to: pt.patient_key }
+  - { from: c.facility_key, to: f.facility_key }
+  - { from: c.date_key, to: d.date_key }
+dimensions:
+  - { name: payer, expr: y.payer_name, label: Payer, synonyms: [insurer, health plan], term: GT-HC-PAYER }
+  - { name: financial_class, expr: y.financial_class, label: Financial class, synonyms: [payer type, payer category], term: GT-HC-PAYER-CLASS }
+  - { name: denial_reason, expr: c.denial_reason, label: Denial reason, synonyms: [denial category, carc group, denial code], term: GT-HC-DENIAL }
+  - { name: claim_type, expr: c.claim_type, label: Claim type, synonyms: [professional or institutional] }
+  - { name: facility, expr: f.facility_name, label: Facility, synonyms: [hospital, campus, site], term: GT-HC-FACILITY }
+  - { name: region, expr: f.region, label: Market, synonyms: [market, region, service area], term: GT-HC-MARKET }
+  - { name: mature_claim, expr: c.mature, label: Claim older than 60 days }
+  - { name: patient_email, expr: pt.email, label: Patient email, synonyms: [email] }
+  - { name: patient_phone, expr: pt.phone, label: Patient phone, synonyms: [phone] }
+time_dimensions:
+  - { name: submit_date, expr: d.date, default: true }
+facts:
+  - { name: charge_amount, expr: c.charge_amount }
+  - { name: expected_amount, expr: c.expected_amount }
+metrics:
+  - name: claims_submitted
+    label: Claims submitted
+    expr: COUNT(*)
+    unit: claims
+    decimals: 0
+    synonyms: [claim volume, number of claims, claims billed]
+    term: GT-HC-CLAIM
+    description: Claims submitted to payers in the period
+  - name: gross_charges
+    label: Gross charges
+    expr: SUM(c.charge_amount)
+    unit: USD
+    decimals: 0
+    synonyms: [charges, billed charges]
+    term: GT-HC-CLAIM
+    description: Total chargemaster charges on claims submitted in the period
+  - name: initial_denial_rate
+    label: Initial denial rate
+    expr: 100.0 * AVG(CASE WHEN c.denied THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [denial rate, denials rate, first-pass denial rate]
+    term: GT-HC-DENIAL
+    description: Share of submitted claims denied on first adjudication
+  - name: denied_charges
+    label: Denied charges
+    expr: SUM(CASE WHEN c.denied THEN c.charge_amount ELSE 0 END)
+    unit: USD
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [dollars denied, denied dollars, charges at risk]
+    term: GT-HC-DENIAL
+    description: Charges on claims denied on first adjudication
+  - name: clean_claim_rate
+    label: Clean claim rate
+    expr: 100.0 * AVG(CASE WHEN c.clean_claim THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [first pass rate, clean claims, scrubber pass rate]
+    term: GT-HC-CLEAN-CLAIM
+    description: Share of claims that passed the claim scrubber without edits
+  - name: net_collection_rate
+    label: Net collection rate
+    expr: 100.0 * SUM(c.paid_60d_amount) / SUM(c.expected_amount)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [ncr, collection rate, net collections]
+    term: GT-HC-NCR
+    description: Payments received within 60 days as a share of expected reimbursement
+    default_filters: [ { rule: BR-HC-021 } ]
+  - name: days_in_ar
+    label: Days in A/R
+    expr: SUM(c.expected_amount * coalesce(c.days_to_pay, 90)) / SUM(c.expected_amount)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [days in accounts receivable, ar days, a/r days, days outstanding]
+    term: GT-HC-AR-DAYS
+    description: Expected-reimbursement-weighted days from claim submission to payment (unpaid claims count as 90 days)
+    default_filters: [ { rule: BR-HC-021 } ]
+products: [DP-HC-005]

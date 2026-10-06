@@ -1,0 +1,101 @@
+# Patient and access DQ rules.
+- id: DQ-HC-029
+  object: CONFORMED_GOLD.DIM_PATIENT
+  column: mrn
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: One row per medical record number after EMPI deduplication.
+- id: DQ-HC-030
+  object: CONFORMED_GOLD.DIM_PATIENT
+  column: mrn
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^MRN-[0-9]{8}$"
+  severity: high
+  alert_route: steward
+  description: Medical record numbers follow the EMPI format.
+- id: DQ-HC-031
+  object: CONFORMED_GOLD.DIM_PATIENT
+  column: mrn
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every patient row has a medical record number.
+- id: DQ-HC-032
+  object: CONFORMED_GOLD.DIM_PATIENT
+  column: email
+  dimension: validity
+  assertion: "regex_rate >= 0.99"
+  pattern: "^[^@ ]+@[^@ ]+[.][a-z]+$"
+  severity: medium
+  alert_route: steward
+  description: Patient emails, where present, are well formed.
+- id: DQ-HC-033
+  object: CONFORMED_GOLD.DIM_PATIENT
+  column: region
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Metro, Lakeshore, Riverside, Valley, Highland]
+  severity: high
+  alert_route: steward
+  description: Patient market is one of the five markets (row access policy RAP_REGION).
+- id: DQ-HC-034
+  object: CONFORMED_GOLD.DIM_PATIENT
+  column: registered_date
+  dimension: timeliness
+  assertion: "freshness_min <= 46080"
+  severity: medium
+  alert_route: engineering
+  description: The new-registration feed from the EMPI has delivered within the last month (monthly patient master refresh).
+- id: DQ-HC-035
+  object: CONFORMED_GOLD.DIM_PATIENT
+  column: risk_score
+  dimension: validity
+  assertion: "max <= 100"
+  severity: medium
+  alert_route: steward
+  description: Risk scores are on the 0–100 scale.
+- id: DQ-HC-036
+  object: CONFORMED_GOLD.FCT_APPOINTMENT
+  column: appointment_status
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Completed, No-show, Cancelled, Bumped]
+  severity: high
+  alert_route: steward
+  description: Appointment outcomes conform to the scheduling status list.
+- id: DQ-HC-037
+  object: CONFORMED_GOLD.FCT_APPOINTMENT
+  column: appointment_status
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every appointment has an outcome status (no-show rate numerator and denominator).
+- id: DQ-HC-038
+  object: CONFORMED_GOLD.FCT_APPOINTMENT
+  column: appointment_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per appointment.
+- id: DQ-HC-039
+  object: CONFORMED_GOLD.FCT_APPOINTMENT
+  column: appointment_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: medium
+  alert_route: engineering
+  description: Appointments from the scheduling system are no more than one day behind.
+- id: DQ-HC-040
+  object: CONFORMED_GOLD.FCT_APPOINTMENT
+  column: lead_days
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: medium
+  alert_route: engineering
+  description: Appointments are never booked after they take place.

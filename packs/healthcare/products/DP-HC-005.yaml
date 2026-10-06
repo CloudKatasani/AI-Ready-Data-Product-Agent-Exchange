@@ -1,0 +1,29 @@
+id: DP-HC-005
+name: Claims & Denials
+domain: Revenue Cycle
+archetype: AGGREGATE
+initial_status: IN_CERTIFICATION
+seed_stage: 11
+version: 1.0.0-rc.1
+owner: healthcare:clinical-dpo
+steward: healthcare:his-steward
+description: Submitted claims, initial denials, clean claims, net collections and days in A/R for revenue cycle operations.
+purpose: Give revenue cycle leaders and the Patient Access Advisor a certified denials and receivables view.
+decision: { persona: VP Revenue Cycle, decision: "Which payers and denial reasons to target with denial-prevention work", cadence: Monthly, workaround: "Denials worklist exported from patient accounting and pivoted each month-end", consequence: "Authorization denials grow with one payer for a quarter before anyone sees the pattern" }
+sample_questions: ["What are our days in A/R this quarter?", "Initial denial rate by payer last quarter", "Clean claim rate by facility"]
+semantic_view: REVENUE_CYCLE
+output_ports:
+  - { kind: semantic, ref: REVENUE_CYCLE }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_HC_005_CLAIMS_DENIALS }
+  - { kind: agent, ref: AG-HC-001 }
+sla: { freshness_minutes: 1440, availability_pct: 99.5, max_null_rate_pct: 0.5 }
+kpis: [KPI-HC-DENIAL, KPI-HC-CLEAN, KPI-HC-NCR, KPI-HC-AR-DAYS, KPI-HC-DENIED-CHARGES, KPI-HC-CLAIMS]
+upstream: [CONFORMED_GOLD.FCT_CLAIM, CONFORMED_GOLD.DIM_PAYER]
+consumers: [Revenue cycle, Managed care contracting, Patient Access Advisor agent]
+lifecycle_seed: { artifacts: auto }
+certification_script:
+  initial: { gate4: warn, gate6: fail }
+  fixes:
+    - { id: FIX-1, check: semantic.verified_queries, label: "Add 3 verified queries for days in A/R", effect: { overlay: VERIFIED_QUERY, keys: [VQ-HC-060, VQ-HC-061, VQ-HC-062] } }
+    - { id: FIX-2, check: governance.masking, label: "Attach PHI masking to patient email and phone", effect: { policy_attach: { policy: MASK_EMAIL, columns: [CONFORMED_GOLD.DIM_PATIENT.email, CONFORMED_GOLD.DIM_PATIENT.phone] } } }
+value_case: VC-HC-005

@@ -1,0 +1,149 @@
+# Crestview Health System synonyms (synthetic): hospital jargon → governed metric, dimension, value or glossary term.
+
+# ── Clinical quality ────────────────────────────────────────────────────────────────────────────────
+- term: 30-day readmission rate
+  synonyms: [readmit rate, bounce-back rate, bounce backs, readmission percentage, patients coming back]
+  maps_to: { kind: metric, ref: readmission_rate }
+- term: Unplanned readmissions
+  synonyms: [readmits, number of readmissions, return admissions]
+  maps_to: { kind: metric, ref: readmissions }
+- term: Inpatient discharges
+  synonyms: [discharges, inpatient volume, admissions volume]
+  maps_to: { kind: metric, ref: discharges }
+- term: Average length of stay
+  synonyms: [ALOS, LOS, how long patients stay, days in hospital]
+  maps_to: { kind: metric, ref: avg_length_of_stay }
+- term: Length of stay index
+  synonyms: [LOS index, O/E LOS, observed to expected stay]
+  maps_to: { kind: metric, ref: los_index }
+- term: Excess days
+  synonyms: [avoidable days, days over GMLOS, extra days]
+  maps_to: { kind: metric, ref: excess_days }
+- term: Inpatient mortality rate
+  synonyms: [death rate, mortality, deaths in hospital]
+  maps_to: { kind: metric, ref: inpatient_mortality_rate }
+- term: Service line
+  synonyms: [clinical service, product line, specialty service]
+  maps_to: { kind: dimension, ref: service_line }
+- term: Condition cohort
+  synonyms: [measure cohort, condition group, diagnosis cohort]
+  maps_to: { kind: dimension, ref: condition_cohort }
+- term: Heart failure
+  synonyms: [CHF, congestive heart failure, HF]
+  maps_to: { kind: value, ref: condition_cohort=Heart failure }
+- term: Planned readmission
+  synonyms: [staged readmission, scheduled readmission, planned readmit]
+  maps_to: { kind: dimension, ref: planned_readmission }
+- term: Facility
+  synonyms: [hospital, campus, site, hospitals]
+  maps_to: { kind: dimension, ref: facility }
+- term: Market
+  synonyms: [region, service area, geography]
+  maps_to: { kind: dimension, ref: region }
+- term: Metro
+  synonyms: [metro market, the city hospitals]
+  maps_to: { kind: value, ref: region=Metro }
+- term: Riverside
+  synonyms: [riverside market]
+  maps_to: { kind: value, ref: region=Riverside }
+
+# ── Patient flow & capacity ─────────────────────────────────────────────────────────────────────────
+- term: Door-to-provider time
+  synonyms: [door to doc, door-to-doctor, time to see a provider, wait to be seen]
+  maps_to: { kind: metric, ref: door_to_provider_minutes }
+- term: Left without being seen rate
+  synonyms: [LWBS, walkouts, left before seen, walk-out rate]
+  maps_to: { kind: metric, ref: lwbs_rate }
+- term: Admitted patient boarding time
+  synonyms: [boarding, boarders, ED holds, admit holds, waiting for a bed]
+  maps_to: { kind: metric, ref: avg_boarding_hours }
+- term: ED visits
+  synonyms: [ER visits, emergency room visits, ED volume]
+  maps_to: { kind: metric, ref: ed_visits }
+- term: Triage acuity
+  synonyms: [ESI, ESI level, acuity, triage category]
+  maps_to: { kind: dimension, ref: acuity }
+- term: Ambulance
+  synonyms: [EMS arrivals, ambulance arrivals]
+  maps_to: { kind: value, ref: arrival_mode=Ambulance }
+- term: Bed occupancy
+  synonyms: [occupancy, census, beds full, capacity]
+  maps_to: { kind: metric, ref: bed_occupancy_pct }
+- term: Nursing hours per patient day
+  synonyms: [HPPD, nursing hours, staffing ratio]
+  maps_to: { kind: metric, ref: nursing_hppd }
+- term: Contract labour share
+  synonyms: [agency, travelers, travel nurses, agency spend share]
+  maps_to: { kind: metric, ref: contract_labor_pct }
+- term: ICU
+  synonyms: [intensive care, critical care unit]
+  maps_to: { kind: value, ref: unit_type=ICU }
+
+# ── Patient access ──────────────────────────────────────────────────────────────────────────────────
+- term: No-show rate
+  synonyms: [no shows, missed appointments, DNAs, did not attend]
+  maps_to: { kind: metric, ref: no_show_rate }
+- term: Days to appointment
+  synonyms: [appointment lag, wait for an appointment, third next available, access wait]
+  maps_to: { kind: metric, ref: avg_days_to_appointment }
+- term: New-patient lag
+  synonyms: [new patient wait, new patient access, time to first appointment]
+  maps_to: { kind: metric, ref: new_patient_lag_days }
+- term: Behavioral health
+  synonyms: [behavioural health, psychiatry, mental health]
+  maps_to: { kind: value, ref: specialty=Behavioral health }
+- term: Telehealth
+  synonyms: [video visit, virtual visit, telemedicine]
+  maps_to: { kind: value, ref: visit_type=Telehealth }
+- term: Patient portal adoption rate
+  synonyms: [portal activation, portal uptake, digital front door]
+  maps_to: { kind: metric, ref: portal_adoption_rate }
+- term: Active patients
+  synonyms: [patient panel, registered patients, number of patients]
+  maps_to: { kind: metric, ref: active_patients }
+- term: Medical record number
+  synonyms: [MRN, chart number, patient id]
+  maps_to: { kind: term, ref: GT-HC-PATIENT }
+
+# ── Revenue cycle ───────────────────────────────────────────────────────────────────────────────────
+- term: Initial denial rate
+  synonyms: [denial rate, denials, claim rejections, first-pass denials]
+  maps_to: { kind: metric, ref: initial_denial_rate }
+- term: Clean claim rate
+  synonyms: [first pass yield, clean claims, scrubber pass rate]
+  maps_to: { kind: metric, ref: clean_claim_rate }
+- term: Net collection rate
+  synonyms: [NCR, net collections, cash collected]
+  maps_to: { kind: metric, ref: net_collection_rate }
+- term: Days in A/R
+  synonyms: [AR days, A/R days, days in accounts receivable, days outstanding]
+  maps_to: { kind: metric, ref: days_in_ar }
+- term: Payer
+  synonyms: [insurer, health plan, insurance company]
+  maps_to: { kind: dimension, ref: payer }
+- term: Authorization
+  synonyms: [prior auth, prior authorization, auth denials]
+  maps_to: { kind: value, ref: denial_reason=Authorization }
+- term: Medicare Advantage
+  synonyms: [MA plans, Medicare managed care]
+  maps_to: { kind: value, ref: financial_class=Medicare Advantage }
+
+# ── Supply chain ────────────────────────────────────────────────────────────────────────────────────
+- term: Supply spend
+  synonyms: [supply expense, purchasing spend, money spent with suppliers]
+  maps_to: { kind: metric, ref: supply_spend }
+- term: Spend on contract
+  synonyms: [GPO compliance, contract compliance, contracted spend]
+  maps_to: { kind: metric, ref: spend_on_contract_pct }
+- term: Off-contract spend
+  synonyms: [maverick spend, leakage, off contract buying, rogue spend]
+  maps_to: { kind: metric, ref: off_contract_spend }
+- term: Supplier fill rate
+  synonyms: [fill rate, OTIF, backorders, vendor delivery]
+  maps_to: { kind: metric, ref: fill_rate_pct }
+- term: Implants & devices
+  synonyms: [physician preference items, PPI, implants]
+  maps_to: { kind: value, ref: category=Implants & devices }
+- term: Supplier
+  synonyms: [vendor, vendors, distributor]
+  maps_to: { kind: dimension, ref: supplier }

@@ -1,0 +1,82 @@
+# Seeded intake requests and demand-board items. REQ-HC-001 deliberately near-duplicates DP-HC-002
+# (Inpatient Quality & Readmissions) so the intake duplicate detector fires (AC5.1).
+requests:
+  - id: REQ-HC-001
+    title: Market readmission scorecard
+    requester: healthcare:ops-director-metro
+    decision: Which units and service lines in my market get transitional-care nurses first next quarter
+    decider: Director of Hospital Operations
+    cadence: Quarterly, with a monthly check-in
+    workaround: ADT discharge extracts pasted into a spreadsheet and matched to readmissions by hand
+    questions:
+      - What was the 30-day readmission rate by facility last quarter?
+      - Which service lines had the most readmissions?
+      - How does our readmission rate compare with the target?
+      - What share of readmissions were planned?
+    stakes: Transitional-care nurses go to service lines that are not driving readmissions, and programme penalties grow
+    freshness: Daily by 07:00
+    status: SUBMITTED
+  - id: REQ-HC-002
+    title: Prior authorization turnaround
+    requester: healthcare:coo
+    decision: Whether to centralise prior authorization for the top three Medicare Advantage plans
+    decider: VP Revenue Cycle
+    cadence: Monthly
+    workaround: Authorization team keeps a manual log of requests and checks outcomes in the payer portals
+    questions:
+      - How long do prior authorizations take by payer?
+      - What share of authorization denials were for services already scheduled?
+      - How much revenue is delayed waiting for authorizations?
+    stakes: Authorization denials keep rising with one payer and procedures are rescheduled at the last minute
+    freshness: Daily
+    status: IN_TRIAGE
+  - id: REQ-HC-003
+    title: Discharge-before-noon tracking
+    requester: healthcare:quality-analyst
+    decision: How to stage discharges so admitted ED patients get beds earlier in the day
+    decider: Chief Nursing Officer
+    cadence: Daily huddle plus a weekly review
+    workaround: Charge nurses tally discharge times on a whiteboard and report them at the bed huddle
+    questions:
+      - What share of discharges happen before noon by unit?
+      - How does discharge time relate to ED boarding the same day?
+      - Which units have the latest average discharge time?
+    stakes: Admitted patients board in the ED for hours while beds sit waiting for afternoon discharges
+    freshness: Hourly
+    status: APPROVED
+  - id: REQ-HC-004
+    title: Sepsis bundle compliance
+    requester: healthcare:clinical-dpo
+    decision: Which facilities need sepsis coordinator coverage on nights and weekends
+    decider: Chief Medical Officer
+    cadence: Monthly
+    workaround: Chart abstraction by the quality team for a sample of cases each month
+    questions:
+      - What share of sepsis patients received the 3-hour bundle on time by facility?
+      - How does compliance differ between weekday and weekend arrivals?
+      - Which bundle element is most often missed?
+    stakes: Sepsis mortality stays above benchmark at facilities without coordinator coverage
+    freshness: Daily
+    status: SUBMITTED
+  - id: REQ-HC-005
+    title: ED dashboard for the Metro market
+    requester: healthcare:ops-director-metro
+    decision: Which Metro hospital gets provider-in-triage first this winter
+    decider: Director of Hospital Operations
+    cadence: Weekly
+    workaround: Weekly email from the ED medical director with a pivot table
+    questions:
+      - What was door-to-provider time by facility in Metro last month?
+      - How many patients left without being seen in Metro last quarter?
+      - How long are admitted patients boarding in Metro?
+    stakes: Winter surge arrives before triage is staffed and LWBS rates spike again
+    freshness: Daily
+    status: MERGED
+
+demand_items:
+  - { id: DM-HC-001, title: Sepsis bundle compliance product, kind: product, description: "Bundle timeliness by facility, shift and element from EHR order and administration timestamps, aggregated only.", requested_by: healthcare:clinical-dpo, votes: 15 }
+  - { id: DM-HC-002, title: Discharge planning agent, kind: agent, description: "Answers which units are discharging late and how that drives ED boarding, from certified flow and quality data.", requested_by: healthcare:quality-analyst, votes: 12 }
+  - { id: DM-HC-003, title: Operating room utilisation product, kind: product, description: "Block utilisation, first-case on-time starts and turnover time by surgeon group and room.", requested_by: healthcare:coo, votes: 10 }
+  - { id: DM-HC-004, title: Prior authorization insights, kind: product, description: "Authorization turnaround, approval rate and denials by payer and service, aggregated only.", requested_by: healthcare:coo, votes: 8 }
+  - { id: DM-HC-005, title: Patient experience analyst agent, kind: agent, description: "Explains which facilities and themes drive low experience scores, once Patient Experience is certified.", requested_by: healthcare:his-steward, votes: 6 }
+  - { id: DM-HC-006, title: Hospital-acquired infection product, kind: product, description: "CLABSI, CAUTI and C. diff rates per 1,000 device or patient days by unit, from the safety event feed.", requested_by: healthcare:clinical-dpo, votes: 5 }

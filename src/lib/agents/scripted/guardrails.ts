@@ -34,7 +34,7 @@ function recordLevel(nouns: string[]): RegExp[] {
   if (!res) {
     const n = nouns.map((x) => escape(x.toLowerCase())).join('|');
     res = [
-      new RegExp(`\\b(${n})\\s*(no|number|id|#)?\\s*[a-z]?\\d{4,}\\b`),
+      new RegExp(`\\b(${n})\\s*(no|number|id|#)?\\s*(?:[a-z]{1,4}\\s*)?\\d{4,}\\b`),
       new RegExp(`\\b(individual|specific|single|this|that|named) (${n})s?\\b`),
       new RegExp(`\\b(${n}) (history|details|record|profile) (for|of)\\b`),
     ];

@@ -1,0 +1,93 @@
+sensitivity_classes:
+  - { class: PHI, description: "Protected health information: patient identifiers and health details linked to a person" }
+  - { class: PII, description: "Personal information about patients, clinicians, staff or contacts" }
+  - { class: GOV_ID, description: "Government or tax identifiers (social security numbers, payer and supplier tax ids)" }
+
+masking_policies:
+  - { id: MASK_PHI, class: PHI, macro: mask_redact, description: "Replace protected health information with [redacted] unless the persona is cleared for PHI" }
+  - { id: MASK_PII, class: PII, macro: mask_pii, description: "Replace personal data with ••• unless the persona is cleared for PII" }
+  - { id: MASK_EMAIL, class: PII, macro: mask_email, description: "Hash the local part of email addresses" }
+  - { id: MASK_PHONE, class: PII, macro: mask_phone, description: "Show only the last four digits of phone numbers" }
+  - { id: MASK_GOV_ID, class: GOV_ID, macro: mask_gov_id, description: "Show only the last four characters of social security numbers and tax identifiers" }
+
+row_access_policies:
+  - id: RAP_REGION
+    dimension: region
+    description: "Market personas see only rows for their own market (facility and patient region)"
+    bindings:
+      - { object: CONFORMED_GOLD.DIM_FACILITY, column: region }
+      - { object: CONFORMED_GOLD.DIM_PATIENT, column: region }
+      - { object: CONFORMED_GOLD.DIM_UNIT, column: region }
+      - { object: CURATED_SILVER.FACILITY, column: region }
+      - { object: CURATED_SILVER.PATIENT, column: region }
+
+column_tags:
+  # Patient identifiers — PHI under the privacy rule; masked for every persona without PHI clearance.
+  - { column: CONFORMED_GOLD.DIM_PATIENT.mrn, classes: [PHI], cde: true, masking: MASK_PHI }
+  - { column: CONFORMED_GOLD.DIM_PATIENT.first_name, classes: [PII, PHI], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_PATIENT.last_name, classes: [PII, PHI], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_PATIENT.full_name, classes: [PII, PHI], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_PATIENT.date_of_birth, classes: [PHI], masking: MASK_PHI }
+  - { column: CONFORMED_GOLD.DIM_PATIENT.street_address, classes: [PII, PHI], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_PATIENT.ssn, classes: [GOV_ID], masking: MASK_GOV_ID }
+  # Certification demo (DP-HC-005 gate 6): patient email and phone masking is not attached until FIX-2.
+  - { column: CONFORMED_GOLD.DIM_PATIENT.email, classes: [PII, PHI], masking: MASK_EMAIL, mask_pending_fix: FIX-2 }
+  - { column: CONFORMED_GOLD.DIM_PATIENT.phone, classes: [PII, PHI], masking: MASK_PHONE, mask_pending_fix: FIX-2 }
+  - { column: CONFORMED_GOLD.DIM_PROVIDER.provider_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_PAYER.tax_id, classes: [GOV_ID], masking: MASK_GOV_ID }
+  - { column: CONFORMED_GOLD.DIM_PAYER.contact_email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CONFORMED_GOLD.DIM_SUPPLIER.tax_id, classes: [GOV_ID], masking: MASK_GOV_ID }
+  - { column: CONFORMED_GOLD.DIM_SUPPLIER.contact_email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CONFORMED_GOLD.FCT_SURVEY.comments, classes: [PHI], masking: MASK_PHI }
+  - { column: CURATED_SILVER.PATIENT.first_name, classes: [PII, PHI], masking: MASK_PII }
+  - { column: CURATED_SILVER.PATIENT.last_name, classes: [PII, PHI], masking: MASK_PII }
+  - { column: CURATED_SILVER.PATIENT.date_of_birth, classes: [PHI], masking: MASK_PHI }
+  - { column: CURATED_SILVER.PATIENT.ssn, classes: [GOV_ID], masking: MASK_GOV_ID }
+  - { column: CURATED_SILVER.PATIENT.email, classes: [PII, PHI], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.PATIENT.phone, classes: [PII, PHI], masking: MASK_PHONE }
+  - { column: CURATED_SILVER.PATIENT.street_address, classes: [PII, PHI], masking: MASK_PII }
+  - { column: CURATED_SILVER.CLINICIAN.provider_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.PAYER.tax_id, classes: [GOV_ID], masking: MASK_GOV_ID }
+  - { column: CURATED_SILVER.PAYER.contact_email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.SUPPLIER.tax_id, classes: [GOV_ID], masking: MASK_GOV_ID }
+  - { column: CURATED_SILVER.SUPPLIER.contact_email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.PURCHASE_ORDER_LINE.buyer, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.SAFETY_EVENT.reporter, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.SAFETY_EVENT.narrative, classes: [PHI], masking: MASK_PHI }
+  - { column: CURATED_SILVER.SURVEY_RESPONSE.comments, classes: [PHI], masking: MASK_PHI }
+  # Critical data elements (each has DQ rules in warehouse/dq).
+  - { column: CONFORMED_GOLD.FCT_ENCOUNTER.readmit_30d, cde: true }
+  - { column: CONFORMED_GOLD.FCT_ENCOUNTER.planned_readmission, cde: true }
+  - { column: CONFORMED_GOLD.FCT_ENCOUNTER.los_days, cde: true }
+  - { column: CONFORMED_GOLD.FCT_ENCOUNTER.discharge_disposition, cde: true }
+  - { column: CONFORMED_GOLD.DIM_FACILITY.region, cde: true }
+  - { column: CONFORMED_GOLD.FCT_ED_VISIT.door_to_provider_min, cde: true }
+  - { column: CONFORMED_GOLD.FCT_ED_VISIT.left_without_seen, cde: true }
+  - { column: CONFORMED_GOLD.FCT_CLAIM.expected_amount, cde: true }
+  - { column: CONFORMED_GOLD.FCT_CLAIM.paid_60d_amount, cde: true }
+  - { column: CONFORMED_GOLD.FCT_CLAIM.denied, cde: true }
+  - { column: CONFORMED_GOLD.FCT_APPOINTMENT.appointment_status, cde: true }
+  - { column: CONFORMED_GOLD.FCT_SUPPLY_SPEND.spend_usd, cde: true }
+  - { column: CONFORMED_GOLD.FCT_SUPPLY_SPEND.on_contract, cde: true }
+  - { column: CONFORMED_GOLD.FCT_UNIT_DAY.census, cde: true }
+  - { column: CONFORMED_GOLD.FCT_UNIT_DAY.worked_hours, cde: true }
+
+grants:
+  - persona: healthcare:ops-director-metro
+    products: [DP-HC-001, DP-HC-002, DP-HC-003, DP-HC-004]
+    agents: [AG-HC-001, AG-HC-002, AG-HC-004]
+  - persona: healthcare:quality-analyst
+    products: [DP-HC-002, DP-HC-003, DP-HC-004, DP-HC-007]
+    agents: [AG-HC-002, AG-HC-004]
+  - persona: healthcare:clinical-dpo
+    products: [DP-HC-002, DP-HC-003, DP-HC-004, DP-HC-006, DP-HC-007]
+    agents: [AG-HC-002, AG-HC-003, AG-HC-004]
+  - persona: healthcare:his-steward
+    products: [DP-HC-001, DP-HC-002, DP-HC-003, DP-HC-004, DP-HC-005, DP-HC-006, DP-HC-007, DP-HC-008]
+    agents: [AG-HC-001, AG-HC-002, AG-HC-003, AG-HC-004, AG-HC-005]
+  - persona: healthcare:coo
+    # Aggregates only (archetype E): sees every headline KPI tile, never row-level data.
+    products: [DP-HC-001, DP-HC-002, DP-HC-003, DP-HC-004, DP-HC-005, DP-HC-006]
+    agents: [AG-HC-001, AG-HC-002, AG-HC-003, AG-HC-004]
+
+public_products: []

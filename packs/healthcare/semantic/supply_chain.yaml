@@ -1,0 +1,73 @@
+name: SUPPLY_CHAIN
+description: Supply chain purchase-order spend, contract compliance and supplier fill rate
+tables:
+  - { alias: s, fqn: CONFORMED_GOLD.FCT_SUPPLY_SPEND, pk: po_line_key }
+  - { alias: p, fqn: CONFORMED_GOLD.DIM_SUPPLIER, pk: supplier_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: s.supplier_key, to: p.supplier_key }
+  - { from: s.date_key, to: d.date_key }
+dimensions:
+  - { name: supplier, expr: p.supplier_name, label: Supplier, synonyms: [vendor, distributor, manufacturer], term: GT-HC-SUPPLIER }
+  - { name: category, expr: s.category, label: Supply category, synonyms: [commodity, category, product category] }
+  - { name: on_contract, expr: s.on_contract, label: On contract, synonyms: [contracted, gpo contracted] }
+  - { name: preferred_supplier, expr: p.preferred, label: Preferred supplier, synonyms: [preferred vendor] }
+time_dimensions:
+  - { name: po_date, expr: d.date, default: true }
+facts:
+  - { name: spend_usd, expr: s.spend_usd }
+  - { name: cycle_days, expr: s.cycle_days }
+metrics:
+  - name: supply_spend
+    label: Supply spend
+    expr: SUM(s.spend_usd)
+    unit: USD
+    decimals: 0
+    synonyms: [spend, purchases, po spend, supply expense]
+    term: GT-HC-SUPPLY-SPEND
+    description: Total purchase-order line spend
+  - name: spend_on_contract_pct
+    label: Spend on contract
+    expr: 100.0 * SUM(CASE WHEN s.on_contract THEN s.spend_usd ELSE 0 END) / SUM(s.spend_usd)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [contract compliance, on-contract spend, gpo compliance]
+    term: GT-HC-CONTRACT-COMPLIANCE
+    description: Share of spend placed against a group purchasing or framework contract
+  - name: off_contract_spend
+    label: Off-contract spend
+    expr: SUM(CASE WHEN NOT s.on_contract THEN s.spend_usd ELSE 0 END)
+    unit: USD
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [maverick spend, non-compliant spend, leakage]
+    term: GT-HC-OFF-CONTRACT
+    description: Spend placed outside a group purchasing or framework contract
+  - name: fill_rate_pct
+    label: Supplier fill rate
+    expr: 100.0 * AVG(CASE WHEN s.received THEN CASE WHEN s.otif THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [fill rate, otif, on time in full, delivery performance]
+    term: GT-HC-FILL-RATE
+    description: Share of received PO lines delivered on time and in full
+  - name: po_cycle_days
+    label: PO cycle time
+    expr: AVG(s.cycle_days)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [cycle time, po to receipt, lead time]
+    term: GT-HC-PO-CYCLE
+    description: Mean days from PO creation to goods receipt
+  - name: po_lines
+    label: PO lines
+    expr: COUNT(*)
+    unit: lines
+    decimals: 0
+    synonyms: [purchase order lines, number of pos]
+    term: GT-HC-SUPPLY-SPEND
+    description: Count of purchase-order lines
+products: [DP-HC-006]

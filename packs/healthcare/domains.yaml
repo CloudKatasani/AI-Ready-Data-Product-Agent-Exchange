@@ -1,0 +1,71 @@
+# Domains, conformed backbone entities and links (ported from the ADPM healthcare pack, adapted to the
+# Crestview warehouse). Owners are persona refs; golden sources are Gold objects in CVH_AI_PLATFORM.
+domains:
+  - id: patient-access
+    name: Patient Access
+    description: Who the patient is, how they are registered and reached, how they engage digitally, and how quickly they can get an appointment with the medical group.
+    owner: healthcare:his-steward
+    entities: [Patient, Clinician, Appointment]
+  - id: clinical-quality
+    name: Clinical Quality
+    description: Inpatient discharges, length of stay, mortality and 30-day readmissions by facility, service line and condition cohort, measured the way the quality programme reports them.
+    owner: healthcare:clinical-dpo
+    entities: [Facility, Inpatient encounter]
+  - id: patient-flow
+    name: Patient Flow
+    description: Emergency department arrivals, triage, door-to-provider time, boarding, left-without-being-seen and inpatient bed capacity across the ten hospitals.
+    owner: healthcare:clinical-dpo
+    entities: [ED visit, Care unit]
+  - id: revenue-cycle
+    name: Revenue Cycle
+    description: Claims, payers, remittances, initial denials, clean claims, net collections and days in accounts receivable.
+    owner: healthcare:coo
+    entities: [Claim, Payer, Remittance]
+  - id: workforce
+    name: Workforce
+    description: Nurse staffing by care unit and day — census, worked hours, overtime and contract (agency) labour — against the staffing plan.
+    owner: healthcare:clinical-dpo
+    entities: [Staffing day]
+  - id: supply-chain
+    name: Supply Chain
+    description: Medical-surgical, pharmacy and implant suppliers, framework contracts and purchase-order lines, including contract compliance and fill rate.
+    owner: healthcare:coo
+    entities: [Supplier, Contract, Purchase order line]
+  - id: patient-experience
+    name: Patient Experience
+    description: Post-discharge patient experience surveys (HCAHPS-style), overall rating, likelihood to recommend and free-text comments.
+    owner: healthcare:his-steward
+    entities: [Survey response]
+
+backbone:
+  entities:
+    - { name: Patient, description: "A person registered in the enterprise master patient index with one medical record number", key: mrn, domain: patient-access, golden_source: CONFORMED_GOLD.DIM_PATIENT }
+    - { name: Clinician, description: "A physician or advanced practice provider who sees patients in the medical group", key: provider_id, domain: patient-access, golden_source: CONFORMED_GOLD.DIM_PROVIDER }
+    - { name: Appointment, description: "One scheduled ambulatory visit slot with its outcome (completed, no-show, cancelled)", key: appointment_id, domain: patient-access, golden_source: CONFORMED_GOLD.FCT_APPOINTMENT }
+    - { name: Facility, description: "A licensed hospital campus of Crestview Health System", key: facility_id, domain: clinical-quality, golden_source: CONFORMED_GOLD.DIM_FACILITY }
+    - { name: Inpatient encounter, description: "One inpatient stay from admission to discharge, with length of stay and readmission outcome", key: encounter_id, domain: clinical-quality, golden_source: CONFORMED_GOLD.FCT_ENCOUNTER }
+    - { name: ED visit, description: "One emergency department visit from arrival to departure", key: ed_visit_id, domain: patient-flow, golden_source: CONFORMED_GOLD.FCT_ED_VISIT }
+    - { name: Care unit, description: "A staffed inpatient nursing unit within a facility", key: unit_id, domain: patient-flow, golden_source: CONFORMED_GOLD.DIM_UNIT }
+    - { name: Staffing day, description: "One care unit on one day: midnight census, staffed beds and nursing hours", key: "unit_id, shift_date", domain: workforce, golden_source: CONFORMED_GOLD.FCT_UNIT_DAY }
+    - { name: Payer, description: "An insurer or government programme that reimburses claims", key: payer_id, domain: revenue-cycle, golden_source: CONFORMED_GOLD.DIM_PAYER }
+    - { name: Claim, description: "A bill submitted to a payer for services rendered to a patient", key: claim_id, domain: revenue-cycle, golden_source: CONFORMED_GOLD.FCT_CLAIM }
+    - { name: Remittance, description: "A payer's payment or denial advice applied against a claim", key: remit_id, domain: revenue-cycle, golden_source: CURATED_SILVER.REMITTANCE }
+    - { name: Supplier, description: "A vendor of supplies, pharmaceuticals, implants or services", key: supplier_id, domain: supply-chain, golden_source: CONFORMED_GOLD.DIM_SUPPLIER }
+    - { name: Contract, description: "A group purchasing or local framework contract with a supplier", key: contract_id, domain: supply-chain, golden_source: CURATED_SILVER.CONTRACT }
+    - { name: Purchase order line, description: "One line of a purchase order with receipt outcome and cycle time", key: po_line_id, domain: supply-chain, golden_source: CONFORMED_GOLD.FCT_SUPPLY_SPEND }
+    - { name: Survey response, description: "One returned patient experience survey after discharge", key: survey_id, domain: patient-experience, golden_source: CONFORMED_GOLD.FCT_SURVEY }
+  links:
+    - { from: Patient, to: Inpatient encounter, cardinality: 1:N, via: mrn }
+    - { from: Patient, to: ED visit, cardinality: 1:N, via: mrn }
+    - { from: Patient, to: Appointment, cardinality: 1:N, via: mrn }
+    - { from: Patient, to: Claim, cardinality: 1:N, via: mrn }
+    - { from: Patient, to: Survey response, cardinality: 1:N, via: mrn }
+    - { from: Clinician, to: Appointment, cardinality: 1:N, via: provider_id }
+    - { from: Facility, to: Inpatient encounter, cardinality: 1:N, via: facility_id }
+    - { from: Facility, to: ED visit, cardinality: 1:N, via: facility_id }
+    - { from: Facility, to: Care unit, cardinality: 1:N, via: facility_id }
+    - { from: Care unit, to: Staffing day, cardinality: 1:N, via: unit_id }
+    - { from: Payer, to: Claim, cardinality: 1:N, via: payer_id }
+    - { from: Claim, to: Remittance, cardinality: 1:N, via: claim_id }
+    - { from: Supplier, to: Contract, cardinality: 1:N, via: supplier_id }
+    - { from: Supplier, to: Purchase order line, cardinality: 1:N, via: supplier_id }

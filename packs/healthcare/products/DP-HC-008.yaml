@@ -1,0 +1,23 @@
+id: DP-HC-008
+name: Patient Experience
+domain: Patient Experience
+archetype: CONSUMER_ALIGNED
+initial_status: DRAFT
+seed_stage: 2
+version: 0.1.0
+owner: healthcare:clinical-dpo
+steward: null
+description: Post-discharge patient experience surveys — overall rating, likelihood to recommend and comments — joined to the facility.
+purpose: Understand which facilities and themes drive low patient experience scores.
+decision: { persona: Chief Experience Officer, decision: "Which facilities get the next nurse-communication improvement sprint", cadence: Quarterly, workaround: "Survey vendor PDFs with no link to the encounter", consequence: "Experience scores fall at facilities nobody is watching" }
+sample_questions: ["Top-box overall rating by facility last quarter", "Likelihood to recommend by market"]
+semantic_view: null
+output_ports:
+  - { kind: sql, ref: DATA_PRODUCTS.DP_HC_008_PATIENT_EXPERIENCE }
+sla: { freshness_minutes: 1440, availability_pct: 98.0, max_null_rate_pct: 2.0 }
+kpis: []
+upstream: [CONFORMED_GOLD.FCT_SURVEY]
+consumers: [Patient experience office]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: null

@@ -1,0 +1,6 @@
+# Readiness preset labels for Crestview Health System (preset ids from the ported readiness engine: early, mid, advanced).
+preset_labels:
+  early: EHR reports and spreadsheets
+  mid: Enterprise warehouse in flight
+  advanced: Governed clinical lakehouse
+question_overrides: []

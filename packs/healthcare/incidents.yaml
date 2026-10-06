@@ -1,0 +1,66 @@
+# "Break something" templates (05 §2.4), retargeted to the Crestview Gold objects. Effects are applied as overlay views
+# in the _INCIDENT schema while an incident is open.
+- id: INC-HC-LATE-FEED
+  kind: late_feed
+  title: ED tracking board feed six hours late
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_ED_VISIT
+  params: { lag_hours: 6 }
+  affects: { products: [DP-HC-004], agents: [AG-HC-004, AG-HC-002] }
+  narrative: >-
+    The interface engine queue feeding ED tracking board events stalled and no arrivals have landed for six hours. The
+    Emergency Department Flow product is now behind its 30-minute freshness SLA, so today's door-to-provider, LWBS and
+    boarding figures understate volume and any agent answer about current ED flow is stale.
+  detection: Freshness rule DQ-HC-017 on FCT_ED_VISIT.arrival_ts fails and the product moves to Degraded.
+  resolution: Restart the interface engine channel, replay the six-hour backlog and re-run the DQ rules; the product returns to Healthy.
+- id: INC-HC-NULL-SPIKE
+  kind: null_spike
+  title: Null spike in readmission flags
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_ENCOUNTER
+  column: readmit_30d
+  params: { null_pct: 18 }
+  affects: { products: [DP-HC-002], agents: [AG-HC-002] }
+  narrative: >-
+    A change to the readmission matching job left 18% of recent discharges without a readmission outcome, so the 30-day
+    readmission flag (a critical data element) arrives empty and readmission rates are understated.
+  detection: Completeness rule DQ-HC-001 on readmit_30d fails; the Inpatient Quality & Readmissions product is Degraded.
+  resolution: Revert the matching job, re-run it for the affected discharge dates and confirm the null rate is back to zero.
+- id: INC-HC-DUP-LOAD
+  kind: duplicate_load
+  title: Duplicate PO line load
+  severity: SEV3
+  object: CONFORMED_GOLD.FCT_SUPPLY_SPEND
+  params: { duplicate_pct: 12 }
+  affects: { products: [DP-HC-006], agents: [AG-HC-003] }
+  narrative: >-
+    A replayed ERP batch loaded 12% of PO lines twice. Supply spend and off-contract spend are inflated while the
+    duplicates remain, and contract compliance shifts by category.
+  detection: Uniqueness rule DQ-HC-044 on po_line_id fails and the row count jumps against the trailing average.
+  resolution: Delete the replayed batch by load id, re-run deduplication and confirm dup_rate returns to zero.
+- id: INC-HC-SCHEMA-DRIFT
+  kind: schema_drift
+  title: Claims column renamed upstream
+  severity: SEV1
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: expected_amount
+  params: { rename_to: expected_reimb_usd }
+  affects: { products: [DP-HC-005], agents: [AG-HC-001] }
+  narrative: >-
+    A patient accounting upgrade renamed the expected reimbursement column to expected_reimb_usd without a contract
+    change. Every revenue cycle metric that depends on it (net collection rate, days in A/R) fails to compile, so agents
+    decline with an incident banner instead of answering.
+  detection: Metric compilation for REVENUE_CYCLE fails and DQ-HC-020 cannot find its column; the contract check flags a breaking change.
+  resolution: Map expected_reimb_usd back to expected_amount in Silver, raise a contract major version with a 30-day notice, and re-run checks.
+- id: INC-HC-VOLUME
+  kind: volume_anomaly
+  title: Missing days of appointments
+  severity: SEV2
+  object: CONFORMED_GOLD.FCT_APPOINTMENT
+  params: { missing_days: 2 }
+  affects: { products: [DP-HC-003], agents: [AG-HC-001] }
+  narrative: >-
+    Two daily extracts from the ambulatory scheduling system never arrived, so the most recent two days of appointments
+    are missing. Completed visits and no-show trends show a false drop at the end of the series.
+  detection: Timeliness rule DQ-HC-039 on appointment_date fails and daily appointment volume drops against the trailing average; the product is Degraded.
+  resolution: Request the missing extracts from the scheduling team, load them and confirm daily volumes match the trailing average.

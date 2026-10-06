@@ -1,0 +1,45 @@
+id: AG-HC-001
+name: Patient Access Advisor
+domain: Patient Access
+status: PRODUCTION
+owner: healthcare:clinical-dpo
+on_call: Patient Access Data Ops
+avatar: { icon: calendar-check, hue: 265 }
+capability: "Answers questions on portal adoption, population risk, appointment access, no-shows, claims denials, net collections and days in A/R."
+personas_served: [VP Patient Access, VP Revenue Cycle, Director of Hospital Operations]
+out_of_scope: ["individual patient record lookups", "booking or cancelling a patient appointment", "collection actions or financial assistance decisions", "payer contract negotiation"]
+products:
+  - { id: DP-HC-001, columns: "*" }
+  - { id: DP-HC-003, columns: "*" }
+  - { id: DP-HC-005, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [PATIENT_360, SCHEDULING, REVENUE_CYCLE], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-HC-ACCESS-STD, DOC-HC-REVENUE-CYCLE, DOC-HC-CREDIT-COLLECTIONS, DOC-HC-DATA-GOVERNANCE] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+  - { tool: request_access_link }
+kpi_coverage:
+  - { kpi: KPI-HC-PORTAL, grains: [], slices: [region, payer_class, age_band], depth: rank_drivers }
+  - { kpi: KPI-HC-RISK, grains: [], slices: [region, payer_class, age_band], depth: explain }
+  - { kpi: KPI-HC-HIGH-RISK, grains: [], slices: [region, payer_class], depth: value }
+  - { kpi: KPI-HC-NO-SHOW, grains: [day, week, month, quarter], slices: [region, specialty, facility, visit_type], depth: rank_drivers }
+  - { kpi: KPI-HC-LAG, grains: [week, month, quarter], slices: [region, specialty, facility, visit_type], depth: trend }
+  - { kpi: KPI-HC-NEW-LAG, grains: [month, quarter], slices: [region, specialty, facility], depth: rank_drivers }
+  - { kpi: KPI-HC-CANCEL, grains: [month, quarter], slices: [region, specialty, facility], depth: trend }
+  - { kpi: KPI-HC-VISITS, grains: [day, week, month], slices: [region, specialty, facility, visit_type], depth: trend }
+  - { kpi: KPI-HC-DENIAL, grains: [month, quarter], slices: [payer, financial_class, denial_reason, facility, region], depth: rank_drivers }
+  - { kpi: KPI-HC-CLEAN, grains: [month, quarter], slices: [facility, region, claim_type], depth: explain }
+  - { kpi: KPI-HC-NCR, grains: [month, quarter], slices: [payer, financial_class, region], depth: explain }
+  - { kpi: KPI-HC-AR-DAYS, grains: [month, quarter], slices: [payer, financial_class, region], depth: explain }
+  - { kpi: KPI-HC-DENIED-CHARGES, grains: [month, quarter], slices: [payer, denial_reason, region], depth: rank_drivers }
+  - { kpi: KPI-HC-CLAIMS, grains: [month], slices: [facility, region, claim_type], depth: value }
+instructions: [INS-HC-001-P, INS-HC-001-R, INS-HC-001-G, INS-HC-001-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: masked, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-HC-012, SC-HC-013, SC-HC-014, SC-HC-015, SC-HC-016, SC-HC-017]
+quality_fix:
+  feedback_question: "What share of active patients have gone digital?"
+  fix: { type: synonym, payload: { term: gone digital, synonyms: [go digital, signed up for the portal], maps_to: { kind: metric, ref: portal_adoption_rate } } }
+  eval_before_pct: 88
+  eval_after_pct: 94

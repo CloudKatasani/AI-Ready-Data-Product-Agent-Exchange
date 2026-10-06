@@ -1,0 +1,30 @@
+id: AG-HC-002
+name: Quality & Readmissions Analyst
+domain: Clinical Quality
+status: PRODUCTION
+owner: healthcare:clinical-dpo
+on_call: Clinical Quality Data Ops
+avatar: { icon: activity, hue: 210 }
+capability: "Answers questions on 30-day readmissions, length of stay, the LOS index, excess days and inpatient mortality."
+personas_served: [Chief Medical Officer, Director of Hospital Operations, Clinical Quality Analyst]
+out_of_scope: ["clinical treatment recommendations", "individual patient chart review", "discharge or admission orders", "regulatory quality submission preparation"]
+products:
+  - { id: DP-HC-002, columns: "*" }
+  - { id: DP-HC-004, columns: [facility_name, region, boarding_min] }
+tools:
+  - { tool: semantic_query, views: [CARE_QUALITY, ED_FLOW], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-HC-READMISSION-STD, DOC-HC-ED-THROUGHPUT] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-HC-READMIT, grains: [month, quarter, year], slices: [facility, region, service_line, condition_cohort, payer_class, age_band], depth: rank_drivers }
+  - { kpi: KPI-HC-READMITS, grains: [month, quarter, year], slices: [facility, region, service_line, condition_cohort], depth: rank_drivers }
+  - { kpi: KPI-HC-DISCHARGES, grains: [month, quarter, year], slices: [facility, region, service_line, payer_class], depth: value }
+  - { kpi: KPI-HC-ALOS, grains: [month, quarter], slices: [facility, region, service_line, condition_cohort], depth: explain }
+  - { kpi: KPI-HC-LOS-INDEX, grains: [month, quarter], slices: [facility, region, service_line], depth: explain }
+  - { kpi: KPI-HC-MORTALITY, grains: [quarter, year], slices: [facility, region, service_line], depth: value }
+instructions: [INS-HC-002-P, INS-HC-002-R, INS-HC-002-G, INS-HC-002-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-HC-001, SC-HC-002, SC-HC-003, SC-HC-004, SC-HC-005, SC-HC-006, SC-HC-007]

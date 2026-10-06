@@ -1,0 +1,115 @@
+# Knockout (Why AI-Ready): four governed answers and how each degrades when a layer is switched off.
+# declared_delta_pct is computed against the warehouse in Phase 8 and left empty here.
+answers:
+  - id: KO-HC-01
+    kpi: KPI-HC-READMIT
+    question: "What was the 30-day readmission rate last quarter, excluding planned readmissions?"
+    query: { view: CARE_QUALITY, metrics: [readmission_rate], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # CDC duplicates and tombstoned encounters counted; expired patients counted as readmissions
+      gold: wrong          # patients still in house counted as index discharges
+      semantic: wrong      # naive formula divides by all discharges, including expired patients
+      glossary: ambiguous  # "bounce-back rate" no longer resolves to the readmission rate
+      context: wrong       # planned readmissions (BR-HC-012) are no longer excluded
+      governance: unsafe   # no certification, row access or lineage on the answer
+    declared_delta_pct: {}
+  - id: KO-HC-02
+    kpi: KPI-HC-AR-DAYS
+    question: "What were days in A/R last quarter?"
+    query: { view: REVENUE_CYCLE, metrics: [days_in_ar], timeRange: { last: { n: 1, unit: quarter } } }
+    failure_by_layer:
+      silver: wrong        # duplicate claim updates and deleted claims counted
+      gold: wrong          # no remittance join; days to pay approximated from the service date
+      semantic: ambiguous  # finance's balance-based A/R days and the payment-weighted measure both plausible
+      glossary: ambiguous  # "AR days" does not resolve to days in A/R
+      context: wrong       # immature claims inside the 60-day window (BR-HC-021) included
+      governance: unsafe   # patient emails reachable from the claims view unmasked
+    declared_delta_pct: {}
+  - id: KO-HC-03
+    kpi: KPI-HC-ON-CONTRACT
+    question: "What share of supply spend was on contract this year?"
+    query: { view: SUPPLY_CHAIN, metrics: [spend_on_contract_pct], timeRange: { ytd: true } }
+    failure_by_layer:
+      silver: wrong        # duplicate PO line updates and dirty category strings
+      gold: unverified     # same number from Silver but no certified lineage
+      semantic: ambiguous  # "contract compliance" could mean lines, suppliers or spend
+      glossary: ambiguous  # "GPO compliance" no longer maps to the metric
+      context: unverified  # purchasing policy definition of off-contract spend not cited
+      governance: unsafe   # supplier tax ids and buyer names unmasked
+    declared_delta_pct: {}
+  - id: KO-HC-04
+    kpi: KPI-HC-D2P
+    question: "What was door-to-provider time last month?"
+    query: { view: ED_FLOW, metrics: [door_to_provider_minutes], timeRange: { last: { n: 1, unit: month } } }
+    failure_by_layer:
+      silver: wrong        # LWBS visits keep a placeholder provider time and duplicate tracking-board events count twice
+      gold: unverified     # computed from Silver visits without the certified facility conformance
+      semantic: ambiguous  # door-to-provider vs door-to-triage not distinguished
+      glossary: ambiguous  # "door to doc" does not resolve
+      context: unverified  # LWBS exclusion (BR-HC-006) not cited
+      governance: unsafe   # patient-level tracking board rows exposed without aggregation or row access
+    declared_delta_pct: {}
+
+# Silver equivalents the compiler uses when the Gold layer is off (05 §1 step 7). column_map maps a Gold column
+# name to the Silver column (or Silver expression) that replaces it. Gold surrogate keys map to natural keys on both
+# sides of a join so relationships still resolve; date_key maps to the same integer expression Gold uses.
+# DIM_DATE is a generated calendar with no Silver source and stays in place.
+gold_fallbacks:
+  - gold: CONFORMED_GOLD.FCT_ENCOUNTER
+    silver: CURATED_SILVER.ENCOUNTER
+    column_map:
+      encounter_key: encounter_id
+      facility_key: facility_id
+      patient_key: patient_mrn
+      date_key: "CAST(strftime(discharge_date, '%Y%m%d') AS INTEGER)"
+      age_band: "'Unknown'"
+  - gold: CONFORMED_GOLD.DIM_FACILITY
+    silver: CURATED_SILVER.FACILITY
+    column_map:
+      facility_key: facility_id
+      bed_size_band: "CASE WHEN licensed_beds >= 300 THEN 'Large (300+ beds)' WHEN licensed_beds >= 100 THEN 'Medium (100-299 beds)' ELSE 'Small (<100 beds)' END"
+  - gold: CONFORMED_GOLD.FCT_CLAIM
+    silver: CURATED_SILVER.CLAIM_HEADER
+    column_map:
+      claim_key: claim_id
+      patient_key: patient_mrn
+      payer_key: payer_id
+      facility_key: facility_id
+      date_key: "CAST(strftime(submit_date, '%Y%m%d') AS INTEGER)"
+      mature: "submit_date <= GOVERNANCE.as_of() - INTERVAL 60 DAY"
+      paid_60d_amount: "expected_amount * 0.9"
+      days_to_pay: "date_diff('day', service_date, submit_date) + 30"
+  - gold: CONFORMED_GOLD.DIM_PAYER
+    silver: CURATED_SILVER.PAYER
+    column_map:
+      payer_key: payer_id
+      payer_group: "CASE WHEN financial_class IN ('Medicare', 'Medicaid') THEN 'Government' WHEN financial_class = 'Self-pay' THEN 'Self-pay' ELSE 'Managed care' END"
+  - gold: CONFORMED_GOLD.DIM_PATIENT
+    silver: CURATED_SILVER.PATIENT
+    column_map:
+      patient_key: mrn
+      full_name: "concat(first_name, ' ', last_name)"
+      risk_band: "CASE WHEN risk_score >= 60 THEN 'High' WHEN risk_score >= 35 THEN 'Rising' ELSE 'Low' END"
+      age_band: "'Unknown'"
+  - gold: CONFORMED_GOLD.FCT_SUPPLY_SPEND
+    silver: CURATED_SILVER.PURCHASE_ORDER_LINE
+    column_map:
+      po_line_key: po_line_id
+      supplier_key: supplier_id
+      date_key: "CAST(strftime(po_date, '%Y%m%d') AS INTEGER)"
+      otif: on_time_in_full
+      received: "receipt_date IS NOT NULL"
+  - gold: CONFORMED_GOLD.DIM_SUPPLIER
+    silver: CURATED_SILVER.SUPPLIER
+    column_map:
+      supplier_key: supplier_id
+      preferred: preferred_flag
+  - gold: CONFORMED_GOLD.FCT_ED_VISIT
+    silver: CURATED_SILVER.ED_VISIT
+    column_map:
+      ed_visit_key: ed_visit_id
+      facility_key: facility_id
+      patient_key: patient_mrn
+      date_key: "CAST(strftime(CAST(arrival_ts AS DATE), '%Y%m%d') AS INTEGER)"
+      acuity: "concat('ESI ', esi_level)"
+      admitted: "ed_disposition = 'Admitted'"

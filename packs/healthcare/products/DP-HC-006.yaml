@@ -1,0 +1,25 @@
+id: DP-HC-006
+name: Supply Chain Spend
+domain: Supply Chain
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 3.1.0
+owner: healthcare:clinical-dpo
+steward: healthcare:his-steward
+description: PO line spend with contract compliance, supplier fill rate and cycle time across supply categories.
+purpose: Value analysis, supplier performance reviews and contract compliance reporting.
+decision: { persona: VP Supply Chain, decision: "Which categories the value analysis committee standardises onto contract next", cadence: Quarterly, workaround: "ERP spend cube refreshed monthly by a consultant", consequence: "Physician preference items stay off contract and shortage spot buys go unnoticed" }
+sample_questions: ["What percentage of supply spend this year was on contract?", "Which suppliers have a fill rate below 90%?", "Off-contract spend by category"]
+semantic_view: SUPPLY_CHAIN
+output_ports:
+  - { kind: semantic, ref: SUPPLY_CHAIN }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_HC_006_SUPPLY_SPEND }
+  - { kind: agent, ref: AG-HC-003 }
+sla: { freshness_minutes: 1440, availability_pct: 99.0, max_null_rate_pct: 1.0 }
+kpis: [KPI-HC-SUPPLY-SPEND, KPI-HC-ON-CONTRACT, KPI-HC-OFF-CONTRACT, KPI-HC-FILL-RATE, KPI-HC-PO-CYCLE]
+upstream: [CONFORMED_GOLD.FCT_SUPPLY_SPEND, CONFORMED_GOLD.DIM_SUPPLIER]
+consumers: [Category managers, Value analysis committee, Supply Chain Copilot agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-HC-006

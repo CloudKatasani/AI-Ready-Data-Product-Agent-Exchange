@@ -1,0 +1,24 @@
+id: DP-HC-007
+name: Nurse Staffing & Capacity
+domain: Workforce
+archetype: CONSUMER_ALIGNED
+initial_status: IN_DEVELOPMENT
+seed_stage: 6
+version: 0.4.0
+owner: healthcare:clinical-dpo
+steward: healthcare:his-steward
+description: Care-unit-day census, staffed beds, nursing hours, overtime and contract labour against the staffing plan.
+purpose: Match nurse staffing to census and cut contract labour where occupancy runs above staffed capacity.
+decision: { persona: Chief Nursing Officer, decision: "Which units get new permanent nurse positions instead of agency contracts", cadence: Monthly, workaround: "Time and attendance exports cross-checked against the census report by hand", consequence: "Agency spend keeps rising on units like the Riverside ICU while permanent vacancies stay open" }
+sample_questions: ["Bed occupancy by facility last month", "Contract labour share by facility", "Nursing hours per patient day by unit type"]
+semantic_view: WORKFORCE
+output_ports:
+  - { kind: semantic, ref: WORKFORCE }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_HC_007_NURSE_STAFFING }
+sla: { freshness_minutes: 1440, availability_pct: 98.0, max_null_rate_pct: 2.0 }
+kpis: [KPI-HC-OCCUPANCY, KPI-HC-HPPD, KPI-HC-OVERTIME, KPI-HC-AGENCY]
+upstream: [CONFORMED_GOLD.FCT_UNIT_DAY, CONFORMED_GOLD.DIM_UNIT, CONFORMED_GOLD.DIM_FACILITY]
+consumers: [Nursing administration]
+lifecycle_seed: { artifacts: auto, open_proposals: true }
+certification_script: null
+value_case: VC-HC-007

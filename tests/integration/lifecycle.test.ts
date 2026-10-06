@@ -27,7 +27,7 @@ describe('seeded lifecycle', () => {
       const approved = await db().gate.count({ where: { productId: p.id, state: 'APPROVED' } });
       expect(approved).toBe(p.seed_stage - 1);
     }
-    const seededDecisions = await db().decision.findMany({ where: { subjectType: 'GATE' } });
+    const seededDecisions = await db().decision.findMany({ where: { subjectType: 'GATE', packId: pack.manifest.id } });
     expect(seededDecisions.every((d) => pack.personas.some((p) => p.id === d.personaId))).toBe(true);
   });
 });

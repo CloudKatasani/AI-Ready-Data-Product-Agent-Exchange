@@ -1,0 +1,28 @@
+id: AG-HC-003
+name: Supply Chain Copilot
+domain: Supply Chain
+status: PRODUCTION
+owner: healthcare:clinical-dpo
+on_call: Supply Chain Analytics
+avatar: { icon: package, hue: 32 }
+capability: "Answers questions on supply spend, contract compliance, off-contract spend, supplier fill rate and PO cycle time."
+personas_served: [VP Supply Chain, Category Manager, Value Analysis Committee]
+out_of_scope: ["raising or approving purchase orders", "supplier contract negotiation", "invoice payment status", "supplier bank details"]
+products:
+  - { id: DP-HC-006, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [SUPPLY_CHAIN], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-HC-PROCUREMENT-POLICY] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-HC-SUPPLY-SPEND, grains: [month, quarter, year], slices: [category, supplier], depth: rank_drivers }
+  - { kpi: KPI-HC-ON-CONTRACT, grains: [month, quarter, year], slices: [category, supplier, preferred_supplier], depth: explain }
+  - { kpi: KPI-HC-OFF-CONTRACT, grains: [month, quarter, year], slices: [category, supplier], depth: rank_drivers }
+  - { kpi: KPI-HC-FILL-RATE, grains: [month, quarter], slices: [supplier, category], depth: rank_drivers }
+  - { kpi: KPI-HC-PO-CYCLE, grains: [month, quarter], slices: [category, supplier], depth: trend }
+instructions: [INS-HC-003-P, INS-HC-003-R, INS-HC-003-G, INS-HC-003-O]
+guardrails: { citations_required: true, refuse_customer_level: false, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.05, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-HC-018, SC-HC-019, SC-HC-020, SC-HC-021]

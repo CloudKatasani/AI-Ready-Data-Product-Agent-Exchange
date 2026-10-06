@@ -1,0 +1,48 @@
+# Five demo identities, one per archetype (01-functional-spec §2.2). People are generated, not real.
+- id: healthcare:ops-director-metro
+  archetype: A
+  name: Maria Delgado
+  title: Director of Hospital Operations, Metro
+  domain: Hospital operations
+  roles: [DATA_CONSUMER]
+  row_filter: { dimension: region, allowed: [Metro] }
+  unmasked: []
+  cares: Patient flow, readmissions and access at the two Metro hospitals; wants plain answers she can act on this week.
+  sees: Metro market only; patient identifiers masked.
+- id: healthcare:quality-analyst
+  archetype: B
+  name: Samuel Osei
+  title: Clinical Quality Analyst
+  domain: Clinical quality
+  roles: [DATA_CONSUMER, ANALYST]
+  unmasked: []
+  cares: Readmission rates, length of stay, ED throughput and the quality measures filed with regulators.
+  sees: All markets; patient identifiers masked.
+- id: healthcare:clinical-dpo
+  archetype: C
+  name: Lena Fischer
+  title: Clinical Data Product Owner
+  domain: Clinical operations
+  roles: [DOMAIN_PRODUCT_OWNER, DATA_ENGINEER]
+  unmasked: []
+  cares: Shipping certified quality, flow, access and staffing products that agents can trust.
+  sees: All markets; patient identifiers masked; can build and submit products for review.
+- id: healthcare:his-steward
+  archetype: D
+  name: Grace Whitfield
+  title: Health Information Data Steward
+  domain: Governance
+  roles: [DATA_STEWARD, GOVERNANCE_COUNCIL, PRIVACY_OFFICER]
+  unmasked: [PII, PHI, GOV_ID]
+  cares: Glossary health, CDE ownership, PHI masking coverage and certification decisions.
+  sees: Everything, unmasked; approves access requests and certification gates.
+- id: healthcare:coo
+  archetype: E
+  name: Jonathan Avery
+  title: Chief Operating Officer
+  domain: Executive
+  roles: [EXECUTIVE, PORTFOLIO_LEAD, GOVERNANCE_COUNCIL]
+  unmasked: []
+  aggregates_only: true
+  cares: Quality and throughput against targets, cost of labour and supplies, and where to invest next.
+  sees: Aggregates only; portfolio, value and readiness.

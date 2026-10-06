@@ -1,0 +1,616 @@
+# Crestview Health System business glossary (synthetic). Ported from the AI-Ready healthcare glossary and the
+# ADPM healthcare pack; ids, owners and mappings adapted to this pack's personas, warehouse and semantic views.
+
+# ── Clinical quality ─────────────────────────────────────────────────────────────────────────────────
+
+- id: GT-HC-READMISSION
+  name: 30-Day Readmission
+  definition: "An unplanned inpatient admission to any Crestview hospital within 30 days of discharge from an index inpatient stay. The readmission rate is reported excluding planned readmissions and expired discharges."
+  formula: "Unplanned readmissions within 30 days ÷ live index discharges × 100 (planned readmissions excluded)"
+  domain: Clinical quality
+  owner: healthcare:clinical-dpo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: true
+  synonyms: [readmission rate, readmit, bounce-back, all-cause readmission]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ENCOUNTER.readmit_30d, CONFORMED_GOLD.FCT_ENCOUNTER.discharge_disposition, CURATED_SILVER.ENCOUNTER.readmit_30d]
+    metrics: [readmission_rate, readmissions]
+
+- id: GT-HC-PLANNED-READMIT
+  name: Planned Readmission
+  definition: "A readmission scheduled as part of the plan of care (for example staged chemotherapy, a staged joint procedure or a scheduled transplant). Planned readmissions are excluded from the readmission measure."
+  formula: "Flagged by the planned readmission algorithm on the readmitting encounter"
+  domain: Clinical quality
+  owner: healthcare:clinical-dpo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: true
+  synonyms: [planned readmit, staged readmission, scheduled readmission]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ENCOUNTER.planned_readmission, CURATED_SILVER.ENCOUNTER.planned_readmission]
+    metrics: []
+
+- id: GT-HC-DISCHARGE
+  name: Inpatient Discharge
+  definition: "The end of an inpatient stay of at least one midnight; each discharge is one index admission for quality measurement."
+  formula: "One row per discharged inpatient encounter"
+  domain: Clinical quality
+  owner: healthcare:clinical-dpo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [discharge, inpatient stay, admission, index admission]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ENCOUNTER.encounter_id, CONFORMED_GOLD.FCT_ENCOUNTER.discharge_date]
+    metrics: [discharges, patient_days]
+
+- id: GT-HC-LOS
+  name: Length of Stay
+  definition: "Days from inpatient admission to discharge for one stay; average length of stay is the mean across discharges."
+  formula: "discharge date − admission date (days)"
+  domain: Clinical quality
+  owner: healthcare:clinical-dpo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: true
+  synonyms: [LOS, ALOS, average length of stay]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ENCOUNTER.los_days, CURATED_SILVER.ENCOUNTER.los_days]
+    metrics: [avg_length_of_stay]
+
+- id: GT-HC-LOS-INDEX
+  name: Length of Stay Index
+  definition: "Observed length of stay divided by the expected (geometric mean) length of stay for the same case mix; above 1.0 means patients stay longer than expected."
+  formula: "Σ length of stay ÷ Σ GMLOS"
+  domain: Clinical quality
+  owner: healthcare:clinical-dpo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [LOS index, observed to expected LOS, O/E LOS, excess days]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ENCOUNTER.los_days, CONFORMED_GOLD.FCT_ENCOUNTER.gmlos_days]
+    metrics: [los_index, excess_days]
+
+- id: GT-HC-MORTALITY
+  name: Inpatient Mortality
+  definition: "Share of inpatient discharges where the patient died in hospital (discharge disposition Expired)."
+  formula: "Expired discharges ÷ discharges × 100"
+  domain: Clinical quality
+  owner: healthcare:clinical-dpo
+  steward: healthcare:his-steward
+  status: IN_REVIEW
+  cde: false
+  synonyms: [mortality, in-hospital mortality, death rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ENCOUNTER.discharge_disposition]
+    metrics: [inpatient_mortality_rate]
+
+- id: GT-HC-SERVICE-LINE
+  name: Service Line
+  definition: "The clinical service line responsible for an inpatient stay (Medicine, Surgery, Cardiology, Orthopedics, Obstetrics, Oncology, Neurosciences, Behavioral health)."
+
+  domain: Clinical quality
+  owner: healthcare:clinical-dpo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [clinical service, product line]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ENCOUNTER.service_line, CURATED_SILVER.ENCOUNTER.service_line]
+    metrics: []
+
+- id: GT-HC-COHORT
+  name: Condition Cohort
+  definition: "The measure cohort an index stay belongs to for condition-specific readmission reporting (heart failure, pneumonia, COPD, sepsis, acute MI, joint replacement, stroke or all other)."
+
+  domain: Clinical quality
+  owner: healthcare:clinical-dpo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [cohort, condition group, measure cohort]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ENCOUNTER.condition_cohort]
+    metrics: []
+
+- id: GT-HC-FACILITY
+  name: Facility
+  definition: "A licensed hospital campus of Crestview Health System; the primary unit of quality, flow and capacity reporting."
+
+  domain: Enterprise
+  owner: healthcare:coo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: true
+  synonyms: [hospital, campus, site]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_FACILITY.facility_id, CONFORMED_GOLD.DIM_FACILITY.facility_name, CURATED_SILVER.FACILITY.facility_id]
+    metrics: []
+
+- id: GT-HC-MARKET
+  name: Market
+  definition: "One of Crestview's five markets (Metro, Lakeshore, Riverside, Valley, Highland). Drives market reporting and the market row-access policy."
+  formula: "Facility market for hospital data; patient home market for patient data"
+  domain: Enterprise
+  owner: healthcare:coo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: true
+  synonyms: [region, market, service area]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_FACILITY.region, CONFORMED_GOLD.DIM_PATIENT.region, CONFORMED_GOLD.DIM_UNIT.region, CURATED_SILVER.FACILITY.region, CURATED_SILVER.PATIENT.region]
+    metrics: []
+
+# ── Patient flow & capacity ──────────────────────────────────────────────────────────────────────────
+
+- id: GT-HC-ED-VISIT
+  name: ED Visit
+  definition: "One emergency department visit from arrival to departure, including visits that leave without being seen."
+  formula: "One row per ED arrival"
+  domain: Patient flow
+  owner: healthcare:clinical-dpo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [emergency visit, ED arrival, ED encounter]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ED_VISIT.ed_visit_id, CONFORMED_GOLD.FCT_ED_VISIT.ed_los_min, CONFORMED_GOLD.FCT_ED_VISIT.admitted]
+    metrics: [ed_visits, ed_admit_rate, avg_ed_los_hours]
+
+- id: GT-HC-D2P
+  name: Door-to-Provider Time
+  definition: "Minutes from ED arrival to first contact with a physician or advanced practice provider, for patients who are seen."
+  formula: "provider contact time − arrival time (minutes)"
+  domain: Patient flow
+  owner: healthcare:clinical-dpo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: true
+  synonyms: [door to doctor, door-to-provider, time to provider]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ED_VISIT.door_to_provider_min, CURATED_SILVER.ED_VISIT.door_to_provider_min]
+    metrics: [door_to_provider_minutes]
+
+- id: GT-HC-LWBS
+  name: Left Without Being Seen
+  definition: "An ED arrival who leaves before being seen by a provider. LWBS visits have no door-to-provider time."
+  formula: "LWBS visits ÷ ED arrivals × 100"
+  domain: Patient flow
+  owner: healthcare:clinical-dpo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: true
+  synonyms: [LWBS, walkout, left before seen]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ED_VISIT.left_without_seen, CURATED_SILVER.ED_VISIT.left_without_seen]
+    metrics: [lwbs_rate]
+
+- id: GT-HC-BOARDING
+  name: Boarding Time
+  definition: "Hours an admitted patient waits in the ED between the admission decision and departure to an inpatient bed."
+  formula: "ED departure − admission decision (admitted patients only)"
+  domain: Patient flow
+  owner: healthcare:clinical-dpo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [boarding, ED boarding, admit hold]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ED_VISIT.boarding_min]
+    metrics: [avg_boarding_hours]
+
+- id: GT-HC-ESI
+  name: Triage Acuity (ESI)
+  definition: "The Emergency Severity Index level assigned at triage, from ESI 1 (immediate, life-saving intervention) to ESI 5 (non-urgent)."
+
+  domain: Patient flow
+  owner: healthcare:clinical-dpo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [ESI, acuity, triage level]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_ED_VISIT.acuity]
+    metrics: []
+
+- id: GT-HC-CARE-UNIT
+  name: Care Unit
+  definition: "A staffed inpatient nursing unit within a facility (med-surg, ICU, step-down, telemetry, maternity, behavioral health, pediatrics)."
+
+  domain: Workforce
+  owner: healthcare:clinical-dpo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [nursing unit, ward, floor]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_UNIT.unit_id, CONFORMED_GOLD.DIM_UNIT.unit_type, CONFORMED_GOLD.DIM_UNIT.staffed_beds]
+    metrics: []
+
+- id: GT-HC-OCCUPANCY
+  name: Bed Occupancy
+  definition: "Midnight census as a share of staffed beds over the period."
+  formula: "Σ midnight census ÷ Σ staffed beds × 100"
+  domain: Workforce
+  owner: healthcare:clinical-dpo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: true
+  synonyms: [occupancy, occupancy rate, census]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_UNIT_DAY.census, CONFORMED_GOLD.FCT_UNIT_DAY.staffed_beds, CURATED_SILVER.STAFFING_DAY.census]
+    metrics: [bed_occupancy_pct, unit_patient_days]
+
+- id: GT-HC-HPPD
+  name: Nursing Hours per Patient Day
+  definition: "Productive nursing hours worked on a care unit divided by patient days (midnight census); compared with the unit's staffing-plan HPPD."
+  formula: "Σ nursing hours worked ÷ Σ midnight census"
+  domain: Workforce
+  owner: healthcare:clinical-dpo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: true
+  synonyms: [HPPD, nursing hours per patient day, staffing intensity]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_UNIT_DAY.worked_hours, CONFORMED_GOLD.FCT_UNIT_DAY.target_hours, CURATED_SILVER.STAFFING_DAY.worked_hours]
+    metrics: [nursing_hppd, hours_vs_plan_pct]
+
+- id: GT-HC-OVERTIME
+  name: Overtime Rate
+  definition: "Overtime nursing hours as a share of all nursing hours worked."
+  formula: "overtime hours ÷ worked hours × 100"
+  domain: Workforce
+  owner: healthcare:clinical-dpo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [overtime, OT rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_UNIT_DAY.overtime_hours]
+    metrics: [overtime_pct]
+
+- id: GT-HC-CONTRACT-LABOR
+  name: Contract Labour
+  definition: "Nursing hours worked by agency or travel nurses rather than employed staff."
+  formula: "agency hours ÷ worked hours × 100"
+  domain: Workforce
+  owner: healthcare:clinical-dpo
+  steward: healthcare:his-steward
+  status: DRAFT
+  cde: false
+  synonyms: [agency nurses, travel nurses, contract labor]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_UNIT_DAY.agency_hours]
+    metrics: [contract_labor_pct]
+
+# ── Patient access ───────────────────────────────────────────────────────────────────────────────────
+
+- id: GT-HC-PATIENT
+  name: Patient
+  definition: "A person registered in the enterprise master patient index, identified by one medical record number (MRN). Patient identifiers are protected health information."
+
+  domain: Patient access
+  owner: healthcare:his-steward
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: true
+  synonyms: [MRN, medical record number, patient record]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_PATIENT.mrn, CURATED_SILVER.PATIENT.mrn]
+    metrics: [active_patients]
+
+- id: GT-HC-ACTIVE-PATIENT
+  name: Active Patient
+  definition: "A patient whose registration status is Active in the EMPI; portal adoption and risk metrics are measured over active patients only."
+  formula: "status = Active"
+  domain: Patient access
+  owner: healthcare:his-steward
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: true
+  synonyms: [active patients, registered patients]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_PATIENT.status, CURATED_SILVER.PATIENT.status]
+    metrics: [active_patients]
+
+- id: GT-HC-PORTAL
+  name: Patient Portal Adoption
+  definition: "Share of active patients with an activated patient portal account."
+  formula: "portal-enrolled active patients ÷ active patients × 100"
+  domain: Patient access
+  owner: healthcare:his-steward
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [portal adoption, portal enrolment, digital front door]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_PATIENT.portal_enrolled]
+    metrics: [portal_adoption_rate]
+
+- id: GT-HC-RISK-SCORE
+  name: Risk Score
+  definition: "A predictive score (0–100) of a patient's likelihood of high utilisation in the next year; 60 or more is High, 35–59 Rising, below 35 Low."
+
+  domain: Patient access
+  owner: healthcare:his-steward
+  steward: healthcare:his-steward
+  status: DRAFT
+  cde: false
+  synonyms: [risk score, population risk, risk tier]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_PATIENT.risk_score, CONFORMED_GOLD.DIM_PATIENT.risk_band]
+    metrics: [avg_risk_score, high_risk_pct]
+
+- id: GT-HC-PAYER-CLASS
+  name: Payer Class
+  definition: "The financial class of a patient's primary coverage (Medicare, Medicare Advantage, Medicaid, Managed Medicaid, Commercial, Self-pay)."
+
+  domain: Revenue cycle
+  owner: healthcare:coo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [financial class, coverage, payer mix, insurance type]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_PATIENT.payer_class, CONFORMED_GOLD.DIM_PAYER.financial_class, CONFORMED_GOLD.FCT_ENCOUNTER.payer_class]
+    metrics: []
+
+- id: GT-HC-SPECIALTY
+  name: Specialty
+  definition: "The clinical specialty of the provider an appointment is booked with."
+
+  domain: Patient access
+  owner: healthcare:his-steward
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [clinic, department]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_APPOINTMENT.specialty, CONFORMED_GOLD.DIM_PROVIDER.specialty]
+    metrics: []
+
+- id: GT-HC-APPOINTMENT
+  name: Appointment
+  definition: "One scheduled ambulatory visit slot with its outcome: completed, no-show, cancelled or bumped."
+
+  domain: Patient access
+  owner: healthcare:his-steward
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: true
+  synonyms: [visit, appointment slot, booking]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_APPOINTMENT.appointment_id, CONFORMED_GOLD.FCT_APPOINTMENT.appointment_status, CURATED_SILVER.APPOINTMENT.status]
+    metrics: [appointments, completed_visits]
+
+- id: GT-HC-NO-SHOW
+  name: No-Show
+  definition: "An appointment the patient neither attended nor cancelled. The no-show rate is measured over appointments that were due to be kept."
+  formula: "no-shows ÷ (completed + no-shows) × 100"
+  domain: Patient access
+  owner: healthcare:his-steward
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: true
+  synonyms: [no-show rate, missed appointment, DNA]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_APPOINTMENT.appointment_status, CONFORMED_GOLD.FCT_APPOINTMENT.no_show]
+    metrics: [no_show_rate, cancellation_rate]
+
+- id: GT-HC-ACCESS-LAG
+  name: Access Lag
+  definition: "Days between the date an appointment is booked and the appointment date; new-patient lag covers new-patient visits only."
+  formula: "appointment date − booking date (days)"
+  domain: Patient access
+  owner: healthcare:his-steward
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [days to appointment, appointment lag, new patient lag, wait time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_APPOINTMENT.lead_days]
+    metrics: [avg_days_to_appointment, new_patient_lag_days]
+
+# ── Revenue cycle ────────────────────────────────────────────────────────────────────────────────────
+
+- id: GT-HC-CLAIM
+  name: Claim
+  definition: "A bill submitted to a payer for services rendered to one patient, with chargemaster charges and the expected (contractual) reimbursement."
+
+  domain: Revenue cycle
+  owner: healthcare:coo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: true
+  synonyms: [claim, bill, 837 claim]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CLAIM.claim_id, CONFORMED_GOLD.FCT_CLAIM.charge_amount, CONFORMED_GOLD.FCT_CLAIM.expected_amount]
+    metrics: [claims_submitted, gross_charges]
+
+- id: GT-HC-PAYER
+  name: Payer
+  definition: "An insurer, health plan or government programme that reimburses claims."
+
+  domain: Revenue cycle
+  owner: healthcare:coo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [insurer, health plan, plan]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_PAYER.payer_id, CONFORMED_GOLD.DIM_PAYER.payer_name]
+    metrics: []
+
+- id: GT-HC-DENIAL
+  name: Initial Denial
+  definition: "A claim the payer rejects on first adjudication, coded by denial reason (authorization, eligibility, coding, medical necessity, timely filing, duplicate claim)."
+  formula: "denied claims ÷ submitted claims × 100"
+  domain: Revenue cycle
+  owner: healthcare:coo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: true
+  synonyms: [denial, denial rate, first-pass denial]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CLAIM.denied, CONFORMED_GOLD.FCT_CLAIM.denial_reason, CURATED_SILVER.CLAIM_HEADER.denied]
+    metrics: [initial_denial_rate, denied_charges]
+
+- id: GT-HC-CLEAN-CLAIM
+  name: Clean Claim
+  definition: "A claim that passes the claim scrubber with no edits and can be submitted without rework."
+  formula: "clean claims ÷ submitted claims × 100"
+  domain: Revenue cycle
+  owner: healthcare:coo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [clean claim rate, first pass rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CLAIM.clean_claim]
+    metrics: [clean_claim_rate]
+
+- id: GT-HC-NCR
+  name: Net Collection Rate
+  definition: "Payments received within 60 days of claim submission as a share of the expected (contractual) reimbursement, for claims older than 60 days."
+  formula: "Σ payments within 60 days ÷ Σ expected reimbursement × 100"
+  domain: Revenue cycle
+  owner: healthcare:coo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: true
+  synonyms: [NCR, net collections, collection rate]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CLAIM.paid_60d_amount, CONFORMED_GOLD.FCT_CLAIM.expected_amount]
+    metrics: [net_collection_rate]
+
+- id: GT-HC-AR-DAYS
+  name: Days in Accounts Receivable
+  definition: "Expected-reimbursement-weighted days from claim submission to payment; claims still unpaid after 60 days count as 90 days."
+  formula: "Σ(expected × days to pay) ÷ Σ expected"
+  domain: Revenue cycle
+  owner: healthcare:coo
+  steward: healthcare:his-steward
+  status: IN_REVIEW
+  cde: false
+  synonyms: [days in A/R, AR days, days outstanding]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_CLAIM.days_to_pay, CONFORMED_GOLD.FCT_CLAIM.expected_amount]
+    metrics: [days_in_ar]
+
+# ── Supply chain ─────────────────────────────────────────────────────────────────────────────────────
+
+- id: GT-HC-SUPPLIER
+  name: Supplier
+  definition: "A vendor of medical-surgical supplies, pharmaceuticals, implants, equipment or services."
+
+  domain: Supply chain
+  owner: healthcare:coo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [vendor, distributor, manufacturer]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_SUPPLIER.supplier_id, CONFORMED_GOLD.DIM_SUPPLIER.supplier_name]
+    metrics: []
+
+- id: GT-HC-SUPPLY-SPEND
+  name: Supply Spend
+  definition: "All purchase-order line spend in a period, before returns and credits."
+  formula: "Σ spend_usd"
+  domain: Supply chain
+  owner: healthcare:coo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: true
+  synonyms: [spend, purchases, supply expense]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUPPLY_SPEND.spend_usd, CONFORMED_GOLD.FCT_SUPPLY_SPEND.po_line_id]
+    metrics: [supply_spend, po_lines]
+
+- id: GT-HC-CONTRACT-COMPLIANCE
+  name: Spend on Contract
+  definition: "The share of purchase-order spend placed against an active group purchasing or local framework contract."
+  formula: "On-contract spend ÷ total spend × 100"
+  domain: Supply chain
+  owner: healthcare:coo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: true
+  synonyms: [contract compliance, GPO compliance, on-contract spend]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUPPLY_SPEND.on_contract, CONFORMED_GOLD.FCT_SUPPLY_SPEND.spend_usd]
+    metrics: [spend_on_contract_pct]
+
+- id: GT-HC-OFF-CONTRACT
+  name: Off-Contract Spend
+  definition: "Spend placed outside an active contract, including physician preference items bought ad hoc and spot buys during shortages."
+  formula: "Σ spend_usd where on_contract = FALSE"
+  domain: Supply chain
+  owner: healthcare:coo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [maverick spend, leakage, non-compliant spend]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUPPLY_SPEND.on_contract, CONFORMED_GOLD.FCT_SUPPLY_SPEND.spend_usd]
+    metrics: [off_contract_spend]
+
+- id: GT-HC-FILL-RATE
+  name: Supplier Fill Rate
+  definition: "The share of received PO lines a supplier delivered on or before the promised date and in full quantity."
+  formula: "Lines received on time and in full ÷ lines received × 100"
+  domain: Supply chain
+  owner: healthcare:coo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [fill rate, OTIF, on time in full]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUPPLY_SPEND.otif, CONFORMED_GOLD.FCT_SUPPLY_SPEND.received]
+    metrics: [fill_rate_pct]
+
+- id: GT-HC-PO-CYCLE
+  name: PO Cycle Time
+  definition: "Days from purchase-order creation to goods receipt."
+  formula: "receipt date − PO date"
+  domain: Supply chain
+  owner: healthcare:coo
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [cycle time, lead time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_SUPPLY_SPEND.cycle_days, CONFORMED_GOLD.FCT_SUPPLY_SPEND.po_date]
+    metrics: [po_cycle_days]
+
+# ── Governance ───────────────────────────────────────────────────────────────────────────────────────
+
+- id: GT-HC-PHI
+  name: Protected Health Information
+  definition: "Individually identifiable health information — names, dates of birth, medical record numbers, addresses, contact details and free-text clinical notes linked to a patient. Masked for every persona without PHI clearance."
+
+  domain: Governance
+  owner: healthcare:his-steward
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [PHI, protected health information, patient identifiers]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_PATIENT.full_name, CONFORMED_GOLD.DIM_PATIENT.date_of_birth, CONFORMED_GOLD.DIM_PATIENT.mrn]
+    metrics: []
+
+- id: GT-HC-CDE
+  name: Critical Data Element
+  definition: "A column whose error would materially change a regulated quality measure or a financial figure; it needs an owner, a steward, a glossary term and at least one executable DQ rule."
+
+  domain: Governance
+  owner: healthcare:his-steward
+  steward: healthcare:his-steward
+  status: APPROVED
+  cde: false
+  synonyms: [CDE, critical data element]
+  mappings:
+    columns: []
+    metrics: []

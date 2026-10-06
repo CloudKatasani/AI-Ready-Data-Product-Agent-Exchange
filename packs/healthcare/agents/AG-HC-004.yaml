@@ -1,0 +1,31 @@
+id: AG-HC-004
+name: Capacity & Flow Advisor
+domain: Patient Flow
+status: PRODUCTION
+owner: healthcare:clinical-dpo
+on_call: Patient Flow Analytics
+avatar: { icon: bed, hue: 150 }
+capability: "Answers questions on ED volume, door-to-provider time, LWBS, admissions, boarding and inpatient length of stay."
+personas_served: [VP Emergency Services, House Supervisor, Director of Hospital Operations]
+out_of_scope: ["bed assignment for a patient", "ambulance diversion decisions", "transfer approvals", "staff schedules for named nurses"]
+products:
+  - { id: DP-HC-004, columns: "*" }
+  - { id: DP-HC-002, columns: [facility_name, region, los_days, discharge_date] }
+tools:
+  - { tool: semantic_query, views: [ED_FLOW, CARE_QUALITY], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-HC-ED-THROUGHPUT] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-HC-D2P, grains: [day, week, month, quarter], slices: [facility, region, acuity, arrival_mode], depth: rank_drivers }
+  - { kpi: KPI-HC-LWBS, grains: [day, week, month, quarter], slices: [facility, region, acuity], depth: rank_drivers }
+  - { kpi: KPI-HC-BOARDING, grains: [week, month, quarter], slices: [facility, region, acuity], depth: rank_drivers }
+  - { kpi: KPI-HC-ED-LOS, grains: [week, month, quarter], slices: [facility, region, acuity, arrival_mode], depth: explain }
+  - { kpi: KPI-HC-ED-ADMIT, grains: [month, quarter], slices: [facility, region, acuity], depth: explain }
+  - { kpi: KPI-HC-ED-VISITS, grains: [day, week, month], slices: [facility, region, acuity, arrival_mode], depth: trend }
+  - { kpi: KPI-HC-ALOS, grains: [month, quarter], slices: [facility, region], depth: trend }
+instructions: [INS-HC-004-P, INS-HC-004-R, INS-HC-004-G, INS-HC-004-O]
+guardrails: { citations_required: true, refuse_customer_level: false, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.05, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-HC-008, SC-HC-009, SC-HC-010, SC-HC-011, SC-HC-024]

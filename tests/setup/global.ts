@@ -1,7 +1,8 @@
 import { execSync } from 'node:child_process';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
-import { getPack, getRubrics } from '../../src/lib/packs/registry';
+import { getPack, getRubrics, listPackIds } from '../../src/lib/packs/registry';
+import type { Pack } from '../../src/lib/packs/schema';
 import { buildWarehouse, openWarehouseReadOnly } from '../../src/lib/warehouse/build';
 
 /** Test app DB (relative to prisma/, Prisma's convention); also set for workers in vitest.config.ts. */
@@ -13,9 +14,16 @@ export const TEST_DATABASE_URL = 'file:../data/test-app.db';
  * migrates and seeds a dedicated test app DB.
  */
 export default async function setup(): Promise<void> {
-  const pack = getPack('utilities');
   const goldenDir = join(process.cwd(), 'data', 'test-warehouse', 'M');
-  await buildWarehouse(pack, { scale: 'M', outDir: goldenDir });
+  // Every pack that loads (a pack still being authored is skipped); utilities stays the default test pack.
+  const packs = listPackIds().flatMap((id): Pack[] => {
+    try {
+      return [getPack(id)];
+    } catch {
+      return [];
+    }
+  });
+  for (const p of packs) await buildWarehouse(p, { scale: 'M', outDir: goldenDir });
   process.env.KEYSTONE_GOLDEN_WAREHOUSE_DIR = goldenDir;
   process.env.KEYSTONE_TEST_WAREHOUSE = join(goldenDir, 'utilities.duckdb');
 
@@ -26,9 +34,11 @@ export default async function setup(): Promise<void> {
   const { db } = await import('../../src/lib/db');
   const { seedPack } = await import('../../src/lib/presenter/seed');
   const { QueryService } = await import('../../src/lib/query/query-service');
-  const w = await openWarehouseReadOnly(join(goldenDir, 'utilities.duckdb'));
   const rubrics = getRubrics();
-  await seedPack(db(), pack, { rubrics, qs: new QueryService({ pack, rubrics, warehouse: w, log: { write: async () => 'seed' } }) });
-  await w.close();
+  for (const pack of packs) {
+    const w = await openWarehouseReadOnly(join(goldenDir, `${pack.manifest.id}.duckdb`));
+    await seedPack(db(), pack, { rubrics, qs: new QueryService({ pack, rubrics, warehouse: w, log: { write: async () => 'seed' } }) });
+    await w.close();
+  }
   await db().$disconnect();
 }

@@ -1,0 +1,130 @@
+# Control library for Crestview Health System (fictional). Regulators and jurisdictions are invented;
+# frameworks are named for the public standards they are modelled on. Illustrative, not legal advice.
+jurisdictions:
+  - { id: JUR-CVH-STATE, name: "State of Calloway (licensed facilities)", regulator: "Calloway Department of Health" }
+  - { id: JUR-CVH-FED, name: "Federal health programmes", regulator: "Federal health programme administrator (CMS-style)" }
+  - { id: JUR-CVH-PRIV, name: "Health information privacy", regulator: "Federal health privacy regulator (HIPAA-style)" }
+  - { id: JUR-CVH-CORP, name: "Corporate policy", regulator: "Crestview Audit, Compliance & Risk Committee" }
+
+controls:
+  - id: CTL-HC-001
+    name: Readmission measure reporting
+    framework: Hospital readmissions reduction programme (HRRP-style)
+    description: >-
+      30-day readmission rates are calculated from index inpatient discharges, with planned readmissions excluded by the
+      planned readmission algorithm and expired discharges removed from the denominator. Every reported figure must trace
+      to a certified product version and metric definition.
+    jurisdiction: JUR-CVH-FED
+    applies_to: { domains: [clinical-quality] }
+    evidence: Certified product version, metric definition and lineage from ADT encounters to the reported rate.
+    stage: 11
+  - id: CTL-HC-002
+    name: Protected health information safeguards
+    framework: HIPAA-style privacy and security rules
+    description: >-
+      Patient names, dates of birth, medical record numbers, addresses, emails and phone numbers are protected health
+      information. They are masked for every persona without PHI clearance and never released to agents or analytical
+      outputs; the minimum necessary standard applies to every query.
+    jurisdiction: JUR-CVH-PRIV
+    applies_to: { classes: [PHI, PII], domains: [patient-access, revenue-cycle, patient-experience] }
+    evidence: Masking policy attachment report for every PHI-tagged column and a sample of masked query logs.
+    stage: 6
+  - id: CTL-HC-003
+    name: Government identifier protection
+    framework: Corporate information security standard
+    description: >-
+      Social security numbers and payer or supplier tax identifiers are classified GOV_ID, shown last-four only via
+      MASK_GOV_ID, and never land in data products or agent answers.
+    jurisdiction: JUR-CVH-CORP
+    applies_to: { classes: [GOV_ID] }
+    evidence: Column classification scan showing GOV_ID columns masked in every curated and conformed object.
+    stage: 6
+  - id: CTL-HC-004
+    name: Medical and billing record retention
+    framework: Records retention schedule
+    description: >-
+      Encounter, claim and remittance records are retained for ten years from the date of service and then destroyed;
+      history in the platform is append-only so retained records cannot be silently altered.
+    jurisdiction: JUR-CVH-STATE
+    applies_to: { domains: [clinical-quality, revenue-cycle] }
+    evidence: Retention configuration per object and the most recent purge certificate.
+    stage: 9
+  - id: CTL-HC-005
+    name: Revenue and receivables reporting controls
+    framework: SOX-style internal control over financial reporting
+    description: >-
+      Net collection rate, initial denial rate and days in accounts receivable used in financial reporting come from one
+      certified product with a reconciled metric definition; definition changes require a versioned contract and owner
+      approval.
+    jurisdiction: JUR-CVH-CORP
+    applies_to: { domains: [revenue-cycle] }
+    evidence: Reconciliation of expected reimbursement to the general ledger and the approved contract version history.
+    stage: 11
+  - id: CTL-HC-006
+    name: Emergency department throughput reporting
+    framework: Hospital outpatient quality reporting (ED throughput measures)
+    description: >-
+      Door-to-provider time, left-without-being-seen rate and admitted-patient boarding time are measured from the ED
+      tracking board timestamps using one definition across all facilities.
+    jurisdiction: JUR-CVH-FED
+    applies_to: { domains: [patient-flow] }
+    evidence: Metric definitions, timestamp lineage and a facility-by-facility reconciliation to the tracking board.
+    stage: 11
+  - id: CTL-HC-007
+    name: Supplier due diligence
+    framework: Third-party risk management policy
+    description: >-
+      Suppliers are onboarded only after tax identity, exclusion-list and financial checks; supplier tax ids are classified
+      GOV_ID and masked outside supply chain stewardship.
+    jurisdiction: JUR-CVH-CORP
+    applies_to: { classes: [GOV_ID], domains: [supply-chain] }
+    evidence: Due diligence completion status per active supplier and masking on DIM_SUPPLIER.tax_id.
+    stage: 4
+  - id: CTL-HC-008
+    name: Nurse staffing plan compliance
+    framework: State nurse staffing committee rule
+    description: >-
+      Each care unit staffs to its approved nursing hours per patient day; variance, overtime and contract labour are
+      reported to the staffing committee quarterly.
+    jurisdiction: JUR-CVH-STATE
+    applies_to: { domains: [workforce] }
+    evidence: Unit-day staffing history and the quarterly staffing variance report from the staffing product.
+    stage: 11
+  - id: CTL-HC-009
+    name: Clinical decisions stay with clinicians
+    framework: Medical staff bylaws and clinical AI policy
+    description: >-
+      Treatment, discharge, admission and scheduling decisions for an individual patient are made by a licensed clinician;
+      agents never recommend care for an individual patient and only report aggregates.
+    jurisdiction: JUR-CVH-CORP
+    applies_to: { domains: [clinical-quality, patient-flow, patient-access] }
+    evidence: Agent out-of-scope lists, refusal test results and the clinical AI oversight log.
+    stage: 10
+  - id: CTL-HC-010
+    name: Critical data element ownership
+    framework: Enterprise data governance policy
+    description: >-
+      Every critical data element has a named owner and steward, at least one executable data quality rule and a glossary
+      term before the product that exposes it can be certified.
+    jurisdiction: JUR-CVH-CORP
+    applies_to: { domains: [patient-access, clinical-quality, patient-flow, revenue-cycle, workforce, supply-chain, patient-experience] }
+    evidence: CDE register with owners, linked DQ rules and their latest results.
+    stage: 8
+  - id: CTL-HC-011
+    name: Data residency
+    framework: Corporate information security standard
+    description: Patient and claims data are processed and stored within the primary operating region only.
+    jurisdiction: JUR-CVH-CORP
+    applies_to: { classes: [PHI], domains: [patient-access, revenue-cycle] }
+    evidence: Platform region configuration and storage location report.
+    stage: 5
+  - id: CTL-HC-012
+    name: Fair billing and financial assistance
+    framework: State hospital financial assistance rule
+    description: >-
+      Collection actions, payment plans and financial assistance determinations are made by a named human in patient
+      financial services; agents never recommend collection action against an individual patient.
+    jurisdiction: JUR-CVH-STATE
+    applies_to: { domains: [revenue-cycle] }
+    evidence: Agent out-of-scope list, refusal test results and the financial assistance decision log.
+    stage: 10

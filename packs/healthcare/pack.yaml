@@ -1,0 +1,48 @@
+id: healthcare
+name: Healthcare
+version: 1.0.0
+depth: deep
+code: HC
+industry: Hospital & health system
+company:
+  name: Crestview Health System
+  short: CVH
+  hq: Ashford
+  description: Not-for-profit regional health system with ten hospitals and a multi-specialty medical group across five markets
+database: CVH_AI_PLATFORM
+locale: en-US
+currency: USD
+asOf: 2026-09-30
+seed: 20261006
+regions: [Metro, Lakeshore, Riverside, Valley, Highland]
+overridable:
+  regions: true
+  companyName: true
+  terms: [facility, market, service line]
+home:
+  heroQuestion: "What was the 30-day readmission rate by facility last quarter, excluding planned readmissions?"
+  heroAgent: AG-HC-002
+  headlineKpis: [KPI-HC-READMIT, KPI-HC-ALOS, KPI-HC-DENIAL, KPI-HC-D2P]
+  theatreScenarios: [SC-HC-001, SC-HC-007, SC-HC-012]
+icon: heart-pulse
+hook: Patient flow, quality, access and revenue cycle data — governed for AI
+story_roles:
+  heroScenario: SC-HC-001
+  certDemoProduct: DP-HC-005
+  lifecycleDemoProduct: DP-HC-007
+  incidentForStory: INC-HC-LATE-FEED
+  knockoutKpi: KPI-HC-READMIT
+  qualityFixAgent: AG-HC-001
+lint_terms:
+  - Crestview
+  - Ashford
+  - readmission
+  - readmissions
+  - inpatient
+  - HCAHPS
+  - LWBS
+  - HPPD
+  - door-to-provider
+  - EMPI
+  - MRN
+  - DRG

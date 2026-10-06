@@ -1,0 +1,77 @@
+name: SCHEDULING
+description: Medical group appointment access — lead time, no-shows, cancellations and completed visits
+tables:
+  - { alias: a, fqn: CONFORMED_GOLD.FCT_APPOINTMENT, pk: appointment_key }
+  - { alias: pr, fqn: CONFORMED_GOLD.DIM_PROVIDER, pk: provider_key }
+  - { alias: f, fqn: CONFORMED_GOLD.DIM_FACILITY, pk: facility_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: a.provider_key, to: pr.provider_key }
+  - { from: a.facility_key, to: f.facility_key }
+  - { from: a.date_key, to: d.date_key }
+dimensions:
+  - { name: specialty, expr: a.specialty, label: Specialty, synonyms: [clinic, department], term: GT-HC-SPECIALTY }
+  - { name: region, expr: f.region, label: Market, synonyms: [market, region, service area], term: GT-HC-MARKET }
+  - { name: facility, expr: f.facility_name, label: Facility, synonyms: [hospital, campus, site], term: GT-HC-FACILITY }
+  - { name: visit_type, expr: a.visit_type, label: Visit type, synonyms: [appointment type] }
+  - { name: appointment_status, expr: a.appointment_status, label: Appointment status, synonyms: [visit outcome] }
+  - { name: provider, expr: pr.provider_id, label: Provider, synonyms: [clinician, physician] }
+  - { name: employment_type, expr: pr.employment_type, label: Employment type, synonyms: [employed or affiliated] }
+time_dimensions:
+  - { name: appointment_date, expr: d.date, default: true }
+facts:
+  - { name: lead_days, expr: a.lead_days }
+metrics:
+  - name: appointments
+    label: Appointments scheduled
+    expr: COUNT(*)
+    unit: appointments
+    decimals: 0
+    synonyms: [scheduled appointments, booked visits]
+    term: GT-HC-APPOINTMENT
+    description: Appointment slots scheduled for the period
+  - name: completed_visits
+    label: Completed visits
+    expr: COUNT_IF(a.completed)
+    unit: visits
+    decimals: 0
+    synonyms: [visit volume, kept appointments, arrived visits]
+    term: GT-HC-APPOINTMENT
+    description: Appointments the patient attended
+  - name: no_show_rate
+    label: No-show rate
+    expr: 100.0 * COUNT_IF(a.no_show) / NULLIF(COUNT_IF(a.completed OR a.no_show), 0)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [no shows, missed appointments, dna rate]
+    term: GT-HC-NO-SHOW
+    description: No-shows as a share of appointments that were due to be kept (completed plus no-show)
+  - name: cancellation_rate
+    label: Cancellation rate
+    expr: 100.0 * AVG(CASE WHEN a.cancelled THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [cancellations, bumped appointments]
+    term: GT-HC-NO-SHOW
+    description: Share of scheduled appointments cancelled or bumped
+  - name: avg_days_to_appointment
+    label: Days to appointment
+    expr: AVG(a.lead_days)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [appointment lag, wait for appointment, access lag, appointment wait time]
+    term: GT-HC-ACCESS-LAG
+    description: Mean days between booking and the appointment date
+  - name: new_patient_lag_days
+    label: New-patient lag
+    expr: AVG(CASE WHEN a.visit_type = 'New patient' THEN a.lead_days END)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [new patient wait, new patient access, time to new patient appointment]
+    term: GT-HC-ACCESS-LAG
+    description: Mean days between booking and a new-patient appointment
+products: [DP-HC-003]

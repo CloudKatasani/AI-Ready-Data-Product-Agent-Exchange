@@ -1,0 +1,395 @@
+# Scripted scenarios for Crestview Health System. Numbers come from golden.json; `expect` holds shape assertions
+# only. Together the 24 scenarios cover all 15 patterns (04 §6).
+
+# ================================================================ AG-HC-002 Quality & Readmissions Analyst
+- id: SC-HC-001
+  agent: AG-HC-002
+  pattern: 3
+  question: "What was the 30-day readmission rate by facility last quarter?"
+  paraphrases:
+    - "What was the 30-day readmission rate by facility last quarter, excluding planned readmissions?"
+    - "readmit rate per hospital last qtr"
+    - "bounce-back rate by campus for Q3"
+  kind: answer
+  query: { view: CARE_QUALITY, metrics: [readmission_rate], dimensions: [facility], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: readmission_rate, dir: desc }] }
+  answer:
+    headline: "{{top.facility}} had the highest 30-day readmission rate last quarter at {{top.readmission_rate}}%."
+    narrative: "Planned readmissions are excluded (BR-HC-012). {{bottom.facility}} was lowest at {{bottom.readmission_rate}}% across {{rows}} facilities."
+    chart: bar
+  followups: ["Which service lines drove Riverside Medical Center?", "Include planned readmissions", "Trend over the last 4 quarters"]
+  expect: { rows: 10, top: { facility: Riverside Medical Center }, rules: [BR-HC-012] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-HC-002
+  agent: AG-HC-002
+  pattern: 10
+  question: "What was the 30-day readmission rate by facility last quarter, including planned readmissions?"
+  paraphrases:
+    - "Readmission rate by facility last quarter including planned"
+    - "readmit rate per hospital last qtr all readmissions"
+  kind: answer
+  query: { view: CARE_QUALITY, metrics: [readmission_rate], dimensions: [facility], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: readmission_rate, dir: desc }] }
+  answer:
+    headline: "Including planned readmissions, {{top.facility}} had the highest readmission rate last quarter at {{top.readmission_rate}}%."
+    narrative: "You asked for planned readmissions too, so the exclusion in BR-HC-012 is not applied. Staged oncology and orthopaedic care reorders the ranking — use the standard view that excludes planned readmissions to compare quality."
+    chart: bar
+  followups: ["Exclude planned readmissions", "Which service lines drive Highland's planned readmissions?"]
+  expect: { rows: 10, top: { facility: Highland Regional Medical Center } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-HC-003
+  agent: AG-HC-002
+  pattern: 5
+  question: "Which five service lines had the most excess days last quarter?"
+  paraphrases:
+    - "Top 5 service lines by excess days last quarter"
+    - "worst service lines by days over expected length of stay last qtr"
+  kind: answer
+  query: { view: CARE_QUALITY, metrics: [excess_days], dimensions: [service_line], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: excess_days, dir: desc }], limit: 5, analysis: rank }
+  answer:
+    headline: "{{top.service_line}} had the most excess days last quarter: {{top.excess_days}} days above the expected length of stay."
+    narrative: "Ranked over the top {{rows}} service lines. Excess days are patient days above GMLOS for the case mix (BR-HC-004); they are the first place to look for discharge delays."
+    chart: bar
+  followups: ["Length of stay index by facility", "Average length of stay at Riverside Medical Center"]
+  expect: { rows: 5, top: { service_line: Medicine } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-HC-004
+  agent: AG-HC-002
+  pattern: 6
+  question: "What is driving unplanned readmissions last quarter, by service line?"
+  paraphrases:
+    - "Which service lines contribute most to readmissions?"
+    - "readmissions breakdown by service line last quarter"
+  kind: answer
+  query: { view: CARE_QUALITY, metrics: [readmissions], dimensions: [service_line], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: readmissions, dir: desc }], analysis: contribution }
+  answer:
+    headline: "{{top.service_line}} was the largest driver of unplanned readmissions last quarter with {{top.readmissions}} readmissions ({{top.readmissions_share_pct}}% of the total)."
+    narrative: "There were {{total.readmissions}} unplanned readmissions across {{rows}} service lines, excluding planned readmissions (BR-HC-012)."
+    chart: bar
+  followups: ["Readmission rate by condition cohort", "Readmissions by facility"]
+  expect: { rows: 8, top: { service_line: Medicine }, rules: [BR-HC-012] }
+
+- id: SC-HC-005
+  agent: AG-HC-002
+  pattern: 15
+  question: "What was our contract compliance for supply spend this year?"
+  paraphrases:
+    - "How much of our supply spend is on contract?"
+  kind: redirect
+  query: null
+  redirect_to: AG-HC-003
+  answer:
+    headline: "That's a supply chain question — the Supply Chain Copilot answers it."
+    narrative: "I cover inpatient quality and readmissions. The Supply Chain Copilot is certified on supply spend and contract compliance."
+    chart: none
+  followups: ["Ask the Supply Chain Copilot", "What can you answer?"]
+
+- id: SC-HC-006
+  agent: AG-HC-002
+  pattern: 15
+  question: "Recommend a treatment plan for our heart failure patients."
+  paraphrases:
+    - "What medication changes should we make for heart failure patients?"
+    - "Suggest clinical treatment for readmitted patients"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't recommend treatment — clinical decisions stay with clinicians."
+    narrative: "Treatment, admission and discharge decisions are made by the care team (control CTL-HC-009). I can show the heart failure readmission rate by facility so the clinical team has the evidence."
+    chart: none
+  followups: ["Readmission rate by condition cohort this year", "Readmission rate by facility last quarter"]
+
+- id: SC-HC-007
+  agent: AG-HC-002
+  pattern: 4
+  question: "How has the readmission rate trended month by month this year?"
+  paraphrases:
+    - "Monthly readmission rate year to date"
+    - "readmit rate trend ytd by month"
+  kind: answer
+  query: { view: CARE_QUALITY, metrics: [readmission_rate], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "The system 30-day readmission rate is {{total.readmission_rate}}% year to date."
+    narrative: "Monthly readmission rate over {{rows}} months, excluding planned readmissions (BR-HC-012). Watch the third-quarter rise at Riverside Medical Center."
+    chart: line
+  followups: ["Readmission rate by facility last quarter", "Which service lines drove the rise?"]
+  expect: { rows: 9, rules: [BR-HC-012] }
+
+# ================================================================ AG-HC-004 Capacity & Flow Advisor
+- id: SC-HC-008
+  agent: AG-HC-004
+  pattern: 8
+  question: "How is door-to-provider time distributed across facilities last month?"
+  paraphrases:
+    - "Spread of door-to-provider time by hospital last month"
+    - "door to doctor percentiles across facilities"
+  kind: answer
+  query: { view: ED_FLOW, metrics: [door_to_provider_minutes], dimensions: [facility], timeRange: { last: { n: 1, unit: month } }, analysis: distribution }
+  answer:
+    headline: "Across {{top.facility_count}} facilities, the median facility averages {{top.door_to_provider_minutes_p50}} minutes from door to provider."
+    narrative: "The middle 80% of facilities sit between {{top.door_to_provider_minutes_p10}} and {{top.door_to_provider_minutes_p90}} minutes; the slowest averages {{top.door_to_provider_minutes_max}} minutes."
+    chart: table
+  followups: ["Which facilities have the highest LWBS rate?", "Door-to-provider time by acuity"]
+  expect: { rows: 1 }
+
+- id: SC-HC-009
+  agent: AG-HC-004
+  pattern: 2
+  question: "Is the left-without-being-seen rate within target last month?"
+  paraphrases:
+    - "Are we hitting our LWBS target last month?"
+    - "lwbs vs target last month"
+  kind: answer
+  query: { view: ED_FLOW, metrics: [lwbs_rate], timeRange: { last: { n: 1, unit: month } }, analysis: compare_target }
+  answer:
+    headline: "The LWBS rate was {{top.lwbs_rate}}% last month — {{vsTarget.top}} target."
+    narrative: "ED arrivals who left before being seen by a provider, as a share of all arrivals. A facility above 3% in a month triggers a triage staffing review (BR-HC-008)."
+    chart: kpi
+  followups: ["LWBS rate by facility", "Door-to-provider time by facility"]
+  expect: { rows: 1 }
+
+- id: SC-HC-010
+  agent: AG-HC-004
+  pattern: 9
+  question: "How do ED admissions and boarding compare across triage acuity levels last quarter?"
+  paraphrases:
+    - "Compare boarding time by ESI level"
+    - "admit rate and boarding by acuity"
+  kind: answer
+  query: { view: ED_FLOW, metrics: [ed_admit_rate, avg_boarding_hours], dimensions: [acuity], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: acuity, dir: asc }] }
+  answer:
+    headline: "{{top.acuity}} arrivals were admitted {{top.ed_admit_rate}}% of the time last quarter and boarded {{top.avg_boarding_hours}} hours on average."
+    narrative: "{{bottom.acuity}} arrivals were admitted {{bottom.ed_admit_rate}}% of the time. Boarding is measured for admitted patients only (BR-HC-007)."
+    chart: bar
+  followups: ["Boarding time by facility", "ED visits by acuity"]
+  expect: { rows: 5, top: { acuity: ESI 1 } }
+
+- id: SC-HC-011
+  agent: AG-HC-004
+  pattern: 11
+  question: "How long are boarders waiting for a bed by campus last quarter?"
+  paraphrases:
+    - "ED holds by hospital last quarter"
+    - "admit holds per site last qtr"
+  kind: answer
+  query: { view: ED_FLOW, metrics: [avg_boarding_hours], dimensions: [facility], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_boarding_hours, dir: desc }] }
+  answer:
+    headline: "{{top.facility}} has the longest boarding times at {{top.avg_boarding_hours}} hours per admitted patient."
+    narrative: "\"Boarders\" maps to admitted patient boarding time and \"campus\" to facility. Facilities averaging more than 4 hours trigger the capacity escalation plan (BR-HC-007)."
+    chart: bar
+  followups: ["Bed occupancy at Riverside Medical Center", "Boarding time by acuity"]
+  expect: { rows: 10, top: { facility: Riverside Medical Center } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-HC-024
+  agent: AG-HC-004
+  pattern: 7
+  question: "How has average length of stay changed quarter over quarter this year?"
+  paraphrases:
+    - "ALOS by quarter year to date"
+    - "is length of stay improving quarter on quarter?"
+  kind: answer
+  query: { view: CARE_QUALITY, metrics: [avg_length_of_stay], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "Average length of stay moved {{delta.avg_length_of_stay}} days from the first to the latest quarter this year."
+    narrative: "Mean inpatient days per discharge for each of the {{rows}} quarters this year. Longer stays hold beds and push admitted patients into ED boarding."
+    chart: line
+  followups: ["Boarding time by facility", "Excess days by service line"]
+  expect: { rows: 3 }
+
+# ================================================================ AG-HC-001 Patient Access Advisor
+- id: SC-HC-012
+  agent: AG-HC-001
+  pattern: 3
+  question: "What is our patient portal adoption rate by market?"
+  paraphrases:
+    - "Which market has the highest portal adoption?"
+    - "portal uptake by region"
+  kind: answer
+  query: { view: PATIENT_360, metrics: [portal_adoption_rate], dimensions: [region], orderBy: [{ field: portal_adoption_rate, dir: desc }] }
+  answer:
+    headline: "{{top.region}} leads patient portal adoption at {{top.portal_adoption_rate}}% of active patients."
+    narrative: "{{bottom.region}} trails at {{bottom.portal_adoption_rate}}%. Adoption counts active patients with an activated portal account (BR-HC-016)."
+    chart: bar
+  followups: ["Portal adoption by age band", "High-risk patients by market"]
+  expect: { rows: 5, top: { region: Metro } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-HC-013
+  agent: AG-HC-001
+  pattern: 12
+  question: "Which five active patients have the highest risk score?"
+  paraphrases:
+    - "Top 5 highest-risk active patients"
+    - "riskiest patients in the population"
+  kind: answer
+  query: { view: PATIENT_360, metrics: [avg_risk_score], dimensions: [patient_name], filters: [{ dimension: patient_status, op: "=", value: Active }], orderBy: [{ field: avg_risk_score, dir: desc }], limit: 5, analysis: rank }
+  answer:
+    headline: "The highest-risk active patient scores {{top.avg_risk_score}}."
+    narrative: "Patient names are protected health information and are masked unless your persona is cleared for PHI (BR-HC-011). Showing the top {{rows}} active patients by risk score."
+    chart: table
+  followups: ["Risk score by payer class", "High-risk share by market"]
+  expect: { rows: 5 }
+  personas_expect: { A: { masked: [patient_name], rowFiltered: true }, D: { masked: [] } }
+
+- id: SC-HC-014
+  agent: AG-HC-001
+  pattern: 14
+  question: "What are our days in A/R this quarter?"
+  paraphrases:
+    - "What are our days in accounts receivable this quarter?"
+    - "AR days last quarter"
+  kind: answer
+  query: { view: REVENUE_CYCLE, metrics: [days_in_ar], timeRange: { last: { n: 1, unit: quarter } } }
+  answer:
+    headline: "Days in A/R were {{top.days_in_ar}} days last quarter — {{vsTarget.top}} target."
+    narrative: "Claims & Denials is still in certification, so treat this figure as provisional. The receivables rule BR-HC-021 is applied."
+    chart: kpi
+  followups: ["Initial denial rate by payer", "When will Claims & Denials be certified?"]
+  expect: { rows: 1, certified: false, rules: [BR-HC-021] }
+  personas_expect: { A: { kind: decline } }
+
+- id: SC-HC-015
+  agent: AG-HC-001
+  pattern: 13
+  question: "What was the no-show rate by market last month?"
+  paraphrases:
+    - "no shows by region last month"
+    - "missed appointment rate per market for September"
+  kind: answer
+  query: { view: SCHEDULING, metrics: [no_show_rate], dimensions: [region], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: no_show_rate, dir: desc }] }
+  answer:
+    headline: "{{top.region}} had the highest no-show rate last month at {{top.no_show_rate}}%."
+    narrative: "No-shows as a share of appointments due to be kept (BR-HC-014), across {{rows}} markets you are entitled to see; the market row-access policy applies."
+    chart: bar
+  followups: ["No-show rate by specialty", "Days to appointment by market"]
+  expect: { rows: 5 }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-HC-016
+  agent: AG-HC-001
+  pattern: 4
+  question: "How have days to appointment trended month by month this year?"
+  paraphrases:
+    - "Monthly appointment lag year to date"
+    - "access wait trend ytd"
+  kind: answer
+  query: { view: SCHEDULING, metrics: [avg_days_to_appointment], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "Patients waited {{total.avg_days_to_appointment}} days on average for an appointment this year."
+    narrative: "Mean days from booking to appointment for each of the {{rows}} months this year. New patients wait longest in neurology and dermatology."
+    chart: line
+  followups: ["New-patient lag by specialty", "No-show rate by market"]
+  expect: { rows: 9 }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-HC-017
+  agent: AG-HC-001
+  pattern: 11
+  question: "How is access looking?"
+  paraphrases:
+    - "access update"
+  kind: clarify
+  query: null
+  answer:
+    headline: "\"Access\" can mean a few things — which one do you need?"
+    narrative: "I can show days to appointment, new-patient lag or the no-show rate. Pick one and a period."
+    chart: none
+  followups: ["Days to appointment by specialty last quarter", "New-patient lag by specialty last quarter", "No-show rate last month"]
+
+# ================================================================ AG-HC-003 Supply Chain Copilot
+- id: SC-HC-018
+  agent: AG-HC-003
+  pattern: 1
+  question: "What was our contract compliance for supply spend this year?"
+  paraphrases:
+    - "contract compliance year to date"
+    - "on-contract spend share ytd"
+  kind: answer
+  query: { view: SUPPLY_CHAIN, metrics: [spend_on_contract_pct], timeRange: { ytd: true }, analysis: value }
+  answer:
+    headline: "{{top.spend_on_contract_pct}}% of supply spend this year was on contract."
+    narrative: "Spend on purchase-order lines placed against an active group purchasing or framework contract, as a share of total supply spend year to date."
+    chart: kpi
+  followups: ["Where is off-contract spend highest?", "Contract compliance by category"]
+  expect: { rows: 1 }
+
+- id: SC-HC-019
+  agent: AG-HC-003
+  pattern: 5
+  question: "Which five suppliers have the worst fill rate this year?"
+  paraphrases:
+    - "Bottom 5 suppliers by fill rate"
+    - "worst delivery performance vendors ytd"
+  kind: answer
+  query: { view: SUPPLY_CHAIN, metrics: [fill_rate_pct], dimensions: [supplier], timeRange: { ytd: true }, orderBy: [{ field: fill_rate_pct, dir: asc }], limit: 5, analysis: rank }
+  answer:
+    headline: "{{top.supplier}} has the lowest fill rate this year at {{top.fill_rate_pct}}%."
+    narrative: "The {{rows}} lowest-performing suppliers by on-time-in-full delivery year to date. Suppliers below 90% for a quarter enter a performance improvement plan (BR-HC-024)."
+    chart: bar
+  followups: ["PO cycle time by category", "Spend with these suppliers"]
+  expect: { rows: 5 }
+
+- id: SC-HC-020
+  agent: AG-HC-003
+  pattern: 6
+  question: "Where is our off-contract spend by category this year?"
+  paraphrases:
+    - "Where is maverick spend highest by category?"
+    - "leakage by commodity this year"
+  kind: answer
+  query: { view: SUPPLY_CHAIN, metrics: [off_contract_spend], dimensions: [category], timeRange: { ytd: true }, orderBy: [{ field: off_contract_spend, dir: desc }], analysis: contribution }
+  answer:
+    headline: "{{top.category}} drives the most off-contract spend this year at {{top.off_contract_spend}}."
+    narrative: "Physician preference items bought ad hoc are the usual driver (BR-HC-023). Total off-contract spend is {{total.off_contract_spend}} across {{rows}} categories."
+    chart: bar
+  followups: ["Off-contract spend by supplier", "Contract compliance trend"]
+  expect: { rows: 8, top: { category: Implants & devices } }
+
+- id: SC-HC-021
+  agent: AG-HC-003
+  pattern: 7
+  question: "How has PO cycle time changed quarter over quarter this year?"
+  paraphrases:
+    - "PO to receipt time by quarter ytd"
+    - "is our lead time improving quarter on quarter?"
+  kind: answer
+  query: { view: SUPPLY_CHAIN, metrics: [po_cycle_days], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "PO cycle time moved {{delta.po_cycle_days}} days from the first to the latest quarter this year."
+    narrative: "Average days from purchase order to receipt for each of the {{rows}} quarters this year."
+    chart: line
+  followups: ["Cycle time by category", "Which suppliers have the worst fill rate?"]
+  expect: { rows: 3 }
+
+# ================================================================ AG-HC-005 Data Steward Assistant (no semantic views)
+- id: SC-HC-022
+  agent: AG-HC-005
+  pattern: 15
+  question: "What can you answer?"
+  paraphrases:
+    - "What can you help me with?"
+    - "help"
+  kind: help
+  query: null
+  answer:
+    headline: "I explain governance across the data estate — I don't analyse business KPIs."
+    narrative: "Ask me what a glossary term or metric means, the certification status of a data product, or where governance gaps such as missing stewards or PHI masking sit. For KPI numbers, ask the domain agents."
+    chart: none
+  followups: ["Which products are not yet certified?", "What does 30-day readmission mean?", "Which critical data elements lack a DQ rule?"]
+
+- id: SC-HC-023
+  agent: AG-HC-005
+  pattern: 15
+  question: "Approve the access request for Claims & Denials."
+  paraphrases:
+    - "Grant me access to DP-HC-005"
+    - "Can you approve my access request?"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't approve access requests — agents act, humans decide."
+    narrative: "Access to a data product is granted only by its owner or steward through the access workflow. I can show you the request status and who can approve it."
+    chart: none
+  followups: ["Who can approve access to Claims & Denials?", "What is the certification status of Claims & Denials?"]

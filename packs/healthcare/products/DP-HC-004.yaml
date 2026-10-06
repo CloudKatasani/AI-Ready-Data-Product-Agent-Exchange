@@ -1,0 +1,25 @@
+id: DP-HC-004
+name: Emergency Department Flow
+domain: Patient Flow
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 1.4.0
+owner: healthcare:clinical-dpo
+steward: healthcare:his-steward
+description: ED arrivals, triage acuity, door-to-provider, LWBS, admissions and boarding for every hospital.
+purpose: Run daily throughput huddles and capacity escalation from one certified ED feed.
+decision: { persona: VP Emergency Services, decision: "Where to place provider-in-triage and when to open surge beds", cadence: Daily with a monthly review, workaround: "Tracking board screenshots and a nightly CSV per hospital", consequence: "Patients board for hours and walk out before being seen" }
+sample_questions: ["Door-to-provider time by facility last month", "How long are admitted patients boarding?", "LWBS rate by facility"]
+semantic_view: ED_FLOW
+output_ports:
+  - { kind: semantic, ref: ED_FLOW }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_HC_004_ED_FLOW }
+  - { kind: agent, ref: AG-HC-004 }
+sla: { freshness_minutes: 30, availability_pct: 99.5, max_null_rate_pct: 1.0 }
+kpis: [KPI-HC-D2P, KPI-HC-LWBS, KPI-HC-BOARDING, KPI-HC-ED-LOS, KPI-HC-ED-ADMIT, KPI-HC-ED-VISITS]
+upstream: [CONFORMED_GOLD.FCT_ED_VISIT, CONFORMED_GOLD.DIM_FACILITY]
+consumers: [Emergency services, House supervisors, Capacity & Flow Advisor agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-HC-004

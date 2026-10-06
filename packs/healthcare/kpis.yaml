@@ -1,0 +1,387 @@
+# KPIs with target bands, calibrated against the scale-M warehouse. `window` is evaluated relative to pack asOf;
+# `last n unit` = the n most recent complete units (ADR-0011).
+- id: KPI-HC-READMIT
+  name: 30-day readmission rate
+  definition: "Share of live inpatient discharges followed by an unplanned readmission within 30 days"
+  formula: "unplanned readmissions within 30 days ÷ live index discharges (planned readmissions excluded)"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 9, max: 12.5 }
+  window: { ytd: true }
+  term: GT-HC-READMISSION
+  metric: readmission_rate
+  products: [DP-HC-002]
+- id: KPI-HC-READMITS
+  name: Unplanned readmissions
+  definition: "Index discharges followed by an unplanned readmission within 30 days"
+  formula: "count of index discharges with an unplanned readmission (planned excluded)"
+  unit: "readmissions"
+  direction: lower_is_better
+  target: { min: 800, max: 1100 }
+  window: { ytd: true }
+  term: GT-HC-READMISSION
+  metric: readmissions
+  products: [DP-HC-002]
+- id: KPI-HC-DISCHARGES
+  name: Inpatient discharges
+  definition: "Inpatient discharges in the fiscal year to date"
+  formula: "count of discharged inpatient encounters"
+  unit: "discharges"
+  direction: target_band
+  target: { min: 8500, max: 11000 }
+  window: { ytd: true }
+  term: GT-HC-DISCHARGE
+  metric: discharges
+  products: [DP-HC-002]
+- id: KPI-HC-ALOS
+  name: Average length of stay
+  definition: "Mean days from admission to discharge"
+  formula: "patient days ÷ discharges"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 4.2, max: 4.9 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-HC-LOS
+  metric: avg_length_of_stay
+  products: [DP-HC-002]
+- id: KPI-HC-LOS-INDEX
+  name: Length of stay index
+  definition: "Observed length of stay against the expected length of stay for the case mix"
+  formula: "Σ length of stay ÷ Σ GMLOS"
+  unit: "ratio"
+  direction: lower_is_better
+  target: { min: 0.95, max: 1.08 }
+  window: { ytd: true }
+  term: GT-HC-LOS-INDEX
+  metric: los_index
+  products: [DP-HC-002]
+- id: KPI-HC-MORTALITY
+  name: Inpatient mortality rate
+  definition: "Share of discharges where the patient expired in hospital"
+  formula: "expired discharges ÷ discharges"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 1.5, max: 3 }
+  window: { ytd: true }
+  term: GT-HC-MORTALITY
+  metric: inpatient_mortality_rate
+  products: [DP-HC-002]
+- id: KPI-HC-D2P
+  name: Door-to-provider time
+  definition: "Mean minutes from ED arrival to first provider contact"
+  formula: "mean of provider contact time − arrival time (patients seen)"
+  unit: "minutes"
+  direction: lower_is_better
+  target: { min: 20, max: 32 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-HC-D2P
+  metric: door_to_provider_minutes
+  products: [DP-HC-004]
+- id: KPI-HC-LWBS
+  name: Left without being seen rate
+  definition: "Share of ED arrivals who left before being seen by a provider"
+  formula: "LWBS visits ÷ ED arrivals"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 1, max: 3.5 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-HC-LWBS
+  metric: lwbs_rate
+  products: [DP-HC-004]
+- id: KPI-HC-BOARDING
+  name: Admitted patient boarding time
+  definition: "Mean hours admitted patients wait in the ED for an inpatient bed"
+  formula: "mean of ED departure − admission decision (admitted patients)"
+  unit: "hours"
+  direction: lower_is_better
+  target: { min: 2, max: 3.5 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-HC-BOARDING
+  metric: avg_boarding_hours
+  products: [DP-HC-004]
+- id: KPI-HC-ED-LOS
+  name: ED length of stay
+  definition: "Mean hours from ED arrival to departure"
+  formula: "mean of departure − arrival"
+  unit: "hours"
+  direction: lower_is_better
+  target: { min: 3.5, max: 4.8 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-HC-ED-VISIT
+  metric: avg_ed_los_hours
+  products: [DP-HC-004]
+- id: KPI-HC-ED-ADMIT
+  name: ED admission rate
+  definition: "Share of ED arrivals admitted as inpatients"
+  formula: "admitted ED visits ÷ ED arrivals"
+  unit: "%"
+  direction: target_band
+  target: { min: 16, max: 24 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-HC-ED-VISIT
+  metric: ed_admit_rate
+  products: [DP-HC-004]
+- id: KPI-HC-ED-VISITS
+  name: ED visits
+  definition: "Emergency department arrivals in the month"
+  formula: "count of ED arrivals"
+  unit: "visits"
+  direction: target_band
+  target: { min: 4000, max: 6000 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-HC-ED-VISIT
+  metric: ed_visits
+  products: [DP-HC-004]
+- id: KPI-HC-NO-SHOW
+  name: No-show rate
+  definition: "Share of appointments due to be kept where the patient did not arrive"
+  formula: "no-shows ÷ (completed + no-shows)"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 7, max: 11 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-HC-NO-SHOW
+  metric: no_show_rate
+  products: [DP-HC-003]
+- id: KPI-HC-LAG
+  name: Days to appointment
+  definition: "Mean days between booking and the appointment"
+  formula: "mean of appointment date − booking date"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 14, max: 22 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-HC-ACCESS-LAG
+  metric: avg_days_to_appointment
+  products: [DP-HC-003]
+- id: KPI-HC-NEW-LAG
+  name: New-patient lag
+  definition: "Mean days a new patient waits for a first appointment"
+  formula: "mean lead days for new-patient visits"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 15, max: 25 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-HC-ACCESS-LAG
+  metric: new_patient_lag_days
+  products: [DP-HC-003]
+- id: KPI-HC-CANCEL
+  name: Cancellation rate
+  definition: "Share of scheduled appointments cancelled or bumped"
+  formula: "cancelled and bumped appointments ÷ scheduled appointments"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 9, max: 15 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-HC-NO-SHOW
+  metric: cancellation_rate
+  products: [DP-HC-003]
+- id: KPI-HC-VISITS
+  name: Completed visits
+  definition: "Medical group visits completed in the month (governed patient sample)"
+  formula: "count of completed appointments"
+  unit: "visits"
+  direction: target_band
+  target: { min: 4200, max: 6500 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-HC-APPOINTMENT
+  metric: completed_visits
+  products: [DP-HC-003]
+- id: KPI-HC-PORTAL
+  name: Patient portal adoption rate
+  definition: "Share of active patients enrolled in the patient portal"
+  formula: "portal-enrolled active patients ÷ active patients"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 55, max: 70 }
+  window: {}
+  term: GT-HC-PORTAL
+  metric: portal_adoption_rate
+  products: [DP-HC-001]
+- id: KPI-HC-RISK
+  name: Average risk score
+  definition: "Average predictive risk score across active patients"
+  formula: "mean risk score (0-100) of active patients"
+  unit: "score"
+  direction: lower_is_better
+  target: { min: 25, max: 38 }
+  window: {}
+  term: GT-HC-RISK-SCORE
+  metric: avg_risk_score
+  products: [DP-HC-001]
+- id: KPI-HC-HIGH-RISK
+  name: High-risk patients
+  definition: "Share of active patients with a risk score of 60 or more"
+  formula: "active patients with risk score ≥ 60 ÷ active patients"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 2, max: 8 }
+  window: {}
+  term: GT-HC-RISK-SCORE
+  metric: high_risk_pct
+  products: [DP-HC-001]
+- id: KPI-HC-DENIAL
+  name: Initial denial rate
+  definition: "Share of submitted claims denied on first adjudication"
+  formula: "denied claims ÷ submitted claims"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 6, max: 11 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-HC-DENIAL
+  metric: initial_denial_rate
+  products: [DP-HC-005]
+- id: KPI-HC-CLEAN
+  name: Clean claim rate
+  definition: "Share of claims that passed the claim scrubber without edits"
+  formula: "clean claims ÷ submitted claims"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 85, max: 95 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-HC-CLEAN-CLAIM
+  metric: clean_claim_rate
+  products: [DP-HC-005]
+- id: KPI-HC-NCR
+  name: Net collection rate
+  definition: "Payments received within 60 days as a share of expected reimbursement"
+  formula: "payments within 60 days ÷ expected reimbursement, claims older than 60 days"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 82, max: 96 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-HC-NCR
+  metric: net_collection_rate
+  products: [DP-HC-005]
+- id: KPI-HC-AR-DAYS
+  name: Days in A/R
+  definition: "Expected-reimbursement-weighted days from claim submission to payment"
+  formula: "Σ(expected × days to pay, unpaid = 90) ÷ Σ expected, claims older than 60 days"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 28, max: 40 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-HC-AR-DAYS
+  metric: days_in_ar
+  products: [DP-HC-005]
+- id: KPI-HC-DENIED-CHARGES
+  name: Denied charges
+  definition: "Charges on claims denied on first adjudication in the quarter (governed patient sample)"
+  formula: "sum of charges on denied claims"
+  unit: "USD"
+  direction: lower_is_better
+  target: { min: 4000000, max: 7000000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-HC-DENIAL
+  metric: denied_charges
+  products: [DP-HC-005]
+- id: KPI-HC-CLAIMS
+  name: Claims submitted
+  definition: "Claims submitted to payers in the month (governed patient sample)"
+  formula: "count of submitted claims"
+  unit: "claims"
+  direction: target_band
+  target: { min: 4500, max: 7000 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-HC-CLAIM
+  metric: claims_submitted
+  products: [DP-HC-005]
+- id: KPI-HC-SUPPLY-SPEND
+  name: Supply spend
+  definition: "All purchase-order spend in the fiscal year to date"
+  formula: "sum of PO line spend"
+  unit: "USD"
+  direction: target_band
+  target: { min: 60000000, max: 120000000 }
+  window: { ytd: true }
+  term: GT-HC-SUPPLY-SPEND
+  metric: supply_spend
+  products: [DP-HC-006]
+- id: KPI-HC-ON-CONTRACT
+  name: Spend on contract
+  definition: "Share of spend placed against a group purchasing or framework contract"
+  formula: "on-contract spend ÷ total spend"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 80, max: 90 }
+  window: { ytd: true }
+  term: GT-HC-CONTRACT-COMPLIANCE
+  metric: spend_on_contract_pct
+  products: [DP-HC-006]
+- id: KPI-HC-OFF-CONTRACT
+  name: Off-contract spend
+  definition: "Spend placed outside a group purchasing or framework contract"
+  formula: "sum of spend where not on contract"
+  unit: "USD"
+  direction: lower_is_better
+  target: { min: 9000000, max: 20000000 }
+  window: { ytd: true }
+  term: GT-HC-OFF-CONTRACT
+  metric: off_contract_spend
+  products: [DP-HC-006]
+- id: KPI-HC-FILL-RATE
+  name: Supplier fill rate
+  definition: "Share of received PO lines delivered on time and in full"
+  formula: "OTIF lines ÷ received lines"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 88, max: 97 }
+  window: { ytd: true }
+  term: GT-HC-FILL-RATE
+  metric: fill_rate_pct
+  products: [DP-HC-006]
+- id: KPI-HC-PO-CYCLE
+  name: PO cycle time
+  definition: "Average days from PO creation to goods receipt"
+  formula: "mean of receipt date − PO date"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 12, max: 24 }
+  window: { ytd: true }
+  term: GT-HC-PO-CYCLE
+  metric: po_cycle_days
+  products: [DP-HC-006]
+- id: KPI-HC-OCCUPANCY
+  name: Bed occupancy
+  definition: "Midnight census as a share of staffed beds"
+  formula: "Σ midnight census ÷ Σ staffed beds"
+  unit: "%"
+  direction: target_band
+  target: { min: 78, max: 90 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-HC-OCCUPANCY
+  metric: bed_occupancy_pct
+  products: [DP-HC-007]
+- id: KPI-HC-HPPD
+  name: Nursing hours per patient day
+  definition: "Nursing hours worked per patient day"
+  formula: "Σ nursing hours worked ÷ Σ midnight census"
+  unit: "hours"
+  direction: target_band
+  target: { min: 9.5, max: 12 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-HC-HPPD
+  metric: nursing_hppd
+  products: [DP-HC-007]
+- id: KPI-HC-OVERTIME
+  name: Overtime rate
+  definition: "Overtime hours as a share of nursing hours worked"
+  formula: "overtime hours ÷ worked hours"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 4, max: 8 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-HC-OVERTIME
+  metric: overtime_pct
+  products: [DP-HC-007]
+- id: KPI-HC-AGENCY
+  name: Contract labour share
+  definition: "Agency and travel nurse hours as a share of nursing hours worked"
+  formula: "agency hours ÷ worked hours"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 3, max: 7 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-HC-CONTRACT-LABOR
+  metric: contract_labor_pct
+  products: [DP-HC-007]

@@ -1,0 +1,73 @@
+name: WORKFORCE
+description: Nurse staffing and inpatient capacity by care unit and day
+tables:
+  - { alias: s, fqn: CONFORMED_GOLD.FCT_UNIT_DAY, pk: unit_day_key }
+  - { alias: u, fqn: CONFORMED_GOLD.DIM_UNIT, pk: unit_key }
+  - { alias: f, fqn: CONFORMED_GOLD.DIM_FACILITY, pk: facility_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: s.unit_key, to: u.unit_key }
+  - { from: s.facility_key, to: f.facility_key }
+  - { from: s.date_key, to: d.date_key }
+dimensions:
+  - { name: facility, expr: f.facility_name, label: Facility, synonyms: [hospital, campus, site], term: GT-HC-FACILITY }
+  - { name: region, expr: f.region, label: Market, synonyms: [market, region, service area], term: GT-HC-MARKET }
+  - { name: unit_type, expr: u.unit_type, label: Unit type, synonyms: [nursing unit type, care unit type], term: GT-HC-CARE-UNIT }
+  - { name: care_unit, expr: u.unit_name, label: Care unit, synonyms: [nursing unit, ward, floor] }
+time_dimensions:
+  - { name: shift_date, expr: d.date, default: true }
+facts:
+  - { name: census, expr: s.census }
+  - { name: worked_hours, expr: s.worked_hours }
+metrics:
+  - name: bed_occupancy_pct
+    label: Bed occupancy
+    expr: 100.0 * SUM(s.census) / NULLIF(SUM(s.staffed_beds), 0)
+    unit: '%'
+    decimals: 1
+    synonyms: [occupancy, occupancy rate, bed utilisation, capacity used]
+    term: GT-HC-OCCUPANCY
+    description: Midnight census as a share of staffed beds
+  - name: nursing_hppd
+    label: Nursing hours per patient day
+    expr: SUM(s.worked_hours) / NULLIF(SUM(s.census), 0)
+    unit: hours
+    decimals: 2
+    synonyms: [hppd, nursing hours per patient day, staffing intensity]
+    term: GT-HC-HPPD
+    description: Nursing hours worked divided by patient days (midnight census)
+  - name: overtime_pct
+    label: Overtime rate
+    expr: 100.0 * SUM(s.overtime_hours) / NULLIF(SUM(s.worked_hours), 0)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [overtime, ot rate, overtime share]
+    term: GT-HC-OVERTIME
+    description: Overtime hours as a share of nursing hours worked
+  - name: contract_labor_pct
+    label: Contract labour share
+    expr: 100.0 * SUM(s.agency_hours) / NULLIF(SUM(s.worked_hours), 0)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [agency nurses, agency hours, travel nurses, contract labor]
+    term: GT-HC-CONTRACT-LABOR
+    description: Agency and travel nurse hours as a share of nursing hours worked
+  - name: unit_patient_days
+    label: Unit patient days
+    expr: SUM(s.census)
+    unit: days
+    decimals: 0
+    synonyms: [census days, midnight census]
+    term: GT-HC-OCCUPANCY
+    description: Sum of midnight census across care unit days
+  - name: hours_vs_plan_pct
+    label: Hours versus staffing plan
+    expr: 100.0 * SUM(s.worked_hours) / NULLIF(SUM(s.target_hours), 0)
+    unit: '%'
+    decimals: 1
+    synonyms: [staffing variance, hours to target, plan compliance]
+    term: GT-HC-HPPD
+    description: Nursing hours worked as a share of the staffing-plan hours for the census
+products: [DP-HC-007]

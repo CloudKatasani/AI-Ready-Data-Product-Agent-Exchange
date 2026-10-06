@@ -1,0 +1,980 @@
+{
+  "pack": "healthcare",
+  "version": "1.0.0",
+  "scale": "M",
+  "scenarios": {
+    "SC-HC-001": {
+      "agent": "AG-HC-002",
+      "kind": "answer",
+      "headline": "Riverside Medical Center had the highest 30-day readmission rate last quarter at 22.5%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Planned readmissions are excluded (BR-HC-012). Harborview Community Hospital was lowest at 9.2% across 10 facilities.",
+      "sqlHash": "55c366509f559427",
+      "columns": [
+        "facility",
+        "readmission_rate"
+      ],
+      "rows": [
+        [
+          "Riverside Medical Center",
+          22.5108
+        ],
+        [
+          "Valley Critical Access Hospital",
+          12.1951
+        ],
+        [
+          "Riverside North Hospital",
+          11.4035
+        ],
+        [
+          "Valley General Hospital",
+          10.8787
+        ],
+        [
+          "Crestview Medical Center",
+          10.4545
+        ],
+        [
+          "Lakeshore Regional Hospital",
+          9.60452
+        ],
+        [
+          "Highland Regional Medical Center",
+          9.52381
+        ],
+        [
+          "Lakeshore Community Hospital",
+          9.44882
+        ],
+        [
+          "Highland Community Hospital",
+          9.27835
+        ],
+        [
+          "Harborview Community Hospital",
+          9.17874
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-002@2.0.1",
+        "metric:CARE_QUALITY.readmission_rate",
+        "rule:BR-HC-012",
+        "verified_query:VQ-HC-001",
+        "document:DOC-HC-READMISSION-STD#6"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Crestview Medical Center had the highest 30-day readmission rate last quarter at 10.5%.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-HC-002": {
+      "agent": "AG-HC-002",
+      "kind": "answer",
+      "headline": "Including planned readmissions, Highland Regional Medical Center had the highest readmission rate last quarter at 33.7%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "You asked for planned readmissions too, so the exclusion in BR-HC-012 is not applied. Staged oncology and orthopaedic care reorders the ranking — use the standard view that excludes planned readmissions to compare quality.",
+      "sqlHash": "361e6c0c86e93170",
+      "columns": [
+        "facility",
+        "readmission_rate"
+      ],
+      "rows": [
+        [
+          "Highland Regional Medical Center",
+          33.7209
+        ],
+        [
+          "Riverside Medical Center",
+          27.2358
+        ],
+        [
+          "Valley Critical Access Hospital",
+          13.4615
+        ],
+        [
+          "Valley General Hospital",
+          13.4146
+        ],
+        [
+          "Lakeshore Community Hospital",
+          13.2075
+        ],
+        [
+          "Riverside North Hospital",
+          12.931
+        ],
+        [
+          "Crestview Medical Center",
+          12.8319
+        ],
+        [
+          "Highland Community Hospital",
+          12
+        ],
+        [
+          "Harborview Community Hospital",
+          10.6888
+        ],
+        [
+          "Lakeshore Regional Hospital",
+          10.1124
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-002@2.0.1",
+        "metric:CARE_QUALITY.readmission_rate",
+        "verified_query:VQ-HC-001",
+        "document:DOC-HC-READMISSION-STD#6"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Including planned readmissions, Crestview Medical Center had the highest readmission rate last quarter at 12.8%.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-HC-003": {
+      "agent": "AG-HC-002",
+      "kind": "answer",
+      "headline": "Medicine had the most excess days last quarter: 225 days above the expected length of stay.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Ranked over the top 5 service lines. Excess days are patient days above GMLOS for the case mix (BR-HC-004); they are the first place to look for discharge delays.",
+      "sqlHash": "da0c986e90c85a3a",
+      "columns": [
+        "service_line",
+        "excess_days"
+      ],
+      "rows": [
+        [
+          "Medicine",
+          224.7
+        ],
+        [
+          "Behavioral health",
+          127.9
+        ],
+        [
+          "Orthopedics",
+          116
+        ],
+        [
+          "Surgery",
+          106
+        ],
+        [
+          "Obstetrics",
+          96.8
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-002@2.0.1",
+        "metric:CARE_QUALITY.excess_days",
+        "verified_query:VQ-HC-008",
+        "document:DOC-HC-READMISSION-STD#6"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Behavioral health had the most excess days last quarter: 52 days above the expected length of stay.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-HC-004": {
+      "agent": "AG-HC-002",
+      "kind": "answer",
+      "headline": "Medicine was the largest driver of unplanned readmissions last quarter with 105 readmissions (32.4% of the total).",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "There were 324 unplanned readmissions across 8 service lines, excluding planned readmissions (BR-HC-012).",
+      "sqlHash": "16b6728fccd4142c",
+      "columns": [
+        "service_line",
+        "readmissions",
+        "readmissions_share_pct"
+      ],
+      "rows": [
+        [
+          "Medicine",
+          105,
+          32.4074
+        ],
+        [
+          "Surgery",
+          50,
+          15.4321
+        ],
+        [
+          "Cardiology",
+          46,
+          14.1975
+        ],
+        [
+          "Obstetrics",
+          28,
+          8.64198
+        ],
+        [
+          "Behavioral health",
+          26,
+          8.02469
+        ],
+        [
+          "Oncology",
+          26,
+          8.02469
+        ],
+        [
+          "Orthopedics",
+          23,
+          7.09877
+        ],
+        [
+          "Neurosciences",
+          20,
+          6.17284
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-002@2.0.1",
+        "metric:CARE_QUALITY.readmissions",
+        "rule:BR-HC-012",
+        "document:DOC-HC-READMISSION-STD#6"
+      ],
+      "personas": {}
+    },
+    "SC-HC-005": {
+      "agent": "AG-HC-002",
+      "kind": "redirect",
+      "headline": "That's a supply chain question — the Supply Chain Copilot answers it.",
+      "narrative": "I cover inpatient quality and readmissions. The Supply Chain Copilot is certified on supply spend and contract compliance.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-HC-006": {
+      "agent": "AG-HC-002",
+      "kind": "decline",
+      "headline": "I can't recommend treatment — clinical decisions stay with clinicians.",
+      "narrative": "Treatment, admission and discharge decisions are made by the care team (control CTL-HC-009). I can show the heart failure readmission rate by facility so the clinical team has the evidence.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-HC-007": {
+      "agent": "AG-HC-002",
+      "kind": "answer",
+      "headline": "The system 30-day readmission rate is 10.2% year to date.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Monthly readmission rate over 9 months, excluding planned readmissions (BR-HC-012). Watch the third-quarter rise at Riverside Medical Center.",
+      "sqlHash": "91dc922ce83bd986",
+      "columns": [
+        "period",
+        "readmission_rate"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          10.9457
+        ],
+        [
+          "2026-02-01",
+          8.68293
+        ],
+        [
+          "2026-03-01",
+          9.86301
+        ],
+        [
+          "2026-04-01",
+          9.39734
+        ],
+        [
+          "2026-05-01",
+          11.4943
+        ],
+        [
+          "2026-06-01",
+          7.48373
+        ],
+        [
+          "2026-07-01",
+          10.0719
+        ],
+        [
+          "2026-08-01",
+          11.2315
+        ],
+        [
+          "2026-09-01",
+          12.2137
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-002@2.0.1",
+        "metric:CARE_QUALITY.readmission_rate",
+        "rule:BR-HC-012",
+        "verified_query:VQ-HC-002",
+        "document:DOC-HC-READMISSION-STD#3"
+      ],
+      "personas": {}
+    },
+    "SC-HC-008": {
+      "agent": "AG-HC-004",
+      "kind": "answer",
+      "headline": "Across 10 facilities, the median facility averages 28.2 minutes from door to provider.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "The middle 80% of facilities sit between 27.5 and 28.6 minutes; the slowest averages 29.7 minutes.",
+      "sqlHash": "d14fed44bf0c6cca",
+      "columns": [
+        "facility_count",
+        "door_to_provider_minutes_p10",
+        "door_to_provider_minutes_p50",
+        "door_to_provider_minutes_p90",
+        "door_to_provider_minutes_min",
+        "door_to_provider_minutes_max"
+      ],
+      "rows": [
+        [
+          10,
+          27.4595,
+          28.1584,
+          28.6293,
+          27.3412,
+          29.728
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-004@1.4.0",
+        "metric:ED_FLOW.door_to_provider_minutes",
+        "verified_query:VQ-HC-013",
+        "document:DOC-HC-ED-THROUGHPUT#6"
+      ],
+      "personas": {}
+    },
+    "SC-HC-009": {
+      "agent": "AG-HC-004",
+      "kind": "answer",
+      "headline": "The LWBS rate was 2.57% last month — within target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "ED arrivals who left before being seen by a provider, as a share of all arrivals. A facility above 3% in a month triggers a triage staffing review (BR-HC-008).",
+      "sqlHash": "bd7589378836da52",
+      "columns": [
+        "lwbs_rate",
+        "lwbs_rate_target_min",
+        "lwbs_rate_target_max"
+      ],
+      "rows": [
+        [
+          2.57493,
+          1,
+          3.5
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-004@1.4.0",
+        "metric:ED_FLOW.lwbs_rate",
+        "verified_query:VQ-HC-020",
+        "document:DOC-HC-ED-THROUGHPUT#3"
+      ],
+      "personas": {}
+    },
+    "SC-HC-010": {
+      "agent": "AG-HC-004",
+      "kind": "answer",
+      "headline": "ESI 1 arrivals were admitted 59.5% of the time last quarter and boarded 3.47 hours on average.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "ESI 5 arrivals were admitted 6.6% of the time. Boarding is measured for admitted patients only (BR-HC-007).",
+      "sqlHash": "319966834873f032",
+      "columns": [
+        "acuity",
+        "ed_admit_rate",
+        "avg_boarding_hours"
+      ],
+      "rows": [
+        [
+          "ESI 1",
+          59.542,
+          3.46816
+        ],
+        [
+          "ESI 2",
+          59.3515,
+          3.27963
+        ],
+        [
+          "ESI 3",
+          18.0837,
+          3.13795
+        ],
+        [
+          "ESI 4",
+          7.26269,
+          3.15892
+        ],
+        [
+          "ESI 5",
+          6.57414,
+          2.88352
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-004@1.4.0",
+        "metric:ED_FLOW.ed_admit_rate",
+        "metric:ED_FLOW.avg_boarding_hours",
+        "document:DOC-HC-ED-THROUGHPUT#4"
+      ],
+      "personas": {}
+    },
+    "SC-HC-011": {
+      "agent": "AG-HC-004",
+      "kind": "answer",
+      "headline": "Riverside Medical Center has the longest boarding times at 6.98 hours per admitted patient.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "\"Boarders\" maps to admitted patient boarding time and \"campus\" to facility. Facilities averaging more than 4 hours trigger the capacity escalation plan (BR-HC-007).",
+      "sqlHash": "899754bfa96e9ac5",
+      "columns": [
+        "facility",
+        "avg_boarding_hours"
+      ],
+      "rows": [
+        [
+          "Riverside Medical Center",
+          6.97901
+        ],
+        [
+          "Harborview Community Hospital",
+          2.99783
+        ],
+        [
+          "Lakeshore Regional Hospital",
+          2.92646
+        ],
+        [
+          "Crestview Medical Center",
+          2.89741
+        ],
+        [
+          "Riverside North Hospital",
+          2.87599
+        ],
+        [
+          "Highland Regional Medical Center",
+          2.86437
+        ],
+        [
+          "Lakeshore Community Hospital",
+          2.86227
+        ],
+        [
+          "Valley Critical Access Hospital",
+          2.7745
+        ],
+        [
+          "Valley General Hospital",
+          2.76779
+        ],
+        [
+          "Highland Community Hospital",
+          2.76427
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-004@1.4.0",
+        "metric:ED_FLOW.avg_boarding_hours",
+        "verified_query:VQ-HC-015",
+        "document:DOC-HC-ED-THROUGHPUT#6"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Harborview Community Hospital has the longest boarding times at 3.00 hours per admitted patient.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-HC-024": {
+      "agent": "AG-HC-004",
+      "kind": "answer",
+      "headline": "Average length of stay moved +0.06 days from the first to the latest quarter this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Mean inpatient days per discharge for each of the 3 quarters this year. Longer stays hold beds and push admitted patients into ED boarding.",
+      "sqlHash": "91c358c986e7433e",
+      "columns": [
+        "period",
+        "avg_length_of_stay"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          4.55783
+        ],
+        [
+          "2026-04-01",
+          4.59452
+        ],
+        [
+          "2026-07-01",
+          4.62039
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-002@2.0.1",
+        "metric:CARE_QUALITY.avg_length_of_stay",
+        "document:DOC-HC-ED-THROUGHPUT#3"
+      ],
+      "personas": {}
+    },
+    "SC-HC-012": {
+      "agent": "AG-HC-001",
+      "kind": "answer",
+      "headline": "Metro leads patient portal adoption at 71.9% of active patients.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Valley trails at 54.8%. Adoption counts active patients with an activated portal account (BR-HC-016).",
+      "sqlHash": "5da253d68d79f6d1",
+      "columns": [
+        "region",
+        "portal_adoption_rate"
+      ],
+      "rows": [
+        [
+          "Metro",
+          71.8866
+        ],
+        [
+          "Riverside",
+          56.5811
+        ],
+        [
+          "Highland",
+          55.6093
+        ],
+        [
+          "Lakeshore",
+          55.3937
+        ],
+        [
+          "Valley",
+          54.8261
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-001@2.2.0",
+        "metric:PATIENT_360.portal_adoption_rate",
+        "verified_query:VQ-HC-024",
+        "document:DOC-HC-CREDIT-COLLECTIONS#4"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Metro leads patient portal adoption at 71.9% of active patients.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-HC-013": {
+      "agent": "AG-HC-001",
+      "kind": "answer",
+      "headline": "The highest-risk active patient scores 61.7.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Patient names are protected health information and are masked unless your persona is cleared for PHI (BR-HC-011). Showing the top 5 active patients by risk score.",
+      "sqlHash": "adf8b9605fd18d66",
+      "columns": [
+        "patient_name",
+        "avg_risk_score"
+      ],
+      "rows": [
+        [
+          "Mark Rivera",
+          61.65
+        ],
+        [
+          "Diego Torres",
+          57.35
+        ],
+        [
+          "Matthew Lopez",
+          53.75
+        ],
+        [
+          "Amanda Wilson",
+          52.5
+        ],
+        [
+          "James Martin",
+          51.8833
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-001@2.2.0",
+        "metric:PATIENT_360.avg_risk_score",
+        "document:DOC-HC-CREDIT-COLLECTIONS#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "The highest-risk active patient scores 70.4.",
+          "rowFiltered": true,
+          "masked": [
+            "patient_name"
+          ]
+        },
+        "D": {
+          "kind": "answer",
+          "headline": "The highest-risk active patient scores 61.7.",
+          "rowFiltered": false,
+          "masked": []
+        }
+      }
+    },
+    "SC-HC-014": {
+      "agent": "AG-HC-001",
+      "kind": "answer",
+      "headline": "Days in A/R were 34.0 days last quarter — within target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Claims & Denials is still in certification, so treat this figure as provisional. The receivables rule BR-HC-021 is applied.",
+      "sqlHash": "12163e5efc04a58c",
+      "columns": [
+        "days_in_ar"
+      ],
+      "rows": [
+        [
+          33.9897
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-005@1.0.0-rc.1",
+        "metric:REVENUE_CYCLE.days_in_ar",
+        "rule:BR-HC-021",
+        "document:DOC-HC-REVENUE-CYCLE#6"
+      ],
+      "personas": {
+        "A": {
+          "kind": "decline",
+          "headline": "You don’t have access to Claims & Denials yet."
+        }
+      }
+    },
+    "SC-HC-015": {
+      "agent": "AG-HC-001",
+      "kind": "answer",
+      "headline": "Lakeshore had the highest no-show rate last month at 11.0%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "No-shows as a share of appointments due to be kept (BR-HC-014), across 5 markets you are entitled to see; the market row-access policy applies.",
+      "sqlHash": "6b52cf6337e7e989",
+      "columns": [
+        "region",
+        "no_show_rate"
+      ],
+      "rows": [
+        [
+          "Lakeshore",
+          10.9992
+        ],
+        [
+          "Riverside",
+          10.6383
+        ],
+        [
+          "Highland",
+          10.4022
+        ],
+        [
+          "Metro",
+          10.0765
+        ],
+        [
+          "Valley",
+          9.34699
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-003@1.2.0",
+        "metric:SCHEDULING.no_show_rate",
+        "verified_query:VQ-HC-042",
+        "document:DOC-HC-ACCESS-STD#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Metro had the highest no-show rate last month at 10.1%.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-HC-016": {
+      "agent": "AG-HC-001",
+      "kind": "answer",
+      "headline": "Patients waited 19.1 days on average for an appointment this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Mean days from booking to appointment for each of the 9 months this year. New patients wait longest in neurology and dermatology.",
+      "sqlHash": "cd36cd229187f950",
+      "columns": [
+        "period",
+        "avg_days_to_appointment"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          19.4893
+        ],
+        [
+          "2026-02-01",
+          18.9874
+        ],
+        [
+          "2026-03-01",
+          19.2303
+        ],
+        [
+          "2026-04-01",
+          18.7504
+        ],
+        [
+          "2026-05-01",
+          19.1755
+        ],
+        [
+          "2026-06-01",
+          19.1349
+        ],
+        [
+          "2026-07-01",
+          19.0538
+        ],
+        [
+          "2026-08-01",
+          18.9068
+        ],
+        [
+          "2026-09-01",
+          19.4977
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-003@1.2.0",
+        "metric:SCHEDULING.avg_days_to_appointment",
+        "verified_query:VQ-HC-041",
+        "document:DOC-HC-ACCESS-STD#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Patients waited 19.0 days on average for an appointment this year.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-HC-017": {
+      "agent": "AG-HC-001",
+      "kind": "clarify",
+      "headline": "\"Access\" can mean a few things — which one do you need?",
+      "narrative": "I can show days to appointment, new-patient lag or the no-show rate. Pick one and a period.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-HC-018": {
+      "agent": "AG-HC-003",
+      "kind": "answer",
+      "headline": "84.4% of supply spend this year was on contract.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Spend on purchase-order lines placed against an active group purchasing or framework contract, as a share of total supply spend year to date.",
+      "sqlHash": "479e33118fb6e1b1",
+      "columns": [
+        "spend_on_contract_pct"
+      ],
+      "rows": [
+        [
+          84.3854
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-006@3.1.0",
+        "metric:SUPPLY_CHAIN.spend_on_contract_pct",
+        "verified_query:VQ-HC-043",
+        "document:DOC-HC-PROCUREMENT-POLICY#4"
+      ],
+      "personas": {}
+    },
+    "SC-HC-019": {
+      "agent": "AG-HC-003",
+      "kind": "answer",
+      "headline": "Granite Partners has the lowest fill rate this year at 72.3%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "The 5 lowest-performing suppliers by on-time-in-full delivery year to date. Suppliers below 90% for a quarter enter a performance improvement plan (BR-HC-024).",
+      "sqlHash": "2cc40cb381ec5b1e",
+      "columns": [
+        "supplier",
+        "fill_rate_pct"
+      ],
+      "rows": [
+        [
+          "Granite Partners",
+          72.3077
+        ],
+        [
+          "Clearwater Services Llc",
+          82.7815
+        ],
+        [
+          "Brightline Holdings",
+          83.0189
+        ],
+        [
+          "Oakmont Partners",
+          85.9259
+        ],
+        [
+          "Clearwater Partners",
+          86.6667
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-006@3.1.0",
+        "metric:SUPPLY_CHAIN.fill_rate_pct",
+        "verified_query:VQ-HC-044",
+        "document:DOC-HC-PROCUREMENT-POLICY#3"
+      ],
+      "personas": {}
+    },
+    "SC-HC-020": {
+      "agent": "AG-HC-003",
+      "kind": "answer",
+      "headline": "Implants & devices drives the most off-contract spend this year at $4,310,523.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Physician preference items bought ad hoc are the usual driver (BR-HC-023). Total off-contract spend is $13,723,181 across 8 categories.",
+      "sqlHash": "3166a11c5bbf2730",
+      "columns": [
+        "category",
+        "off_contract_spend",
+        "off_contract_spend_share_pct"
+      ],
+      "rows": [
+        [
+          "Implants & devices",
+          4310520,
+          31.4105
+        ],
+        [
+          "Imaging equipment",
+          2834020,
+          20.6513
+        ],
+        [
+          "Med-surg supplies",
+          1546520,
+          11.2694
+        ],
+        [
+          "Food & nutrition",
+          1385730,
+          10.0978
+        ],
+        [
+          "IT & software",
+          1257940,
+          9.16651
+        ],
+        [
+          "Pharmaceuticals",
+          961559,
+          7.00682
+        ],
+        [
+          "Environmental services",
+          915703,
+          6.67267
+        ],
+        [
+          "Lab & diagnostics",
+          511185,
+          3.72497
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-006@3.1.0",
+        "metric:SUPPLY_CHAIN.off_contract_spend",
+        "verified_query:VQ-HC-045",
+        "document:DOC-HC-PROCUREMENT-POLICY#1"
+      ],
+      "personas": {}
+    },
+    "SC-HC-021": {
+      "agent": "AG-HC-003",
+      "kind": "answer",
+      "headline": "PO cycle time moved −1.4 days from the first to the latest quarter this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Average days from purchase order to receipt for each of the 3 quarters this year.",
+      "sqlHash": "c850d0e17178f947",
+      "columns": [
+        "period",
+        "po_cycle_days"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          18.0746
+        ],
+        [
+          "2026-04-01",
+          18.1166
+        ],
+        [
+          "2026-07-01",
+          16.635
+        ]
+      ],
+      "citations": [
+        "product:DP-HC-006@3.1.0",
+        "metric:SUPPLY_CHAIN.po_cycle_days",
+        "verified_query:VQ-HC-047",
+        "document:DOC-HC-PROCUREMENT-POLICY#3"
+      ],
+      "personas": {}
+    },
+    "SC-HC-022": {
+      "agent": "AG-HC-005",
+      "kind": "help",
+      "headline": "I explain governance across the data estate — I don't analyse business KPIs.",
+      "narrative": "Ask me what a glossary term or metric means, the certification status of a data product, or where governance gaps such as missing stewards or PHI masking sit. For KPI numbers, ask the domain agents.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-HC-023": {
+      "agent": "AG-HC-005",
+      "kind": "decline",
+      "headline": "I can't approve access requests — agents act, humans decide.",
+      "narrative": "Access to a data product is granted only by its owner or steward through the access workflow. I can show you the request status and who can approve it.",
+      "citations": [],
+      "personas": {}
+    }
+  }
+}

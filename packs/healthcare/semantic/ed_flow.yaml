@@ -1,0 +1,75 @@
+name: ED_FLOW
+description: Emergency department throughput — arrivals, door-to-provider, LWBS, admissions and boarding
+tables:
+  - { alias: v, fqn: CONFORMED_GOLD.FCT_ED_VISIT, pk: ed_visit_key }
+  - { alias: f, fqn: CONFORMED_GOLD.DIM_FACILITY, pk: facility_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: v.facility_key, to: f.facility_key }
+  - { from: v.date_key, to: d.date_key }
+dimensions:
+  - { name: facility, expr: f.facility_name, label: Facility, synonyms: [hospital, campus, site], term: GT-HC-FACILITY }
+  - { name: region, expr: f.region, label: Market, synonyms: [market, region, service area], term: GT-HC-MARKET }
+  - { name: facility_type, expr: f.facility_type, label: Facility type, synonyms: [hospital type] }
+  - { name: acuity, expr: v.acuity, label: Triage acuity, synonyms: [acuity level, acuity levels, esi level, triage level], term: GT-HC-ESI }
+  - { name: arrival_mode, expr: v.arrival_mode, label: Arrival mode, synonyms: [ambulance or walk-in] }
+  - { name: ed_disposition, expr: v.ed_disposition, label: ED disposition, synonyms: [ed outcome, departure status] }
+time_dimensions:
+  - { name: arrival_date, expr: d.date, default: true }
+facts:
+  - { name: door_to_provider_min, expr: v.door_to_provider_min }
+  - { name: boarding_min, expr: v.boarding_min }
+metrics:
+  - name: ed_visits
+    label: ED visits
+    expr: COUNT(*)
+    unit: visits
+    decimals: 0
+    synonyms: [emergency visits, ed volume, ed arrivals]
+    term: GT-HC-ED-VISIT
+    description: Emergency department arrivals in the period
+  - name: door_to_provider_minutes
+    label: Door-to-provider time
+    expr: AVG(v.door_to_provider_min)
+    unit: minutes
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [door to doctor, time to provider, door to provider]
+    term: GT-HC-D2P
+    description: Mean minutes from arrival to first provider contact (patients seen)
+  - name: lwbs_rate
+    label: Left without being seen rate
+    expr: 100.0 * AVG(CASE WHEN v.left_without_seen THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [lwbs, walkouts, left without being seen]
+    term: GT-HC-LWBS
+    description: Share of ED arrivals who left before being seen by a provider
+  - name: ed_admit_rate
+    label: ED admission rate
+    expr: 100.0 * AVG(CASE WHEN v.admitted THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    synonyms: [admit rate, ed conversion rate]
+    term: GT-HC-ED-VISIT
+    description: Share of ED arrivals admitted as inpatients
+  - name: avg_boarding_hours
+    label: Admitted patient boarding time
+    expr: AVG(v.boarding_min) / 60.0
+    unit: hours
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [boarding, boarding time, ed boarding, admit to departure]
+    term: GT-HC-BOARDING
+    description: Mean hours from the admission decision to departure from the ED, admitted patients only
+  - name: avg_ed_los_hours
+    label: ED length of stay
+    expr: AVG(v.ed_los_min) / 60.0
+    unit: hours
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [ed los, ed throughput time, time in department]
+    term: GT-HC-ED-VISIT
+    description: Mean hours from arrival to departure across all ED visits
+products: [DP-HC-004]

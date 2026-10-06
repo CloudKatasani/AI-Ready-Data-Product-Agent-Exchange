@@ -1,0 +1,100 @@
+# Inpatient quality DQ rules (FCT_ENCOUNTER, DIM_FACILITY and their Silver sources).
+- id: DQ-HC-001
+  object: CONFORMED_GOLD.FCT_ENCOUNTER
+  column: readmit_30d
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every discharge carries a 30-day readmission outcome (readmission rate numerator).
+- id: DQ-HC-002
+  object: CONFORMED_GOLD.FCT_ENCOUNTER
+  column: planned_readmission
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every discharge carries a planned-readmission flag so the planned readmission exclusion can be applied.
+- id: DQ-HC-003
+  object: CONFORMED_GOLD.FCT_ENCOUNTER
+  column: los_days
+  dimension: validity
+  assertion: "min >= 1"
+  severity: high
+  alert_route: steward
+  description: Inpatient stays last at least one midnight; shorter stays are observation, not inpatient.
+- id: DQ-HC-004
+  object: CONFORMED_GOLD.FCT_ENCOUNTER
+  column: los_days
+  dimension: accuracy
+  assertion: "max <= 120"
+  severity: medium
+  alert_route: engineering
+  description: No stay exceeds 120 days; longer values indicate a missing discharge.
+- id: DQ-HC-005
+  object: CONFORMED_GOLD.FCT_ENCOUNTER
+  column: discharge_disposition
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Home, Home health, Skilled nursing facility, Inpatient rehab, Hospice, Left against medical advice, Expired]
+  severity: medium
+  alert_route: steward
+  description: Discharge dispositions conform to the standard disposition list.
+- id: DQ-HC-006
+  object: CONFORMED_GOLD.FCT_ENCOUNTER
+  column: encounter_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per inpatient encounter after CDC deduplication.
+- id: DQ-HC-007
+  object: CONFORMED_GOLD.FCT_ENCOUNTER
+  column: discharge_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: high
+  alert_route: engineering
+  description: Discharges from the ADT feed are no more than one day behind the reporting date.
+- id: DQ-HC-008
+  object: CONFORMED_GOLD.FCT_ENCOUNTER
+  column: service_line
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Medicine, Surgery, Cardiology, Orthopedics, Obstetrics, Oncology, Neurosciences, Behavioral health]
+  severity: medium
+  alert_route: steward
+  description: Service lines conform to the service line hierarchy.
+- id: DQ-HC-009
+  object: CONFORMED_GOLD.FCT_ENCOUNTER
+  column: discharge_disposition
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: high
+  alert_route: steward
+  description: Every discharge has a disposition (expired discharges leave the readmission denominator).
+- id: DQ-HC-010
+  object: CONFORMED_GOLD.DIM_FACILITY
+  column: region
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Metro, Lakeshore, Riverside, Valley, Highland]
+  severity: critical
+  alert_route: steward
+  description: Facility market is one of the five markets (row access policy RAP_REGION depends on it).
+- id: DQ-HC-011
+  object: CONFORMED_GOLD.DIM_FACILITY
+  column: facility_id
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^FAC-[0-9]{2}$"
+  severity: low
+  alert_route: engineering
+  description: Facility ids follow the facility master numbering convention.
+- id: DQ-HC-012
+  object: CURATED_SILVER.ENCOUNTER
+  dimension: timeliness
+  assertion: "freshness_min <= 1440"
+  severity: medium
+  alert_route: engineering
+  description: The curated encounter table has been refreshed within the last day.

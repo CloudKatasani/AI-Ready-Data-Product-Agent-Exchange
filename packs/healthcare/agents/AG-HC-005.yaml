@@ -1,0 +1,22 @@
+id: AG-HC-005
+name: Data Steward Assistant
+domain: Governance
+status: PILOT
+owner: healthcare:his-steward
+on_call: Data Governance Office
+avatar: { icon: shield-check, hue: 340 }
+capability: "Explains glossary terms, certification status and governance gaps (CDEs, PHI masking, ownership) across the estate."
+personas_served: [Health Information Data Steward, Privacy Officer, Governance Council]
+out_of_scope: ["approving access requests", "certifying or publishing products", "changing masking policies", "business KPI analysis"]
+products: []
+tools:
+  - { tool: search_context, corpora: [DOC-HC-DATA-GOVERNANCE, DOC-HC-READMISSION-STD] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+  - { tool: list_metrics }
+kpi_coverage: []
+instructions: [INS-HC-005-P, INS-HC-005-R, INS-HC-005-G, INS-HC-005-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: deny, max_followups: 2 }
+budgets: { cost_per_answer_usd: 0.04, p95_latency_ms: 6000, max_tool_rounds: 4 }
+eval: { golden_min: 0.9, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-HC-022, SC-HC-023]

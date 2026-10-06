@@ -1,0 +1,54 @@
+name: PATIENT_360
+description: Patient master metrics — registration status, portal enrolment and population risk
+tables:
+  - { alias: p, fqn: CONFORMED_GOLD.DIM_PATIENT, pk: patient_key }
+dimensions:
+  - { name: region, expr: p.region, label: Market, synonyms: [market, region, service area], term: GT-HC-MARKET }
+  - { name: payer_class, expr: p.payer_class, label: Payer class, synonyms: [insurance type, coverage, payer mix], term: GT-HC-PAYER-CLASS }
+  - { name: age_band, expr: p.age_band, label: Age band, synonyms: [age group] }
+  - { name: sex, expr: p.sex, label: Sex }
+  - { name: patient_status, expr: p.status, label: Status, synonyms: [registration status] }
+  - { name: portal_enrolled, expr: p.portal_enrolled, label: Portal enrolled, synonyms: [portal user, patient portal] }
+  - { name: risk_band, expr: p.risk_band, label: Risk band, synonyms: [risk tier, risk level] }
+  - { name: patient_name, expr: p.full_name, label: Patient name, synonyms: [patient full name] }
+time_dimensions:
+  - { name: registered_date, expr: p.registered_date, default: true }
+facts:
+  - { name: risk_score, expr: p.risk_score }
+metrics:
+  - name: active_patients
+    label: Active patients
+    expr: COUNT_IF(p.status = 'Active')
+    unit: patients
+    decimals: 0
+    synonyms: [patient count, number of patients, registered patients]
+    term: GT-HC-ACTIVE-PATIENT
+    description: Patients with Active registration status in the governed patient sample
+  - name: portal_adoption_rate
+    label: Patient portal adoption rate
+    expr: 100.0 * AVG(CASE WHEN p.status = 'Active' THEN CASE WHEN p.portal_enrolled THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [portal adoption, portal enrolment rate, digital front door adoption]
+    term: GT-HC-PORTAL
+    description: Share of active patients enrolled in the patient portal
+  - name: avg_risk_score
+    label: Average risk score
+    expr: AVG(CASE WHEN p.status = 'Active' THEN p.risk_score END)
+    unit: score
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [risk score, acuity risk, population risk]
+    term: GT-HC-RISK-SCORE
+    description: Mean predictive risk score (0-100) across active patients
+  - name: high_risk_pct
+    label: High-risk patients
+    expr: 100.0 * AVG(CASE WHEN p.status = 'Active' THEN CASE WHEN p.risk_band = 'High' THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [high risk share, rising risk, care management population]
+    term: GT-HC-RISK-SCORE
+    description: Share of active patients with a risk score of 60 or more
+products: [DP-HC-001]

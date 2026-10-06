@@ -1,0 +1,75 @@
+# Revenue cycle DQ rules.
+- id: DQ-HC-020
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: expected_amount
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every claim has an expected reimbursement (net collection rate and A/R days weights).
+- id: DQ-HC-021
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: expected_amount
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Expected reimbursement is never negative.
+- id: DQ-HC-022
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: paid_60d_amount
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Amount paid within 60 days is populated (zero when unpaid) for the net collection rate.
+- id: DQ-HC-023
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: paid_60d_amount
+  dimension: accuracy
+  assertion: "min >= 0"
+  severity: high
+  alert_route: steward
+  description: Payments applied within the 60-day window are never negative.
+- id: DQ-HC-024
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: claim_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per claim.
+- id: DQ-HC-025
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: submit_date
+  dimension: timeliness
+  assertion: "freshness_min <= 4320"
+  severity: medium
+  alert_route: engineering
+  description: Claims from the latest billing runs have arrived (no more than three days behind).
+- id: DQ-HC-026
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: denied
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every claim carries its first-adjudication denial flag.
+- id: DQ-HC-027
+  object: CONFORMED_GOLD.FCT_CLAIM
+  column: denial_reason
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Not denied, Authorization, Eligibility, Coding, Medical necessity, Timely filing, Duplicate claim]
+  severity: medium
+  alert_route: steward
+  description: Denial reasons conform to the denial category list.
+- id: DQ-HC-028
+  object: CURATED_SILVER.PAYER
+  column: tax_id
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^[0-9]{2}-.+$"
+  severity: medium
+  alert_route: steward
+  description: Payer tax ids follow the registered identifier format.

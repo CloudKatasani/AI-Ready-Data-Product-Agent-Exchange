@@ -1,0 +1,25 @@
+id: DP-HC-002
+name: Inpatient Quality & Readmissions
+domain: Clinical Quality
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 2.0.1
+owner: healthcare:clinical-dpo
+steward: healthcare:his-steward
+description: Discharge-grain readmission, length of stay and mortality measures with facilities, service lines, condition cohorts and planned-readmission flags.
+purpose: Single governed source for 30-day readmissions and length of stay by facility, service line and cohort.
+decision: { persona: Chief Medical Officer, decision: "Which facilities and service lines get transitional-care nurses next quarter", cadence: Quarterly, workaround: "Quality analysts rebuild readmissions from ADT extracts in spreadsheets", consequence: "Transitional-care resources go to programmes whose rates are inflated by planned readmissions" }
+sample_questions: ["30-day readmission rate by facility last quarter", "Which service lines had the most excess days?", "Is our readmission rate within target this year?"]
+semantic_view: CARE_QUALITY
+output_ports:
+  - { kind: semantic, ref: CARE_QUALITY }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_HC_002_INPATIENT_QUALITY }
+  - { kind: agent, ref: AG-HC-002 }
+sla: { freshness_minutes: 60, availability_pct: 99.5, max_null_rate_pct: 0.5 }
+kpis: [KPI-HC-READMIT, KPI-HC-READMITS, KPI-HC-DISCHARGES, KPI-HC-ALOS, KPI-HC-LOS-INDEX, KPI-HC-MORTALITY]
+upstream: [CONFORMED_GOLD.FCT_ENCOUNTER, CONFORMED_GOLD.DIM_FACILITY]
+consumers: [Quality & patient safety, Regulatory reporting, Quality & Readmissions Analyst agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-HC-002

@@ -1,0 +1,185 @@
+# Crestview Health System business rules (synthetic). Rules with an `apply` block are applied by the metric
+# compiler as default filters; the rest are definitions, thresholds and policies cited in answers.
+
+# ── Clinical quality ────────────────────────────────────────────────────────────────────────────────
+- id: BR-HC-001
+  domain: Clinical quality
+  text: "An index admission is a discharged inpatient stay of at least one midnight; observation stays and ED visits are never index admissions."
+  kind: definition
+  metric: discharges
+  source_doc: DOC-HC-READMISSION-STD
+
+- id: BR-HC-002
+  domain: Clinical quality
+  text: "A readmission is an unplanned inpatient admission to any Crestview hospital within 30 days of an index discharge; it counts against the index stay, not the readmitting stay."
+  kind: definition
+  metric: readmission_rate
+  source_doc: DOC-HC-READMISSION-STD
+
+- id: BR-HC-003
+  domain: Clinical quality
+  text: "Discharges with disposition Expired leave the readmission denominator; a patient who died cannot be readmitted."
+  kind: definition
+  metric: readmissions
+  source_doc: DOC-HC-READMISSION-STD
+
+- id: BR-HC-004
+  domain: Clinical quality
+  text: "Length of stay index is observed patient days divided by the expected (GMLOS) days for the same case mix; it is never averaged across facilities or service lines."
+  kind: definition
+  metric: los_index
+  source_doc: DOC-HC-READMISSION-STD
+
+- id: BR-HC-005
+  domain: Clinical quality
+  text: "A planned readmission is one the planned readmission algorithm flags as scheduled care (staged chemotherapy, staged procedures, transplants)."
+  kind: definition
+  source_doc: DOC-HC-READMISSION-STD
+
+- id: BR-HC-012
+  domain: Clinical quality
+  text: "Readmission measures exclude index stays followed by a planned readmission unless planned readmissions are explicitly requested."
+  kind: filter
+  metric: readmission_rate
+  source_doc: DOC-HC-READMISSION-STD
+  apply:
+    filter: { dimension: planned_readmission, op: "=", value: false }
+    unless_question_mentions: [including planned readmissions, including planned, all readmissions, planned and unplanned]
+
+# ── Patient flow & capacity ─────────────────────────────────────────────────────────────────────────
+- id: BR-HC-006
+  domain: Patient flow
+  text: "Door-to-provider time runs from ED arrival to first provider contact and is measured for patients who are seen; left-without-being-seen visits are reported separately as the LWBS rate."
+  kind: definition
+  metric: door_to_provider_minutes
+  source_doc: DOC-HC-ED-THROUGHPUT
+
+- id: BR-HC-007
+  domain: Patient flow
+  text: "Boarding time is measured only for admitted ED patients, from the admission decision to departure from the department. Facilities averaging more than 4 hours of boarding in a month trigger the capacity escalation plan."
+  kind: threshold
+  metric: avg_boarding_hours
+  source_doc: DOC-HC-ED-THROUGHPUT
+
+- id: BR-HC-008
+  domain: Patient flow
+  text: "An LWBS rate above 3% for a facility in any month triggers a triage staffing review within 14 days."
+  kind: threshold
+  metric: lwbs_rate
+  source_doc: DOC-HC-ED-THROUGHPUT
+
+# ── Workforce ───────────────────────────────────────────────────────────────────────────────────────
+- id: BR-HC-009
+  domain: Workforce
+  text: "Bed occupancy uses the midnight census against staffed (not licensed) beds. Units above 90% occupancy for a week are reviewed for surge staffing."
+  kind: threshold
+  metric: bed_occupancy_pct
+  source_doc: DOC-HC-STAFFING-PLAN
+
+- id: BR-HC-010
+  domain: Workforce
+  text: "Contract labour above 8% of nursing hours on a unit for a quarter requires a recruitment plan approved by the chief nursing officer."
+  kind: threshold
+  metric: contract_labor_pct
+  source_doc: DOC-HC-STAFFING-PLAN
+
+# ── Patient access ──────────────────────────────────────────────────────────────────────────────────
+- id: BR-HC-014
+  domain: Patient access
+  text: "The no-show rate is no-shows divided by appointments that were due to be kept (completed plus no-shows); cancelled and bumped appointments are excluded from the denominator."
+  kind: definition
+  metric: no_show_rate
+  source_doc: DOC-HC-ACCESS-STD
+
+- id: BR-HC-015
+  domain: Patient access
+  text: "New-patient access standard: a new patient should be offered an appointment within 14 days for primary care and 30 days for specialty care."
+  kind: threshold
+  metric: new_patient_lag_days
+  source_doc: DOC-HC-ACCESS-STD
+
+- id: BR-HC-016
+  domain: Patient access
+  text: "An active patient has an Active registration status in the EMPI; portal adoption and risk metrics are measured over active patients only."
+  kind: definition
+  metric: active_patients
+  source_doc: DOC-HC-DATA-GOVERNANCE
+
+# ── Revenue cycle ───────────────────────────────────────────────────────────────────────────────────
+- id: BR-HC-017
+  domain: Revenue cycle
+  text: "The initial denial rate counts claims denied on first adjudication, whether or not the denial is later overturned on appeal."
+  kind: definition
+  metric: initial_denial_rate
+  source_doc: DOC-HC-REVENUE-CYCLE
+
+- id: BR-HC-018
+  domain: Revenue cycle
+  text: "A clean claim passes the claim scrubber with no edits; claims corrected before submission are not clean."
+  kind: definition
+  metric: clean_claim_rate
+  source_doc: DOC-HC-REVENUE-CYCLE
+
+- id: BR-HC-019
+  domain: Revenue cycle
+  text: "A payer whose initial denial rate exceeds 15% for a quarter is escalated to managed care contracting for a joint operating review."
+  kind: threshold
+  metric: initial_denial_rate
+  source_doc: DOC-HC-REVENUE-CYCLE
+
+- id: BR-HC-021
+  domain: Revenue cycle
+  text: "Net collection rate and days in A/R only include claims submitted more than 60 days ago, so the collection window is complete."
+  kind: filter
+  metric: net_collection_rate
+  source_doc: DOC-HC-REVENUE-CYCLE
+  apply:
+    filter: { dimension: mature_claim, op: "=", value: true }
+    unless_question_mentions: []
+
+- id: BR-HC-022
+  domain: Revenue cycle
+  text: "Net collection rate counts payments received within 60 days of submission against expected reimbursement; days in A/R counts claims still unpaid after 60 days as 90 days outstanding."
+  kind: definition
+  metric: days_in_ar
+  source_doc: DOC-HC-REVENUE-CYCLE
+
+# ── Supply chain ────────────────────────────────────────────────────────────────────────────────────
+- id: BR-HC-023
+  domain: Supply chain
+  text: "Off-contract spend is any purchase-order spend not placed against an active group purchasing or framework contract, including physician preference items bought ad hoc and shortage spot buys."
+  kind: definition
+  metric: off_contract_spend
+  source_doc: DOC-HC-PROCUREMENT-POLICY
+
+- id: BR-HC-024
+  domain: Supply chain
+  text: "Fill rate is measured per received PO line: delivered on or before the promised date and in full. Suppliers below 90% for a quarter enter a performance improvement plan."
+  kind: threshold
+  metric: fill_rate_pct
+  source_doc: DOC-HC-PROCUREMENT-POLICY
+
+# ── Governance policies ─────────────────────────────────────────────────────────────────────────────
+- id: BR-HC-011
+  domain: Governance
+  text: "Patient names, dates of birth, medical record numbers, addresses, emails, phone numbers and free-text comments are PHI and are masked for every persona without PHI clearance, in every surface including agent answers."
+  kind: policy
+  source_doc: DOC-HC-DATA-GOVERNANCE
+
+- id: BR-HC-013
+  domain: Governance
+  text: "Market personas see only rows for their own market; market totals and system totals are not disclosed to them."
+  kind: policy
+  source_doc: DOC-HC-DATA-GOVERNANCE
+
+- id: BR-HC-020
+  domain: Governance
+  text: "Agents answer with aggregates only. Requests for an individual patient's chart, encounters, appointments, bills or contact details are declined and redirected to the health information management release-of-information process."
+  kind: policy
+  source_doc: DOC-HC-DATA-GOVERNANCE
+
+- id: BR-HC-025
+  domain: Governance
+  text: "Contract prices, rebates and supplier tax identifiers are commercially confidential; supply chain answers report spend and compliance only."
+  kind: policy
+  source_doc: DOC-HC-PROCUREMENT-POLICY

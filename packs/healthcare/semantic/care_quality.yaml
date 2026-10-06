@@ -1,0 +1,100 @@
+name: CARE_QUALITY
+description: Inpatient discharges, length of stay, mortality and 30-day readmissions at index-discharge grain
+tables:
+  - { alias: e, fqn: CONFORMED_GOLD.FCT_ENCOUNTER, pk: encounter_key }
+  - { alias: f, fqn: CONFORMED_GOLD.DIM_FACILITY, pk: facility_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: e.facility_key, to: f.facility_key }
+  - { from: e.date_key, to: d.date_key }
+dimensions:
+  - { name: facility, expr: f.facility_name, label: Facility, synonyms: [hospital, campus, site], term: GT-HC-FACILITY }
+  - { name: region, expr: f.region, label: Market, synonyms: [market, region, service area], term: GT-HC-MARKET }
+  - { name: facility_type, expr: f.facility_type, label: Facility type, synonyms: [hospital type] }
+  - { name: service_line, expr: e.service_line, label: Service line, synonyms: [specialty service, clinical service], term: GT-HC-SERVICE-LINE }
+  - { name: condition_cohort, expr: e.condition_cohort, label: Condition cohort, synonyms: [cohort, condition, diagnosis group], term: GT-HC-COHORT }
+  - { name: payer_class, expr: e.payer_class, label: Payer class, synonyms: [insurance type, coverage] }
+  - { name: age_band, expr: e.age_band, label: Age band, synonyms: [age group] }
+  - { name: discharge_disposition, expr: e.discharge_disposition, label: Discharge disposition, synonyms: [discharged to, disposition] }
+  - { name: planned_readmission, expr: e.planned_readmission, label: Planned readmission, synonyms: [planned readmit, staged readmission], term: GT-HC-PLANNED-READMIT }
+time_dimensions:
+  - { name: discharge_date, expr: d.date, default: true }
+facts:
+  - { name: los_days, expr: e.los_days, description: Length of stay in days per discharge }
+  - { name: gmlos_days, expr: e.gmlos_days, description: Expected (geometric mean) length of stay for the case mix }
+metrics:
+  - name: readmission_rate
+    label: 30-day readmission rate
+    expr: 100.0 * COUNT_IF(e.readmit_30d) / NULLIF(COUNT_IF(e.discharge_disposition <> 'Expired'), 0)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [readmit rate, bounce-back rate, all-cause readmission rate, unplanned readmission rate]
+    term: GT-HC-READMISSION
+    description: Index discharges followed by an unplanned readmission within 30 days, as a share of live discharges
+    default_filters: [ { rule: BR-HC-012 } ]
+    naive_expr: 100.0 * AVG(CASE WHEN e.readmit_30d THEN 1 ELSE 0 END)
+  - name: readmissions
+    label: Unplanned readmissions
+    expr: COUNT_IF(e.readmit_30d)
+    unit: readmissions
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [readmits, bounce-backs, number of readmissions]
+    term: GT-HC-READMISSION
+    description: Index discharges followed by an unplanned readmission within 30 days
+    default_filters: [ { rule: BR-HC-012 } ]
+  - name: discharges
+    label: Inpatient discharges
+    expr: COUNT(*)
+    unit: discharges
+    decimals: 0
+    synonyms: [inpatient volume, admissions, number of discharges]
+    term: GT-HC-DISCHARGE
+    description: Inpatient discharges in the period (index admission grain)
+  - name: avg_length_of_stay
+    label: Average length of stay
+    expr: AVG(e.los_days)
+    unit: days
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [alos, los, length of stay, inpatient days per stay]
+    term: GT-HC-LOS
+    description: Mean days from admission to discharge
+    naive_expr: AVG(e.gmlos_days)
+  - name: los_index
+    label: Length of stay index
+    expr: SUM(e.los_days) / NULLIF(SUM(e.gmlos_days), 0)
+    unit: ratio
+    decimals: 3
+    direction: lower_is_better
+    synonyms: [los index, observed to expected los, o/e los]
+    term: GT-HC-LOS-INDEX
+    description: Observed length of stay divided by the expected (GMLOS) length of stay for the case mix
+  - name: excess_days
+    label: Excess days
+    expr: SUM(e.los_days - e.gmlos_days)
+    unit: days
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [avoidable days, days over expected]
+    term: GT-HC-LOS-INDEX
+    description: Patient days above the expected length of stay for the case mix
+  - name: inpatient_mortality_rate
+    label: Inpatient mortality rate
+    expr: 100.0 * COUNT_IF(e.discharge_disposition = 'Expired') / COUNT(*)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [mortality, death rate, in-hospital mortality]
+    term: GT-HC-MORTALITY
+    description: Share of discharges where the patient expired in hospital
+  - name: patient_days
+    label: Patient days
+    expr: SUM(e.los_days)
+    unit: days
+    decimals: 0
+    synonyms: [inpatient days, bed days used]
+    term: GT-HC-DISCHARGE
+    description: Total inpatient days for discharges in the period
+products: [DP-HC-002]

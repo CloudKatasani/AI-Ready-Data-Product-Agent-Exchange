@@ -1,0 +1,25 @@
+id: DP-HC-001
+name: Patient 360
+domain: Patient Access
+archetype: ENTITY_MASTER
+initial_status: CERTIFIED
+seed_stage: 12
+version: 2.2.0
+owner: healthcare:clinical-dpo
+steward: healthcare:his-steward
+description: One trusted, PHI-governed view of every registered patient — status, coverage, portal enrolment and population risk.
+purpose: Give access, care management and digital teams one certified patient record for reporting, outreach planning and agents.
+decision: { persona: VP Patient Access, decision: "Which markets get the next patient portal activation campaign", cadence: Quarterly, workaround: "EMPI extracts reconciled by hand against the portal vendor's export", consequence: "Outreach budget spent where adoption is already high while care management misses rising-risk patients" }
+sample_questions: ["What is our patient portal adoption rate by market?", "How many active patients are high risk?", "Average risk score by payer class"]
+semantic_view: PATIENT_360
+output_ports:
+  - { kind: semantic, ref: PATIENT_360 }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_HC_001_PATIENT_360 }
+  - { kind: agent, ref: AG-HC-001 }
+sla: { freshness_minutes: 1440, availability_pct: 99.5, max_null_rate_pct: 1.0 }
+kpis: [KPI-HC-PORTAL, KPI-HC-RISK, KPI-HC-HIGH-RISK]
+upstream: [CONFORMED_GOLD.DIM_PATIENT]
+consumers: [Patient access, Care management, Patient Access Advisor agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-HC-001

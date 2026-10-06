@@ -1,0 +1,417 @@
+# Verified queries — curated question -> MetricQuery pairs. Every query compiles through compileMetricQuery() on the
+# named view. REVENUE_CYCLE deliberately has only 7 active entries and no active days-in-A/R query: the DP-HC-005
+# certification story (gate 4) activates VQ-HC-060..062 via FIX-1.
+
+# ---------------------------------------------------------------- CARE_QUALITY
+- id: VQ-HC-001
+  question: "What was the 30-day readmission rate by facility last quarter?"
+  query: { view: CARE_QUALITY, metrics: [readmission_rate], dimensions: [facility], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: readmission_rate, dir: desc }] }
+  agent: AG-HC-002
+  verified_by: healthcare:quality-analyst
+  verified_at: 2026-07-09
+- id: VQ-HC-002
+  question: "What is the readmission rate year to date excluding planned readmissions?"
+  query: { view: CARE_QUALITY, metrics: [readmission_rate], timeRange: { ytd: true } }
+  agent: AG-HC-002
+  verified_by: healthcare:quality-analyst
+  verified_at: 2026-07-12
+- id: VQ-HC-003
+  question: "Readmission rate by service line this year"
+  query: { view: CARE_QUALITY, metrics: [readmission_rate], dimensions: [service_line], timeRange: { ytd: true }, orderBy: [{ field: readmission_rate, dir: desc }] }
+  agent: AG-HC-002
+  verified_by: healthcare:quality-analyst
+  verified_at: 2026-07-15
+- id: VQ-HC-004
+  question: "Unplanned readmissions by condition cohort year to date"
+  query: { view: CARE_QUALITY, metrics: [readmissions], dimensions: [condition_cohort], timeRange: { ytd: true }, orderBy: [{ field: readmissions, dir: desc }], analysis: contribution }
+  agent: AG-HC-002
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-07-18
+- id: VQ-HC-005
+  question: "Readmission rate by month this year"
+  query: { view: CARE_QUALITY, metrics: [readmission_rate], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-HC-002
+  verified_by: healthcare:quality-analyst
+  verified_at: 2026-07-21
+- id: VQ-HC-006
+  question: "Average length of stay by facility last quarter"
+  query: { view: CARE_QUALITY, metrics: [avg_length_of_stay], dimensions: [facility], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_length_of_stay, dir: desc }] }
+  agent: AG-HC-002
+  verified_by: healthcare:quality-analyst
+  verified_at: 2026-07-24
+- id: VQ-HC-007
+  question: "Length of stay index by service line this year"
+  query: { view: CARE_QUALITY, metrics: [los_index], dimensions: [service_line], timeRange: { ytd: true }, orderBy: [{ field: los_index, dir: desc }] }
+  agent: AG-HC-002
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-07-27
+- id: VQ-HC-008
+  question: "Which service lines had the most excess days last quarter?"
+  query: { view: CARE_QUALITY, metrics: [excess_days], dimensions: [service_line], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: excess_days, dir: desc }], limit: 5, analysis: rank }
+  agent: AG-HC-002
+  verified_by: healthcare:quality-analyst
+  verified_at: 2026-07-30
+- id: VQ-HC-009
+  question: "Inpatient mortality rate by market this year"
+  query: { view: CARE_QUALITY, metrics: [inpatient_mortality_rate], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: inpatient_mortality_rate, dir: desc }] }
+  agent: AG-HC-002
+  verified_by: healthcare:quality-analyst
+  verified_at: 2026-08-02
+- id: VQ-HC-010
+  question: "Inpatient discharges by payer class year to date"
+  query: { view: CARE_QUALITY, metrics: [discharges], dimensions: [payer_class], timeRange: { ytd: true }, orderBy: [{ field: discharges, dir: desc }] }
+  agent: AG-HC-002
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-08-05
+- id: VQ-HC-011
+  question: "Readmission rate by quarter for the last four quarters"
+  query: { view: CARE_QUALITY, metrics: [readmission_rate], timeGrain: quarter, timeRange: { last: { n: 4, unit: quarter } }, analysis: trend }
+  agent: AG-HC-002
+  verified_by: healthcare:quality-analyst
+  verified_at: 2026-08-08
+- id: VQ-HC-012
+  question: "Patient days by facility this year"
+  query: { view: CARE_QUALITY, metrics: [patient_days], dimensions: [facility], timeRange: { ytd: true }, orderBy: [{ field: patient_days, dir: desc }] }
+  agent: AG-HC-002
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-08-11
+
+# ---------------------------------------------------------------- ED_FLOW
+- id: VQ-HC-013
+  question: "Door-to-provider time by facility last month"
+  query: { view: ED_FLOW, metrics: [door_to_provider_minutes], dimensions: [facility], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: door_to_provider_minutes, dir: desc }] }
+  agent: AG-HC-004
+  verified_by: healthcare:quality-analyst
+  verified_at: 2026-08-14
+- id: VQ-HC-014
+  question: "Left without being seen rate by facility last month"
+  query: { view: ED_FLOW, metrics: [lwbs_rate], dimensions: [facility], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: lwbs_rate, dir: desc }] }
+  agent: AG-HC-004
+  verified_by: healthcare:quality-analyst
+  verified_at: 2026-08-17
+- id: VQ-HC-015
+  question: "Admitted patient boarding time by facility last quarter"
+  query: { view: ED_FLOW, metrics: [avg_boarding_hours], dimensions: [facility], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_boarding_hours, dir: desc }] }
+  agent: AG-HC-004
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-08-20
+- id: VQ-HC-016
+  question: "ED visits by month this year"
+  query: { view: ED_FLOW, metrics: [ed_visits], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-HC-004
+  verified_by: healthcare:quality-analyst
+  verified_at: 2026-08-23
+- id: VQ-HC-017
+  question: "ED admission rate by triage acuity last quarter"
+  query: { view: ED_FLOW, metrics: [ed_admit_rate], dimensions: [acuity], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: ed_admit_rate, dir: desc }] }
+  agent: AG-HC-004
+  verified_by: healthcare:quality-analyst
+  verified_at: 2026-08-26
+- id: VQ-HC-018
+  question: "ED length of stay by arrival mode last month"
+  query: { view: ED_FLOW, metrics: [avg_ed_los_hours], dimensions: [arrival_mode], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: avg_ed_los_hours, dir: desc }] }
+  agent: AG-HC-004
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-08-29
+- id: VQ-HC-019
+  question: "ED visits by triage acuity last quarter"
+  query: { view: ED_FLOW, metrics: [ed_visits], dimensions: [acuity], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: ed_visits, dir: desc }] }
+  agent: AG-HC-004
+  verified_by: healthcare:quality-analyst
+  verified_at: 2026-09-01
+- id: VQ-HC-020
+  question: "LWBS rate by month this year"
+  query: { view: ED_FLOW, metrics: [lwbs_rate], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-HC-004
+  verified_by: healthcare:quality-analyst
+  verified_at: 2026-09-04
+- id: VQ-HC-021
+  question: "Door-to-provider time by market last quarter"
+  query: { view: ED_FLOW, metrics: [door_to_provider_minutes], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: door_to_provider_minutes, dir: desc }] }
+  agent: AG-HC-004
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-09-07
+- id: VQ-HC-022
+  question: "Boarding time by month this year"
+  query: { view: ED_FLOW, metrics: [avg_boarding_hours], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-HC-004
+  verified_by: healthcare:quality-analyst
+  verified_at: 2026-09-10
+
+# ---------------------------------------------------------------- PATIENT_360
+- id: VQ-HC-023
+  question: "How many active patients do we have?"
+  query: { view: PATIENT_360, metrics: [active_patients] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-09-13
+- id: VQ-HC-024
+  question: "Patient portal adoption rate by market"
+  query: { view: PATIENT_360, metrics: [portal_adoption_rate], dimensions: [region], orderBy: [{ field: portal_adoption_rate, dir: desc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-09-16
+- id: VQ-HC-025
+  question: "Active patients by portal enrolment"
+  query: { view: PATIENT_360, metrics: [active_patients], dimensions: [portal_enrolled] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-09-19
+- id: VQ-HC-026
+  question: "Average risk score by payer class"
+  query: { view: PATIENT_360, metrics: [avg_risk_score], dimensions: [payer_class], orderBy: [{ field: avg_risk_score, dir: desc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-09-22
+- id: VQ-HC-027
+  question: "Average risk score by age band"
+  query: { view: PATIENT_360, metrics: [avg_risk_score], dimensions: [age_band], orderBy: [{ field: avg_risk_score, dir: desc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-09-25
+- id: VQ-HC-028
+  question: "Share of high-risk patients by market"
+  query: { view: PATIENT_360, metrics: [high_risk_pct], dimensions: [region], orderBy: [{ field: high_risk_pct, dir: desc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-07-06
+- id: VQ-HC-029
+  question: "Active patients by payer class"
+  query: { view: PATIENT_360, metrics: [active_patients], dimensions: [payer_class], orderBy: [{ field: active_patients, dir: desc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-07-09
+- id: VQ-HC-030
+  question: "Portal adoption by age band"
+  query: { view: PATIENT_360, metrics: [portal_adoption_rate], dimensions: [age_band], orderBy: [{ field: portal_adoption_rate, dir: desc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-07-12
+- id: VQ-HC-031
+  question: "Active patients by risk band"
+  query: { view: PATIENT_360, metrics: [active_patients], dimensions: [risk_band], orderBy: [{ field: active_patients, dir: desc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-07-15
+- id: VQ-HC-032
+  question: "High-risk patient share by payer class"
+  query: { view: PATIENT_360, metrics: [high_risk_pct], dimensions: [payer_class], orderBy: [{ field: high_risk_pct, dir: desc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-07-18
+
+# ---------------------------------------------------------------- SCHEDULING
+- id: VQ-HC-033
+  question: "What was the no-show rate last month?"
+  query: { view: SCHEDULING, metrics: [no_show_rate], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-07-21
+- id: VQ-HC-034
+  question: "No-show rate by specialty last quarter"
+  query: { view: SCHEDULING, metrics: [no_show_rate], dimensions: [specialty], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: no_show_rate, dir: desc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-07-24
+- id: VQ-HC-035
+  question: "Days to appointment by specialty last quarter"
+  query: { view: SCHEDULING, metrics: [avg_days_to_appointment], dimensions: [specialty], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: avg_days_to_appointment, dir: desc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-07-27
+- id: VQ-HC-036
+  question: "New-patient lag by specialty last quarter"
+  query: { view: SCHEDULING, metrics: [new_patient_lag_days], dimensions: [specialty], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: new_patient_lag_days, dir: desc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-07-30
+- id: VQ-HC-037
+  question: "Completed visits by month this year"
+  query: { view: SCHEDULING, metrics: [completed_visits], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-08-02
+- id: VQ-HC-038
+  question: "Cancellation rate by market last quarter"
+  query: { view: SCHEDULING, metrics: [cancellation_rate], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: cancellation_rate, dir: desc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-08-05
+- id: VQ-HC-039
+  question: "No-show rate by visit type last quarter"
+  query: { view: SCHEDULING, metrics: [no_show_rate], dimensions: [visit_type], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: no_show_rate, dir: desc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-08-08
+- id: VQ-HC-040
+  question: "Appointments by status last month"
+  query: { view: SCHEDULING, metrics: [appointments], dimensions: [appointment_status], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: appointments, dir: desc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-08-11
+- id: VQ-HC-041
+  question: "Days to appointment by month this year"
+  query: { view: SCHEDULING, metrics: [avg_days_to_appointment], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-08-14
+- id: VQ-HC-042
+  question: "No-show rate by market last month"
+  query: { view: SCHEDULING, metrics: [no_show_rate], dimensions: [region], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: no_show_rate, dir: desc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-08-17
+
+# ---------------------------------------------------------------- SUPPLY_CHAIN
+- id: VQ-HC-043
+  question: "What share of supply spend this year was on contract?"
+  query: { view: SUPPLY_CHAIN, metrics: [spend_on_contract_pct], timeRange: { ytd: true } }
+  agent: AG-HC-003
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-08-20
+- id: VQ-HC-044
+  question: "Bottom 10 suppliers by fill rate this year"
+  query: { view: SUPPLY_CHAIN, metrics: [fill_rate_pct], dimensions: [supplier], timeRange: { ytd: true }, orderBy: [{ field: fill_rate_pct, dir: asc }], limit: 10, analysis: rank }
+  agent: AG-HC-003
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-08-23
+- id: VQ-HC-045
+  question: "Off-contract spend by category this year"
+  query: { view: SUPPLY_CHAIN, metrics: [off_contract_spend], dimensions: [category], timeRange: { ytd: true }, orderBy: [{ field: off_contract_spend, dir: desc }], analysis: contribution }
+  agent: AG-HC-003
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-08-26
+- id: VQ-HC-046
+  question: "Supply spend by category year to date"
+  query: { view: SUPPLY_CHAIN, metrics: [supply_spend], dimensions: [category], timeRange: { ytd: true }, orderBy: [{ field: supply_spend, dir: desc }] }
+  agent: AG-HC-003
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-08-29
+- id: VQ-HC-047
+  question: "PO cycle time by quarter this year"
+  query: { view: SUPPLY_CHAIN, metrics: [po_cycle_days], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-HC-003
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-09-01
+- id: VQ-HC-048
+  question: "Spend on contract by preferred supplier status this year"
+  query: { view: SUPPLY_CHAIN, metrics: [spend_on_contract_pct], dimensions: [preferred_supplier], timeRange: { ytd: true } }
+  agent: AG-HC-003
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-09-04
+- id: VQ-HC-049
+  question: "Supplier fill rate by category this year"
+  query: { view: SUPPLY_CHAIN, metrics: [fill_rate_pct], dimensions: [category], timeRange: { ytd: true }, orderBy: [{ field: fill_rate_pct, dir: asc }] }
+  agent: AG-HC-003
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-09-07
+- id: VQ-HC-050
+  question: "PO cycle time by category this year"
+  query: { view: SUPPLY_CHAIN, metrics: [po_cycle_days], dimensions: [category], timeRange: { ytd: true }, orderBy: [{ field: po_cycle_days, dir: desc }] }
+  agent: AG-HC-003
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-09-10
+- id: VQ-HC-051
+  question: "PO lines by preferred supplier status year to date"
+  query: { view: SUPPLY_CHAIN, metrics: [po_lines], dimensions: [preferred_supplier], timeRange: { ytd: true }, orderBy: [{ field: po_lines, dir: desc }] }
+  agent: AG-HC-003
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-09-13
+- id: VQ-HC-052
+  question: "Supply spend by month this year"
+  query: { view: SUPPLY_CHAIN, metrics: [supply_spend], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-HC-003
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-09-16
+
+# ---------------------------------------------------------------- REVENUE_CYCLE
+- id: VQ-HC-053
+  question: "Which payers had the highest initial denial rate last quarter?"
+  query: { view: REVENUE_CYCLE, metrics: [initial_denial_rate], dimensions: [payer], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: initial_denial_rate, dir: desc }], limit: 10, analysis: rank }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-09-19
+- id: VQ-HC-054
+  question: "How many claims did we submit last month?"
+  query: { view: REVENUE_CYCLE, metrics: [claims_submitted], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-09-22
+- id: VQ-HC-055
+  question: "Clean claim rate by facility last quarter"
+  query: { view: REVENUE_CYCLE, metrics: [clean_claim_rate], dimensions: [facility], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: clean_claim_rate, dir: asc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-09-25
+- id: VQ-HC-056
+  question: "Net collection rate by financial class last quarter"
+  query: { view: REVENUE_CYCLE, metrics: [net_collection_rate], dimensions: [financial_class], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: net_collection_rate, dir: asc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-07-06
+- id: VQ-HC-057
+  question: "Initial denial rate by month this year"
+  query: { view: REVENUE_CYCLE, metrics: [initial_denial_rate], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-07-09
+- id: VQ-HC-058
+  question: "Denied charges by denial reason last quarter"
+  query: { view: REVENUE_CYCLE, metrics: [denied_charges], dimensions: [denial_reason], timeRange: { last: { n: 1, unit: quarter } }, filters: [{ dimension: denial_reason, op: "!=", value: Not denied }], orderBy: [{ field: denied_charges, dir: desc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-07-12
+- id: VQ-HC-059
+  question: "Gross charges by financial class last quarter"
+  query: { view: REVENUE_CYCLE, metrics: [gross_charges], dimensions: [financial_class], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: gross_charges, dir: desc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-07-15
+- id: VQ-HC-060
+  question: "What are our days in A/R this quarter?"
+  query: { view: REVENUE_CYCLE, metrics: [days_in_ar], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-09-22
+  status: pending_fix
+- id: VQ-HC-061
+  question: "Days in A/R trend by month for the last six months"
+  query: { view: REVENUE_CYCLE, metrics: [days_in_ar], timeGrain: month, timeRange: { last: { n: 6, unit: month } }, analysis: trend }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-09-22
+  status: pending_fix
+- id: VQ-HC-062
+  question: "Days in A/R by financial class last quarter"
+  query: { view: REVENUE_CYCLE, metrics: [days_in_ar], dimensions: [financial_class], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: days_in_ar, dir: desc }] }
+  agent: AG-HC-001
+  verified_by: healthcare:his-steward
+  verified_at: 2026-09-22
+  status: pending_fix
+
+# ---------------------------------------------------------------- WORKFORCE
+- id: VQ-HC-063
+  question: "Bed occupancy by facility last month"
+  query: { view: WORKFORCE, metrics: [bed_occupancy_pct], dimensions: [facility], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: bed_occupancy_pct, dir: desc }] }
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-07-27
+- id: VQ-HC-064
+  question: "Nursing hours per patient day by unit type last month"
+  query: { view: WORKFORCE, metrics: [nursing_hppd], dimensions: [unit_type], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: nursing_hppd, dir: desc }] }
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-07-30
+- id: VQ-HC-065
+  question: "Overtime rate by facility last quarter"
+  query: { view: WORKFORCE, metrics: [overtime_pct], dimensions: [facility], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: overtime_pct, dir: desc }] }
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-08-02
+- id: VQ-HC-066
+  question: "Contract labour share by facility last quarter"
+  query: { view: WORKFORCE, metrics: [contract_labor_pct], dimensions: [facility], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: contract_labor_pct, dir: desc }] }
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-08-05
+- id: VQ-HC-067
+  question: "Bed occupancy by month this year"
+  query: { view: WORKFORCE, metrics: [bed_occupancy_pct], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  verified_by: healthcare:clinical-dpo
+  verified_at: 2026-08-08

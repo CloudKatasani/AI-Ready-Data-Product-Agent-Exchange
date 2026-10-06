@@ -1,0 +1,59 @@
+# Supply chain DQ rules.
+- id: DQ-HC-041
+  object: CONFORMED_GOLD.FCT_SUPPLY_SPEND
+  column: spend_usd
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every PO line carries spend.
+- id: DQ-HC-042
+  object: CONFORMED_GOLD.FCT_SUPPLY_SPEND
+  column: spend_usd
+  dimension: accuracy
+  assertion: "min > 0"
+  severity: high
+  alert_route: steward
+  description: PO line spend is positive; returns are posted as credit notes outside this fact.
+- id: DQ-HC-043
+  object: CONFORMED_GOLD.FCT_SUPPLY_SPEND
+  column: on_contract
+  dimension: completeness
+  assertion: "null_rate == 0"
+  severity: critical
+  alert_route: steward
+  description: Every PO line is flagged on or off contract (contract compliance and off-contract spend).
+- id: DQ-HC-044
+  object: CONFORMED_GOLD.FCT_SUPPLY_SPEND
+  column: po_line_id
+  dimension: uniqueness
+  assertion: "dup_rate == 0"
+  severity: high
+  alert_route: engineering
+  description: One row per PO line (duplicate ERP loads double spend).
+- id: DQ-HC-045
+  object: CONFORMED_GOLD.FCT_SUPPLY_SPEND
+  column: category
+  dimension: consistency
+  assertion: "invalid_rate == 0"
+  allowed: [Med-surg supplies, Pharmaceuticals, Implants & devices, Lab & diagnostics, Imaging equipment, Food & nutrition, Environmental services, IT & software]
+  severity: medium
+  alert_route: steward
+  description: Supply categories conform to the category list.
+- id: DQ-HC-046
+  object: CURATED_SILVER.SUPPLIER
+  column: tax_id
+  dimension: validity
+  assertion: "regex_rate >= 1"
+  pattern: "^[0-9]{2}-.+$"
+  severity: medium
+  alert_route: steward
+  description: Supplier tax ids follow the registered identifier format checked at due diligence.
+- id: DQ-HC-047
+  object: CONFORMED_GOLD.FCT_SUPPLY_SPEND
+  column: po_date
+  dimension: timeliness
+  assertion: "freshness_min <= 2880"
+  severity: medium
+  alert_route: engineering
+  description: Purchase orders from the ERP are no more than a day behind.

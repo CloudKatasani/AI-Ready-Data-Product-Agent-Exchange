@@ -1,0 +1,80 @@
+# Value cases per product (marketplace value model). All figures are illustrative and synthetic.
+- id: VC-HC-001
+  product: DP-HC-001
+  hypothesis: A single certified patient record lets patient access target portal activation at low-adoption markets and route rising-risk patients to care management sooner.
+  baseline: "Quarterly EMPI extracts reconciled by hand against the portal vendor export; about 60 analyst hours a quarter; outreach spread evenly across markets."
+  benefit_model: "incremental_portal_patients * annual_paper_and_call_cost + analyst_hours_saved * loaded_analyst_rate"
+  assumptions:
+    - { text: "Incremental portal activations from targeted campaigns", value: 22000, unit: patients, source: "Patient access campaign pilot, H1 2026" }
+    - { text: "Annual statement, reminder and call-centre cost avoided per portal patient", value: 6.4, unit: usd, source: "Patient access cost model FY26" }
+    - { text: "Analyst hours saved per quarter", value: 50, unit: hours, source: "Patient access analytics time study" }
+    - { text: "Fully loaded analyst rate", value: 95, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 159800
+  measured: { value_usd: 128000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-HC-002
+  product: DP-HC-002
+  hypothesis: Ranking facilities and service lines by unplanned readmissions from one governed source directs transitional-care nurses where they prevent the most readmissions and programme penalties.
+  baseline: "Quality analysts rebuild readmissions from ADT extracts each quarter; planned readmissions are not excluded consistently; transitional-care nurses are allocated by bed count."
+  benefit_model: "avoided_readmissions * average_cost_per_readmission + avoided_programme_penalty"
+  assumptions:
+    - { text: "Unplanned readmissions avoided per year by retargeting transitional care", value: 140, unit: readmissions, source: "Care transitions pilot at Riverside Medical Center, 2026" }
+    - { text: "Average variable cost of a readmission", value: 9800, unit: usd, source: "Cost accounting FY26 (synthetic)" }
+    - { text: "Readmissions programme penalty avoided per year", value: 410000, unit: usd, source: "Quality finance model FY27 (synthetic)" }
+  annual_value_usd: 1782000
+  measured: { value_usd: 1350000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-HC-003
+  product: DP-HC-003
+  hypothesis: Visible new-patient lag and no-shows by specialty let the medical group add open-access slots and reminders where they recover the most visits.
+  baseline: "Clinic managers export the scheduling template report into spreadsheets monthly; no-show follow-up is ad hoc."
+  benefit_model: "recovered_visits * average_net_revenue_per_visit"
+  assumptions:
+    - { text: "Visits recovered per year through reminders and open access", value: 9500, unit: visits, source: "Medical group access plan FY26" }
+    - { text: "Average net revenue per ambulatory visit", value: 142, unit: usd, source: "Medical group finance FY26 (synthetic)" }
+  annual_value_usd: 1349000
+  measured: { value_usd: 980000, period: "2026-Q1..2026-Q3 annualised", confidence: low }
+- id: VC-HC-004
+  product: DP-HC-004
+  hypothesis: Daily ED throughput and boarding by facility triggers surge plans earlier, reducing walkouts and ambulance diversion hours.
+  baseline: "Tracking board screenshots and a nightly CSV per hospital; escalation decided by phone at the evening bed huddle."
+  benefit_model: "avoided_lwbs_visits * net_revenue_per_ed_visit + avoided_diversion_hours * revenue_per_diversion_hour"
+  assumptions:
+    - { text: "LWBS visits avoided per year", value: 3100, unit: visits, source: "ED operations improvement plan FY26" }
+    - { text: "Average net revenue per ED visit", value: 410, unit: usd, source: "Emergency services finance FY26 (synthetic)" }
+    - { text: "Ambulance diversion hours avoided per year", value: 260, unit: hours, source: "EMS diversion log 2025" }
+    - { text: "Net revenue lost per diversion hour", value: 2600, unit: usd, source: "Emergency services finance FY26 (synthetic)" }
+  annual_value_usd: 1947000
+  measured: { value_usd: 1420000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-HC-005
+  product: DP-HC-005
+  hypothesis: A certified denials and receivables view focuses denial-prevention work on the payers and reasons driving initial denials, recovering cash and cutting rework.
+  baseline: "Denials worklist exported from patient accounting and pivoted at each month-end; two A/R day definitions in circulation; about 40 analyst hours a month."
+  benefit_model: "reduction_in_denial_write_offs * annual_expected_reimbursement + rework_hours_saved * loaded_rate"
+  assumptions:
+    - { text: "Reduction in denial write-offs as a share of expected reimbursement", value: 0.15, unit: percent_points, source: "Revenue cycle target, FY27 plan" }
+    - { text: "Annual expected reimbursement (synthetic)", value: 1250000000, unit: usd, source: "Synthetic finance summary" }
+    - { text: "Denial rework hours saved per year", value: 5200, unit: hours, source: "Patient financial services time study" }
+    - { text: "Fully loaded billing specialist rate", value: 48, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 2124600
+  measured: null
+- id: VC-HC-006
+  product: DP-HC-006
+  hypothesis: Visible off-contract spend by category and supplier moves physician preference items and spot buys onto contract, capturing negotiated pricing.
+  baseline: "ERP spend cube refreshed monthly by a consultant; off-contract spend reported quarterly with a six-week lag."
+  benefit_model: "spend_moved_onto_contract * average_contract_discount + consultant_cost_avoided"
+  assumptions:
+    - { text: "Annual spend moved from off-contract to contract", value: 11000000, unit: usd, source: "Value analysis committee plan FY26" }
+    - { text: "Average contract discount versus off-contract buying", value: 8, unit: percent, source: "GPO benchmark of 2025 tenders" }
+    - { text: "Consultant reporting cost avoided per year", value: 90000, unit: usd, source: "Supply chain operating budget FY26" }
+  annual_value_usd: 970000
+  measured: { value_usd: 760000, period: "2026-Q1..2026-Q3 annualised", confidence: medium }
+- id: VC-HC-007
+  product: DP-HC-007
+  hypothesis: Matching nurse staffing to census by unit replaces agency contracts with permanent positions where occupancy is persistently above staffed capacity.
+  baseline: "Time and attendance exports cross-checked against the census report by hand; agency contracts renewed unit by unit."
+  benefit_model: "agency_hours_converted * (agency_rate - employed_rate)"
+  assumptions:
+    - { text: "Agency nursing hours converted to employed hours per year", value: 42000, unit: hours, source: "Nursing workforce plan FY27" }
+    - { text: "Agency hourly rate (synthetic)", value: 118, unit: usd_per_hour, source: "Agency framework rates (synthetic)" }
+    - { text: "Fully loaded employed RN hourly rate (synthetic)", value: 71, unit: usd_per_hour, source: "Finance planning rates FY26" }
+  annual_value_usd: 1974000
+  measured: null
