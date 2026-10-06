@@ -23,5 +23,13 @@ Phase 10 added four deep packs (insurance, telecom, manufacturing, public-sector
    - The eval harness and story-resolution tests run on deep and standard packs.
    - Playwright runs all six stories on deep packs, and S1 (executive-5) and S5 (factory-10) on standard packs, which is the Phase 10 DoD.
 
+8. **Follow-up fixes for authoring friction** (after Phase 11):
+   - Plant `set` / `where` literals for DATE and TIMESTAMP columns may be ISO text; the generator converts them to epoch days or seconds. Before, a date string became NaN.
+   - The scripted stemmer no longer strips the final "s" of a double-s word, so "loss", "losses", "access" and "accesses" match.
+   - Metric filters and rule filters support `is null` / `is not null`. These take no value, which the schema enforces, and compile to `IS NULL` / `IS NOT NULL` without a bound parameter.
+   - `rubrics.matcher.entity_nouns` adds "resident" and "applicant", for record-level refusals.
+
+   Golden answers (0 differences across 11 packs), validator, knockout and eval results are unchanged.
+
 ## Consequences
 Every pack now reaches 0 validator errors. Authoring mistakes that used to show up only when seeding now show up in `pnpm pack:validate`.

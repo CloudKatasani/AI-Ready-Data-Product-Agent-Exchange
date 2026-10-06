@@ -120,7 +120,10 @@ export const BusinessRule = z
     source_doc: DocId,
     apply: z
       .object({
-        filter: z.object({ dimension: SemanticName, op: z.enum(['=', '!=', 'in', 'not in', '>', '<', '>=', '<=']), value: z.union([z.string(), z.number(), z.boolean(), z.array(z.union([z.string(), z.number()]))]) }).strict(),
+        filter: z
+          .object({ dimension: SemanticName, op: z.enum(['=', '!=', 'in', 'not in', '>', '<', '>=', '<=', 'is null', 'is not null']), value: z.union([z.string(), z.number(), z.boolean(), z.array(z.union([z.string(), z.number()]))]).optional() })
+          .strict()
+          .refine((f) => (f.op === 'is null' || f.op === 'is not null') === (f.value === undefined), { message: '"is null" / "is not null" take no value; every other operator needs one' }),
         unless_question_mentions: z.array(z.string()).default([]),
       })
       .strict()

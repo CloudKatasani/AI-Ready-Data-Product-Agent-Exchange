@@ -14,7 +14,7 @@ export function normalise(s: string): string {
     .trim();
 }
 
-export const stem = (w: string) => w.replace(/ies$/, 'y').replace(/(ing|ers|er|es|s)$/, '');
+export const stem = (w: string) => w.replace(/ies$/, 'y').replace(/(ing|ers|er|es|(?<!s)s)$/, '');
 
 export function tokens(s: string): string[] {
   return normalise(s)

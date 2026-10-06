@@ -42,8 +42,8 @@ Totals:
 ## Notes and decisions
 - **ADR-0023:** the standard-pack lifecycle demo uses the in-certification product. Story e4 now says "drops out of Trusted", because every pack's Context knockout is a `wrong` failure, which scores Questionable.
 - **Lint-safe naming:** pack objects that would become lint terms colliding with platform vocabulary were renamed inside the packs. Examples: `INSURANCE_POLICY`, `PLANT_SITE`, `OPERATOR_ROSTER`, `MOBILE_USAGE`, `GRANT_FUNDING`.
-- **Known authoring friction** (documented for pack authors, not blocking):
-  - A fixed-date plant needs an epoch-day number.
-  - The matcher stems "loss" and "losses" differently.
-  - `MetricFilter` has no `is not null`.
-  - `rubrics.matcher.entity_nouns` lacks "resident" and "applicant".
+- **Authoring friction reported by the pack agents**, fixed after Phase 11 (ADR-0023 §8):
+  - Plant literals for DATE / TIMESTAMP columns accept ISO text.
+  - The stemmer keeps double-s words whole ("loss" = "losses").
+  - Filters support `is null` / `is not null`.
+  - `entity_nouns` includes "resident" and "applicant".

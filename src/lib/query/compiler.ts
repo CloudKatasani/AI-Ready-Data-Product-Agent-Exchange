@@ -146,6 +146,19 @@ function inferShape(q: MetricQuery): Shape {
 
 const OPS: Record<string, string> = { '=': '=', '!=': '<>', '>': '>', '<': '<', '>=': '>=', '<=': '<=' };
 
+/** One filter predicate; values are always bound parameters. */
+function predicate(expr: string, op: string, value: unknown, bind: (v: unknown) => string, dimension: string): string {
+  if (op === 'is null') return `${expr} IS NULL`;
+  if (op === 'is not null') return `${expr} IS NOT NULL`;
+  const vals = Array.isArray(value) ? value : [value];
+  if (op === 'in' || op === 'not in') return `${expr} ${op === 'in' ? 'IN' : 'NOT IN'} (${vals.map(bind).join(', ')})`;
+  if (op === 'between') {
+    if (vals.length !== 2) throw new CompileError(`between needs two values for ${dimension}`, 'INVALID');
+    return `${expr} BETWEEN ${bind(vals[0])} AND ${bind(vals[1])}`;
+  }
+  return `${expr} ${OPS[op]} ${bind(vals[0])}`;
+}
+
 export function compileMetricQuery(q: MetricQuery, pack: Pack, opts: CompileOptions = {}): CompiledQuery {
   const view = pack.semantic.find((v) => v.name === q.view);
   if (!view) throw new CompileError(`Unknown semantic view "${q.view}"`, 'UNKNOWN_FIELD', suggest(q.view, pack.semantic.map((v) => ({ name: v.name }))));
@@ -181,12 +194,7 @@ export function compileMetricQuery(q: MetricQuery, pack: Pack, opts: CompileOpti
     const d = dimByName.get(f.dimension);
     if (!d) throw new CompileError(`Unknown filter dimension "${f.dimension}" in ${view.name}`, 'UNKNOWN_FIELD', suggest(f.dimension, view.dimensions));
     needAliases(d.expr);
-    const vals = Array.isArray(f.value) ? f.value : [f.value];
-    if (f.op === 'in' || f.op === 'not in') where.push(`${d.expr} ${f.op === 'in' ? 'IN' : 'NOT IN'} (${vals.map(bind).join(', ')})`);
-    else if (f.op === 'between') {
-      if (vals.length !== 2) throw new CompileError(`between needs two values for ${f.dimension}`, 'INVALID');
-      where.push(`${d.expr} BETWEEN ${bind(vals[0])} AND ${bind(vals[1])}`);
-    } else where.push(`${d.expr} ${OPS[f.op]} ${bind(vals[0])}`);
+    where.push(predicate(d.expr, f.op, f.value, bind, f.dimension));
   }
 
   // Business rules (default filters) unless the question or the caller opts out.
@@ -210,8 +218,7 @@ export function compileMetricQuery(q: MetricQuery, pack: Pack, opts: CompileOpti
       if (!d) throw new CompileError(`Rule ${id} filters on "${rule.apply.filter.dimension}", not in ${view.name}`, 'INVALID');
       needAliases(d.expr);
       const f = rule.apply.filter;
-      const vals = Array.isArray(f.value) ? f.value : [f.value];
-      where.push(f.op === 'in' || f.op === 'not in' ? `${d.expr} ${f.op === 'in' ? 'IN' : 'NOT IN'} (${vals.map(bind).join(', ')})` : `${d.expr} ${OPS[f.op]} ${bind(vals[0])}`);
+      where.push(predicate(d.expr, f.op, f.value, bind, f.dimension));
       ruleRefs.push(id);
     }
   }

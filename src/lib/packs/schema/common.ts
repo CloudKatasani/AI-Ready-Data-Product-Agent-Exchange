@@ -85,14 +85,17 @@ export const TimeRange = z
   .strict();
 export type TimeRange = z.infer<typeof TimeRange>;
 
-export const FilterOp = z.enum(['=', '!=', 'in', 'not in', '>', '<', '>=', '<=', 'between']);
+export const FilterOp = z.enum(['=', '!=', 'in', 'not in', '>', '<', '>=', '<=', 'between', 'is null', 'is not null']);
+/** Operators that take no value. */
+export const NULL_OPS: readonly string[] = ['is null', 'is not null'];
 export type FilterOp = z.infer<typeof FilterOp>;
 
 const Scalar = z.union([z.string(), z.number(), z.boolean()]);
 
 export const MetricFilter = z
-  .object({ dimension: SemanticName, op: FilterOp, value: z.union([Scalar, z.array(Scalar)]) })
-  .strict();
+  .object({ dimension: SemanticName, op: FilterOp, value: z.union([Scalar, z.array(Scalar)]).optional() })
+  .strict()
+  .refine((f) => NULL_OPS.includes(f.op) === (f.value === undefined), { message: '"is null" / "is not null" take no value; every other operator needs one' });
 export type MetricFilter = z.infer<typeof MetricFilter>;
 
 /** The single intermediate representation for every governed question (ADR-0004, 02-architecture §4). */

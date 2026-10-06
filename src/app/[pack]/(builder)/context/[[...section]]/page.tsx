@@ -84,7 +84,7 @@ export default async function ContextPage({ params, searchParams }: { params: Pr
                 <td className={`${td} font-mono`}>{r.id}</td>
                 <td className={td}>{r.kind}</td>
                 <td className={td}>{r.text}</td>
-                <td className={`${td} font-mono text-xs`}>{r.apply ? `${r.apply.filter.dimension} ${r.apply.filter.op} ${JSON.stringify(r.apply.filter.value)}` : ''}</td>
+                <td className={`${td} font-mono text-xs`}>{r.apply ? `${r.apply.filter.dimension} ${r.apply.filter.op}${r.apply.filter.value === undefined ? '' : ` ${JSON.stringify(r.apply.filter.value)}`}` : ''}</td>
                 <td className={td}>
                   <a className="text-primary underline" href={`/${packId}/context/documents?q=${encodeURIComponent(r.text.split(' ').slice(0, 4).join(' '))}`}>{r.source_doc}</a>
                 </td>

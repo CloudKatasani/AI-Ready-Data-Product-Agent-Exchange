@@ -18,7 +18,7 @@ matcher:                      # AI-Ready respond.ts
   clarify_threshold: 0.25
   redirect_margin: 0.15
   # Nouns naming an individual record holder; "<noun> 123456" or "this <noun>" is declined as record-level.
-  entity_nouns: [customer, account, member, patient, policyholder, subscriber, citizen, passenger, employee, person]
+  entity_nouns: [customer, account, member, patient, policyholder, subscriber, citizen, resident, applicant, passenger, employee, person]
 
 agentEval:                    # Marketplace evaluation.py defaults
   golden_min: 0.92

@@ -14,6 +14,21 @@ export function applyPlants(t: GeneratedTable, seed: number): void {
   for (const plant of t.spec.plant) applyPlant(t, plant, seed, col);
 }
 
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const ISO_TIMESTAMP = /^(\d{4}-\d{2}-\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/;
+
+/**
+ * Plant literals for DATE / TIMESTAMP columns may be written as ISO text ("2026-08-15", "2026-08-15 06:00");
+ * cells hold epoch days / epoch seconds, so convert them (a raw string would turn into NaN downstream).
+ */
+export function plantLiteral(v: string | number | boolean, type: string | undefined): Cell {
+  if (typeof v !== 'string') return v;
+  if (type === 'DATE' && ISO_DATE.test(v)) return isoToEpochDay(v);
+  const ts = type === 'TIMESTAMP' ? ISO_TIMESTAMP.exec(v) ?? (ISO_DATE.test(v) ? [v, v, '00', '00', '00'] : null) : null;
+  if (ts) return isoToEpochDay(ts[1] ?? '') * 86_400 + Number(ts[2]) * 3_600 + Number(ts[3]) * 60 + Number(ts[4] ?? 0);
+  return v;
+}
+
 function matches(v: Cell, cond: unknown): boolean {
   if (cond && typeof cond === 'object' && 'in' in cond) return (cond as { in: unknown[] }).in.includes(v as never);
   return v === cond;
@@ -21,7 +36,11 @@ function matches(v: Cell, cond: unknown): boolean {
 
 function applyPlant(t: GeneratedTable, plant: Plant, seed: number, col: (name: string) => Cell[]): void {
   const rng = new Rng(hashSeed(seed, t.spec.name, plant.id));
-  const where = Object.entries(plant.where).map(([name, cond]) => ({ values: col(name), cond }));
+  const typeOf = (name: string) => t.spec.columns.find((c) => c.name === name)?.type;
+  const where = Object.entries(plant.where).map(([name, cond]) => ({
+    values: col(name),
+    cond: cond && typeof cond === 'object' ? { in: cond.in.map((x) => plantLiteral(x, typeOf(name))) } : plantLiteral(cond, typeOf(name)),
+  }));
   const window = plant.window
     ? { values: col(plant.window.column), type: t.spec.columns.find((c) => c.name === plant.window?.column)?.type, from: isoToEpochDay(plant.window.from), to: isoToEpochDay(plant.window.to) }
     : null;
@@ -38,7 +57,7 @@ function applyPlant(t: GeneratedTable, plant: Plant, seed: number, col: (name: s
       if (a.pct !== undefined && !rng.chance(a.pct / 100)) continue;
       const cur = values[i] ?? null;
       let next: Cell = cur;
-      if (a.set !== undefined) next = a.set;
+      if (a.set !== undefined) next = plantLiteral(a.set, spec.type);
       if (typeof next === 'number' && a.multiply !== undefined) next = next * a.multiply;
       if (typeof next === 'number' && a.add !== undefined) next = next + a.add;
       if (typeof next === 'number') next = spec.type === 'INTEGER' || spec.type === 'BIGINT' ? Math.round(next) : Math.round(next * 100) / 100;
