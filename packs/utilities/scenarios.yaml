@@ -14,7 +14,7 @@
   kind: answer
   query: { view: RELIABILITY, metrics: [saidi], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: saidi, dir: desc }] }
   answer:
-    headline: "{{top.region}} had the highest SAIDI last quarter at {{top.saidi}} minutes — {{vsTarget.top}} target."
+    headline: "{{top.region}} had the highest SAIDI last quarter at {{top.saidi}} minutes."
     narrative: "Major event days are excluded (BR-UTL-012). {{bottom.region}} was lowest at {{bottom.saidi}} minutes across {{rows}} regions."
     chart: bar
   followups: ["Which feeders drove East?", "Include major event days", "Trend over the last 4 quarters"]
@@ -121,18 +121,18 @@
 - id: SC-UTL-008
   agent: AG-UTL-004
   pattern: 8
-  question: "How are our assets distributed across condition bands?"
+  question: "How is asset health distributed across feeders?"
   paraphrases:
-    - "How many assets are in each condition band?"
-    - "asset health band distribution"
+    - "Spread of the asset health index by feeder"
+    - "asset health percentiles across feeders"
   kind: answer
-  query: { view: ASSET_HEALTH, metrics: [asset_count], dimensions: [condition_band], orderBy: [{ field: asset_count, dir: desc }], analysis: distribution }
+  query: { view: ASSET_HEALTH, metrics: [avg_asset_health], dimensions: [feeder], analysis: distribution }
   answer:
-    headline: "Most assets sit in the {{top.condition_band}} band ({{top.asset_count}} assets)."
-    narrative: "{{total.asset_count}} assets across {{rows}} condition bands; the Poor band is scored from the asset health index."
-    chart: bar
-  followups: ["Poor-condition assets by asset class", "Which feeders have the most poor assets?"]
-  expect: { rows: 3 }
+    headline: "Across {{top.feeder_count}} feeders, the median feeder scores {{top.avg_asset_health_p50}} on the asset health index."
+    narrative: "The middle 80% of feeders score between {{top.avg_asset_health_p10}} and {{top.avg_asset_health_p90}}; the weakest feeder averages {{top.avg_asset_health_min}}."
+    chart: table
+  followups: ["Which feeders have the most poor assets?", "Asset health by asset class"]
+  expect: { rows: 1 }
 
 - id: SC-UTL-009
   agent: AG-UTL-004
@@ -340,7 +340,7 @@
   kind: answer
   query: { view: PROCUREMENT, metrics: [po_cycle_days], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
   answer:
-    headline: "PO cycle time moved {{delta.po_cycle_days}} days versus the previous quarter."
+    headline: "PO cycle time moved {{delta.po_cycle_days}} days from the first to the latest quarter this year."
     narrative: "Average days from purchase order to receipt for each of the {{rows}} quarters this year."
     chart: line
   followups: ["Cycle time by category", "Which suppliers have the worst OTIF?"]

@@ -17,7 +17,7 @@ tools:
   - { tool: get_definition }
   - { tool: get_product_status }
 kpi_coverage:
-  - { kpi: KPI-UTL-AHI, grains: [], slices: [asset_class, vintage_band, region, criticality], depth: rank_drivers }
+  - { kpi: KPI-UTL-AHI, grains: [], slices: [asset_class, vintage_band, region, criticality, feeder, condition_band], depth: rank_drivers }
   - { kpi: KPI-UTL-POOR-ASSETS, grains: [], slices: [asset_class, region, feeder], depth: rank_drivers }
   - { kpi: KPI-UTL-PM-COMP, grains: [month, quarter], slices: [region, asset_class], depth: explain }
   - { kpi: KPI-UTL-WO-BACKLOG, grains: [], slices: [region, wo_type, asset_class], depth: rank_drivers }

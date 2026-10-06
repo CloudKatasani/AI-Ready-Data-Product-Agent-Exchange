@@ -22,6 +22,7 @@
     "warehouse:build": "tsx scripts/warehouse-build.ts",
     "pack:validate": "tsx scripts/pack-validate.ts",
     "pack:schema": "tsx scripts/pack-schema.ts",
+    "golden": "tsx scripts/golden.ts",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx scripts/seed.ts",
     "db:setup": "pnpm db:migrate && pnpm db:seed",

@@ -3,7 +3,7 @@ import { LinkTabs } from '@/components/explorer/tabs';
 import { optionalSegments } from '@/components/shell/route-params';
 import { Badge } from '@/components/ui/badge';
 import { copy } from '@/copy/en';
-import { searchDocuments } from '@/lib/marketplace/search';
+import { searchDocuments } from '@/lib/packs/doc-search';
 import { getPack } from '@/lib/packs/registry';
 
 const SECTIONS = ['instructions', 'rules', 'verified', 'synonyms', 'documents'] as const;

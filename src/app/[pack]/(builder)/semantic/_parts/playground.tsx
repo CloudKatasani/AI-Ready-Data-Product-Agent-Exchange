@@ -99,7 +99,7 @@ export async function Playground({ pack, view, params, who }: { pack: Pack; view
       {out?.ok && metric && (
         <div className="flex flex-col gap-4">
           {out.result.rowCount === 1 && out.result.columns.length === 1 && (
-            <p className="text-4xl font-semibold tabular-nums" data-testid="playground-value">
+            <p className="text-4xl font-semibold tabular-nums" data-testid="playground-value" data-value={String(out.result.rows[0]?.[0] ?? '')}>
               {new Intl.NumberFormat(pack.manifest.locale, { maximumFractionDigits: metric.decimals, minimumFractionDigits: metric.decimals }).format(Number(out.result.rows[0]?.[0]))}{' '}
               <span className="text-lg font-normal text-muted-foreground">{metric.unit}</span>
             </p>

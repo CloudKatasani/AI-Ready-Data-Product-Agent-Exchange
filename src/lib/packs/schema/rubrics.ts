@@ -10,7 +10,7 @@ export const Rubrics = z
     certification: z
       .object({ dq_pass: z.number(), dq_warn: z.number(), min_verified_queries: z.number().int(), semantic_eval_min: z.number(), agent_eval_min: z.number() })
       .strict(),
-    matcher: z.object({ run_threshold: z.number(), clarify_threshold: z.number(), redirect_margin: z.number() }).strict(),
+    matcher: z.object({ run_threshold: z.number(), clarify_threshold: z.number(), redirect_margin: z.number(), entity_nouns: z.array(z.string().min(2)).min(1) }).strict(),
     agentEval: z
       .object({
         golden_min: z.number(),

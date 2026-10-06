@@ -1,6 +1,6 @@
 import MiniSearch from 'minisearch';
-import { chunkDocument } from '@/lib/packs/chunk';
-import type { Pack } from '@/lib/packs/schema';
+import { chunkDocument } from './chunk';
+import type { Pack } from './schema';
 
 export interface DocHit {
   docId: string;

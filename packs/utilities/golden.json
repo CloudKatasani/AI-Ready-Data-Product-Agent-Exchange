@@ -1,0 +1,1052 @@
+{
+  "pack": "utilities",
+  "version": "1.0.0",
+  "scale": "M",
+  "scenarios": {
+    "SC-UTL-001": {
+      "agent": "AG-UTL-002",
+      "kind": "answer",
+      "headline": "East had the highest SAIDI last quarter at 58.8 minutes.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Major event days are excluded (BR-UTL-012). West was lowest at 17.6 minutes across 5 regions.",
+      "sqlHash": "07f38305deecc67d",
+      "columns": [
+        "region",
+        "saidi"
+      ],
+      "rows": [
+        [
+          "East",
+          58.7807
+        ],
+        [
+          "South",
+          36.943
+        ],
+        [
+          "Central",
+          32.5889
+        ],
+        [
+          "North",
+          26.4853
+        ],
+        [
+          "West",
+          17.6014
+        ]
+      ],
+      "citations": [
+        "product:DP-UTL-002@2.1.0",
+        "metric:RELIABILITY.saidi",
+        "rule:BR-UTL-012",
+        "verified_query:VQ-UTL-001",
+        "document:DOC-UTL-RELIABILITY-STD#5"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "North had the highest SAIDI last quarter at 26.5 minutes.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-UTL-002": {
+      "agent": "AG-UTL-002",
+      "kind": "answer",
+      "headline": "Including major event days, North had the highest SAIDI last quarter at 87.2 minutes.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "You asked for all days, so the major-event-day exclusion in BR-UTL-012 is not applied. Storm days reorder the ranking — compare with the standard view that excludes them.",
+      "sqlHash": "da180a8d0b69d3c7",
+      "columns": [
+        "region",
+        "saidi"
+      ],
+      "rows": [
+        [
+          "North",
+          87.2044
+        ],
+        [
+          "South",
+          78.8938
+        ],
+        [
+          "East",
+          67.5852
+        ],
+        [
+          "Central",
+          48.4984
+        ],
+        [
+          "West",
+          20.3904
+        ]
+      ],
+      "citations": [
+        "product:DP-UTL-002@2.1.0",
+        "metric:RELIABILITY.saidi",
+        "verified_query:VQ-UTL-001",
+        "document:DOC-UTL-RELIABILITY-STD#9"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "Including major event days, North had the highest SAIDI last quarter at 87.2 minutes.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-UTL-003": {
+      "agent": "AG-UTL-002",
+      "kind": "answer",
+      "headline": "F-2207 was the worst feeder last quarter with 9,192,126 customer minutes interrupted.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Ranked over 10 feeders, excluding major event days (BR-UTL-012). The worst feeders are the first candidates for vegetation and asset reviews.",
+      "sqlHash": "5dd0b6a458c0b974",
+      "columns": [
+        "feeder",
+        "customer_minutes_interrupted"
+      ],
+      "rows": [
+        [
+          "F-2207",
+          9192130
+        ],
+        [
+          "F-2103",
+          1326130
+        ],
+        [
+          "F-2101",
+          1298620
+        ],
+        [
+          "F-2102",
+          1174670
+        ],
+        [
+          "F-2128",
+          1114310
+        ],
+        [
+          "F-2105",
+          1108690
+        ],
+        [
+          "F-2104",
+          1103540
+        ],
+        [
+          "F-2117",
+          972625
+        ],
+        [
+          "F-2160",
+          963427
+        ],
+        [
+          "F-2163",
+          793649
+        ]
+      ],
+      "citations": [
+        "product:DP-UTL-002@2.1.0",
+        "metric:RELIABILITY.customer_minutes_interrupted",
+        "rule:BR-UTL-012",
+        "verified_query:VQ-UTL-004",
+        "document:DOC-UTL-VEG-PROGRAM#7"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "F-2105 was the worst feeder last quarter with 1,108,685 customer minutes interrupted.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-UTL-004": {
+      "agent": "AG-UTL-002",
+      "kind": "answer",
+      "headline": "Tree contact was the largest driver of customer minutes last quarter at 17,292,172 minutes.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Total customer minutes interrupted were 50,886,469 across 7 causes, excluding major event days (BR-UTL-012).",
+      "sqlHash": "7013268ad4e9bec6",
+      "columns": [
+        "cause",
+        "customer_minutes_interrupted",
+        "customer_minutes_interrupted_share_pct"
+      ],
+      "rows": [
+        [
+          "Tree contact",
+          17292200,
+          33.9819
+        ],
+        [
+          "Equipment failure",
+          12431900,
+          24.4307
+        ],
+        [
+          "Animal",
+          6020180,
+          11.8306
+        ],
+        [
+          "Weather - wind",
+          5041910,
+          9.90814
+        ],
+        [
+          "Unknown",
+          4087100,
+          8.03181
+        ],
+        [
+          "Lightning",
+          4003820,
+          7.86814
+        ],
+        [
+          "Vehicle accident",
+          2009370,
+          3.94872
+        ]
+      ],
+      "citations": [
+        "product:DP-UTL-002@2.1.0",
+        "metric:RELIABILITY.customer_minutes_interrupted",
+        "rule:BR-UTL-012",
+        "document:DOC-UTL-RELIABILITY-STD#4"
+      ],
+      "personas": {}
+    },
+    "SC-UTL-005": {
+      "agent": "AG-UTL-002",
+      "kind": "redirect",
+      "headline": "That's a procurement question — the Procurement Copilot answers it.",
+      "narrative": "I cover outage and reliability performance. The Procurement Copilot is certified on procurement spend and contract compliance.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-UTL-006": {
+      "agent": "AG-UTL-002",
+      "kind": "decline",
+      "headline": "I can't dispatch crews — that is outside what this agent is allowed to do.",
+      "narrative": "Crew dispatch is handled by grid operations in the outage management system. I can show you the reliability record for that feeder so the dispatcher has the evidence.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-UTL-007": {
+      "agent": "AG-UTL-002",
+      "kind": "answer",
+      "headline": "System SAIDI is 87.2 minutes year to date — better than target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Monthly SAIDI over 9 months, excluding major event days (BR-UTL-012).",
+      "sqlHash": "eb5f661aa84b34f4",
+      "columns": [
+        "period",
+        "saidi"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          8.68206
+        ],
+        [
+          "2026-02-01",
+          7.26095
+        ],
+        [
+          "2026-03-01",
+          8.39623
+        ],
+        [
+          "2026-04-01",
+          7.13298
+        ],
+        [
+          "2026-05-01",
+          8.92161
+        ],
+        [
+          "2026-06-01",
+          8.96139
+        ],
+        [
+          "2026-07-01",
+          13.3081
+        ],
+        [
+          "2026-08-01",
+          14.4769
+        ],
+        [
+          "2026-09-01",
+          10.0882
+        ]
+      ],
+      "citations": [
+        "product:DP-UTL-002@2.1.0",
+        "metric:RELIABILITY.saidi",
+        "rule:BR-UTL-012",
+        "verified_query:VQ-UTL-007",
+        "document:DOC-UTL-RELIABILITY-STD#6"
+      ],
+      "personas": {}
+    },
+    "SC-UTL-008": {
+      "agent": "AG-UTL-004",
+      "kind": "answer",
+      "headline": "Across 120 feeders, the median feeder scores 68.8 on the asset health index.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "The middle 80% of feeders score between 66.6 and 70.7; the weakest feeder averages 44.8.",
+      "sqlHash": "713098d2099657f8",
+      "columns": [
+        "feeder_count",
+        "avg_asset_health_p10",
+        "avg_asset_health_p50",
+        "avg_asset_health_p90",
+        "avg_asset_health_min",
+        "avg_asset_health_max"
+      ],
+      "rows": [
+        [
+          120,
+          66.5801,
+          68.7852,
+          70.6883,
+          44.7799,
+          74.1451
+        ]
+      ],
+      "citations": [
+        "product:DP-UTL-004@1.3.0",
+        "metric:ASSET_HEALTH.avg_asset_health",
+        "document:DOC-UTL-ASSET-STRATEGY#1"
+      ],
+      "personas": {}
+    },
+    "SC-UTL-009": {
+      "agent": "AG-UTL-004",
+      "kind": "answer",
+      "headline": "PM compliance is 78.0% year to date — within target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Preventive work orders completed on time as a share of preventive work orders due this year.",
+      "sqlHash": "4998195ed114de87",
+      "columns": [
+        "pm_compliance_pct",
+        "pm_compliance_pct_target_min",
+        "pm_compliance_pct_target_max"
+      ],
+      "rows": [
+        [
+          78.0435,
+          78,
+          95
+        ]
+      ],
+      "citations": [
+        "product:DP-UTL-004@1.3.0",
+        "metric:WORK_MANAGEMENT.pm_compliance_pct",
+        "verified_query:VQ-UTL-021",
+        "document:DOC-UTL-ASSET-STRATEGY#6"
+      ],
+      "personas": {}
+    },
+    "SC-UTL-010": {
+      "agent": "AG-UTL-004",
+      "kind": "answer",
+      "headline": "Pre-1980 assets have the lowest health index at 68.0.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "4.9% of Pre-1980 assets are in poor condition, versus 4.0% for 1980-1999.",
+      "sqlHash": "ac70a4d701e43394",
+      "columns": [
+        "vintage_band",
+        "avg_asset_health",
+        "poor_condition_pct"
+      ],
+      "rows": [
+        [
+          "Pre-1980",
+          67.96,
+          4.91573
+        ],
+        [
+          "2000+",
+          68.6028,
+          4.81052
+        ],
+        [
+          "1980-1999",
+          68.7703,
+          3.96649
+        ]
+      ],
+      "citations": [
+        "product:DP-UTL-004@1.3.0",
+        "metric:ASSET_HEALTH.avg_asset_health",
+        "metric:ASSET_HEALTH.poor_condition_pct",
+        "document:DOC-UTL-ASSET-STRATEGY#1"
+      ],
+      "personas": {}
+    },
+    "SC-UTL-011": {
+      "agent": "AG-UTL-004",
+      "kind": "answer",
+      "headline": "South has the largest maintenance backlog with 1,322 overdue work orders.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "\"Maintenance backlog\" maps to overdue work orders: open work orders past their due date. 4,801 are overdue across 5 regions.",
+      "sqlHash": "5471ab14a5b4a370",
+      "columns": [
+        "region",
+        "overdue_work_orders"
+      ],
+      "rows": [
+        [
+          "South",
+          1322
+        ],
+        [
+          "East",
+          1173
+        ],
+        [
+          "Central",
+          1085
+        ],
+        [
+          "North",
+          1043
+        ],
+        [
+          "West",
+          178
+        ]
+      ],
+      "citations": [
+        "product:DP-UTL-004@1.3.0",
+        "metric:WORK_MANAGEMENT.overdue_work_orders",
+        "document:DOC-UTL-ASSET-STRATEGY#7"
+      ],
+      "personas": {
+        "A": {
+          "kind": "decline",
+          "headline": "You don’t have access to Grid Asset Health yet."
+        }
+      }
+    },
+    "SC-UTL-012": {
+      "agent": "AG-UTL-001",
+      "kind": "answer",
+      "headline": "Central leads digital adoption at 61.1% of active customers.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "West trails at 46.5%. Adoption counts active customers enrolled in paperless billing.",
+      "sqlHash": "e537b33d66e6d9df",
+      "columns": [
+        "region",
+        "digital_adoption_rate"
+      ],
+      "rows": [
+        [
+          "Central",
+          61.1096
+        ],
+        [
+          "North",
+          47.8088
+        ],
+        [
+          "East",
+          47.4012
+        ],
+        [
+          "South",
+          47.2514
+        ],
+        [
+          "West",
+          46.4943
+        ]
+      ],
+      "citations": [
+        "product:DP-UTL-001@2.3.0",
+        "metric:CUSTOMER_360.digital_adoption_rate",
+        "verified_query:VQ-UTL-029",
+        "document:DOC-UTL-AMI-OPERATIONS#3"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "North leads digital adoption at 47.8% of active customers.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-UTL-013": {
+      "agent": "AG-UTL-001",
+      "kind": "answer",
+      "headline": "The highest churn-risk active customer scores 57.0.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Customer names are masked unless your persona is cleared for PII under the masking policy. Showing the top 5 active customers by churn risk score.",
+      "sqlHash": "3667961f41e39129",
+      "columns": [
+        "customer_name",
+        "avg_churn_risk"
+      ],
+      "rows": [
+        [
+          "Donna Hernandez",
+          57
+        ],
+        [
+          "Lucia Lopez",
+          56.1
+        ],
+        [
+          "David Campbell",
+          55.15
+        ],
+        [
+          "Charles Green",
+          53.5
+        ],
+        [
+          "Richard Williams",
+          51.1333
+        ]
+      ],
+      "citations": [
+        "product:DP-UTL-001@2.3.0",
+        "metric:CUSTOMER_360.avg_churn_risk",
+        "document:DOC-UTL-TARIFF-BOOK#2"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "The highest churn-risk active customer scores 89.5.",
+          "rowFiltered": true,
+          "masked": [
+            "customer_name"
+          ]
+        },
+        "D": {
+          "kind": "answer",
+          "headline": "The highest churn-risk active customer scores 57.0.",
+          "rowFiltered": false,
+          "masked": []
+        }
+      }
+    },
+    "SC-UTL-014": {
+      "agent": "AG-UTL-001",
+      "kind": "answer",
+      "headline": "DSO was 34.1 days last quarter — within target.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Billing & Receivables is still in certification, so treat this figure as provisional. The receivables rule BR-UTL-021 is applied.",
+      "sqlHash": "da29f431b5054763",
+      "columns": [
+        "dso_days"
+      ],
+      "rows": [
+        [
+          34.1339
+        ]
+      ],
+      "citations": [
+        "product:DP-UTL-005@1.0.0-rc.1",
+        "metric:BILLING_AR.dso_days",
+        "rule:BR-UTL-021",
+        "document:DOC-UTL-CREDIT-COLLECTIONS#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "decline",
+          "headline": "You don’t have access to Billing & Receivables yet."
+        }
+      }
+    },
+    "SC-UTL-015": {
+      "agent": "AG-UTL-001",
+      "kind": "answer",
+      "headline": "North had the highest average daily consumption last month at 37.2 kWh.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Average kWh per meter-day across 5 regions you are entitled to see; region row-access policy applies.",
+      "sqlHash": "220fb4c86e9cc87a",
+      "columns": [
+        "region",
+        "daily_kwh"
+      ],
+      "rows": [
+        [
+          "North",
+          37.2068
+        ],
+        [
+          "West",
+          37.0662
+        ],
+        [
+          "South",
+          36.5802
+        ],
+        [
+          "Central",
+          36.551
+        ],
+        [
+          "East",
+          36.507
+        ]
+      ],
+      "citations": [
+        "product:DP-UTL-003@1.1.0",
+        "metric:METERING.daily_kwh",
+        "document:DOC-UTL-AMI-OPERATIONS#3"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "North had the highest average daily consumption last month at 37.9 kWh.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-UTL-016": {
+      "agent": "AG-UTL-001",
+      "kind": "answer",
+      "headline": "AMI read success averaged 98.36% last quarter.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Daily read success over 50 days. Look for the late-August dip — the estimated-read and estimated-bill spikes follow it.",
+      "sqlHash": "de90eba210f8b201",
+      "columns": [
+        "period",
+        "read_success_rate"
+      ],
+      "rows": [
+        [
+          "2026-07-01",
+          98.8656
+        ],
+        [
+          "2026-07-02",
+          98.797
+        ],
+        [
+          "2026-07-03",
+          98.8255
+        ],
+        [
+          "2026-07-04",
+          98.8531
+        ],
+        [
+          "2026-07-05",
+          98.9317
+        ],
+        [
+          "2026-07-06",
+          98.876
+        ],
+        [
+          "2026-07-07",
+          98.8762
+        ],
+        [
+          "2026-07-08",
+          98.878
+        ],
+        [
+          "2026-07-09",
+          98.883
+        ],
+        [
+          "2026-07-10",
+          98.8737
+        ],
+        [
+          "2026-07-11",
+          98.836
+        ],
+        [
+          "2026-07-12",
+          98.8233
+        ],
+        [
+          "2026-07-13",
+          98.8013
+        ],
+        [
+          "2026-07-14",
+          98.9007
+        ],
+        [
+          "2026-07-15",
+          98.8558
+        ],
+        [
+          "2026-07-16",
+          98.8914
+        ],
+        [
+          "2026-07-17",
+          98.8728
+        ],
+        [
+          "2026-07-18",
+          98.8866
+        ],
+        [
+          "2026-07-19",
+          98.8064
+        ],
+        [
+          "2026-07-20",
+          98.8543
+        ],
+        [
+          "2026-07-21",
+          98.8456
+        ],
+        [
+          "2026-07-22",
+          98.8815
+        ],
+        [
+          "2026-07-23",
+          98.8744
+        ],
+        [
+          "2026-07-24",
+          98.8666
+        ],
+        [
+          "2026-07-25",
+          98.8206
+        ],
+        [
+          "2026-07-26",
+          98.8408
+        ],
+        [
+          "2026-07-27",
+          98.8144
+        ],
+        [
+          "2026-07-28",
+          98.8025
+        ],
+        [
+          "2026-07-29",
+          98.8349
+        ],
+        [
+          "2026-07-30",
+          98.9276
+        ],
+        [
+          "2026-07-31",
+          98.8293
+        ],
+        [
+          "2026-08-01",
+          98.8485
+        ],
+        [
+          "2026-08-02",
+          98.8436
+        ],
+        [
+          "2026-08-03",
+          98.8064
+        ],
+        [
+          "2026-08-04",
+          98.834
+        ],
+        [
+          "2026-08-05",
+          98.7594
+        ],
+        [
+          "2026-08-06",
+          98.8784
+        ],
+        [
+          "2026-08-07",
+          98.8041
+        ],
+        [
+          "2026-08-08",
+          98.8404
+        ],
+        [
+          "2026-08-09",
+          98.8559
+        ],
+        [
+          "2026-08-10",
+          98.8542
+        ],
+        [
+          "2026-08-11",
+          98.8407
+        ],
+        [
+          "2026-08-12",
+          98.8942
+        ],
+        [
+          "2026-08-13",
+          98.7243
+        ],
+        [
+          "2026-08-14",
+          98.8429
+        ],
+        [
+          "2026-08-15",
+          98.9095
+        ],
+        [
+          "2026-08-16",
+          98.8661
+        ],
+        [
+          "2026-08-17",
+          98.8176
+        ],
+        [
+          "2026-08-18",
+          98.8752
+        ],
+        [
+          "2026-08-19",
+          98.8657
+        ]
+      ],
+      "citations": [
+        "product:DP-UTL-003@1.1.0",
+        "metric:METERING.read_success_rate",
+        "verified_query:VQ-UTL-035",
+        "document:DOC-UTL-AMI-OPERATIONS#1"
+      ],
+      "personas": {
+        "A": {
+          "kind": "answer",
+          "headline": "AMI read success averaged 98.36% last quarter.",
+          "rowFiltered": true,
+          "masked": []
+        }
+      }
+    },
+    "SC-UTL-017": {
+      "agent": "AG-UTL-001",
+      "kind": "clarify",
+      "headline": "\"Bills\" can mean a few things — which one do you need?",
+      "narrative": "I can show the average monthly bill, the estimated bill rate, or bills issued. Pick one and a period.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-UTL-018": {
+      "agent": "AG-UTL-003",
+      "kind": "answer",
+      "headline": "80.1% of spend this year was under contract.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Spend on purchase-order lines placed against an active contract, as a share of total spend year to date.",
+      "sqlHash": "bd71996876a6821c",
+      "columns": [
+        "spend_under_contract_pct"
+      ],
+      "rows": [
+        [
+          80.0676
+        ]
+      ],
+      "citations": [
+        "product:DP-UTL-006@3.0.2",
+        "metric:PROCUREMENT.spend_under_contract_pct",
+        "verified_query:VQ-UTL-041",
+        "document:DOC-UTL-PROCUREMENT-POLICY#10"
+      ],
+      "personas": {}
+    },
+    "SC-UTL-019": {
+      "agent": "AG-UTL-003",
+      "kind": "answer",
+      "headline": "Oakmont Services Llc has the lowest OTIF this year at 82.5%.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "The 5 lowest-performing suppliers by on-time-in-full delivery year to date.",
+      "sqlHash": "f2fef90c989ed0c4",
+      "columns": [
+        "supplier",
+        "otif_pct"
+      ],
+      "rows": [
+        [
+          "Oakmont Services Llc",
+          82.4561
+        ],
+        [
+          "Apex Industries",
+          85.2713
+        ],
+        [
+          "Summit Services Llc",
+          86.9565
+        ],
+        [
+          "Granite Works",
+          89.0411
+        ],
+        [
+          "Clearwater Holdings",
+          89.5522
+        ]
+      ],
+      "citations": [
+        "product:DP-UTL-006@3.0.2",
+        "metric:PROCUREMENT.otif_pct",
+        "verified_query:VQ-UTL-042",
+        "document:DOC-UTL-PROCUREMENT-POLICY#9"
+      ],
+      "personas": {}
+    },
+    "SC-UTL-020": {
+      "agent": "AG-UTL-003",
+      "kind": "answer",
+      "headline": "Fleet drives the most maverick spend this year at $5,773,193.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Off-contract spend is maverick spend; commodity maps to spend category. Total maverick spend is $17,568,288 across 8 categories.",
+      "sqlHash": "49d09bb17ad6b7eb",
+      "columns": [
+        "category",
+        "maverick_spend",
+        "maverick_spend_share_pct"
+      ],
+      "rows": [
+        [
+          "Fleet",
+          5773190,
+          32.8614
+        ],
+        [
+          "IT & software",
+          2872320,
+          16.3495
+        ],
+        [
+          "Conductor & cable",
+          2359990,
+          13.4333
+        ],
+        [
+          "Substation equipment",
+          1856300,
+          10.5662
+        ],
+        [
+          "Vegetation services",
+          1760800,
+          10.0226
+        ],
+        [
+          "Meters",
+          1096540,
+          6.24158
+        ],
+        [
+          "Poles & crossarms",
+          1043510,
+          5.93972
+        ],
+        [
+          "Transformers",
+          805637,
+          4.58575
+        ]
+      ],
+      "citations": [
+        "product:DP-UTL-006@3.0.2",
+        "metric:PROCUREMENT.maverick_spend",
+        "verified_query:VQ-UTL-043",
+        "document:DOC-UTL-PROCUREMENT-POLICY#4"
+      ],
+      "personas": {}
+    },
+    "SC-UTL-021": {
+      "agent": "AG-UTL-003",
+      "kind": "answer",
+      "headline": "PO cycle time moved −1.4 days from the first to the latest quarter this year.",
+      "rowFiltered": false,
+      "masked": [],
+      "narrative": "Average days from purchase order to receipt for each of the 3 quarters this year.",
+      "sqlHash": "b8304001746107e4",
+      "columns": [
+        "period",
+        "po_cycle_days"
+      ],
+      "rows": [
+        [
+          "2026-01-01",
+          22.8963
+        ],
+        [
+          "2026-04-01",
+          23.0884
+        ],
+        [
+          "2026-07-01",
+          21.5175
+        ]
+      ],
+      "citations": [
+        "product:DP-UTL-006@3.0.2",
+        "metric:PROCUREMENT.po_cycle_days",
+        "verified_query:VQ-UTL-045",
+        "document:DOC-UTL-PROCUREMENT-POLICY#5"
+      ],
+      "personas": {}
+    },
+    "SC-UTL-022": {
+      "agent": "AG-UTL-005",
+      "kind": "help",
+      "headline": "I explain governance across the data estate — I don't analyse business KPIs.",
+      "narrative": "Ask me what a glossary term or metric means, the certification status of a data product, or where governance gaps such as missing stewards or masking sit. For KPI numbers, ask the domain agents.",
+      "citations": [],
+      "personas": {}
+    },
+    "SC-UTL-023": {
+      "agent": "AG-UTL-005",
+      "kind": "decline",
+      "headline": "I can't approve access requests — agents act, humans decide.",
+      "narrative": "Access to a data product is granted only by its owner or steward through the access workflow. I can show you the request status and who can approve it.",
+      "citations": [],
+      "personas": {}
+    }
+  }
+}

@@ -4,7 +4,7 @@ import { z } from 'zod';
  * Server-side configuration, parsed once from process.env (02-architecture §6).
  * Never import this module from a client component: it can see ANTHROPIC_API_KEY (invariant I11).
  */
-const AgentMode = z.enum(['scripted', 'live', 'auto']);
+export const AgentMode = z.enum(['scripted', 'live', 'auto']);
 export type AgentMode = z.infer<typeof AgentMode>;
 
 const EnvSchema = z.object({

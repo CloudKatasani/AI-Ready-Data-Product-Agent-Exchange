@@ -1,6 +1,6 @@
 /**
  * pnpm pack:validate [id] [--scale M] [--json] [--static]
- * Static checks (categories 1–3, 5, 6, 9, 10) plus warehouse checks (category 4) against a built
+ * Static checks (categories 1–3, 5, 6, 9, 10) plus warehouse (4), scenario (7) and agent (8) checks against a built
  * warehouse (built on demand, cached). Writes data/reports/<pack>-validation.json. Exits 1 on errors.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -10,6 +10,8 @@ import { Scale } from '../src/lib/packs/schema';
 import { summarise, validatePackStatic } from '../src/lib/packs/validate';
 import { buildWarehouse, openWarehouseReadOnly } from '../src/lib/warehouse/build';
 import { metricChecks } from '../src/lib/query/validate';
+import { scenarioChecks } from '../src/lib/agents/validate';
+import { QueryService } from '../src/lib/query/query-service';
 import { warehouseChecks } from '../src/lib/warehouse/validate';
 import { parseArgs } from './cli-args';
 
@@ -30,6 +32,8 @@ for (const id of ids) {
     try {
       results = await warehouseChecks(pack, w, [...results]);
       results = await metricChecks(pack, getRubrics(), w, results);
+      const qs = new QueryService({ pack, rubrics: getRubrics(), warehouse: w, log: { write: async () => 'validator' } });
+      results = await scenarioChecks(pack, getRubrics(), qs, results);
     } finally {
       await w.close();
     }

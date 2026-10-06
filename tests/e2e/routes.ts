@@ -3,14 +3,13 @@ import { ALL_NAV_ITEMS } from '../../src/components/shell/nav';
 export const PACK = 'utilities';
 
 /** Screens built so far (no stub). */
-export const BUILT = new Set(['explorer', 'semantic', 'glossary', 'context']);
+export const BUILT = new Set(['home', 'ask', 'explorer', 'semantic', 'glossary', 'context']);
 
 /** Scaffolded routes that still render the Phase 0 stub. */
 export const STUB_URLS: string[] = [
   ...ALL_NAV_ITEMS.filter((i) => !BUILT.has(i.id)).map((i) => `/${PACK}/${i.path}`),
   `/${PACK}/marketplace/products/DP-UTL-002`,
   `/${PACK}/marketplace/agents/AG-UTL-002`,
-  `/${PACK}/ask/AG-UTL-002`,
   `/${PACK}/request/REQ-UTL-001`,
   `/${PACK}/studio/DP-UTL-005`,
   `/${PACK}/studio/DP-UTL-005/11`,
@@ -19,8 +18,11 @@ export const STUB_URLS: string[] = [
   `/${PACK}/agent-quality/feedback`,
 ];
 
-/** Built screens (Phase 2). */
+/** Built screens (Phases 2–3). */
 export const SCREEN_URLS: string[] = [
+  `/${PACK}/home`,
+  `/${PACK}/ask`,
+  `/${PACK}/ask/AG-UTL-002`,
   `/${PACK}/explorer`,
   `/${PACK}/explorer/worksheet`,
   `/${PACK}/explorer/CURATED_SILVER/CUSTOMER`,

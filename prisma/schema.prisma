@@ -1,5 +1,6 @@
 // Keystone app-state model — see docs/build-spec/03-data-model.md.
 // Models arrive phase by phase. Phase 2: Persona, Entitlement, QueryLog, AuditEvent, KnowledgeOverlay.
+// Phase 3: AnswerRecord, AnswerFeedback.
 //
 // Prisma does not allow the datasource provider to come from an env var. SQLite is the default;
 // Postgres support (DATABASE_PROVIDER=postgresql) is delivered in Phase 11 (docs/adr/0010-database-provider-switch.md).
@@ -89,4 +90,43 @@ model KnowledgeOverlay {
   supersededAt     DateTime?
 
   @@index([packId, kind])
+}
+
+/// Append-only (invariant I06): one row per agent answer (Ask, Home hero, Answer Theatre replays excluded).
+model AnswerRecord {
+  id              String   @id @default(cuid())
+  packId          String
+  agentId         String
+  agentVersion    Int      @default(1)
+  personaId       String
+  question        String
+  kind            String // answer|decline|clarify|redirect|help
+  mode            String // scripted|live|live_fallback
+  fallbackReason  String?
+  scenarioId      String?
+  metricQueryJson String?
+  answerJson      String // full AgentAnswer
+  citationsJson   String
+  traceJson       String
+  confidence      String // trusted|questionable|unsafe
+  tokensIn        Int      @default(0)
+  tokensOut       Int      @default(0)
+  costUsd         Float    @default(0)
+  latencyMs       Int
+  createdAt       DateTime @default(now())
+
+  @@index([packId, agentId])
+}
+
+model AnswerFeedback {
+  id        String   @id @default(cuid())
+  answerId  String
+  personaId String
+  rating    Int // +1 | -1
+  reason    String?
+  state     String // NEW|TRIAGED|FIXED|DISMISSED
+  fixId     String?
+  createdAt DateTime @default(now())
+
+  @@index([answerId])
 }

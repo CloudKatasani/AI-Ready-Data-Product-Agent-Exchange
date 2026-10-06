@@ -31,14 +31,14 @@ export async function principalForPersona(packId: string, personaId: string): Pr
   }
 }
 
-async function service(packId: string): Promise<QueryService> {
+export async function governedService(packId: string): Promise<QueryService> {
   return new QueryService({ pack: getPack(packId), rubrics: getRubrics(), warehouse: await warehouseFor(packId), log: prismaQueryLog(db()) });
 }
 
 /** Catalog metadata for Explorer (objects and columns; no rows). Empty when the warehouse is not built. */
 export async function warehouseCatalog(packId: string): Promise<Awaited<ReturnType<QueryService['catalog']>>> {
   try {
-    return await (await service(packId)).catalog();
+    return await (await governedService(packId)).catalog();
   } catch {
     return [];
   }
@@ -46,7 +46,7 @@ export async function warehouseCatalog(packId: string): Promise<Awaited<ReturnTy
 
 export async function describeObject(packId: string, fqn: string): Promise<{ name: string; type: string; nullable: boolean }[]> {
   try {
-    return await (await service(packId)).describe(fqn);
+    return await (await governedService(packId)).describe(fqn);
   } catch {
     return [];
   }
@@ -68,7 +68,7 @@ export async function accessHistory(needle: string, limit = 15): Promise<{ id: s
 
 export async function governedQuery(packId: string, req: QueryRequest, who: Principal): Promise<GovernedOutcome> {
   try {
-    return { ok: true, result: await (await service(packId)).run(req, who) };
+    return { ok: true, result: await (await governedService(packId)).run(req, who) };
   } catch (e) {
     if (e instanceof PolicyDenied) return { ok: false, kind: 'denied', message: e.message, productId: e.productId, requestable: e.requestable };
     if (e instanceof SqlRejected) return { ok: false, kind: 'rejected', message: e.message, hint: e.hint };
