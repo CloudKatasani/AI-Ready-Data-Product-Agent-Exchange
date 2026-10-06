@@ -3,17 +3,27 @@ import { ALL_NAV_ITEMS } from '../../src/components/shell/nav';
 export const PACK = 'utilities';
 
 /** Screens built so far (no stub). */
-export const BUILT = new Set(['home', 'ask', 'marketplace', 'access', 'request', 'studio', 'factory', 'explorer', 'semantic', 'glossary', 'context']);
+export const BUILT = new Set(['home', 'ask', 'marketplace', 'access', 'request', 'studio', 'factory', 'explorer', 'semantic', 'glossary', 'context', 'health', 'agentQuality', 'costValue', 'impact', 'audit']);
 
 /** Scaffolded routes that still render the Phase 0 stub. */
 export const STUB_URLS: string[] = [
   ...ALL_NAV_ITEMS.filter((i) => !BUILT.has(i.id)).map((i) => `/${PACK}/${i.path}`),
-  `/${PACK}/health/incidents`,
-  `/${PACK}/agent-quality/feedback`,
 ];
 
-/** Built screens (Phases 2–6). */
+/** Built screens (Phases 2–7). */
 export const SCREEN_URLS: string[] = [
+  `/${PACK}/health`,
+  `/${PACK}/health/incidents`,
+  `/${PACK}/agent-quality`,
+  `/${PACK}/agent-quality/feedback`,
+  `/${PACK}/cost-value`,
+  `/${PACK}/cost-value?tab=value`,
+  `/${PACK}/cost-value?lag=0.25&wh=L&q=900&price=3`,
+  `/${PACK}/impact`,
+  `/${PACK}/impact?object=CONFORMED_GOLD.FCT_OUTAGE&column=customer_minutes&change=rename`,
+  `/${PACK}/audit`,
+  `/${PACK}/audit?actor=HUMAN`,
+  `/${PACK}/audit?tab=lineage`,
   `/${PACK}/factory`,
   `/${PACK}/studio`,
   `/${PACK}/studio?view=table`,

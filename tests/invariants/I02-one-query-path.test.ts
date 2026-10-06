@@ -1,7 +1,8 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { persona, service } from '../setup/query';
+import { QueryService } from '@/lib/query/query-service';
+import { MemoryLog, pack, persona, rubrics, service, testWarehouse } from '../setup/query';
 
 // CLAUDE.md §4.2 — One governed query path.
 function files(dir: string): string[] {
@@ -45,5 +46,18 @@ describe('I02 one governed query path', () => {
     expect(r.policiesApplied.map((p) => p.kind)).toEqual(expect.arrayContaining(['entitlement', 'masking', 'limit']));
   });
 
-  it.todo('incident effects shadow affected objects while an incident is open (Phase 7)');
+  it('incident effects shadow affected objects while an incident is open (Phase 7)', async () => {
+    const { qs } = await service();
+    const t = pack.incidents.find((x) => x.kind === 'late_feed');
+    if (!t) throw new Error('no late-feed template');
+    const open = new QueryService({ pack, rubrics, warehouse: await testWarehouse(), log: new MemoryLog(), state: { appliedFixes: [], incidents: [t.id] } });
+    const sql = { kind: 'sql' as const, sql: `SELECT count(*) FROM ${t.object}`, source: 'worksheet' as const };
+    const base = await qs.run(sql, persona('D'));
+    const shadowed = await open.run(sql, persona('D'));
+    expect(shadowed.policiesApplied.some((p) => p.kind === 'incident' && p.ruleOrPolicyId === t.id)).toBe(true);
+    expect(Number(shadowed.rows[0]?.[0])).toBeLessThan(Number(base.rows[0]?.[0]));
+    for (const id of t.affects.products) expect(shadowed.sources.find((s) => s.productId === id)?.health ?? 'degraded').not.toBe('healthy');
+    // Closed again (state without the incident): the base object is read unchanged.
+    expect((await qs.run(sql, persona('D'))).rows).toEqual(base.rows);
+  });
 });

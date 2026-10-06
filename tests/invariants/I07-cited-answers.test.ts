@@ -1,4 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import type Anthropic from '@anthropic-ai/sdk';
+import { validateGrounding } from '@/lib/agents/grounding';
+import type { LlmClient } from '@/lib/agents/live/client';
+import { answerQuestion } from '@/lib/agents/runtime';
 import { respondScripted } from '@/lib/agents/scripted/respond';
 import { pack, persona, rubrics, service } from '../setup/query';
 
@@ -43,6 +47,30 @@ describe('I07 cited answers', () => {
     }
   });
 
-  it.todo('the grounding validator rejects a live answer containing a number absent from tool results (tolerance rules in 08 §4.4)');
-  it.todo('a grounding failure after one repair turn falls back to scripted with fallbackReason');
+  it('the grounding validator rejects a live answer containing a number absent from tool results (tolerance rules in 08 §4.4)', () => {
+    const ctx = { results: new Map([['R1', [41.2, 37.5]]]), docIds: new Set<string>(), metrics: new Set(['saidi']), rules: new Set<string>(), maskedValues: [], unentitledProducts: [], tolerance: rubrics.grounding.derived_value_tolerance_rel };
+    const answer = (headline: string) => ({ kind: 'answer', headline, narrative: '', citations: [{ result_id: 'R1', metric: 'saidi' }] });
+    expect(validateGrounding(answer('East leads at 41.2 minutes, 3.7 more than West.'), ctx).ok).toBe(true);
+    const bad = validateGrounding(answer('East leads at 52.9 minutes.'), ctx);
+    expect(bad.ok).toBe(false);
+    expect(bad.violations.join(' ')).toMatch(/52\.9/);
+  });
+
+  it('a grounding failure after one repair turn falls back to scripted with fallbackReason', async () => {
+    const { qs } = await service();
+    const s = pack.scenarios.find((x) => x.id === pack.manifest.story_roles.heroScenario) ?? pack.scenarios[0];
+    let calls = 0;
+    const client: LlmClient = {
+      async send() {
+        calls += 1;
+        const content = [{ type: 'tool_use', id: `t${calls}`, name: 'submit_answer', input: { kind: 'answer', headline: 'The value is 987.6 minutes.', narrative: '', chart: { type: 'none' }, citations: [{ metric: 'saidi' }] } }];
+        return { id: `m${calls}`, type: 'message', role: 'assistant', model: 'fake', content, stop_reason: 'tool_use', stop_sequence: null, usage: { input_tokens: 10, output_tokens: 10 } } as unknown as Anthropic.Message;
+      },
+    };
+    const a = await answerQuestion(s?.agent ?? '', s?.question ?? '', 'auto', { pack, rubrics, qs, who: persona('D'), live: { client, model: 'test-model', timeoutMs: 2000, maxRounds: 4 } });
+    expect(a.mode).toBe('live_fallback');
+    expect(a.fallbackReason).toBeTruthy();
+    expect(a.headline).not.toContain('987.6');
+    expect(calls).toBe(2);
+  });
 });

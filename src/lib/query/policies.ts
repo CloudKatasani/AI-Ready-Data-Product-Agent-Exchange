@@ -17,6 +17,8 @@ export interface PolicyState {
   appliedFixes: string[];
   /** Live product status/version from the lifecycle (falls back to the pack's initial values). */
   products?: Record<string, { status: string; version: string }>;
+  /** Open incident template ids (Phase 7): their effects overlay the objects they target. */
+  incidents?: string[];
 }
 
 export const EMPTY_STATE: PolicyState = { appliedFixes: [] };
@@ -130,6 +132,7 @@ export function governedSource(
   fqn: string,
   columns: string[],
   state: PolicyState = EMPTY_STATE,
+  base: string = fqn,
 ): { sql: string; masked: string[]; applied: PolicyApplication[]; rowFiltered: boolean } {
   const applied: PolicyApplication[] = [];
   const masked: string[] = [];
@@ -142,6 +145,6 @@ export function governedSource(
   });
   const rf = rowFilterFor(pack, who, fqn);
   if (rf) applied.push({ kind: 'row_access', target: fqn, detail: rf.detail, ruleOrPolicyId: rf.policyId });
-  if (masked.length === 0 && !rf) return { sql: fqn, masked, applied, rowFiltered: false };
-  return { sql: `(SELECT ${projections.join(', ')} FROM ${fqn}${rf ? ` WHERE ${rf.predicate}` : ''})`, masked, applied, rowFiltered: Boolean(rf) };
+  if (masked.length === 0 && !rf) return { sql: base, masked, applied, rowFiltered: false };
+  return { sql: `(SELECT ${projections.join(', ')} FROM ${base}${base === fqn ? '' : ' __s'}${rf ? ` WHERE ${rf.predicate}` : ''})`, masked, applied, rowFiltered: Boolean(rf) };
 }

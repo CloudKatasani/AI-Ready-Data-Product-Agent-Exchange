@@ -178,7 +178,9 @@ function buildAnswer(agent: AgentManifest, question: string, s: SubmitAnswer, de
   const rf = used.flatMap((r) => r.policiesApplied).find((p) => p.kind === 'row_access');
   if (rf) banners.push({ kind: 'row_filtered', text: `Showing ${rf.detail} only (${rf.ruleOrPolicyId}).` });
   if (state.denied[0]) banners.push({ kind: 'no_access', text: state.denied[0].message, productId: state.denied[0].productId ?? undefined });
-  const confidence: Confidence = sources.some((x) => !x.certified || x.health !== 'healthy') ? 'questionable' : 'trusted';
+  const incidents = [...new Map(used.flatMap((r) => r.policiesApplied).filter((p) => p.kind === 'incident').map((p) => [p.ruleOrPolicyId, p])).values()];
+  for (const inc of incidents) banners.push({ kind: 'incident', text: inc.detail, productId: sources.find((x) => x.health !== 'healthy')?.productId });
+  const confidence: Confidence = sources.some((x) => !x.certified || x.health !== 'healthy') || incidents.length ? 'questionable' : 'trusted';
   const step = (id: TraceStep['id'], label: string, layer: string, detail: string, refs: string[] = [], status: TraceStep['status'] = 'ok'): TraceStep => ({ id, label, layer, status, ms: 0, refs, detail });
   const trace: TraceStep[] = [
     step('understand', 'Understand', 'glossary', `Live model read the question (${toolCalls.length} tool call(s))`),

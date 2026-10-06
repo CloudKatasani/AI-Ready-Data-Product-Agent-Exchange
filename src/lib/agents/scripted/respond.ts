@@ -6,6 +6,7 @@
 import { searchDocuments } from '@/lib/packs/doc-search';
 import type { AgentManifest, MetricQuery, Pack, Rubrics } from '@/lib/packs/schema';
 import { CompileError } from '@/lib/query/compiler';
+import { IncidentBlocked } from '@/lib/query/incidents';
 import type { QueryService } from '@/lib/query/query-service';
 import { PolicyDenied, type GovernedResult, type Principal } from '@/lib/query/types';
 import type { AgentAnswer, Banner, Citation, Confidence, TraceStep } from '../types';
@@ -189,6 +190,18 @@ async function execute(
         banners: [{ kind: 'no_access', text: e.message, productId: e.productId ?? undefined }],
       });
     }
+    if (e instanceof IncidentBlocked) {
+      trace.push(step('query', 'Query', 'gold', clock.lap(), e.message, [e.incidentId], 'blocked'));
+      const t = pack.incidents.find((x) => x.id === e.incidentId);
+      return {
+        ...textAnswer(agent, question, 'decline', `I can’t answer that reliably right now — ${t?.title ?? 'an open incident'} affects the data.`, `${e.message} ${t?.resolution ?? ''}`.trim(), trace, {
+          scenarioId,
+          metricQuery: query,
+          banners: [{ kind: 'incident', text: `${e.incidentId} (${t?.severity ?? ''}) — ${t?.title ?? ''}`, productId: e.productIds[0] }],
+        }),
+        confidence: 'unsafe',
+      };
+    }
     if (e instanceof CompileError) {
       trace.push(step('model', 'Choose model', 'semantic', clock.lap(), e.message, [], 'blocked'));
       return textAnswer(agent, question, 'help', 'I couldn’t build a governed query for that.', `${e.message}${e.suggestions.length ? ` Did you mean ${e.suggestions.join(', ')}?` : ''}`, trace, { scenarioId });
@@ -239,7 +252,7 @@ async function execute(
   for (const s of r.sources.filter((x) => !x.certified)) banners.push({ kind: 'not_certified', text: `${pack.products.find((p) => p.id === s.productId)?.name ?? s.productId} is not certified yet — treat this number as provisional.`, productId: s.productId });
   if (r.maskedColumns.length) banners.push({ kind: 'masked', text: `Some values are masked for you (${r.maskedColumns.join(', ')}).` });
   if (rowFilter) banners.push({ kind: 'row_filtered', text: `Showing ${rowFilter.detail} only (${rowFilter.ruleOrPolicyId}).` });
-  for (const inc of r.policiesApplied.filter((p) => p.kind === 'incident')) banners.push({ kind: 'incident', text: inc.detail, productId: r.sources.find((s) => s.health !== 'healthy')?.productId });
+  for (const inc of new Map(r.policiesApplied.filter((p) => p.kind === 'incident').map((p) => [p.ruleOrPolicyId, p])).values()) banners.push({ kind: 'incident', text: inc.detail, productId: r.sources.find((s) => s.health !== 'healthy')?.productId });
   const confidence: Confidence = r.sources.some((s) => !s.certified || s.health !== 'healthy') || banners.some((b) => b.kind === 'incident') ? 'questionable' : 'trusted';
   const numericClaims = (headline.match(/\d/g) ?? []).length > 0;
   trace.push(step('answer', 'Answer', 'agent', clock.lap(), numericClaims ? `${citations.length} citations; every number comes from ${r.queryLogId}` : 'Answer has no numeric claims', citations.map((c) => c.ref)));

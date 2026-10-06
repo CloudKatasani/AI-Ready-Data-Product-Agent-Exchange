@@ -10,6 +10,7 @@ import type { GoldenFile } from '@/lib/agents/golden';
 import { db } from '@/lib/db';
 import { appendAudit, canonicalJson } from '@/lib/db/audit';
 import { recordDecision } from '@/lib/lifecycle/decisions';
+import { applyOverlays } from '@/lib/operate/quality';
 import { getAdversarial, getPack, getRubrics, packsDir } from '@/lib/packs/registry';
 import type { AgentManifest, Pack } from '@/lib/packs/schema';
 import { existsSync, readFileSync } from 'node:fs';
@@ -29,8 +30,18 @@ export async function factoryAgents(packId: string, opts: { includeDrafts?: bool
 }
 
 /** The pack plus released factory agents (drafts too when asked) — what Ask and Marketplace serve. */
+/** Active knowledge overlays (agent-quality fixes, certification VQ activations) for a pack. */
+async function activeOverlays(packId: string): Promise<{ kind: string; key: string; payloadJson: string }[]> {
+  try {
+    return await db().knowledgeOverlay.findMany({ where: { packId, supersededAt: null }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }], select: { kind: true, key: true, payloadJson: true } });
+  } catch {
+    return [];
+  }
+}
+
 export async function livePack(packId: string, opts: { includeDrafts?: boolean } = {}): Promise<Pack> {
-  return withFactoryAgents(getPack(packId), await factoryAgents(packId, opts));
+  const [agents, overlays] = await Promise.all([factoryAgents(packId, opts), activeOverlays(packId)]);
+  return applyOverlays(withFactoryAgents(getPack(packId), agents), overlays);
 }
 
 export function blankAgent(pack: Pack, id: string, ownerId: string): FactoryAgent {

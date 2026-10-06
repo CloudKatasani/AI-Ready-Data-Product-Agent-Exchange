@@ -6,6 +6,8 @@ import { productSensitivity } from '@/lib/marketplace/catalog';
 import { duplicateCandidates } from '@/lib/packs/similarity';
 import type { Pack, Rubrics } from '@/lib/packs/schema';
 import type { QueryService } from '@/lib/query/query-service';
+import { respondScripted } from '@/lib/agents/scripted/respond';
+import { principalFor } from '@/lib/query/principal';
 
 /**
  * Seeds one pack (idempotent: replaces the pack's seeded rows): personas, entitlements, agent records,
@@ -52,6 +54,8 @@ export async function seedPack(prisma: PrismaClient, pack: Pack, opts: { rubrics
   await prisma.dataProduct.deleteMany({ where: { packId } });
   await prisma.agent.deleteMany({ where: { packId } });
   await prisma.persona.deleteMany({ where: { packId } });
+  await prisma.incident.deleteMany({ where: { packId } });
+  await prisma.qualityFixRun.deleteMany({ where: { packId } });
 
   await prisma.persona.createMany({
     data: pack.personas.map((p) => ({
@@ -132,7 +136,32 @@ export async function seedPack(prisma: PrismaClient, pack: Pack, opts: { rubrics
     subjectId: packId,
     detail: { version: pack.manifest.version, personas: personaIds.length, entitlements: grants.length, products: pack.products.length, agents: pack.agents.length, qualitySnapshots: snapshots, gatesApproved: gates },
   });
+  if (opts.rubrics && opts.qs) await seedFeedback(prisma, pack, opts.rubrics, opts.qs);
   return { personas: personaIds.length, entitlements: grants.length, products: pack.products.length, agents: pack.agents.length, snapshots, gates };
+}
+
+/**
+ * The Agent Quality story's thumbs-down: persona B asked the quality-fix agent its feedback question. Answer
+ * records are append-only, so a re-seed reuses the record and resets its feedback to NEW.
+ */
+async function seedFeedback(prisma: PrismaClient, pack: Pack, rubrics: Rubrics, qs: QueryService): Promise<void> {
+  const agent = pack.agents.find((a) => a.id === pack.manifest.story_roles.qualityFixAgent);
+  const fix = agent?.quality_fix;
+  const asker = pack.personas.find((p) => p.archetype === 'B');
+  if (!agent || !fix || !asker) return;
+  const packId = pack.manifest.id;
+  let record = await prisma.answerRecord.findFirst({ where: { packId, agentId: agent.id, personaId: asker.id, question: fix.feedback_question }, select: { id: true } });
+  if (!record) {
+    const a = await respondScripted(agent.id, fix.feedback_question, { pack, rubrics, qs, who: principalFor(pack, asker.id) });
+    record = await prisma.answerRecord.create({
+      data: { packId, agentId: agent.id, personaId: asker.id, question: fix.feedback_question, kind: a.kind, mode: a.mode, scenarioId: a.scenarioId ?? null, metricQueryJson: a.metricQuery ? JSON.stringify(a.metricQuery) : null, answerJson: JSON.stringify(a), citationsJson: JSON.stringify(a.citations), traceJson: JSON.stringify(a.trace), confidence: a.confidence, latencyMs: 0 },
+      select: { id: true },
+    });
+  }
+  const reason = 'This did not answer what I asked.';
+  const fb = await prisma.answerFeedback.findFirst({ where: { answerId: record.id, personaId: asker.id } });
+  if (fb) await prisma.answerFeedback.update({ where: { id: fb.id }, data: { state: 'NEW', fixId: null, rating: -1, reason } });
+  else await prisma.answerFeedback.create({ data: { answerId: record.id, personaId: asker.id, rating: -1, reason, state: 'NEW' } });
 }
 
 /** Seeded intake requests (demand.yaml) with their duplicate candidates computed by the real detector. */

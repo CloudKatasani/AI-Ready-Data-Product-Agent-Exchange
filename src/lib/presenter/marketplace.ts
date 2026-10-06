@@ -10,6 +10,7 @@ export async function catalogState(pack: Pack, personaId: string): Promise<Catal
   const live = new Map<string, LiveProduct>();
   const quality = new Map<string, QualityView>();
   const pendingProducts = new Set<string>();
+  const degraded = new Set<string>();
   try {
     const prisma = db();
     const rows = await prisma.dataProduct.findMany({ where: { packId: pack.manifest.id }, select: { id: true, status: true, semanticVersion: true, currentStage: true, tier: true } });
@@ -19,10 +20,12 @@ export async function catalogState(pack: Pack, personaId: string): Promise<Catal
     for (const s of snaps) if (!quality.has(s.productId)) quality.set(s.productId, { score: s.score, tier: tiers.get(s.productId) ?? 'unrated', at: s.createdAt.toISOString() });
     const pending = await prisma.accessRequest.findMany({ where: { packId: pack.manifest.id, requesterId: personaId, state: 'PENDING' }, select: { productId: true } });
     for (const p of pending) if (p.productId) pendingProducts.add(p.productId);
+    const open = await prisma.incident.findMany({ where: { packId: pack.manifest.id, state: { not: 'RESOLVED' } }, select: { templateId: true } });
+    for (const i of open) for (const id of pack.incidents.find((t) => t.id === i.templateId)?.affects.products ?? []) degraded.add(id);
   } catch {
     // Pack-only view (DB not migrated yet).
   }
-  return { live, quality, pendingProducts };
+  return { live, quality, pendingProducts, degraded };
 }
 
 export async function qualityHistory(productId: string): Promise<{ score: number; at: string; dimensions: Record<string, { passRate: number; rules: number }> }[]> {

@@ -550,3 +550,40 @@ model EvalCaseResult {
   reason       String?
   run          EvalRun @relation(fields: [runId], references: [id])
 }
+
+// ───────── Operate (Phase 7) ─────────
+
+/// A "Break something" incident opened from a pack template. Effects apply while state ≠ RESOLVED.
+model Incident {
+  id             String    @id @default(cuid())
+  packId         String
+  templateId     String
+  title          String
+  severity       String // SEV1|SEV2|SEV3
+  state          String // OPEN|MITIGATED|RESOLVED
+  affectedJson   String // { objects, products, agents }
+  effectsJson    String // { kind, params, object, column }
+  openedBy       String
+  detectedAt     DateTime  @default(now())
+  resolvedAt     DateTime?
+  resolvedBy     String?
+  postmortemJson String?
+
+  @@index([packId, state])
+}
+
+/// One applied agent-quality fix (feedback → knowledge overlay) with the eval it moved.
+model QualityFixRun {
+  id           String   @id @default(cuid())
+  packId       String
+  agentId      String
+  feedbackId   String?
+  overlayId    String
+  fixType      String // SYNONYM|BUSINESS_RULE|VERIFIED_QUERY|INSTRUCTION
+  evalBefore   Float
+  evalAfter    Float
+  appliedBy    String
+  createdAt    DateTime @default(now())
+
+  @@index([packId, agentId])
+}

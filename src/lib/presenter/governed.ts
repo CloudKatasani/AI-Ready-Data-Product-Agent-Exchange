@@ -5,6 +5,7 @@
 import { db } from '@/lib/db';
 import { getPack, getRubrics } from '@/lib/packs/registry';
 import { CompileError } from '@/lib/query/compiler';
+import { IncidentBlocked } from '@/lib/query/incidents';
 import { warehouseFor, WarehouseMissing } from '@/lib/query/connections';
 import { principalFor } from '@/lib/query/principal';
 import { prismaQueryLog } from '@/lib/query/query-log';
@@ -36,8 +37,16 @@ export async function principalForPersona(packId: string, personaId: string): Pr
 export async function policyState(packId: string): Promise<PolicyState> {
   try {
     const prisma = db();
-    const [fixes, products] = await Promise.all([prisma.appliedFix.findMany({ where: { packId }, select: { fixId: true } }), prisma.dataProduct.findMany({ where: { packId }, select: { id: true, status: true, semanticVersion: true } })]);
-    return { appliedFixes: fixes.map((f) => f.fixId), products: Object.fromEntries(products.map((p) => [p.id, { status: p.status, version: p.semanticVersion }])) };
+    const [fixes, products, incidents] = await Promise.all([
+      prisma.appliedFix.findMany({ where: { packId }, select: { fixId: true } }),
+      prisma.dataProduct.findMany({ where: { packId }, select: { id: true, status: true, semanticVersion: true } }),
+      prisma.incident.findMany({ where: { packId, state: { not: 'RESOLVED' } }, select: { templateId: true } }),
+    ]);
+    return {
+      appliedFixes: fixes.map((f) => f.fixId),
+      products: Object.fromEntries(products.map((p) => [p.id, { status: p.status, version: p.semanticVersion }])),
+      incidents: [...new Set(incidents.map((i) => i.templateId))].sort(),
+    };
   } catch {
     return EMPTY_STATE;
   }
@@ -85,6 +94,7 @@ export async function governedQuery(packId: string, req: QueryRequest, who: Prin
     if (e instanceof PolicyDenied) return { ok: false, kind: 'denied', message: e.message, productId: e.productId, requestable: e.requestable };
     if (e instanceof SqlRejected) return { ok: false, kind: 'rejected', message: e.message, hint: e.hint };
     if (e instanceof CompileError) return { ok: false, kind: 'rejected', message: e.message, hint: e.suggestions.length ? `Did you mean ${e.suggestions.join(', ')}?` : 'Check the metric and dimension names.' };
+    if (e instanceof IncidentBlocked) return { ok: false, kind: 'unavailable', message: e.message };
     if (e instanceof WarehouseMissing) return { ok: false, kind: 'unavailable', message: e.message };
     return { ok: false, kind: 'unavailable', message: e instanceof Error ? e.message : 'The query could not run.' };
   }

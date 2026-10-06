@@ -39,6 +39,7 @@ export interface ProductCard {
   owner: string;
   access: AccessBadge;
   freshnessMinutes: number;
+  degraded: boolean;
 }
 
 export interface AgentCard {
@@ -60,6 +61,8 @@ export interface CatalogState {
   live: Map<string, LiveProduct>;
   quality: Map<string, QualityView>;
   pendingProducts: Set<string>;
+  /** Products affected by an open incident (Phase 7). */
+  degraded?: Set<string>;
 }
 
 export function liveFromPack(p: DataProduct): LiveProduct {
@@ -117,6 +120,7 @@ export function productCard(pack: Pack, rubrics: Rubrics, product: DataProduct, 
     owner: pack.personas.find((p) => p.id === product.owner)?.name ?? product.owner,
     access: productBadge(pack, rubrics, product, live, who, state.pendingProducts),
     freshnessMinutes: product.sla.freshness_minutes,
+    degraded: state.degraded?.has(product.id) ?? false,
   };
 }
 

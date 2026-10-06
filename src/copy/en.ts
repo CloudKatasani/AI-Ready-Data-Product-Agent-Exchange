@@ -3,9 +3,11 @@
  * Product name is white-label: read it from the active brand, never from this file.
  */
 import { factoryCopy } from './en-factory';
+import { operateCopy } from './en-operate';
 
 export const copy = {
   factory: factoryCopy,
+  operate: operateCopy,
   doors: {
     home: 'Home',
     consume: 'Consume',

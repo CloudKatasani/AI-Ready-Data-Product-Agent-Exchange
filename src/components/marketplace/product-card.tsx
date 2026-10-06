@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { copy } from '@/copy/en';
 import type { ProductCard as Card } from '@/lib/marketplace/catalog';
+import { HealthState } from '@/components/operate/signal';
 import { AccessChip, QualityRing, SensitivityChips, StatusChip } from './chips';
 
 export function ProductCardView({ card, packId, compareChecked }: { card: Card; packId: string; compareChecked?: boolean }) {
@@ -23,6 +24,7 @@ export function ProductCardView({ card, packId, compareChecked }: { card: Card; 
       <p className="line-clamp-2 text-sm text-muted-foreground">{card.description}</p>
       <div className="flex flex-wrap items-center gap-1.5 text-xs">
         <StatusChip status={card.status} />
+        {card.degraded && <HealthState value="degraded" />}
         {card.quality && <span className="rounded-full border border-border px-2 py-0.5 capitalize">{card.quality.tier}</span>}
         <SensitivityChips classes={card.sensitivity} />
       </div>

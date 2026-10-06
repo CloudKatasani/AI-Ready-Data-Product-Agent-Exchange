@@ -3,11 +3,12 @@
  * compile → entitlement → row access → masking → (incident effects, Phase 7) → limits → execute → log.
  */
 import { createHash } from 'node:crypto';
-import type { Pack } from '@/lib/packs/schema';
+import type { IncidentTemplate, Pack } from '@/lib/packs/schema';
 import type { Rubrics } from '@/lib/packs/schema';
 import type { CellValue, WarehouseAdapter } from '@/lib/warehouse/adapter';
 import { compileMetricQuery } from './compiler';
 import { toDisplaySql } from './display-sql';
+import { type ColumnInfo, IncidentBlocked, incidentSource, openTemplates, productHealth } from './incidents';
 import { checkEntitlement, EMPTY_STATE, governedSource, maskFor, type PolicyState, productsForObject, rowFilterFor } from './policies';
 import { checkWorksheetSql, rewriteTables } from './sql-safety';
 import type { GovernedResult, OutputField, PolicyApplication, Principal, QueryRequest, ResultSource } from './types';
@@ -50,7 +51,7 @@ export class SqlRejected extends Error {
 const hash = (s: string) => createHash('sha256').update(s).digest('hex').slice(0, 16);
 
 export class QueryService {
-  private columnsCache = new Map<string, string[]>();
+  private columnsCache = new Map<string, ColumnInfo[]>();
   private objectsCache: Set<string> | null = null;
 
   constructor(private readonly deps: QueryServiceDeps) {}
@@ -65,13 +66,25 @@ export class QueryService {
     return this.deps.state ?? EMPTY_STATE;
   }
 
-  private async columns(fqn: string): Promise<string[]> {
+  private async columnInfo(fqn: string): Promise<ColumnInfo[]> {
     let cols = this.columnsCache.get(fqn);
     if (!cols) {
-      cols = (await this.deps.warehouse.describe(fqn)).map((c) => c.name);
+      cols = (await this.deps.warehouse.describe(fqn)).map((c) => ({ name: c.name, type: c.type }));
       this.columnsCache.set(fqn, cols);
     }
     return cols;
+  }
+
+  /** Base object, or its incident overlay while an open incident targets it; column names after any rename. */
+  private async overlay(fqn: string): Promise<{ sql: string; columns: string[]; applied: PolicyApplication[]; renamed: { from: string; to: string; incidentId: string }[] }> {
+    const info = await this.columnInfo(fqn);
+    const o = incidentSource(fqn, fqn, info, this.incidents);
+    const rename = new Map(o.renamed.map((r) => [r.from, r.to]));
+    return { ...o, columns: info.map((c) => rename.get(c.name) ?? c.name) };
+  }
+
+  private get incidents(): IncidentTemplate[] {
+    return openTemplates(this.deps.pack, this.state.incidents);
   }
 
   /** Every queryable object (schema-qualified) in the warehouse. */
@@ -100,7 +113,7 @@ export class QueryService {
     return productIds.map((id) => {
       const p = this.deps.pack.products.find((x) => x.id === id);
       const live = this.state.products?.[id];
-      return { productId: id, version: live?.version ?? p?.version ?? '0.0.0', certified: (live?.status ?? p?.initial_status) === 'CERTIFIED', health: 'healthy' as const };
+      return { productId: id, version: live?.version ?? p?.version ?? '0.0.0', certified: (live?.status ?? p?.initial_status) === 'CERTIFIED', health: productHealth(this.incidents, id) };
     });
   }
 
@@ -118,6 +131,7 @@ export class QueryService {
     let fields: OutputField[] = [];
     let ruleRefs: string[] = [];
     let purpose: string | null = null;
+    const renamed: { from: string; to: string; incidentId: string; fqn: string }[] = [];
 
     if (req.kind === 'metric') {
       purpose = req.purpose;
@@ -138,10 +152,23 @@ export class QueryService {
         const fqn = compiled.sources.find((s) => s.alias === alias)?.fqn ?? alias;
         policies.push({ kind: 'row_access', target: fqn, detail: rf.detail, ruleOrPolicyId: rf.policyId });
       }
+      const overlays = new Map<string, string>();
+      for (const fqn of new Set(compiled.sources.map((x) => x.fqn))) {
+        const o = await this.overlay(fqn);
+        policies.push(...o.applied);
+        for (const r of o.renamed) {
+          if (new RegExp(`\\b${r.from}\\b`).test(compiled.sql)) {
+            throw new IncidentBlocked(`${r.incidentId}: ${fqn}.${r.from} was renamed upstream to ${r.to}, so this metric cannot be computed until the incident is resolved.`, r.incidentId, productsForObject(pack, fqn));
+          }
+        }
+        if (o.sql !== fqn) overlays.set(fqn, o.sql);
+      }
       sql = compiled.render({
         source: (s) => {
           const rf = filtered.get(s.alias);
-          return rf ? `(SELECT * FROM ${s.fqn} WHERE ${rf.predicate}) ${s.alias}` : `${s.fqn} ${s.alias}`;
+          const base = overlays.get(s.fqn);
+          if (rf) return `(SELECT * FROM ${base ? `${base} __o` : s.fqn} WHERE ${rf.predicate}) ${s.alias}`;
+          return `${base ?? s.fqn} ${s.alias}`;
         },
         project: (field, expr) => {
           const mask = field.lineage ? maskFor(pack, who, field.lineage, this.state) : null;
@@ -162,9 +189,10 @@ export class QueryService {
       if (!(await this.objects()).has(fqn)) throw new SqlRejected(`${fqn} does not exist.`, 'Pick an object from the Explorer tree.');
       productIds = productsForObject(pack, fqn);
       policies.push(...checkEntitlement(pack, who, [fqn], { rowLevel: true }));
-      const cols = await this.columns(fqn);
-      const g = governedSource(pack, who, fqn, cols, this.state);
-      policies.push(...g.applied);
+      const o = await this.overlay(fqn);
+      const cols = o.columns;
+      const g = governedSource(pack, who, fqn, cols, this.state, o.sql);
+      policies.push(...o.applied, ...g.applied);
       maskedColumns = g.masked;
       rowFiltered = g.rowFiltered;
       sql = `SELECT * FROM ${g.sql === fqn ? fqn : `${g.sql} AS "${fqn.split('.')[1]}"`} LIMIT ${maxRows}`;
@@ -180,9 +208,11 @@ export class QueryService {
       policies.push(...checkEntitlement(pack, who, fqns, { rowLevel: true }));
       const governed = new Map<string, string>();
       for (const fqn of fqns) {
-        const g = governedSource(pack, who, fqn, await this.columns(fqn), this.state);
+        const o = await this.overlay(fqn);
+        renamed.push(...o.renamed.map((r) => ({ ...r, fqn })));
+        const g = governedSource(pack, who, fqn, o.columns, this.state, o.sql);
         governed.set(fqn, g.sql);
-        policies.push(...g.applied);
+        policies.push(...o.applied, ...g.applied);
         maskedColumns.push(...g.masked);
         rowFiltered ||= g.rowFiltered;
       }
@@ -192,7 +222,15 @@ export class QueryService {
     }
 
     policies.push({ kind: 'limit', target: req.kind, detail: `max ${maxRows} rows, ${rubrics.query.statement_timeout_ms} ms timeout` });
-    const result = await warehouse.query(sql, params, { timeoutMs: rubrics.query.statement_timeout_ms, maxRows });
+    let result: Awaited<ReturnType<typeof warehouse.query>>;
+    try {
+      result = await warehouse.query(sql, params, { timeoutMs: rubrics.query.statement_timeout_ms, maxRows });
+    } catch (e) {
+      // A worksheet that names a column an open schema-drift incident renamed fails like production would.
+      const r = renamed.find((x) => e instanceof Error && e.message.includes(`"${x.from}"`));
+      if (r) throw new IncidentBlocked(`${r.incidentId}: ${r.fqn}.${r.from} was renamed upstream to ${r.to}.`, r.incidentId, productsForObject(pack, r.fqn));
+      throw e;
+    }
     if (req.kind === 'sql') fields = result.columns.map((c) => ({ name: c.name, role: 'column', label: c.name }));
     const displaySql = toDisplaySql(logicalSql, params, pack.manifest.database, policies);
     const queryLogId = await this.deps.log.write({
