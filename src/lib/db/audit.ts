@@ -30,14 +30,29 @@ export function auditHash(prevHash: string | null, e: AuditInput): string {
   return createHash('sha256').update(`${prevHash ?? ''}${canonicalJson(e)}`).digest('hex');
 }
 
-/** Appends a hash-chained AuditEvent (append-only, invariant I06). */
+/** The chain tip: the most recent event that nothing links to yet. */
+async function chainTip(prisma: Db, packId: string): Promise<string | null> {
+  const recent = await prisma.auditEvent.findMany({ where: { packId }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: 50, select: { hash: true, prevHash: true } });
+  const linked = new Set(recent.map((r) => r.prevHash));
+  return recent.find((r) => !linked.has(r.hash))?.hash ?? recent[0]?.hash ?? null;
+}
+
+/**
+ * Appends a hash-chained AuditEvent (append-only, invariant I06). `prevHash` is unique, so two concurrent
+ * appends cannot both extend the same tip: the loser re-reads the tip and retries.
+ */
 export async function appendAudit(prisma: Db, e: AuditInput): Promise<string> {
-  const prev = await prisma.auditEvent.findFirst({ where: { packId: e.packId }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { hash: true } });
-  const hash = auditHash(prev?.hash ?? null, e);
-  const row = await prisma.auditEvent.create({
-    data: { packId: e.packId, actorType: e.actorType, actorId: e.actorId, action: e.action, subjectType: e.subjectType, subjectId: e.subjectId, detailJson: canonicalJson(e.detail), hash, prevHash: prev?.hash ?? null },
-  });
-  return row.id;
+  for (let attempt = 0; ; attempt++) {
+    const prev = await chainTip(prisma, e.packId);
+    try {
+      const row = await prisma.auditEvent.create({
+        data: { packId: e.packId, actorType: e.actorType, actorId: e.actorId, action: e.action, subjectType: e.subjectType, subjectId: e.subjectId, detailJson: canonicalJson(e.detail), hash: auditHash(prev, e), prevHash: prev },
+      });
+      return row.id;
+    } catch (err) {
+      if (attempt >= 8 || (err as { code?: string }).code !== 'P2002') throw err;
+    }
+  }
 }
 
 export interface ChainCheck {

@@ -18,7 +18,8 @@ describe('AC9.1 Playground = KPI tile for every headline KPI', () => {
     const { qs } = await service();
     const tile = await qs.run({ kind: 'metric', query: { view: view.name, metrics: [kpi.metric], timeRange: kpi.window }, purpose: 'kpi-tile' }, persona('E'));
     const play = await qs.run({ kind: 'metric', query: pg as NonNullable<typeof pg>, purpose: 'playground' }, persona('E'));
-    expect(play.rows[0]?.[0]).toBe(tile.rows[0]?.[0]);
+    // Same compiled SQL; DuckDB's parallel float aggregation may differ in the last bit between runs.
+    expect(Number(play.rows[0]?.[0])).toBeCloseTo(Number(tile.rows[0]?.[0]), 9);
     expect(play.sql).toBe(tile.sql);
   });
 });
@@ -35,7 +36,7 @@ describe('AC2.1 Home KPI tiles = Semantic Playground', () => {
       if (!kpi || !view) throw new Error(t.kpiId);
       const pg = playgroundQuery(view, { metric: kpi.metric, range: rangeKeyFor(kpi.window) });
       const play = await qs.run({ kind: 'metric', query: pg as NonNullable<typeof pg>, purpose: 'playground' }, persona('E'));
-      expect(t.value).toBe(play.rows[0]?.[0]);
+      expect(Number(t.value)).toBeCloseTo(Number(play.rows[0]?.[0]), 9);
       expect(t.spark.length).toBeGreaterThan(1);
     }
   });

@@ -74,7 +74,8 @@ model AuditEvent {
   subjectId   String
   detailJson  String
   hash        String
-  prevHash    String?
+  /// Unique: an event has at most one successor, so concurrent appends cannot fork the chain.
+  prevHash    String?  @unique
   createdAt   DateTime @default(now())
 
   @@index([packId])

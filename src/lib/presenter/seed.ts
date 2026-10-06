@@ -17,26 +17,30 @@ import type { QueryService } from '@/lib/query/query-service';
 export async function seedPack(prisma: PrismaClient, pack: Pack, opts: { rubrics?: Rubrics; qs?: QueryService } = {}): Promise<{ personas: number; entitlements: number; products: number; agents: number; snapshots: number; gates: number }> {
   const packId = pack.manifest.id;
   const personaIds = pack.personas.map((p) => p.id);
-  const productIds = pack.products.map((p) => p.id);
+  // Every product of this pack, including ones created in Product Studio since the last seed.
+  const productIds = [...new Set([...pack.products.map((p) => p.id), ...(await prisma.dataProduct.findMany({ where: { packId }, select: { id: true } })).map((p) => p.id)])];
 
   // Reset this pack's mutable demo state (seeding is a reset; the running app never deletes rows).
-  const gateIds = (await prisma.gate.findMany({ where: { productId: { in: productIds } }, select: { id: true } })).map((g) => g.id);
-  const artifactIds = (await prisma.artifact.findMany({ where: { productId: { in: productIds } }, select: { id: true } })).map((a) => a.id);
+  // Lifecycle rows are keyed by product id; clear by the pack's id prefix so rows of products removed
+  // by an earlier seed (studio-created ones) never collide with new ids.
+  const mine = { OR: [{ productId: { in: productIds } }, { productId: { startsWith: `DP-${pack.manifest.code}-` } }] };
+  const gateIds = (await prisma.gate.findMany({ where: mine, select: { id: true } })).map((g) => g.id);
+  const artifactIds = (await prisma.artifact.findMany({ where: mine, select: { id: true } })).map((a) => a.id);
   const versionIds = (await prisma.artifactVersion.findMany({ where: { artifactId: { in: artifactIds } }, select: { id: true } })).map((v) => v.id);
   await prisma.fieldProvenance.deleteMany({ where: { versionId: { in: versionIds } } });
   await prisma.gateEvidence.deleteMany({ where: { gateId: { in: gateIds } } });
   await prisma.artifactVersion.deleteMany({ where: { id: { in: versionIds } } });
   await prisma.artifact.deleteMany({ where: { id: { in: artifactIds } } });
   await prisma.gate.deleteMany({ where: { id: { in: gateIds } } });
-  await prisma.stageRun.deleteMany({ where: { productId: { in: productIds } } });
-  await prisma.agentProposal.deleteMany({ where: { productId: { in: productIds } } });
+  await prisma.stageRun.deleteMany({ where: mine });
+  await prisma.agentProposal.deleteMany({ where: mine });
   await prisma.agentAction.deleteMany({ where: { packId } });
-  await prisma.autopilotRun.deleteMany({ where: { productId: { in: productIds } } });
-  await prisma.certificationCheckResult.deleteMany({ where: { productId: { in: productIds } } });
+  await prisma.autopilotRun.deleteMany({ where: mine });
+  await prisma.certificationCheckResult.deleteMany({ where: mine });
   await prisma.appliedFix.deleteMany({ where: { packId } });
   await prisma.knowledgeOverlay.deleteMany({ where: { packId } });
   await prisma.task.deleteMany({ where: { packId } });
-  await prisma.comment.deleteMany({ where: { productId: { in: productIds } } });
+  await prisma.comment.deleteMany({ where: mine });
   await prisma.productRequest.deleteMany({ where: { packId } });
   await prisma.decision.deleteMany({ where: { packId } });
   await prisma.accessRequest.deleteMany({ where: { packId } });
@@ -126,9 +130,9 @@ export async function seedPack(prisma: PrismaClient, pack: Pack, opts: { rubrics
     action: 'PACK_SEEDED',
     subjectType: 'PACK',
     subjectId: packId,
-    detail: { version: pack.manifest.version, personas: personaIds.length, entitlements: grants.length, products: productIds.length, agents: pack.agents.length, qualitySnapshots: snapshots, gatesApproved: gates },
+    detail: { version: pack.manifest.version, personas: personaIds.length, entitlements: grants.length, products: pack.products.length, agents: pack.agents.length, qualitySnapshots: snapshots, gatesApproved: gates },
   });
-  return { personas: personaIds.length, entitlements: grants.length, products: productIds.length, agents: pack.agents.length, snapshots, gates };
+  return { personas: personaIds.length, entitlements: grants.length, products: pack.products.length, agents: pack.agents.length, snapshots, gates };
 }
 
 /** Seeded intake requests (demand.yaml) with their duplicate candidates computed by the real detector. */

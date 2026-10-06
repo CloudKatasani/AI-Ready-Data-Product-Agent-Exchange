@@ -3,21 +3,26 @@ import { ALL_NAV_ITEMS } from '../../src/components/shell/nav';
 export const PACK = 'utilities';
 
 /** Screens built so far (no stub). */
-export const BUILT = new Set(['home', 'ask', 'marketplace', 'access', 'explorer', 'semantic', 'glossary', 'context']);
+export const BUILT = new Set(['home', 'ask', 'marketplace', 'access', 'request', 'studio', 'explorer', 'semantic', 'glossary', 'context']);
 
 /** Scaffolded routes that still render the Phase 0 stub. */
 export const STUB_URLS: string[] = [
   ...ALL_NAV_ITEMS.filter((i) => !BUILT.has(i.id)).map((i) => `/${PACK}/${i.path}`),
-  `/${PACK}/request/REQ-UTL-001`,
-  `/${PACK}/studio/DP-UTL-005`,
-  `/${PACK}/studio/DP-UTL-005/11`,
   `/${PACK}/factory/draft-1`,
   `/${PACK}/health/incidents`,
   `/${PACK}/agent-quality/feedback`,
 ];
 
-/** Built screens (Phases 2–4). */
+/** Built screens (Phases 2–5). */
 export const SCREEN_URLS: string[] = [
+  `/${PACK}/studio`,
+  `/${PACK}/studio?view=table`,
+  `/${PACK}/studio/DP-UTL-005`,
+  `/${PACK}/studio/DP-UTL-005/5`,
+  `/${PACK}/studio/DP-UTL-007`,
+  `/${PACK}/studio/DP-UTL-002/3`,
+  `/${PACK}/request/new`,
+  `/${PACK}/request/REQ-UTL-001`,
   `/${PACK}/marketplace`,
   `/${PACK}/marketplace?tab=demand`,
   `/${PACK}/marketplace?tab=mesh`,

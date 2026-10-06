@@ -26,7 +26,8 @@ test('AC2.1 the Home SAIDI tile links to the same value in the Semantic Playgrou
   expect(Number(value)).toBeGreaterThan(0);
   await tile.getByRole('link').click();
   await expect(page).toHaveURL(/tab=playground/);
-  await expect(page.getByTestId('playground-value')).toHaveAttribute('data-value', value ?? '');
+  const shown = await page.getByTestId('playground-value').getAttribute('data-value');
+  expect(Number(shown)).toBeCloseTo(Number(value), 9);
 });
 
 test('Ask: a suggested question streams a trace and the inspector shows SQL and policies', async ({ page }) => {
