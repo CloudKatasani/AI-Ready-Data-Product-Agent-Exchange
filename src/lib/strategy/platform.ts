@@ -88,14 +88,33 @@ export interface FlowStep {
 }
 
 /** The path one governed answer takes for the pack's headline KPI: source → … → agent. */
+/** First Bronze source reachable upstream of an object (breadth-first, cycle-safe). */
+function bronzeUpstream(pack: Pack, fqn: string): string | undefined {
+  const seen = new Set<string>();
+  const queue = [fqn];
+  while (queue.length) {
+    const cur = queue.shift() ?? '';
+    if (seen.has(cur)) continue;
+    seen.add(cur);
+    const up = pack.objects.find((o) => o.fqn === cur)?.upstream ?? [];
+    const hit = up.find((u) => u.startsWith('RAW_BRONZE.'));
+    if (hit) return hit;
+    queue.push(...up);
+  }
+  return undefined;
+}
+
 export function flowPath(pack: Pack): FlowStep[] {
   const ko = pack.knockout.answers.find((a) => a.kpi === pack.manifest.story_roles.knockoutKpi) ?? pack.knockout.answers[0];
   const kpi = pack.kpis.find((k) => k.id === ko?.kpi);
   const view = pack.semantic.find((v) => v.metrics.some((m) => m.name === kpi?.metric));
   const fact = view?.tables[0]?.fqn;
   const goldObj = pack.objects.find((o) => o.fqn === fact);
-  const silver = goldObj?.upstream.find((u) => u.startsWith('CURATED_SILVER.'));
-  const bronze = pack.objects.find((o) => o.fqn === silver)?.upstream.find((u) => u.startsWith('RAW_BRONZE.'));
+  // Prefer a Silver input that reaches Bronze (Silver objects may build on other Silver objects).
+  const silvers = goldObj?.upstream.filter((u) => u.startsWith('CURATED_SILVER.')) ?? [];
+  const bronzeOf = (fqn: string) => bronzeUpstream(pack, fqn);
+  const silver = silvers.find((s) => bronzeOf(s)) ?? silvers[0];
+  const bronze = silver ? bronzeOf(silver) : undefined;
   const term = pack.glossary.find((t) => t.id === kpi?.term);
   const rule = view?.metrics.find((m) => m.name === kpi?.metric)?.default_filters[0]?.rule;
   const product = pack.products.find((p) => p.semantic_view === view?.name);

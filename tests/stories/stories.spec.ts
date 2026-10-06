@@ -3,17 +3,24 @@ import { getPack, getStories, listPackIds } from '../../src/lib/packs/registry';
 import { resolveStory } from '../../src/lib/presenter/stories';
 
 /**
- * 09 §5 / AC1.5: every story, every deep pack — the presenter overlay's Go lands on the documented route as
+ * 09 §5 / AC1.5: every story on every deep pack, S1/S5 on standard packs — the presenter overlay's Go lands on the documented route as
  * the documented persona, and the step's landing-observable `expect` holds. Expectations that need the
  * presenter's clicks first (certify, grant, release…) are covered by the feature suites named in the
  * Phase 9 report; here the cheap ones are performed.
  */
-const deep = listPackIds().filter((id) => {
+const depthOf = (id: string) => {
   try {
-    return getPack(id).manifest.depth === 'deep';
+    return getPack(id).manifest.depth;
   } catch {
-    return false;
+    return 'unloadable';
   }
+};
+/** Phase 10 DoD: deep packs run all six stories; standard packs run S1 (executive-5) and S5 (factory-10). */
+const STANDARD_STORIES = new Set(['executive-5', 'factory-10']);
+const runs = listPackIds().flatMap((id) => {
+  const depth = depthOf(id);
+  const stories = getStories().filter((s) => depth === 'deep' || (depth === 'standard' && STANDARD_STORIES.has(s.id)));
+  return stories.map((s) => [id, s] as const);
 });
 
 async function openOverlay(page: Page, storyId: string) {
@@ -52,8 +59,8 @@ async function landing(page: Page, expectBlock: Record<string, unknown>) {
   await expect(main).toBeVisible();
 }
 
-for (const packId of deep) {
-  for (const s of getStories()) {
+for (const [packId, s] of runs) {
+  {
     test(`AC1.5 ${s.id} on ${packId}: every Go lands on the documented state`, async ({ page }) => {
       test.setTimeout(180_000);
       const story = resolveStory(getPack(packId), s.id);

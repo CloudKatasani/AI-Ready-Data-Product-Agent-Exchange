@@ -4,6 +4,7 @@
  */
 import { indexPack } from './index-pack';
 import { readPack } from './loader';
+import { getRubrics } from './registry';
 import type { Pack, Story } from './schema';
 import { checkGovernance, checkQuotas, checkSemantics, checkStories, lintTerms } from './validate/policy-checks';
 import { checkIdentity, checkObjects, checkReferences, checkSemantic, checkSources } from './validate/references';
@@ -22,7 +23,7 @@ export function staticChecks(pack: Pack, stories: Story[], results: CheckResult[
   checkObjects(refs, pack, idx);
   checkSemantic(refs, pack, idx);
   checkReferences(refs, pack, idx);
-  checkQuotas(c.in(3), pack);
+  checkQuotas(c.in(3), pack, getRubrics().certification.min_verified_queries);
   checkSemantics(c.in(5), pack, idx);
   checkGovernance(c.in(6), pack, idx);
   checkStories(c.in(9), pack, idx, stories);

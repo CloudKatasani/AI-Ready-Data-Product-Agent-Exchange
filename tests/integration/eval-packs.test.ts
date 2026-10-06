@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { getPack, listPackIds } from '@/lib/packs/registry';
 import { runEvaluation } from '@/lib/presenter/factory';
 
-/** Phase 6 DoD: the scripted eval harness passes every production agent of every deep pack. */
+/** Phase 6 DoD: the scripted eval harness passes every production agent of every deep and standard pack. */
 const deep = listPackIds().filter((id) => {
   try {
-    return getPack(id).manifest.depth === 'deep';
+    return getPack(id).manifest.depth !== 'draft';
   } catch {
     return false;
   }

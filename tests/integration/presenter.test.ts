@@ -42,7 +42,7 @@ describe('Demo Profiles and stories', async () => {
 
   const deep = listPackIds().filter((id) => {
     try {
-      return getPack(id).manifest.depth === 'deep';
+      return getPack(id).manifest.depth !== 'draft';
     } catch {
       return false;
     }

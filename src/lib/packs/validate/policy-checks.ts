@@ -33,8 +33,13 @@ export const QUOTAS: Record<'deep' | 'standard', Quota> = {
 };
 
 /** Category 3 — depth quotas incl. product status mix, agent status mix and pattern coverage. */
-export function checkQuotas(c: Checks, pack: Pack): void {
+export function checkQuotas(c: Checks, pack: Pack, minVerifiedQueries: number): void {
   if (pack.manifest.depth === 'draft') return;
+  // The seed certifies CERTIFIED products through check 4, which needs this many active verified queries on the view.
+  for (const p of pack.products.filter((x) => x.initial_status === 'CERTIFIED')) {
+    const n = pack.verifiedQueries.filter((v) => v.status === 'active' && v.query.view === p.semantic_view).length;
+    c.expect(n >= minVerifiedQueries, 'quota.certified_vqs', `${p.id}: ${n} active verified queries on ${p.semantic_view} (certification needs ≥ ${minVerifiedQueries})`, p.id);
+  }
   const q = QUOTAS[pack.manifest.depth];
   const between = (n: number, [lo, hi]: Range, what: string) => c.expect(n >= lo && n <= hi, `quota.${what}`, `${what}: ${n} (quota ${lo}–${hi === INF ? '∞' : hi})`);
   const atLeast = (n: number, min: number, what: string) => c.expect(n >= min, `quota.${what}`, `${what}: ${n} (quota ≥ ${min})`);
