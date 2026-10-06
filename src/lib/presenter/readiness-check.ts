@@ -30,6 +30,12 @@ export async function readinessChecks(): Promise<Check[]> {
   for (const id of listPackIds()) {
     try {
       const pack = getPack(id);
+      if (env.WAREHOUSE_ADAPTER === 'snowflake') {
+        // ADR-0025: the warehouse is remote; local files are not used. Configuration presence only.
+        const ok = Boolean(env.SNOWFLAKE_ACCOUNT && env.SNOWFLAKE_USER && env.SNOWFLAKE_PRIVATE_KEY_PATH);
+        checks.push({ name: `warehouse:${id}`, ok, detail: ok ? `${id}: Snowflake database ${pack.manifest.database} (not probed)` : `${id}: Snowflake settings incomplete` });
+        continue;
+      }
       const meta = join(env.WAREHOUSE_DIR, `${id}.duckdb.meta.json`);
       if (!existsSync(meta)) {
         checks.push({ name: `warehouse:${id}`, ok: false, detail: `${id}: warehouse not built (pnpm warehouse:build --pack ${id})` });

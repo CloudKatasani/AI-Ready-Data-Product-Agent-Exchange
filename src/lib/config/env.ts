@@ -24,6 +24,14 @@ const EnvSchema = z.object({
   LLM_MAX_TOOL_ROUNDS: z.coerce.number().int().positive().default(6),
   LLM_BUDGET_USD_PER_SESSION: z.coerce.number().positive().default(5),
   SESSION_SECRET: z.string().default('change-me'),
+  // Snowflake SQL API (WAREHOUSE_ADAPTER=snowflake, ADR-0025). Key-pair auth; the key file path only.
+  SNOWFLAKE_ACCOUNT: z.string().optional(),
+  SNOWFLAKE_USER: z.string().optional(),
+  SNOWFLAKE_PRIVATE_KEY_PATH: z.string().optional(),
+  SNOWFLAKE_WAREHOUSE: z.string().optional(),
+  SNOWFLAKE_ROLE: z.string().optional(),
+  /** Override the API host (default `<account>.snowflakecomputing.com`); used by tests and private links. */
+  SNOWFLAKE_HOST: z.string().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
@@ -58,4 +66,26 @@ export function hasApiKey(env: Env = getEnv()): boolean {
 /** The API key, for constructing the server-side SDK client only. Never log it or pass it to the browser. */
 export function anthropicApiKey(env: Env = getEnv()): string | undefined {
   return env.ANTHROPIC_API_KEY;
+}
+
+export interface SnowflakeConfig {
+  account: string;
+  user: string;
+  privateKeyPath: string;
+  warehouse?: string;
+  role?: string;
+  host?: string;
+}
+
+/** Snowflake connection settings, or null when incomplete. The private key stays on disk (path only here). */
+export function snowflakeConfig(env: Env = getEnv()): SnowflakeConfig | null {
+  if (!env.SNOWFLAKE_ACCOUNT || !env.SNOWFLAKE_USER || !env.SNOWFLAKE_PRIVATE_KEY_PATH) return null;
+  return {
+    account: env.SNOWFLAKE_ACCOUNT,
+    user: env.SNOWFLAKE_USER,
+    privateKeyPath: env.SNOWFLAKE_PRIVATE_KEY_PATH,
+    ...(env.SNOWFLAKE_WAREHOUSE ? { warehouse: env.SNOWFLAKE_WAREHOUSE } : {}),
+    ...(env.SNOWFLAKE_ROLE ? { role: env.SNOWFLAKE_ROLE } : {}),
+    ...(env.SNOWFLAKE_HOST ? { host: env.SNOWFLAKE_HOST } : {}),
+  };
 }

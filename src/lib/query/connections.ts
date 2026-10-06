@@ -1,9 +1,11 @@
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { getEnv, snowflakeConfig } from '@/lib/config/env';
 import { getPack } from '@/lib/packs/registry';
 import { Scale } from '@/lib/packs/schema';
 import { buildWarehouse, openWarehouseReadOnly } from '@/lib/warehouse/build';
 import type { WarehouseAdapter } from '@/lib/warehouse/adapter';
+import { SnowflakeAdapter } from '@/lib/warehouse/snowflake';
 
 const globalForWarehouse = globalThis as unknown as { keystoneWarehouses?: Map<string, Promise<WarehouseAdapter>> };
 
@@ -32,6 +34,14 @@ async function buildThenOpen(packId: string, path: string): Promise<WarehouseAda
 export function warehouseFor(packId: string): Promise<WarehouseAdapter> {
   const cache = (globalForWarehouse.keystoneWarehouses ??= new Map());
   let w = cache.get(packId);
+  if (!w && getEnv().WAREHOUSE_ADAPTER === 'snowflake') {
+    // ADR-0025: the pack's database in Snowflake, over the SQL API. Experimental: mock-tested only.
+    const cfg = snowflakeConfig();
+    if (!cfg) return Promise.reject(new Error('WAREHOUSE_ADAPTER=snowflake needs SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER and SNOWFLAKE_PRIVATE_KEY_PATH.'));
+    w = Promise.resolve(new SnowflakeAdapter(cfg, { database: getPack(packId).manifest.database }));
+    cache.set(packId, w);
+    return w;
+  }
   if (!w) {
     const path = warehousePath(packId);
     if (!existsSync(path)) {
