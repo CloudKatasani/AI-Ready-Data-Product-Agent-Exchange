@@ -89,5 +89,6 @@ jobs:
         run: |
           docker run -d --name ks -p 3000:3000 -e SESSION_SECRET=ci-only-session-secret -e KEYSTONE_WAREHOUSE_AUTOBUILD=1 keystone:ci
           for i in $(seq 1 60); do curl -fsS localhost:3000/api/health && break; sleep 2; done
-          curl -fsS localhost:3000/api/health
+          curl -fsS localhost:3000/api/health || { docker logs ks; exit 1; }
+          curl -fsS -o /dev/null localhost:3000/utilities/home || { docker logs ks; exit 1; }
           docker image inspect keystone:ci --format '{{.Size}}' | awk '{printf "image size: %.0f MB\n", $1/1048576}'
