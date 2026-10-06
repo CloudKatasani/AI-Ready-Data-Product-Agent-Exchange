@@ -93,7 +93,10 @@ export async function respondScripted(agentId: string, question: string, deps: R
     return finish(textAnswer(agent, question, 'decline', 'I can’t help with that request.', guard.reason, trace, { followups: agent.scenarios.slice(0, 2).map((s) => pack.scenarios.find((x) => x.id === s)?.question ?? '').filter(Boolean) }));
   }
 
-  if (!curated && other && other.score >= RUN && other.score >= (mine?.score ?? 0) + MARGIN) {
+  // An agent that covers the KPI the other agent's scenario is about answers it itself (no redirect).
+  const plannedHere = !curated && other ? plan(pack, agent, question) : null;
+  const coversIt = Boolean(plannedHere);
+  if (!curated && !coversIt && other && other.score >= RUN && other.score >= (mine?.score ?? 0) + MARGIN) {
     const to = pack.agents.find((a) => a.id === other.scenario.agent);
     if (to) return finish(textAnswer(agent, question, 'redirect', `${to.name} is the right agent for this.`, `${to.name} covers it: ${to.capability}`, trace, { redirectTo: { agentId: to.id, name: to.name }, suggestions: [other.scenario.question] }));
   }

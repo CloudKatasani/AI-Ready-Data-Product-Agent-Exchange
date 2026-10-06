@@ -14,11 +14,13 @@ export type DecisionActor = { kind: 'HUMAN'; personaId: string } | { kind: 'SYST
 export type DecisionOutcome = 'APPROVE' | 'REJECT';
 
 export interface DecisionInput {
-  subjectType: 'ACCESS_REQUEST' | 'GATE' | 'TRIAGE';
+  subjectType: 'ACCESS_REQUEST' | 'GATE' | 'TRIAGE' | 'AGENT_PUBLISH';
   subjectId: string;
   actor: DecisionActor;
   outcome: DecisionOutcome | 'VETO';
   rationale: string;
+  /** AGENT_PUBLISH: the release step being approved. */
+  release?: 'pilot' | 'canary' | 'production';
 }
 
 export class DecisionRefused extends Error {
@@ -55,6 +57,7 @@ async function decide(prisma: Db, pack: Pack, input: DecisionInput): Promise<Dec
   if (input.actor.kind === 'AGENT') throw new DecisionRefused('Agents act, humans decide: an agent cannot approve or reject.');
   if (!input.rationale.trim()) throw new DecisionRefused('A decision needs a rationale.');
   if (input.subjectType === 'TRIAGE') return decideTriage(prisma, pack, input);
+  if (input.subjectType === 'AGENT_PUBLISH') return decideAgentPublish(prisma, pack, input);
   return input.subjectType === 'GATE' ? decideGate(prisma, pack, input) : decideAccess(prisma, pack, input);
 }
 
@@ -255,4 +258,43 @@ async function decideTriage(prisma: Db, pack: Pack, input: DecisionInput): Promi
   }
   await appendAudit(prisma, { packId, actorType: 'HUMAN', actorId: personaId, action: `TRIAGE_${input.outcome}`, subjectType: 'PRODUCT_REQUEST', subjectId: req.id, detail: { reference: req.reference, state, rationale: input.rationale } });
   return { decisionIds: [d.id], state };
+}
+
+/** Roles that may approve an agent release (product owner or steward). */
+export const PUBLISH_ROLES: Role[] = ['DOMAIN_PRODUCT_OWNER', 'DATA_STEWARD'];
+const RELEASE: Record<'pilot' | 'canary' | 'production', { status: string; state: string; pct: number; from: string[] }> = {
+  pilot: { status: 'PILOT', state: 'candidate', pct: 0, from: ['DRAFT'] },
+  canary: { status: 'CANARY', state: 'canary', pct: 20, from: ['PILOT'] },
+  production: { status: 'PRODUCTION', state: 'live', pct: 100, from: ['CANARY'] },
+};
+
+/**
+ * Agent publish/release (08 §6): a human with a publish role approves each release step. Pilot needs the
+ * latest publish-gate run to pass checks 1–7 (check 8 is this approval). Agents can never approve.
+ */
+async function decideAgentPublish(prisma: Db, pack: Pack, input: DecisionInput): Promise<DecisionResult> {
+  const packId = pack.manifest.id;
+  if (input.actor.kind !== 'HUMAN') throw new DecisionRefused('A person approves agent releases.');
+  const personaId = input.actor.personaId;
+  const persona = pack.personas.find((p) => p.id === personaId);
+  const role = PUBLISH_ROLES.find((r) => persona?.roles.includes(r));
+  if (!persona || !role) throw new DecisionRefused(`Releasing an agent needs one of: ${PUBLISH_ROLES.join(', ')}.`);
+  const agent = await prisma.agent.findUnique({ where: { id: input.subjectId } });
+  if (!agent || agent.packId !== packId) throw new DecisionRefused('Unknown agent.');
+  const step = RELEASE[input.release ?? 'pilot'];
+  if (!step.from.includes(agent.status)) throw new DecisionRefused(`The agent is ${agent.status.toLowerCase()}; this release step needs ${step.from.join(' or ').toLowerCase()}.`);
+  if (input.outcome !== 'APPROVE') {
+    const d = await prisma.decision.create({ data: { packId, subjectType: 'AGENT_PUBLISH', subjectId: agent.id, personaId, role, outcome: 'REJECT', rationale: input.rationale } });
+    return { decisionIds: [d.id], state: agent.status };
+  }
+  const gate = await prisma.publishGateRun.findFirst({ where: { agentId: agent.id, agentVersion: agent.currentVersion }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }] });
+  const results = gate ? (JSON.parse(gate.resultsJson) as { id: string; passed: boolean }[]) : [];
+  const blocking = results.filter((r) => r.id !== 'approval' && !r.passed);
+  if (!gate || blocking.length) throw new DecisionRefused(gate ? `The publish gate is failing: ${blocking.map((b) => b.id).join(', ')}.` : 'Run the publish gate first.');
+  const d = await prisma.decision.create({ data: { packId, subjectType: 'AGENT_PUBLISH', subjectId: agent.id, personaId, role, outcome: 'APPROVE', rationale: input.rationale } });
+  await prisma.agent.update({ where: { id: agent.id }, data: { status: step.status } });
+  const v = await prisma.agentVersion.findUnique({ where: { agentId_version: { agentId: agent.id, version: agent.currentVersion } } });
+  if (v) await prisma.agentVersion.update({ where: { id: v.id }, data: { releaseState: step.state, canaryPct: step.pct } });
+  await appendAudit(prisma, { packId, actorType: 'HUMAN', actorId: personaId, action: `AGENT_RELEASE_${step.status}`, subjectType: 'AGENT', subjectId: agent.id, detail: { version: agent.currentVersion, rationale: input.rationale } });
+  return { decisionIds: [d.id], state: step.status };
 }

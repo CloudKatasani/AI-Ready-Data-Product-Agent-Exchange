@@ -497,3 +497,56 @@ model ProductRequest {
 
   @@index([packId, state])
 }
+
+// ───────── Agent Factory, evaluation, publish gate, release (08 §5–6) ─────────
+model AgentVersion {
+  id               String   @id @default(cuid())
+  agentId          String
+  version          Int
+  manifestJson     String
+  manifestHash     String
+  instructionsHash String
+  releaseState     String // candidate|canary|live|rolled_back
+  canaryPct        Int      @default(0)
+  createdAt        DateTime @default(now())
+
+  @@unique([agentId, version])
+}
+
+model PublishGateRun {
+  id           String   @id @default(cuid())
+  agentId      String
+  agentVersion Int
+  resultsJson  String
+  passed       Boolean
+  createdAt    DateTime @default(now())
+
+  @@index([agentId])
+}
+
+model EvalRun {
+  id           String           @id @default(cuid())
+  packId       String
+  agentId      String
+  agentVersion Int
+  mode         String
+  suitesJson   String // per suite: score, n, threshold, passed
+  overall      Float
+  createdAt    DateTime         @default(now())
+  cases        EvalCaseResult[]
+
+  @@index([agentId])
+}
+
+model EvalCaseResult {
+  id           String  @id @default(cuid())
+  runId        String
+  suite        String
+  caseId       String
+  question     String
+  expectedJson String
+  actualJson   String
+  pass         Boolean
+  reason       String?
+  run          EvalRun @relation(fields: [runId], references: [id])
+}

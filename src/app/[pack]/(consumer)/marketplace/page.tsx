@@ -10,6 +10,7 @@ import { agentCard, type CatalogFilters, filterProducts, productCard, productFac
 import { listDemand } from '@/lib/marketplace/demand';
 import { agentMesh, blastRadius, dataMesh } from '@/lib/marketplace/mesh';
 import { searchCatalog } from '@/lib/marketplace/search';
+import { livePack } from '@/lib/presenter/factory';
 import { getPack, getRubrics } from '@/lib/packs/registry';
 import { catalogState } from '@/lib/presenter/marketplace';
 import { activePrincipal } from '../../_server/session';
@@ -24,7 +25,7 @@ const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 export default async function MarketplacePage({ params, searchParams }: { params: Promise<{ pack: string }>; searchParams: Promise<SP> }) {
   const { pack: packId } = await params;
   const sp = await searchParams;
-  const pack = getPack(packId);
+  const pack = await livePack(packId);
   const rubrics = getRubrics();
   const who = await activePrincipal(pack);
   const state = await catalogState(pack, who.personaId);

@@ -2,7 +2,10 @@
  * Generic UI copy (English). Industry-specific strings never live here — they come from the active pack.
  * Product name is white-label: read it from the active brand, never from this file.
  */
+import { factoryCopy } from './en-factory';
+
 export const copy = {
+  factory: factoryCopy,
   doors: {
     home: 'Home',
     consume: 'Consume',

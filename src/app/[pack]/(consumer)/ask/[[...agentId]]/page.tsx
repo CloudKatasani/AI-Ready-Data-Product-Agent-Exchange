@@ -3,13 +3,13 @@ import { AskConsole } from '@/components/answer/ask-console';
 import { optionalSegments } from '@/components/shell/route-params';
 import { copy } from '@/copy/en';
 import { getEnv, hasApiKey } from '@/lib/config/env';
-import { getPack } from '@/lib/packs/registry';
+import { livePack } from '@/lib/presenter/factory';
 
 export default async function AskPage({ params, searchParams }: { params: Promise<{ pack: string; agentId?: string[] }>; searchParams: Promise<{ q?: string }> }) {
   const { pack: packId, agentId: seg } = await params;
   const { q } = await searchParams;
   const { agentId } = optionalSegments(seg, ['agentId'] as const);
-  const pack = getPack(packId);
+  const pack = await livePack(packId);
   const agent = agentId ? pack.agents.find((a) => a.id === agentId) : undefined;
   if (agentId && !agent) notFound();
 

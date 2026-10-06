@@ -5,12 +5,13 @@
  */
 import type { AgentMode } from '@/lib/config/env';
 import { db } from '@/lib/db';
-import { getPack, getRubrics } from '@/lib/packs/registry';
+import { getRubrics } from '@/lib/packs/registry';
 import { anthropicClient, type LlmClient } from '@/lib/agents/live/client';
 import { answerQuestion } from '@/lib/agents/runtime';
 import { routeQuestion } from '@/lib/agents/scripted/router';
-import { getEnv } from '@/lib/config/env';
+import { anthropicApiKey, getEnv } from '@/lib/config/env';
 import type { AgentAnswer } from '@/lib/agents/types';
+import { livePack } from './factory';
 import { governedService, principalForPersona } from './governed';
 
 export interface AskInput {
@@ -33,14 +34,14 @@ let client: LlmClient | null | undefined;
 /** One SDK client per process; null when no key is configured (the key never leaves the server). */
 function liveClient(): LlmClient | null {
   if (client === undefined) {
-    const key = getEnv().ANTHROPIC_API_KEY;
+    const key = anthropicApiKey();
     client = key ? anthropicClient(key) : null;
   }
   return client;
 }
 
 export async function ask(input: AskInput): Promise<AskOutput> {
-  const pack = getPack(input.packId);
+  const pack = await livePack(input.packId);
   const rubrics = getRubrics();
   const question = input.question.trim().slice(0, MAX_QUESTION_LENGTH);
   const chosen = input.agentId && pack.agents.some((a) => a.id === input.agentId) ? input.agentId : undefined;

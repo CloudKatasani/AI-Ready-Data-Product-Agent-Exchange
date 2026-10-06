@@ -121,7 +121,10 @@ export function plan(pack: Pack, agent: AgentManifest, question: string): Plan |
   const view = pack.semantic.find((v) => v.metrics.some((m) => m.name === kpi.metric));
   const metric = view?.metrics.find((m) => m.name === kpi.metric);
   if (!coverage || !view || !metric) return null;
-  const q = normalise(question);
+  // Words that belong to the metric's own name (e.g. a "Daily …" metric) are not analysis words.
+  const packSyn = pack.synonyms.filter((x) => x.maps_to.kind === 'metric' && x.maps_to.ref === metric.name).flatMap((x) => [x.term, ...x.synonyms]);
+  const metricPhrases = [kpi.name, metric.label, ...metric.synonyms, ...packSyn].map(normalise).filter(Boolean).sort((a, b) => b.length - a.length);
+  const q = metricPhrases.reduce((acc, p) => acc.replace(new RegExp(`\\b${p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g'), ' '), normalise(question));
   const hasTime = view.time_dimensions.length > 0;
 
   let grain = GRAIN_WORDS.find(([re]) => re.test(q))?.[1];

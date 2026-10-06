@@ -7,7 +7,7 @@ import { AccessChip } from '@/components/marketplace/chips';
 import { buttonVariants } from '@/components/ui/button';
 import { copy } from '@/copy/en';
 import { agentCard } from '@/lib/marketplace/catalog';
-import { getPack } from '@/lib/packs/registry';
+import { livePack } from '@/lib/presenter/factory';
 import { answeredCount } from '@/lib/presenter/ask';
 import { activePrincipal } from '../../../../_server/session';
 
@@ -19,7 +19,7 @@ const dt = 'text-muted-foreground';
 export default async function AgentDetailPage({ params, searchParams }: { params: Promise<{ pack: string; id: string }>; searchParams: Promise<{ tab?: string }> }) {
   const { pack: packId, id: raw } = await params;
   const { tab: t } = await searchParams;
-  const pack = getPack(packId);
+  const pack = await livePack(packId);
   const agent = pack.agents.find((a) => a.id === decodeURIComponent(raw));
   if (!agent) notFound();
   const who = await activePrincipal(pack);

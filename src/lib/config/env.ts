@@ -54,3 +54,8 @@ export function getEnv(): Env {
 export function hasApiKey(env: Env = getEnv()): boolean {
   return Boolean(env.ANTHROPIC_API_KEY);
 }
+
+/** The API key, for constructing the server-side SDK client only. Never log it or pass it to the browser. */
+export function anthropicApiKey(env: Env = getEnv()): string | undefined {
+  return env.ANTHROPIC_API_KEY;
+}

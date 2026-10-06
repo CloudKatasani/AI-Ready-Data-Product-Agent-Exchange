@@ -67,6 +67,8 @@ function matches(n: GroundingNumber, values: number[], tol: number): boolean {
     return Math.abs(v - target) <= Math.max(step + 1e-9, Math.abs(v) * tol);
   };
   const candidates = (v: number) => [v, Math.abs(v), v * 100, Math.abs(v * 100)];
+  // "No change" (0) is the difference of a cited value with itself.
+  if (n.value === 0 && values.length > 0) return true;
   if (values.some((v) => candidates(v).some((c) => close(c, n.value)) || close(Math.round(v * 10 ** n.decimals) / 10 ** n.decimals, n.value))) return true;
   // Derived values from two cited numbers: difference, ratio, percent change.
   const limit = Math.min(values.length, 400);
