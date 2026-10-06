@@ -6,7 +6,8 @@
  */
 import { createHash } from 'node:crypto';
 import type { PrismaClient } from '@prisma/client';
-import { heuristicPropose } from '@/lib/agents/lifecycle-agents/heuristic';
+import { liveOrHeuristicPropose } from '@/lib/agents/lifecycle-agents/live';
+import type { LlmClient } from '@/lib/agents/live/client';
 import { agentForStage } from '@/lib/agents/lifecycle-agents/registry';
 import { appendAudit, canonicalJson } from '@/lib/db/audit';
 import type { DataProduct, Pack, Rubrics } from '@/lib/packs/schema';
@@ -37,7 +38,7 @@ export interface AgentRunResult {
   proposals: number;
 }
 
-export async function runLifecycleAgent(client: PrismaClient, pack: Pack, rubrics: Rubrics, input: { productId: string; stage: number; trigger: 'MANUAL' | 'AUTOPILOT' | 'STAGE_ENTRY'; requestedBy: string; qs?: QueryService }): Promise<AgentRunResult> {
+export async function runLifecycleAgent(client: PrismaClient, pack: Pack, rubrics: Rubrics, input: { productId: string; stage: number; trigger: 'MANUAL' | 'AUTOPILOT' | 'STAGE_ENTRY'; requestedBy: string; qs?: QueryService; llm?: { client: LlmClient; model: string; timeoutMs: number } | null }): Promise<AgentRunResult> {
   const row = await client.dataProduct.findUnique({ where: { id: input.productId } });
   if (!row) throw new LifecycleError('Unknown product');
   const product = productModel(pack, row);
@@ -48,18 +49,24 @@ export async function runLifecycleAgent(client: PrismaClient, pack: Pack, rubric
   const open = await client.agentProposal.findMany({ where: { productId: product.id, stage: input.stage, state: 'OPEN' }, select: { artifactType: true, fieldPath: true } });
   const openKeys = new Set(open.map((o) => `${o.artifactType}:${o.fieldPath}`));
   const outputs: { type: ArtifactType; narrative: string; proposals: { fieldPath: string; value: unknown; rationale: string }[]; redacted: string[] }[] = [];
+  let provider: 'anthropic' | 'heuristic' = 'heuristic';
+  const tokens = { in: 0, out: 0 };
   for (const type of stageDef(input.stage).artifacts) {
     const def = ARTIFACTS[type];
     const evidence = blueprint(pack, product, type, facts);
-    const out = heuristicPropose({
+    const out = await liveOrHeuristicPropose({
       agentName: agent.name,
+      charter: agent.charter,
       artifactLabel: def.label.toLowerCase(),
       fields: def.fields,
       current: latest.get(type)?.content ?? {},
       evidence,
       evidenceSources: evidenceSources(input.stage),
       allowSampleData: agent.wantsSampleData,
-    });
+    }, input.llm ?? null);
+    if (out.provider === 'anthropic') provider = 'anthropic';
+    tokens.in += out.tokensIn;
+    tokens.out += out.tokensOut;
     outputs.push({ type, narrative: out.narrative, proposals: out.proposals.filter((p) => !openKeys.has(`${type}:${p.fieldPath}`)), redacted: out.redactedFields });
   }
   const proposals = outputs.flatMap((o) => o.proposals.map((p) => ({ ...p, type: o.type })));
@@ -74,8 +81,10 @@ export async function runLifecycleAgent(client: PrismaClient, pack: Pack, rubric
       trigger: input.trigger,
       scopeJson: JSON.stringify({ artifacts: stageDef(input.stage).artifacts, readScope: agent.readScope }),
       inputHash: createHash('sha256').update(canonicalJson({ facts, latest: [...latest.entries()].map(([k, v]) => [k, v.hash]) })).digest('hex'),
-      model: 'heuristic-v1',
-      provider: 'heuristic',
+      model: provider === 'anthropic' ? (input.llm?.model ?? '') : 'heuristic-v1',
+      provider,
+      tokensIn: tokens.in,
+      tokensOut: tokens.out,
       outputJson: JSON.stringify(output),
       redactedFieldsJson: JSON.stringify(outputs.flatMap((o) => o.redacted.map((f) => `${o.type}.${f}`))),
       disposition: proposals.length ? 'PROPOSED' : 'NO_CHANGE',

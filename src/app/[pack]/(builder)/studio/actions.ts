@@ -13,6 +13,7 @@ import { runProductQuality } from '@/lib/lifecycle/quality';
 import type { ArtifactType } from '@/lib/lifecycle/stages';
 import { getPack, getRubrics, hasPack } from '@/lib/packs/registry';
 import { governedService } from '@/lib/presenter/governed';
+import { lifecycleLlm } from '@/lib/presenter/llm';
 import { activePersona } from '../../_server/session';
 
 export interface ActionResult {
@@ -67,7 +68,7 @@ export async function saveArtifact(packId: string, productId: string, type: Arti
 export async function runAgent(packId: string, productId: string, stage: number): Promise<ActionResult> {
   return wrap(packId, productId, async () => {
     const { pack, rubrics, persona, prisma } = await ctx(packId);
-    const r = await runLifecycleAgent(prisma, pack, rubrics, { productId, stage, trigger: 'MANUAL', requestedBy: persona.id, qs: await qsOrUndefined(packId) });
+    const r = await runLifecycleAgent(prisma, pack, rubrics, { productId, stage, trigger: 'MANUAL', requestedBy: persona.id, qs: await qsOrUndefined(packId), llm: lifecycleLlm() });
     return { ok: true, message: r.narrative };
   });
 }

@@ -34,7 +34,6 @@ export default async function FactoryDraftPage({ params }: { params: Promise<{ p
         </p>
       </header>
       <FactoryWizard
-        key={`${draft.status}-${draft.version}`}
         packId={packId}
         agentId={id}
         initial={draft.agent}

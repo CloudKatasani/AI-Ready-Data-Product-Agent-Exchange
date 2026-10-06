@@ -6,12 +6,12 @@
 import type { AgentMode } from '@/lib/config/env';
 import { db } from '@/lib/db';
 import { getRubrics } from '@/lib/packs/registry';
-import { anthropicClient, type LlmClient } from '@/lib/agents/live/client';
 import { answerQuestion } from '@/lib/agents/runtime';
 import { routeQuestion } from '@/lib/agents/scripted/router';
-import { anthropicApiKey, getEnv } from '@/lib/config/env';
+import { getEnv } from '@/lib/config/env';
 import type { AgentAnswer } from '@/lib/agents/types';
 import { livePack } from './factory';
+import { liveClient } from './llm';
 import { governedService, principalForPersona } from './governed';
 
 export interface AskInput {
@@ -30,15 +30,6 @@ export interface AskOutput {
 
 export const MAX_QUESTION_LENGTH = 500;
 
-let client: LlmClient | null | undefined;
-/** One SDK client per process; null when no key is configured (the key never leaves the server). */
-function liveClient(): LlmClient | null {
-  if (client === undefined) {
-    const key = anthropicApiKey();
-    client = key ? anthropicClient(key) : null;
-  }
-  return client;
-}
 
 export async function ask(input: AskInput): Promise<AskOutput> {
   const pack = await livePack(input.packId);

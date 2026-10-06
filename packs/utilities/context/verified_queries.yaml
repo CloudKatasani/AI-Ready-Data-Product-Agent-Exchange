@@ -411,7 +411,7 @@
   verified_by: utilities:customer-steward
   verified_at: 2026-09-20
 - id: VQ-UTL-066
-  question: "Estimated read share by region last month"
+  question: "Estimated reads by region last month"
   query: { view: METERING, metrics: [estimated_read_pct], dimensions: [region], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: estimated_read_pct, dir: desc }] }
   agent: AG-UTL-001
   verified_by: utilities:customer-steward
