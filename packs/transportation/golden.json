@@ -47,7 +47,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Southeast led on-time delivery last quarter at 94.2%.",
+          "headline": "Southeast · On-time delivery last quarter: 94.2%.",
           "rowFiltered": true,
           "masked": []
         }
@@ -431,7 +431,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Southeast ran the most empty miles last quarter at 11.5% of miles driven.",
+          "headline": "Southeast · Empty miles last quarter: 11.5%.",
           "rowFiltered": true,
           "masked": []
         }
@@ -684,7 +684,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Southeast had the highest asset utilisation last quarter at 74.5%.",
+          "headline": "Southeast · Asset utilisation last quarter: 74.5%.",
           "rowFiltered": true,
           "masked": []
         }

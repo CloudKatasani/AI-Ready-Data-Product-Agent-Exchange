@@ -12,9 +12,9 @@ import { PolicyDenied, type GovernedResult, type Principal } from '@/lib/query/t
 import type { AgentAnswer, Banner, Citation, Confidence, TraceStep } from '../types';
 import { checkGuardrails } from './guardrails';
 import { Matcher } from './matcher';
-import { describeQuery, detectKpi, metricMentioned, plan } from './planner';
+import { describeQuery, detectKpi, metricMentioned, plan, unitSuffix } from './planner';
 import { verifiedMatcherFor } from './verified';
-import { renderTemplate } from './template';
+import { periodPhrase, renderTemplate, singleRowTemplates } from './template';
 import { mentions } from './text';
 
 export interface RespondDeps {
@@ -226,8 +226,12 @@ async function execute(
   trace.push(step('ground', 'Ground', 'context', clock.lap(), hit ? `${hit.title} §${hit.chunk}` : 'No supporting document passage', hit ? [`${hit.docId}#${hit.chunk}`] : [], hit ? 'ok' : 'skipped'));
 
   const data = { columns: r.columns.map((c) => c.name), rows: r.rows, fields: r.fields, totals, kpiFor: (m: string) => pack.kpis.find((k) => k.metric === m), locale: pack.manifest.locale, currency: pack.manifest.currency };
-  let headline = renderTemplate(headlineTpl, data);
-  let narrative = renderTemplate(narrativeTpl, data);
+  // One row left (e.g. row access): comparative wording would mislead, so state the value plainly.
+  const slice = query.dimensions?.[0];
+  const metricDef = view?.metrics.find((m) => m.name === query.metrics[0]);
+  const single = r.rowCount === 1 && slice && metricDef && !query.timeGrain ? singleRowTemplates(headlineTpl, narrativeTpl, { slice, metric: metricDef.name, label: metricDef.label, unit: unitSuffix(pack, metricDef.unit), period: periodPhrase(query.timeRange) }) : null;
+  let headline = renderTemplate(single?.headline ?? headlineTpl, data);
+  let narrative = renderTemplate(single?.narrative ?? narrativeTpl, data);
   const rowFilter = r.policiesApplied.find((p) => p.kind === 'row_access');
   if (r.rowCount === 0) {
     headline = 'No data matched that question for your access.';

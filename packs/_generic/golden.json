@@ -42,7 +42,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "EMEA had the highest net revenue last quarter at $37,757,839.",
+          "headline": "EMEA · Net revenue last quarter: $37,757,839.",
           "rowFiltered": true,
           "masked": []
         }
@@ -86,7 +86,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Including intercompany sales, EMEA would rank first last quarter at $64,962,610.",
+          "headline": "EMEA · Net revenue last quarter: $64,962,610.",
           "rowFiltered": true,
           "masked": []
         }
@@ -195,7 +195,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "EMEA has the highest DSO this year at 39.6 days.",
+          "headline": "EMEA · Days sales outstanding this year: 39.6 days.",
           "rowFiltered": true,
           "masked": []
         }

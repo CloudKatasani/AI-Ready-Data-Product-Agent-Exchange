@@ -47,7 +47,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Northeast had the highest comparable-store net sales last quarter at $301,511.",
+          "headline": "Northeast · Net sales last quarter: $301,511.",
           "rowFiltered": true,
           "masked": []
         }
@@ -96,7 +96,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Including all stores, Northeast had the highest net sales last quarter at $301,511.",
+          "headline": "Northeast · Net sales last quarter: $301,511.",
           "rowFiltered": true,
           "masked": []
         }
@@ -876,7 +876,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Northeast had the highest in-stock rate last month at 93.71%.",
+          "headline": "Northeast · In-stock rate last month: 93.71%.",
           "rowFiltered": true,
           "masked": []
         }
@@ -925,7 +925,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Northeast leads app adoption at 43.3% of active members.",
+          "headline": "Northeast · App adoption rate: 43.3%.",
           "rowFiltered": true,
           "masked": []
         }

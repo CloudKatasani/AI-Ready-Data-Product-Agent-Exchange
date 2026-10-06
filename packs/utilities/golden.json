@@ -47,7 +47,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "North had the highest SAIDI last quarter at 26.5 minutes.",
+          "headline": "North · SAIDI last quarter: 26.5 minutes.",
           "rowFiltered": true,
           "masked": []
         }
@@ -96,7 +96,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Including major event days, North had the highest SAIDI last quarter at 87.2 minutes.",
+          "headline": "North · SAIDI last quarter: 87.2 minutes.",
           "rowFiltered": true,
           "masked": []
         }
@@ -493,7 +493,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "North leads digital adoption at 47.8% of active customers.",
+          "headline": "North · Digital adoption rate: 47.8%.",
           "rowFiltered": true,
           "masked": []
         }
@@ -626,7 +626,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "North had the highest average daily consumption last month at 37.9 kWh.",
+          "headline": "North · Daily consumption last month: 37.9 kWh.",
           "rowFiltered": true,
           "masked": []
         }

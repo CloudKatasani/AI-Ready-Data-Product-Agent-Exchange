@@ -43,7 +43,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Mountain had the highest NPL ratio last quarter at 1.23%.",
+          "headline": "Mountain · NPL ratio last quarter: 1.23%.",
           "rowFiltered": true,
           "masked": []
         }
@@ -88,7 +88,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Including loans held for sale, Mountain had the highest NPL ratio last quarter at 1.31%.",
+          "headline": "Mountain · NPL ratio last quarter: 1.31%.",
           "rowFiltered": true,
           "masked": []
         }
@@ -275,7 +275,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Mountain leads digital engagement at 55.4% of active customers.",
+          "headline": "Mountain · Digital active rate: 55.4%.",
           "rowFiltered": true,
           "masked": []
         }
@@ -384,7 +384,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Mountain has the highest average relationship balance at $43,047.",
+          "headline": "Mountain · Average relationship balance: $43,047.",
           "rowFiltered": true,
           "masked": []
         }
@@ -819,7 +819,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Mountain opened the most collection cases last quarter: 758.",
+          "headline": "Mountain · Collection cases last quarter: 758 cases.",
           "rowFiltered": true,
           "masked": []
         }

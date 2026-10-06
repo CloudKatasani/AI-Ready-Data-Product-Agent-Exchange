@@ -60,3 +60,24 @@ export function renderTemplate(tpl: string, d: TemplateData): string {
     return '—';
   });
 }
+
+const COMPARATIVE = /\b(highest|lowest|most|fewest|largest|smallest|best|worst|ranks?|leads?|trails?)\b/i;
+const ACROSS_ROWS = /\{\{\s*(bottom\.[^}]*|rows)\s*\}\}/;
+
+/**
+ * A comparative template ("X had the highest… Y was lowest… across N regions") reads wrongly when the
+ * governed result has a single row, as when row access leaves one region. Then the headline states that
+ * row's value plainly and the comparative sentences are dropped; rule and definition sentences stay.
+ */
+export function singleRowTemplates(headlineTpl: string, narrativeTpl: string, o: { slice: string; metric: string; label: string; unit: string; period: string }): { headline: string; narrative: string } | null {
+  if (!COMPARATIVE.test(headlineTpl) && !ACROSS_ROWS.test(`${headlineTpl} ${narrativeTpl}`)) return null;
+  const sentences = narrativeTpl.split(/(?<=[.!?])\s+/).filter((x) => x.trim() && !ACROSS_ROWS.test(x) && !COMPARATIVE.test(x));
+  return { headline: `{{top.${o.slice}}} · ${o.label}${o.period ? ` ${o.period}` : ''}: {{top.${o.metric}}}${o.unit}.`, narrative: sentences.join(' ') };
+}
+
+/** "last quarter", "in the last 3 months", "this year" — the period a time range covers, for answer text. */
+export function periodPhrase(range: { last?: { n: number; unit: string }; ytd?: boolean } | undefined): string {
+  if (range?.ytd) return 'this year';
+  if (range?.last) return range.last.n === 1 ? `last ${range.last.unit}` : `in the last ${range.last.n} ${range.last.unit}s`;
+  return '';
+}

@@ -584,7 +584,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Metro leads patient portal adoption at 71.9% of active patients.",
+          "headline": "Metro · Patient portal adoption rate: 71.9%.",
           "rowFiltered": true,
           "masked": []
         }
@@ -718,7 +718,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Metro had the highest no-show rate last month at 10.1%.",
+          "headline": "Metro · No-show rate last month: 10.1%.",
           "rowFiltered": true,
           "masked": []
         }

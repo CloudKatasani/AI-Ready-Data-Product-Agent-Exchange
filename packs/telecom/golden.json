@@ -42,7 +42,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Northeast had the highest churn rate last quarter at 1.95% a month.",
+          "headline": "Northeast · Churn rate last quarter: 1.95%.",
           "rowFiltered": true,
           "masked": []
         }
@@ -86,7 +86,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Including inactive prepaid lines, Northeast had the highest churn rate last quarter at 2.92% a month.",
+          "headline": "Northeast · Churn rate last quarter: 2.92%.",
           "rowFiltered": true,
           "masked": []
         }
@@ -359,7 +359,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Northeast has the highest autopay rate at 66.8% of active subscribers.",
+          "headline": "Northeast · Autopay rate: 66.8%.",
           "rowFiltered": true,
           "masked": []
         }
@@ -746,7 +746,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "Northeast had the highest ARPU last quarter at $59.00 a month.",
+          "headline": "Northeast · ARPU last quarter: $59.00.",
           "rowFiltered": true,
           "masked": []
         }

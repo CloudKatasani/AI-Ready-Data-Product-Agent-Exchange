@@ -169,6 +169,11 @@ export function plan(pack: Pack, agent: AgentManifest, question: string): Plan |
 
 
 /** Answer templates for a MetricQuery on its first metric (planner and verified-query paths share them). */
+/** How a metric's unit follows its value in answer text ("%", nothing for currency, else " minutes"). */
+export function unitSuffix(pack: Pack, unit: string): string {
+  return unit === '%' ? '%' : unit === 'USD' || unit === pack.manifest.currency ? '' : ` ${unit}`;
+}
+
 export function describeQuery(pack: Pack, view: SemanticView, kpi: Kpi, query: MetricQuery): Pick<Plan, 'headline' | 'narrative' | 'chart'> {
   const metric = view.metrics.find((m) => m.name === query.metrics[0]) ?? view.metrics.find((m) => m.name === kpi.metric);
   if (!metric) throw new Error(`Metric ${query.metrics[0]} is not in ${view.name}`);
@@ -176,7 +181,7 @@ export function describeQuery(pack: Pack, view: SemanticView, kpi: Kpi, query: M
   const grain = query.timeGrain;
   const analysis = query.analysis ?? (grain ? 'trend' : 'value');
   const lowestFirst = query.orderBy?.[0]?.dir === 'asc';
-  const u = metric.unit === '%' ? '%' : metric.unit === 'USD' || metric.unit === pack.manifest.currency ? '' : ` ${metric.unit}`;
+  const u = unitSuffix(pack, metric.unit);
   const sliceLabel = slice ? (view.dimensions.find((d) => d.name === slice)?.label ?? slice).toLowerCase() : '';
   const t = (field: string) => `{{top.${field}}}`;
   const tv = (field: string) => `{{top.${field}}}${u}`;

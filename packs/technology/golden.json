@@ -42,7 +42,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "EMEA carries the most ARR at $60,847,163 at the end of last month.",
+          "headline": "EMEA · ARR last month: $60,847,163.",
           "rowFiltered": true,
           "masked": []
         },
@@ -716,7 +716,7 @@
       "personas": {
         "A": {
           "kind": "answer",
-          "headline": "EMEA had the most daily active users last month at 21,146 per day.",
+          "headline": "EMEA · Daily active users last month: 21,146 users.",
           "rowFiltered": true,
           "masked": []
         }
