@@ -1,75 +1,74 @@
 # Running Keystone
 
-Status: **Phase 2 — governed query path & knowledge screens.** Explorer, Semantic (with Playground),
-Glossary and Context are live for the utilities pack, all reading through QueryService with persona
-policies. Other modules are still stubs (see `docs/build-spec/11-build-plan.md`).
-
 ## Prerequisites
+- Node ≥ 22, pnpm 10 (`corepack enable`).
+- About 1 GB of free disk for the four reference deep packs at scale M. Each deep pack takes about 55 MB.
+- No network is needed in Scripted mode: fonts, icons and libraries are bundled.
 
-- Node ≥ 22 (`.nvmrc`), pnpm 10 (`corepack enable` picks the version from `package.json`).
-- No network or API key is needed to run the demo in Scripted mode.
-
-## First run
-
+## Quick start (presenter laptop)
 ```bash
-pnpm install                # also runs prisma generate
-cp .env.example .env        # optional in development; defaults match .env.example
-pnpm db:setup               # SQLite app DB at data/keystone.db: migrate + seed personas/entitlements
-pnpm warehouse:build        # DuckDB warehouse(s) at data/warehouse/ (≈ 6 s, cached)
-pnpm dev                    # http://localhost:3000 → /launch → pick a pack
+pnpm install
+cp .env.example .env            # set SESSION_SECRET; optionally ANTHROPIC_API_KEY for Live/Auto modes
+pnpm demo                       # migrate → build warehouses (cached) → seed → build → start
+open http://localhost:3000/launch
 ```
+- `pnpm demo:fresh` forces a warehouse rebuild and a reseed.
+- `pnpm doctor` runs pre-demo checks:
+  - Node and disk;
+  - app DB, packs and warehouses current for the pack content;
+  - golden files present;
+  - API key presence (never the value) and an optional live ping with `--ping`;
+  - the clock.
 
-Or in one go (production build): `pnpm demo`.
+  It ends with a **"Demo ready."** verdict.
+- Probes: `/api/health` (process up) and `/api/ready` (DB, packs, warehouses; 503 if not ready).
 
-Switch persona from the top bar (or `Ctrl+Shift+P`); every screen re-renders with that identity's
-entitlements, masking and row filters. The persona is a signed, httpOnly cookie.
-
-Build the demo warehouse once (≈ 6 s for the utilities pack at scale M, then cached):
-
-```bash
-pnpm warehouse:build --pack utilities
-pnpm pack:validate utilities
-```
-
-
-### Editing a pack
-
-Pack files are YAML/SQL/Markdown under `packs/<id>/`. Point your editor's YAML schema mapping at
-`packs/_schema/*.schema.json`. After changes run `pnpm pack:validate <id>`; the warehouse rebuilds
-automatically when any pack file changes.
-
-## Commands
-
+## Everyday commands
 | Command | What it does |
 |---|---|
-| `pnpm dev` | Next.js dev server on :3000 |
-| `pnpm build` / `pnpm start` | Production build (`output: 'standalone'`) / serve it. Production refuses the default `SESSION_SECRET`. |
-| `pnpm typecheck` | `tsc --noEmit` (strict) |
-| `pnpm lint` | ESLint (module boundaries, DuckDB-import ban, determinism, no default exports) + `scripts/lint/no-domain-strings.ts` |
-| `pnpm test` | Vitest: unit, invariants (I01–I03, I08, I11 implemented), integration (builds a scale-S warehouse in `data/test-warehouse/` on first run) |
-| `pnpm test:e2e` | Playwright e2e + axe a11y against `pnpm start` on :3100 (run `pnpm build` first; the web server step builds the warehouse and seeds the DB) |
-| `pnpm check` | typecheck + lint + unit tests |
-| `pnpm db:generate` | `prisma generate` |
-| `pnpm db:setup` | `prisma migrate deploy` + seed (personas, entitlements, audit event) for every pack |
-| `pnpm demo` | db:setup → warehouse:build → build → start |
-| `pnpm warehouse:build [--pack id] [--scale S\|M\|L] [--force]` | Builds `data/warehouse/<pack>.duckdb` (cached by pack content hash; `--force` rebuilds) |
-| `pnpm pack:validate [id] [--static] [--json]` | Validator categories 1–6, 9, 10; builds the warehouse at scale M if needed; report in `data/reports/<pack>-validation.json` |
-| `pnpm pack:schema` | Regenerates JSON Schema for pack files into `packs/_schema/` (editor autocompletion) |
+| `pnpm dev` | Next dev server (http://localhost:3000) |
+| `pnpm warehouse:build [--pack id] [--scale S\|M\|L] [--force]` | Builds `data/warehouse/<pack>.duckdb` (deterministic; cached by pack content hash) |
+| `pnpm db:setup` | Migrates the app DB and seeds every pack through the real lifecycle |
+| `pnpm pack:validate [id]` | The pack validator (schema, references, quotas, warehouse, semantics, governance, scenarios, agents, stories, lint input) |
+| `pnpm golden [--pack id] [--update]` | Records or compares golden answers (scale M) |
+| `pnpm knockout:deltas [--pack id] [--update]` | Computes Knockout single-layer deltas through the governed path, or checks them against `knockout.yaml` |
+| `pnpm pack:draft --from utilities --id water --code WTR --company "…" --short ABC` | Pack Drafter, offline mode: a re-skinned **draft** pack (also available in Admin) |
+| `pnpm lint` · `pnpm typecheck` | ESLint (boundaries, no-DuckDB-import, determinism) plus the domain-string lint; TypeScript |
+| `pnpm test` | Unit, invariant, golden, integration, security and performance suites (Vitest) |
+| `pnpm test:e2e` | Playwright. The `chromium` project (features and axe, light and dark) runs first, then `stories` (6 stories × deep packs), then `presenter` (launch and reset) |
 
-Playwright uses Chromium; in environments with a pre-installed browser set `PLAYWRIGHT_BROWSERS_PATH`
-instead of running `playwright install`.
+## Configuration (`.env`)
+| Variable | Default | Notes |
+|---|---|---|
+| `SESSION_SECRET` | — | Signs the persona and profile cookies. Production refuses the default |
+| `DATABASE_URL` | `file:../data/keystone.db` | SQLite, relative to `prisma/`. The app uses one pooled connection (snapshot reset needs it) |
+| `DATABASE_PROVIDER` | `sqlite` | `postgresql` for local runs: `pnpm db:pg:prepare && pnpm db:pg:push && pnpm db:seed` with a `postgresql://` URL. Snapshot reset is SQLite-only |
+| `WAREHOUSE_DIR` / `DEMO_SCALE` | `./data/warehouse` / `M` | Where warehouses live, and their size (S ≈ 50K, M ≈ 500K, L ≈ 5M rows per pack) |
+| `KEYSTONE_WAREHOUSE_AUTOBUILD` | unset | `1` builds a missing warehouse on first use (set in the container image) |
+| `AGENT_MODE_DEFAULT` | `scripted` | `scripted`, `auto` (live, falling back visibly to scripted) or `live` |
+| `ANTHROPIC_API_KEY` | — | Read only by `src/lib/config/env.ts`. Never logged, persisted or sent to the browser |
+| `KEYSTONE_MODEL_*` | see `.env.example` | Model IDs are configuration, never literals in code |
+| `LLM_TIMEOUT_MS` · `LLM_MAX_TOOL_ROUNDS` · `LLM_BUDGET_USD_PER_SESSION` | 12000 · 6 · 5 | Live-mode limits |
 
-## Configuration
+## Docker
+```bash
+docker build -t keystone .                             # small image; warehouses build on first use per pack
+docker build --build-arg PREBUILD=deep -t keystone .   # bake deep-pack warehouses (scale M) into the image
+SESSION_SECRET=… docker compose up                     # http://localhost:3000, data in the keystone-data volume
+```
+- The image runs as a non-root user and has a `HEALTHCHECK` on `/api/health`.
+- On first start, `/app/data` (the volume) is initialised from the image's seeded template: the app DB, plus warehouses if they were prebuilt.
 
-All settings are environment variables documented in `.env.example` (02-architecture §6).
-`ANTHROPIC_API_KEY` is read from the environment only and never reaches the browser, logs or DB.
+## Data and reset
+- `data/` holds the app DB, the per-pack warehouses (read-only at runtime) and `snapshots/`. It is never committed.
+- Saving a Demo Profile snapshots the app DB. **Reset** in the presenter overlay restores that snapshot in place in well under 3 s and keeps the profile (ADR-0021).
+- Re-seeding (`pnpm db:seed`) rebuilds every pack's demo state through the lifecycle. Answer records are append-only and are kept.
 
-## Health
-
-- `GET /api/health` → `{ "status": "ok" }` (process up).
-- `GET /api/ready` arrives with packs and the warehouse.
-
-## Planned (later phases)
-
-`pnpm demo`, `pnpm demo:fresh`, `pnpm golden`,
-`pnpm eval`, `pnpm doctor`, Docker image and compose — see `docs/build-spec/12-deployment.md`.
+## Troubleshooting
+| Symptom | Fix |
+|---|---|
+| A screen says a warehouse has not been built | `pnpm warehouse:build --pack <id>` (or set `KEYSTONE_WAREHOUSE_AUTOBUILD=1`) |
+| `/api/ready` reports a stale warehouse | Pack content changed: `pnpm warehouse:build --pack <id>` |
+| The app refuses to start in production | Set `SESSION_SECRET` |
+| Live mode answers show a "Live→Scripted fallback" badge | No key, timeout or a grounding failure. The reason is on the badge; Scripted numbers are identical |
+| A pack fails to load | `pnpm pack:validate <id>` lists the exact files and fields |

@@ -23,5 +23,6 @@
 | [0019](0019-operate-overlays-and-quality-calibration.md) | Incident overlays at query time; calibrated agent-quality score | Accepted |
 | [0020](0020-knockout-and-strategy-engines.md) | Knockout through the real query path; evidence-based maturity | Accepted |
 | [0021](0021-presenter-profiles-reset-stories.md) | Demo Profiles, in-place snapshot reset and story Go URLs | Accepted |
+| [0022](0022-packaging-and-hardening.md) | Packaging, readiness probes and hardening | Accepted |
 
 New decisions: copy the shape of an existing ADR, take the next number, add a row here.
