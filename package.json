@@ -26,7 +26,7 @@
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx scripts/seed.ts",
     "db:setup": "pnpm db:migrate && pnpm db:seed",
-    "demo": "pnpm db:setup && pnpm warehouse:build && pnpm build && pnpm start",
+    "demo": "pnpm warehouse:build && pnpm db:setup && pnpm build && pnpm start",
     "postinstall": "prisma generate"
   },
   "pnpm": {

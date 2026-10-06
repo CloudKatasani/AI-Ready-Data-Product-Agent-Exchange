@@ -1,6 +1,7 @@
 // Keystone app-state model — see docs/build-spec/03-data-model.md.
 // Models arrive phase by phase. Phase 2: Persona, Entitlement, QueryLog, AuditEvent, KnowledgeOverlay.
-// Phase 3: AnswerRecord, AnswerFeedback.
+// Phase 3: AnswerRecord, AnswerFeedback. Phase 4: DataProduct, Agent, Decision, AccessRequest, DemandItem,
+// DemandVote, QualityRuleResult, QualityScoreSnapshot.
 //
 // Prisma does not allow the datasource provider to come from an env var. SQLite is the default;
 // Postgres support (DATABASE_PROVIDER=postgresql) is delivered in Phase 11 (docs/adr/0010-database-provider-switch.md).
@@ -129,4 +130,138 @@ model AnswerFeedback {
   createdAt DateTime @default(now())
 
   @@index([answerId])
+}
+
+/// Live catalog record for a data product (seeded from the pack; lifecycle state from Phase 5).
+model DataProduct {
+  id                  String    @id // "DP-UTL-001"
+  packId              String
+  name                String
+  domain              String
+  archetype           String
+  tier                String // bronze|silver|gold|platinum (rubric quality tiers)
+  status              String // DRAFT|IN_DEVELOPMENT|IN_CERTIFICATION|CERTIFIED|DEPRECATED|RETIRED
+  currentStage        Int       @default(1)
+  semanticVersion     String    @default("0.1.0")
+  ownerPersonaId      String
+  stewardPersonaId    String?
+  description         String
+  purpose             String
+  decisionJson        String
+  sampleQuestionsJson String
+  semanticView        String?
+  outputPortsJson     String
+  slaJson             String
+  sensitivityJson     String // SensitiveClass[]
+  kpiIdsJson          String
+  upstreamJson        String
+  fromPack            Boolean   @default(true)
+  isCertDemo          Boolean   @default(false)
+  publishedAt         DateTime?
+  retiredAt           DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  accessRequests AccessRequest[]
+  qualityScores  QualityScoreSnapshot[]
+
+  @@index([packId])
+}
+
+model Agent {
+  id             String   @id // "AG-UTL-001"
+  packId         String
+  family         String // DOMAIN|LIFECYCLE|PLATFORM
+  name           String
+  domain         String?
+  status         String // DRAFT|PILOT|CANARY|PRODUCTION|RETIRED
+  ownerPersonaId String
+  manifestJson   String
+  currentVersion Int      @default(1)
+  fromPack       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  @@index([packId])
+}
+
+/// ONLY written by recordDecision() (invariant I04).
+model Decision {
+  id          String   @id @default(cuid())
+  packId      String
+  subjectType String // GATE|ACCESS_REQUEST|AGENT_PUBLISH|PRODUCT_CERTIFY|TRIAGE
+  subjectId   String
+  gateId      String?
+  personaId   String // a human persona, or "<pack>:system" for policy auto-approval
+  role        String
+  outcome     String // APPROVE|REJECT|VETO
+  rationale   String
+  createdAt   DateTime @default(now())
+
+  @@index([subjectType, subjectId])
+}
+
+model AccessRequest {
+  id                String       @id @default(cuid())
+  packId            String
+  productId         String?
+  agentId           String?
+  requesterId       String
+  purpose           String
+  justification     String
+  durationDays      Int
+  policyPreviewJson String
+  state             String // PENDING|GRANTED|DENIED|EXPIRED|REVOKED
+  createdAt         DateTime     @default(now())
+  product           DataProduct? @relation(fields: [productId], references: [id])
+
+  @@index([packId, state])
+}
+
+model DemandItem {
+  id              String   @id // "DM-UTL-001" (pack) or generated
+  packId          String
+  kind            String // PRODUCT|AGENT|KPI
+  title           String
+  description     String
+  votes           Int      @default(0)
+  state           String // OPEN|IN_INTAKE|DELIVERED|DECLINED
+  linkedRequestId String?
+  createdBy       String
+  createdAt       DateTime @default(now())
+
+  @@index([packId])
+}
+
+model DemandVote {
+  id        String   @id @default(cuid())
+  demandId  String
+  personaId String
+  createdAt DateTime @default(now())
+
+  @@unique([demandId, personaId])
+}
+
+model QualityRuleResult {
+  id          String   @id @default(cuid())
+  productId   String
+  ruleId      String
+  dimension   String
+  passed      Boolean
+  observed    Float?
+  threshold   Float
+  evaluatedAt DateTime @default(now())
+
+  @@index([productId])
+}
+
+model QualityScoreSnapshot {
+  id             String      @id @default(cuid())
+  productId      String
+  score          Float
+  dimensionsJson String
+  rubricVersion  String
+  createdAt      DateTime    @default(now())
+  product        DataProduct @relation(fields: [productId], references: [id])
+
+  @@index([productId, createdAt])
 }

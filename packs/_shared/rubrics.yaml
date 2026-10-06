@@ -52,6 +52,14 @@ llm:
     answer: { in: 3.0, out: 15.0 }
     fast: { in: 1.0, out: 5.0 }
 
+access:                       # access workflow (06 §6); purposes are industry-neutral categories
+  purposes: [Operational reporting, Analytics & insight, AI agent use, Regulatory reporting, Data science exploration]
+  auto_approve_purposes: [Operational reporting, Analytics & insight, AI agent use]
+  durations_days: [30, 90, 180, 365]
+  default_duration_days: 90
+  approver_roles: [DATA_STEWARD]
+  sensitive_approver_roles: [DATA_STEWARD, PRIVACY_OFFICER]
+
 intake:
   duplicate_similarity: 0.55
   triage_sla_hours: 72

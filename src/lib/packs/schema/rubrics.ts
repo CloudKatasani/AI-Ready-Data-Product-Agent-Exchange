@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Role } from './common';
 
 const Weights = z.record(z.string(), z.number().nonnegative());
 
@@ -31,6 +32,16 @@ export const Rubrics = z
         max_tool_rounds: z.number().int(),
         session_budget_usd: z.number(),
         pricing_illustrative_per_mtok: z.record(z.string(), z.object({ in: z.number(), out: z.number() }).strict()),
+      })
+      .strict(),
+    access: z
+      .object({
+        purposes: z.array(z.string()).min(1),
+        auto_approve_purposes: z.array(z.string()),
+        durations_days: z.array(z.number().int().positive()).min(1),
+        default_duration_days: z.number().int().positive(),
+        approver_roles: z.array(Role).min(1),
+        sensitive_approver_roles: z.array(Role).min(1),
       })
       .strict(),
     intake: z.object({ duplicate_similarity: z.number(), triage_sla_hours: z.number() }).strict(),

@@ -183,6 +183,13 @@ export function checkStories(c: Checks, pack: Pack, idx: PackIndex, stories: Sto
 }
 
 /** Category 10 — the term list the domain-string lint (invariant I01) keeps out of src/. */
+/**
+ * Keystone platform vocabulary (CLAUDE.md §5, 01 §M3): words every industry uses for the platform's own
+ * concepts. A pack object that happens to share one (e.g. a CONTRACT source table) does not make the
+ * word industry-specific (ADR-0016).
+ */
+export const PLATFORM_VOCABULARY = new Set(['contract', 'contracts']);
+
 export function lintTerms(pack: Pack): string[] {
   const m = pack.manifest;
   const terms = [
@@ -201,5 +208,5 @@ export function lintTerms(pack: Pack): string[] {
     ...pack.personas.map((p) => p.title),
     ...pack.domains.domains.map((d) => d.name),
   ];
-  return [...new Set(terms.map((t) => t.trim()).filter((t) => t.length >= 4))].sort();
+  return [...new Set(terms.map((t) => t.trim()).filter((t) => t.length >= 4 && !PLATFORM_VOCABULARY.has(t.toLowerCase())))].sort();
 }

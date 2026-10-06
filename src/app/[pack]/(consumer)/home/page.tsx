@@ -4,11 +4,14 @@ import { Constellation } from '@/components/home/constellation';
 import { KpiTileCard } from '@/components/home/kpi-tile';
 import { copy } from '@/copy/en';
 import { respondScripted } from '@/lib/agents/scripted/respond';
+import { db } from '@/lib/db';
+import { approverInbox } from '@/lib/marketplace/access';
 import { answeredCount, recentAnswers } from '@/lib/presenter/ask';
 import { getPack, getRubrics } from '@/lib/packs/registry';
 import { governedService } from '@/lib/presenter/governed';
 import { headlineTiles, type KpiTile } from '@/lib/presenter/home';
 import { rangeKeyFor } from '@/lib/presenter/playground';
+import Link from 'next/link';
 import { activePrincipal } from '../../_server/session';
 
 export default async function HomePage({ params }: { params: Promise<{ pack: string }> }) {
@@ -31,6 +34,7 @@ export default async function HomePage({ params }: { params: Promise<{ pack: str
     theatre = [];
   }
   const [answered, recent] = await Promise.all([answeredCount(packId), recentAnswers(packId)]);
+  const open = await openItems(packId, who.personaId);
   const counters = [
     { label: copy.home.counters.certified, value: pack.products.filter((p) => p.initial_status === 'CERTIFIED').length },
     { label: copy.home.counters.agents, value: pack.agents.filter((a) => a.status === 'PRODUCTION').length },
@@ -107,7 +111,26 @@ export default async function HomePage({ params }: { params: Promise<{ pack: str
             <h2 id="open-h" className="mb-2 text-base font-semibold">
               {copy.home.openItems}
             </h2>
-            <p className="text-sm text-muted-foreground">{copy.home.openItemsEmpty}</p>
+            {open.approvals + open.requests === 0 ? (
+              <p className="text-sm text-muted-foreground">{copy.home.openItemsEmpty}</p>
+            ) : (
+              <ul className="flex flex-col gap-1.5 text-sm" data-testid="open-items">
+                {open.approvals > 0 && (
+                  <li>
+                    <Link href={`/${packId}/access`} className="text-primary underline">
+                      {open.approvals} {copy.home.approvalsWaiting}
+                    </Link>
+                  </li>
+                )}
+                {open.requests > 0 && (
+                  <li>
+                    <Link href={`/${packId}/access`} className="text-primary underline">
+                      {open.requests} {copy.home.requestsPending}
+                    </Link>
+                  </li>
+                )}
+              </ul>
+            )}
           </section>
         </div>
       </div>
@@ -118,4 +141,14 @@ export default async function HomePage({ params }: { params: Promise<{ pack: str
       />
     </div>
   );
+}
+
+async function openItems(packId: string, personaId: string): Promise<{ approvals: number; requests: number }> {
+  try {
+    const prisma = db();
+    const [inbox, requests] = await Promise.all([approverInbox(prisma, getPack(packId), personaId), prisma.accessRequest.count({ where: { packId, requesterId: personaId, state: 'PENDING' } })]);
+    return { approvals: inbox.length, requests };
+  } catch {
+    return { approvals: 0, requests: 0 };
+  }
 }

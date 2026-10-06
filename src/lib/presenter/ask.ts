@@ -77,9 +77,9 @@ export async function recordFeedback(input: { answerId: string; personaId: strin
 }
 
 /** Questions answered for a pack (Home counter). */
-export async function answeredCount(packId: string): Promise<number> {
+export async function answeredCount(packId: string, agentIds?: string[]): Promise<number> {
   try {
-    return await db().answerRecord.count({ where: { packId } });
+    return await db().answerRecord.count({ where: { packId, ...(agentIds ? { agentId: { in: agentIds } } : {}) } });
   } catch {
     return 0;
   }

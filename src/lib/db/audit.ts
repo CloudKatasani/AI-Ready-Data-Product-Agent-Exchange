@@ -1,5 +1,8 @@
 import { createHash } from 'node:crypto';
-import type { PrismaClient } from '@prisma/client';
+import type { Prisma, PrismaClient } from '@prisma/client';
+
+/** A client or an interactive-transaction client. */
+export type Db = PrismaClient | Prisma.TransactionClient;
 
 export interface AuditInput {
   packId: string;
@@ -28,7 +31,7 @@ export function auditHash(prevHash: string | null, e: AuditInput): string {
 }
 
 /** Appends a hash-chained AuditEvent (append-only, invariant I06). */
-export async function appendAudit(prisma: PrismaClient, e: AuditInput): Promise<string> {
+export async function appendAudit(prisma: Db, e: AuditInput): Promise<string> {
   const prev = await prisma.auditEvent.findFirst({ where: { packId: e.packId }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], select: { hash: true } });
   const hash = auditHash(prev?.hash ?? null, e);
   const row = await prisma.auditEvent.create({

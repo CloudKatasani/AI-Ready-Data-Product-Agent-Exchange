@@ -3,13 +3,11 @@ import { ALL_NAV_ITEMS } from '../../src/components/shell/nav';
 export const PACK = 'utilities';
 
 /** Screens built so far (no stub). */
-export const BUILT = new Set(['home', 'ask', 'explorer', 'semantic', 'glossary', 'context']);
+export const BUILT = new Set(['home', 'ask', 'marketplace', 'access', 'explorer', 'semantic', 'glossary', 'context']);
 
 /** Scaffolded routes that still render the Phase 0 stub. */
 export const STUB_URLS: string[] = [
   ...ALL_NAV_ITEMS.filter((i) => !BUILT.has(i.id)).map((i) => `/${PACK}/${i.path}`),
-  `/${PACK}/marketplace/products/DP-UTL-002`,
-  `/${PACK}/marketplace/agents/AG-UTL-002`,
   `/${PACK}/request/REQ-UTL-001`,
   `/${PACK}/studio/DP-UTL-005`,
   `/${PACK}/studio/DP-UTL-005/11`,
@@ -18,8 +16,22 @@ export const STUB_URLS: string[] = [
   `/${PACK}/agent-quality/feedback`,
 ];
 
-/** Built screens (Phases 2–3). */
+/** Built screens (Phases 2–4). */
 export const SCREEN_URLS: string[] = [
+  `/${PACK}/marketplace`,
+  `/${PACK}/marketplace?tab=demand`,
+  `/${PACK}/marketplace?tab=mesh`,
+  `/${PACK}/marketplace?tab=compare&compare=DP-UTL-002&compare=DP-UTL-004`,
+  `/${PACK}/marketplace?q=outage%20minutes`,
+  `/${PACK}/marketplace/products/DP-UTL-002`,
+  `/${PACK}/marketplace/products/DP-UTL-002?tab=contract`,
+  `/${PACK}/marketplace/products/DP-UTL-002?tab=schema`,
+  `/${PACK}/marketplace/products/DP-UTL-002?tab=quality`,
+  `/${PACK}/marketplace/products/DP-UTL-002?tab=lineage`,
+  `/${PACK}/marketplace/products/DP-UTL-002?tab=value`,
+  `/${PACK}/marketplace/agents/AG-UTL-002`,
+  `/${PACK}/marketplace/agents/AG-UTL-002?tab=coverage`,
+  `/${PACK}/access`,
   `/${PACK}/home`,
   `/${PACK}/ask`,
   `/${PACK}/ask/AG-UTL-002`,
