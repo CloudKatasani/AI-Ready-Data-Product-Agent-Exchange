@@ -56,7 +56,7 @@ docker build -t keystone .                             # small image; warehouses
 docker build --build-arg PREBUILD=deep -t keystone .   # bake deep-pack warehouses (scale M) into the image
 SESSION_SECRET=… docker compose up                     # http://localhost:3000, data in the keystone-data volume
 ```
-- The image runs as a non-root user and has a `HEALTHCHECK` on `/api/health`.
+- The image (278 MB) runs on distroless Node 22 as a non-root user, with no shell, and has a `HEALTHCHECK` on `/api/health`. Debug with `docker logs`; `docker exec sh` is not available.
 - On first start, `/app/data` (the volume) is initialised from the image's seeded template: the app DB, plus warehouses if they were prebuilt.
 
 ## Data and reset
