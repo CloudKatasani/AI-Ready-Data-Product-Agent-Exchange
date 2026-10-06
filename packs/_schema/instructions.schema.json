@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^INS-[A-Z]{2,4}-\\d{3}-[PRGO]$"
+      },
+      "agent": {
+        "type": "string",
+        "pattern": "^AG-[A-Z]{2,4}-\\d{3}$"
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "persona",
+          "response",
+          "guardrail",
+          "orchestration"
+        ]
+      },
+      "version": {
+        "type": "integer",
+        "exclusiveMinimum": 0,
+        "maximum": 9007199254740991
+      },
+      "text": {
+        "type": "string",
+        "minLength": 20
+      }
+    },
+    "required": [
+      "id",
+      "agent",
+      "kind",
+      "version",
+      "text"
+    ],
+    "additionalProperties": false
+  }
+}

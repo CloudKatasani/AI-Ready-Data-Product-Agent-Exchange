@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^INC-[A-Z]{2,4}-[A-Z0-9-]+$"
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "late_feed",
+          "null_spike",
+          "duplicate_load",
+          "schema_drift",
+          "volume_anomaly"
+        ]
+      },
+      "title": {
+        "type": "string"
+      },
+      "severity": {
+        "type": "string",
+        "enum": [
+          "SEV1",
+          "SEV2",
+          "SEV3"
+        ]
+      },
+      "object": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9_]*\\.[A-Z][A-Z0-9_]*$"
+      },
+      "column": {
+        "type": "string"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "lag_hours": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "null_pct": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "duplicate_pct": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "rename_to": {
+            "type": "string"
+          },
+          "missing_days": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "additionalProperties": false
+      },
+      "affects": {
+        "type": "object",
+        "properties": {
+          "products": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^DP-[A-Z]{2,4}-\\d{3}$"
+            }
+          },
+          "agents": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^AG-[A-Z]{2,4}-\\d{3}$"
+            }
+          }
+        },
+        "required": [
+          "products",
+          "agents"
+        ],
+        "additionalProperties": false
+      },
+      "narrative": {
+        "type": "string"
+      },
+      "detection": {
+        "type": "string"
+      },
+      "resolution": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "kind",
+      "title",
+      "severity",
+      "object",
+      "params",
+      "affects",
+      "narrative",
+      "detection",
+      "resolution"
+    ],
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "objects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "fqn": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*\\.[A-Z][A-Z0-9_]*$"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "TABLE",
+              "DYNAMIC TABLE",
+              "VIEW"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "target_lag": {
+            "type": "string"
+          },
+          "upstream": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]*\\.[A-Z][A-Z0-9_]*$"
+            }
+          },
+          "grain": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "fqn",
+          "kind",
+          "description",
+          "upstream"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "objects"
+  ],
+  "additionalProperties": false
+}

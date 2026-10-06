@@ -1,0 +1,53 @@
+name: CUSTOMER_360
+description: Customer master metrics — status, digital enrolment and churn risk
+tables:
+  - { alias: c, fqn: CONFORMED_GOLD.DIM_CUSTOMER, pk: customer_key }
+dimensions:
+  - { name: region, expr: c.region, label: Region, synonyms: [territory, area], term: GT-UTL-REGION }
+  - { name: rate_class, expr: c.rate_class, label: Rate class, synonyms: [tariff, rate, rate code], term: GT-UTL-RATE-CLASS }
+  - { name: segment, expr: c.segment, label: Segment, synonyms: [customer type, customer segment] }
+  - { name: customer_status, expr: c.status, label: Status, synonyms: [account status] }
+  - { name: digital_enrolled, expr: c.digital_enrolled, label: Paperless, synonyms: [paperless, ebill, e-bill] }
+  - { name: churn_risk_band, expr: c.churn_risk_band, label: Churn risk band, synonyms: [risk band] }
+  - { name: customer_name, expr: c.full_name, label: Customer name, synonyms: [name, customer] }
+time_dimensions:
+  - { name: customer_since, expr: c.open_date, default: true }
+facts:
+  - { name: churn_risk_score, expr: c.churn_risk_score }
+metrics:
+  - name: active_customers
+    label: Active customers (sample)
+    expr: COUNT_IF(c.status = 'Active')
+    unit: customers
+    decimals: 0
+    synonyms: [active accounts, customer count, number of customers]
+    term: GT-UTL-ACTIVE-CUSTOMER
+    description: Customers with Active status in the governed customer sample
+  - name: digital_adoption_rate
+    label: Digital adoption rate
+    expr: 100.0 * AVG(CASE WHEN c.status = 'Active' THEN CASE WHEN c.digital_enrolled THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [paperless rate, ebill adoption, digital enrolment]
+    term: GT-UTL-DIGITAL-ADOPTION
+    description: Share of active customers enrolled in paperless billing
+  - name: avg_churn_risk
+    label: Churn risk score
+    expr: AVG(CASE WHEN c.status = 'Active' THEN c.churn_risk_score END)
+    unit: score
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [churn risk, attrition risk]
+    term: GT-UTL-CHURN-RISK
+    description: Mean model churn risk (0-100) across active customers
+  - name: high_churn_risk_pct
+    label: High churn-risk customers
+    expr: 100.0 * AVG(CASE WHEN c.status = 'Active' THEN CASE WHEN c.churn_risk_band = 'High' THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [at-risk customers, high risk customers]
+    term: GT-UTL-CHURN-RISK
+    description: Share of active customers with a churn risk score of 60 or more
+products: [DP-UTL-001]

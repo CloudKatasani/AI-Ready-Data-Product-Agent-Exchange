@@ -1,0 +1,385 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "quality": {
+      "type": "object",
+      "properties": {
+        "dimensions": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "tiers": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      },
+      "required": [
+        "dimensions",
+        "tiers"
+      ],
+      "additionalProperties": false
+    },
+    "certification": {
+      "type": "object",
+      "properties": {
+        "dq_pass": {
+          "type": "number"
+        },
+        "dq_warn": {
+          "type": "number"
+        },
+        "min_verified_queries": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "semantic_eval_min": {
+          "type": "number"
+        },
+        "agent_eval_min": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "dq_pass",
+        "dq_warn",
+        "min_verified_queries",
+        "semantic_eval_min",
+        "agent_eval_min"
+      ],
+      "additionalProperties": false
+    },
+    "matcher": {
+      "type": "object",
+      "properties": {
+        "run_threshold": {
+          "type": "number"
+        },
+        "clarify_threshold": {
+          "type": "number"
+        },
+        "redirect_margin": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "run_threshold",
+        "clarify_threshold",
+        "redirect_margin"
+      ],
+      "additionalProperties": false
+    },
+    "agentEval": {
+      "type": "object",
+      "properties": {
+        "golden_min": {
+          "type": "number"
+        },
+        "groundedness_min": {
+          "type": "number"
+        },
+        "boundary_min": {
+          "type": "number"
+        },
+        "adversarial_min": {
+          "type": "number"
+        },
+        "entitlement_min": {
+          "type": "number"
+        },
+        "compositional_min": {
+          "type": "number"
+        },
+        "weights": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      },
+      "required": [
+        "golden_min",
+        "groundedness_min",
+        "boundary_min",
+        "adversarial_min",
+        "entitlement_min",
+        "compositional_min",
+        "weights"
+      ],
+      "additionalProperties": false
+    },
+    "grounding": {
+      "type": "object",
+      "properties": {
+        "derived_value_tolerance_rel": {
+          "type": "number"
+        },
+        "ignore_numbers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "derived_value_tolerance_rel",
+        "ignore_numbers"
+      ],
+      "additionalProperties": false
+    },
+    "confidence": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string"
+        },
+        "additionalProperties": {
+          "type": [
+            "boolean",
+            "number"
+          ]
+        }
+      }
+    },
+    "query": {
+      "type": "object",
+      "properties": {
+        "max_rows_agent": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "max_rows_worksheet": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "statement_timeout_ms": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "preview_rows": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "max_rows_agent",
+        "max_rows_worksheet",
+        "statement_timeout_ms",
+        "preview_rows"
+      ],
+      "additionalProperties": false
+    },
+    "llm": {
+      "type": "object",
+      "properties": {
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "max_tool_rounds": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "session_budget_usd": {
+          "type": "number"
+        },
+        "pricing_illustrative_per_mtok": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "in": {
+                "type": "number"
+              },
+              "out": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "in",
+              "out"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "timeout_ms",
+        "max_tool_rounds",
+        "session_budget_usd",
+        "pricing_illustrative_per_mtok"
+      ],
+      "additionalProperties": false
+    },
+    "intake": {
+      "type": "object",
+      "properties": {
+        "duplicate_similarity": {
+          "type": "number"
+        },
+        "triage_sla_hours": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "duplicate_similarity",
+        "triage_sla_hours"
+      ],
+      "additionalProperties": false
+    },
+    "prioritisation": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": "string",
+          "enum": [
+            "WSJF",
+            "RICE"
+          ]
+        },
+        "wsjf_weights": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      },
+      "required": [
+        "model",
+        "wsjf_weights"
+      ],
+      "additionalProperties": false
+    },
+    "readiness": {
+      "type": "object",
+      "properties": {
+        "target": {
+          "type": "number"
+        },
+        "weights": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "bands": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "items": false,
+            "minItems": 2,
+            "maxItems": 2
+          }
+        }
+      },
+      "required": [
+        "target",
+        "weights",
+        "bands"
+      ],
+      "additionalProperties": false
+    },
+    "contracts": {
+      "type": "object",
+      "properties": {
+        "breaking_notice_days": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "breaking_notice_days"
+      ],
+      "additionalProperties": false
+    },
+    "demo": {
+      "type": "object",
+      "properties": {
+        "reset_target_ms": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "scripted_answer_budget_ms": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "reset_target_ms",
+        "scripted_answer_budget_ms"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "version",
+    "quality",
+    "certification",
+    "matcher",
+    "agentEval",
+    "grounding",
+    "confidence",
+    "query",
+    "llm",
+    "intake",
+    "prioritisation",
+    "readiness",
+    "contracts",
+    "demo"
+  ],
+  "additionalProperties": false
+}

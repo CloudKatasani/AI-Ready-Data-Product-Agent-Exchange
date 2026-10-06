@@ -1,0 +1,67 @@
+name: METERING
+description: AMI daily consumption, demand and read quality per premise
+tables:
+  - { alias: u, fqn: CONFORMED_GOLD.FCT_DAILY_USAGE, pk: "premise_key, date_key" }
+  - { alias: p, fqn: CONFORMED_GOLD.DIM_PREMISE, pk: premise_key }
+  - { alias: f, fqn: CONFORMED_GOLD.DIM_FEEDER, pk: feeder_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: u.premise_key, to: p.premise_key }
+  - { from: p.feeder_key, to: f.feeder_key }
+  - { from: u.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: p.region, label: Region, synonyms: [territory, area], term: GT-UTL-REGION }
+  - { name: rate_class, expr: p.rate_class, label: Rate class, synonyms: [tariff, rate], term: GT-UTL-RATE-CLASS }
+  - { name: segment, expr: p.segment, label: Segment, synonyms: [customer type] }
+  - { name: premise_type, expr: p.premise_type, label: Premise type, synonyms: [building type] }
+  - { name: city, expr: p.city, label: City, synonyms: [town] }
+  - { name: feeder, expr: f.feeder_id, label: Feeder, synonyms: [circuit], term: GT-UTL-FEEDER }
+time_dimensions:
+  - { name: read_date, expr: d.date, default: true }
+facts:
+  - { name: kwh, expr: u.kwh }
+  - { name: peak_kw, expr: u.peak_kw }
+metrics:
+  - name: daily_kwh
+    label: Daily consumption
+    expr: AVG(u.kwh)
+    unit: kWh
+    decimals: 1
+    synonyms: [consumption, usage, load, energy use]
+    term: GT-UTL-KWH
+    description: Mean kWh per premise per day
+  - name: peak_demand_kw
+    label: Peak demand
+    expr: AVG(u.peak_kw)
+    unit: kW
+    decimals: 2
+    synonyms: [peak demand, max demand, peak load]
+    term: GT-UTL-PEAK-DEMAND
+    description: Mean daily peak 15-minute demand per premise
+  - name: read_success_rate
+    label: AMI read success rate
+    expr: AVG(u.read_success_pct)
+    unit: '%'
+    decimals: 2
+    direction: higher_is_better
+    synonyms: [read rate, ami performance, meter read rate, read success]
+    term: GT-UTL-READ-SUCCESS
+    description: Share of expected 15-minute intervals received and valid
+  - name: estimated_read_pct
+    label: Estimated reads
+    expr: 100.0 - AVG(u.read_success_pct)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [estimated intervals, estimation rate]
+    term: GT-UTL-READ-SUCCESS
+    description: Share of expected intervals that had to be estimated
+  - name: meter_days
+    label: Meter-days read
+    expr: COUNT(*)
+    unit: meter-days
+    decimals: 0
+    synonyms: [reads, daily reads]
+    term: GT-UTL-METER
+    description: Count of meter-days with a daily read
+products: [DP-UTL-003]

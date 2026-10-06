@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^GT-[A-Z]{2,4}-[A-Z0-9-]+$"
+      },
+      "name": {
+        "type": "string"
+      },
+      "definition": {
+        "type": "string"
+      },
+      "formula": {
+        "type": "string"
+      },
+      "domain": {
+        "type": "string"
+      },
+      "owner": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
+      },
+      "steward": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "APPROVED",
+          "IN_REVIEW",
+          "DRAFT",
+          "DEPRECATED"
+        ]
+      },
+      "cde": {
+        "type": "boolean"
+      },
+      "synonyms": {
+        "default": [],
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "mappings": {
+        "type": "object",
+        "properties": {
+          "columns": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]*\\.[A-Z][A-Z0-9_]*\\.[a-z_][a-z0-9_]*$"
+            }
+          },
+          "metrics": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "id",
+      "name",
+      "definition",
+      "domain",
+      "owner",
+      "steward",
+      "status",
+      "cde",
+      "mappings"
+    ],
+    "additionalProperties": false
+  }
+}

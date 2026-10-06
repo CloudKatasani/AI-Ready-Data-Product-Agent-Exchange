@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "jurisdictions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "regulator": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "regulator"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "controls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^CTL-[A-Z]{2,4}-\\d{3}$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "framework": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "jurisdiction": {
+            "type": "string"
+          },
+          "applies_to": {
+            "type": "object",
+            "properties": {
+              "classes": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "PII",
+                    "PHI",
+                    "PCI",
+                    "CPNI",
+                    "NPI",
+                    "GOV_ID",
+                    "TRADE_SECRET"
+                  ]
+                }
+              },
+              "domains": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "stage": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "framework",
+          "description",
+          "applies_to",
+          "evidence"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "jurisdictions",
+    "controls"
+  ],
+  "additionalProperties": false
+}

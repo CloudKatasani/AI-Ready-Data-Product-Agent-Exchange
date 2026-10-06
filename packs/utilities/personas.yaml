@@ -1,0 +1,48 @@
+# Five demo identities, one per archetype (01-functional-spec §2.2). People are generated, not real.
+- id: utilities:ops-manager-north
+  archetype: A
+  name: Priya Iyer
+  title: Regional Operations Manager, North
+  domain: Grid operations
+  roles: [DATA_CONSUMER]
+  row_filter: { dimension: region, allowed: [North] }
+  unmasked: []
+  cares: Reliability and customer service in the North region; wants plain answers she can act on this week.
+  sees: North region only; customer PII masked.
+- id: utilities:reliability-analyst
+  archetype: B
+  name: Marcus Okafor
+  title: Reliability Analyst
+  domain: Grid operations
+  roles: [DATA_CONSUMER, ANALYST]
+  unmasked: []
+  cares: SAIDI, SAIFI, CAIDI, outage causes and worst-performing feeders for regulatory reporting.
+  sees: All regions; customer PII masked.
+- id: utilities:grid-dpo
+  archetype: C
+  name: Elena Novak
+  title: Grid Data Product Owner
+  domain: Grid operations
+  roles: [DOMAIN_PRODUCT_OWNER, DATA_ENGINEER]
+  unmasked: []
+  cares: Shipping certified reliability, asset and vegetation products that agents can trust.
+  sees: All regions; PII masked; can build and submit products for review.
+- id: utilities:customer-steward
+  archetype: D
+  name: Hannah Sullivan
+  title: Customer Data Steward
+  domain: Governance
+  roles: [DATA_STEWARD, GOVERNANCE_COUNCIL, PRIVACY_OFFICER]
+  unmasked: [PII, PCI, GOV_ID]
+  cares: Glossary health, CDE ownership, masking coverage and certification decisions.
+  sees: Everything, unmasked; approves access requests and certification gates.
+- id: utilities:coo
+  archetype: E
+  name: Daniel Reyes
+  title: Chief Operating Officer
+  domain: Executive
+  roles: [EXECUTIVE, PORTFOLIO_LEAD]
+  unmasked: []
+  aggregates_only: true
+  cares: Reliability against regulatory targets, cost to serve and where to invest next.
+  sees: Aggregates only; portfolio, value and readiness.

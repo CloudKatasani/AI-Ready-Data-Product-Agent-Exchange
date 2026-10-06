@@ -12,5 +12,7 @@
 | [0008](0008-agents-never-approve.md) | Agents never approve | Accepted |
 | [0009](0009-default-export-scope.md) | Scope of "no default exports except Next pages" | Accepted |
 | [0010](0010-database-provider-switch.md) | Database provider switching | Proposed |
+| [0011](0011-relative-time-windows.md) | Relative time windows anchored to the pack clock | Accepted |
+| [0012](0012-pack-schema-additions.md) | Pack schema additions beyond the 04 examples | Accepted |
 
 New decisions: copy the shape of an existing ADR, take the next number, add a row here.

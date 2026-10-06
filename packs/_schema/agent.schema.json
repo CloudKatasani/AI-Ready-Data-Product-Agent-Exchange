@@ -1,0 +1,389 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^AG-[A-Z]{2,4}-\\d{3}$"
+    },
+    "name": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PILOT",
+        "CANARY",
+        "PRODUCTION"
+      ]
+    },
+    "owner": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
+    },
+    "on_call": {
+      "type": "string"
+    },
+    "avatar": {
+      "type": "object",
+      "properties": {
+        "icon": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "hue": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 360
+        }
+      },
+      "required": [
+        "icon",
+        "hue"
+      ],
+      "additionalProperties": false
+    },
+    "capability": {
+      "type": "string"
+    },
+    "personas_served": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "out_of_scope": {
+      "minItems": 3,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "products": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^DP-[A-Z]{2,4}-\\d{3}$"
+          },
+          "columns": {
+            "anyOf": [
+              {
+                "type": "string",
+                "const": "*"
+              },
+              {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "columns"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "tools": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "tool": {
+                "type": "string",
+                "const": "semantic_query"
+              },
+              "views": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[A-Z][A-Z0-9_]*$"
+                }
+              },
+              "row_limit": {
+                "type": "integer",
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "tool",
+              "views",
+              "row_limit"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "tool": {
+                "type": "string",
+                "const": "search_context"
+              },
+              "corpora": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^DOC-[A-Z]{2,4}-[A-Z0-9-]+$"
+                }
+              }
+            },
+            "required": [
+              "tool",
+              "corpora"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "tool": {
+                "type": "string",
+                "enum": [
+                  "get_definition",
+                  "get_product_status",
+                  "list_metrics",
+                  "request_access_link"
+                ]
+              }
+            },
+            "required": [
+              "tool"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "kpi_coverage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kpi": {
+            "type": "string",
+            "pattern": "^KPI-[A-Z]{2,4}-[A-Z0-9-]+$"
+          },
+          "grains": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "day",
+                "week",
+                "month",
+                "quarter",
+                "year"
+              ]
+            }
+          },
+          "slices": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "depth": {
+            "type": "string",
+            "enum": [
+              "value",
+              "trend",
+              "explain",
+              "rank_drivers"
+            ]
+          }
+        },
+        "required": [
+          "kpi",
+          "grains",
+          "slices",
+          "depth"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "instructions": {
+      "minItems": 4,
+      "maxItems": 4,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^INS-[A-Z]{2,4}-\\d{3}-[PRGO]$"
+      }
+    },
+    "guardrails": {
+      "type": "object",
+      "properties": {
+        "citations_required": {
+          "type": "boolean"
+        },
+        "refuse_customer_level": {
+          "type": "boolean"
+        },
+        "pii_output": {
+          "type": "string",
+          "enum": [
+            "deny",
+            "masked"
+          ]
+        },
+        "max_followups": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "citations_required",
+        "refuse_customer_level",
+        "pii_output",
+        "max_followups"
+      ],
+      "additionalProperties": false
+    },
+    "budgets": {
+      "type": "object",
+      "properties": {
+        "cost_per_answer_usd": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "p95_latency_ms": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "max_tool_rounds": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "cost_per_answer_usd",
+        "p95_latency_ms",
+        "max_tool_rounds"
+      ],
+      "additionalProperties": false
+    },
+    "eval": {
+      "type": "object",
+      "properties": {
+        "golden_min": {
+          "type": "number"
+        },
+        "groundedness_min": {
+          "type": "number"
+        },
+        "boundary_min": {
+          "type": "number"
+        },
+        "adversarial_min": {
+          "type": "number"
+        },
+        "entitlement_min": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "golden_min",
+        "groundedness_min",
+        "boundary_min",
+        "adversarial_min",
+        "entitlement_min"
+      ],
+      "additionalProperties": false
+    },
+    "scenarios": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^SC-[A-Z]{2,4}-\\d{3}$"
+      }
+    },
+    "quality_fix": {
+      "type": "object",
+      "properties": {
+        "feedback_question": {
+          "type": "string"
+        },
+        "fix": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": [
+                "synonym",
+                "business_rule",
+                "verified_query",
+                "instruction"
+              ]
+            },
+            "payload": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          },
+          "required": [
+            "type",
+            "payload"
+          ],
+          "additionalProperties": false
+        },
+        "eval_before_pct": {
+          "type": "number"
+        },
+        "eval_after_pct": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "feedback_question",
+        "fix",
+        "eval_before_pct",
+        "eval_after_pct"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "domain",
+    "status",
+    "owner",
+    "on_call",
+    "avatar",
+    "capability",
+    "personas_served",
+    "out_of_scope",
+    "products",
+    "tools",
+    "kpi_coverage",
+    "instructions",
+    "guardrails",
+    "budgets",
+    "eval",
+    "scenarios"
+  ],
+  "additionalProperties": false
+}

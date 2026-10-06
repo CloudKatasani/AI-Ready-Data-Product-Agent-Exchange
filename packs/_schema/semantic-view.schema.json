@@ -1,0 +1,266 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]*$"
+    },
+    "description": {
+      "type": "string"
+    },
+    "tables": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "alias": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "fqn": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*\\.[A-Z][A-Z0-9_]*$"
+          },
+          "pk": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "alias",
+          "fqn",
+          "pk"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "relationships": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*\\.[a-z_][a-z0-9_]*$"
+          },
+          "to": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*\\.[a-z_][a-z0-9_]*$"
+          }
+        },
+        "required": [
+          "from",
+          "to"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "dimensions": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "expr": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "synonyms": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "term": {
+            "type": "string",
+            "pattern": "^GT-[A-Z]{2,4}-[A-Z0-9-]+$"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "expr"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "time_dimensions": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "expr": {
+            "type": "string"
+          },
+          "default": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "expr"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "facts": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "expr": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "expr"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "metrics": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "label": {
+            "type": "string"
+          },
+          "expr": {
+            "type": "string"
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "decimals": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4
+          },
+          "synonyms": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "term": {
+            "type": "string",
+            "pattern": "^GT-[A-Z]{2,4}-[A-Z0-9-]+$"
+          },
+          "description": {
+            "type": "string"
+          },
+          "direction": {
+            "default": "neutral",
+            "type": "string",
+            "enum": [
+              "higher_is_better",
+              "lower_is_better",
+              "neutral"
+            ]
+          },
+          "default_filters": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "rule": {
+                  "type": "string",
+                  "pattern": "^BR-[A-Z]{2,4}-\\d{3}$"
+                }
+              },
+              "required": [
+                "rule"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "naive_expr": {
+            "type": "string"
+          },
+          "scope_exprs": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "dimension": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "expr": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "dimension",
+                "expr"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "name",
+          "label",
+          "expr",
+          "unit",
+          "decimals",
+          "term",
+          "description"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "products": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^DP-[A-Z]{2,4}-\\d{3}$"
+      }
+    }
+  },
+  "required": [
+    "name",
+    "description",
+    "tables",
+    "dimensions",
+    "metrics",
+    "products"
+  ],
+  "additionalProperties": false
+}

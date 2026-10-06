@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^VC-[A-Z]{2,4}-\\d{3}$"
+      },
+      "product": {
+        "type": "string",
+        "pattern": "^DP-[A-Z]{2,4}-\\d{3}$"
+      },
+      "hypothesis": {
+        "type": "string"
+      },
+      "baseline": {
+        "type": "string"
+      },
+      "benefit_model": {
+        "type": "string"
+      },
+      "assumptions": {
+        "minItems": 1,
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "text": {
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            },
+            "unit": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "text",
+            "value",
+            "unit",
+            "source"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "annual_value_usd": {
+        "type": "number",
+        "minimum": 0
+      },
+      "measured": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "value_usd": {
+                "type": "number"
+              },
+              "period": {
+                "type": "string"
+              },
+              "confidence": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              }
+            },
+            "required": [
+              "value_usd",
+              "period",
+              "confidence"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "null"
+          }
+        ]
+      }
+    },
+    "required": [
+      "id",
+      "product",
+      "hypothesis",
+      "baseline",
+      "benefit_model",
+      "assumptions",
+      "annual_value_usd",
+      "measured"
+    ],
+    "additionalProperties": false
+  }
+}

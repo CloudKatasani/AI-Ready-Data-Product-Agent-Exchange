@@ -1,0 +1,354 @@
+# KPIs with target bands, calibrated against the scale-M warehouse (AI-Ready kpis.ts + Marketplace KPI manifests).
+# `window` is evaluated relative to pack asOf; `last n unit` = the n most recent complete units (ADR-0011).
+- id: KPI-UTL-SAIDI
+  name: SAIDI
+  definition: "Average outage minutes per customer served, excluding major event days"
+  formula: "customer minutes interrupted ÷ customers served (IEEE 1366, MEDs excluded)"
+  unit: "minutes"
+  direction: lower_is_better
+  target: { min: 70, max: 105 }
+  window: { ytd: true }
+  term: GT-UTL-SAIDI
+  metric: saidi
+  products: [DP-UTL-002]
+- id: KPI-UTL-SAIFI
+  name: SAIFI
+  definition: "Average number of sustained interruptions per customer served"
+  formula: "customers interrupted ÷ customers served (MEDs excluded)"
+  unit: "interruptions"
+  direction: lower_is_better
+  target: { min: 0.6, max: 0.95 }
+  window: { ytd: true }
+  term: GT-UTL-SAIFI
+  metric: saifi
+  products: [DP-UTL-002]
+- id: KPI-UTL-CAIDI
+  name: CAIDI
+  definition: "Average restoration time for interrupted customers"
+  formula: "customer minutes interrupted ÷ customers interrupted"
+  unit: "minutes"
+  direction: lower_is_better
+  target: { min: 100, max: 125 }
+  window: { ytd: true }
+  term: GT-UTL-CAIDI
+  metric: caidi
+  products: [DP-UTL-002]
+- id: KPI-UTL-CI
+  name: Customers interrupted
+  definition: "Total customer interruptions from sustained outages"
+  formula: "sum of customers interrupted per sustained outage (MEDs excluded)"
+  unit: "customers"
+  direction: lower_is_better
+  target: { min: 800000, max: 1300000 }
+  window: { ytd: true }
+  term: GT-UTL-CI
+  metric: customers_interrupted
+  products: [DP-UTL-002]
+- id: KPI-UTL-CMI
+  name: Customer minutes interrupted
+  definition: "Total customer minutes of interruption"
+  formula: "sum of customers interrupted × duration (MEDs excluded)"
+  unit: "minutes"
+  direction: lower_is_better
+  target: { min: 90000000, max: 145000000 }
+  window: { ytd: true }
+  term: GT-UTL-CMI
+  metric: customer_minutes_interrupted
+  products: [DP-UTL-002]
+- id: KPI-UTL-TREE-OUTAGES
+  name: Tree-caused outages
+  definition: "Sustained outages caused by tree contact in the quarter"
+  formula: "count of outages with cause Tree contact"
+  unit: "events"
+  direction: lower_is_better
+  target: { min: 300, max: 550 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-UTL-VEG-OUTAGE
+  metric: tree_outages
+  products: [DP-UTL-002, DP-UTL-007]
+- id: KPI-UTL-RESTORE
+  name: Average restoration time
+  definition: "Mean minutes from outage start to restoration"
+  formula: "mean event duration (MEDs excluded)"
+  unit: "minutes"
+  direction: lower_is_better
+  target: { min: 95, max: 135 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-UTL-RESTORATION
+  metric: avg_restoration_minutes
+  products: [DP-UTL-002]
+- id: KPI-UTL-AHI
+  name: Asset health index
+  definition: "Mean condition score across in-service grid assets"
+  formula: "mean asset health score (0-100)"
+  unit: "score"
+  direction: higher_is_better
+  target: { min: 62, max: 75 }
+  window: {}
+  term: GT-UTL-AHI
+  metric: avg_asset_health
+  products: [DP-UTL-004]
+- id: KPI-UTL-POOR-ASSETS
+  name: Assets in poor condition
+  definition: "Share of in-service assets with a health score below 40"
+  formula: "assets with health score < 40 ÷ all assets"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 2, max: 8 }
+  window: {}
+  term: GT-UTL-AHI
+  metric: poor_condition_pct
+  products: [DP-UTL-004]
+- id: KPI-UTL-PM-COMP
+  name: PM compliance
+  definition: "Share of preventive work orders completed by their due date"
+  formula: "PM work orders completed on or before due date ÷ PM work orders due"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 78, max: 95 }
+  window: { ytd: true }
+  term: GT-UTL-PM-COMPLIANCE
+  metric: pm_compliance_pct
+  products: [DP-UTL-004]
+- id: KPI-UTL-WO-BACKLOG
+  name: Overdue work orders
+  definition: "Open maintenance work orders past their due date"
+  formula: "count of open work orders with due date before the reporting date"
+  unit: "work orders"
+  direction: lower_is_better
+  target: { min: 3000, max: 6500 }
+  window: {}
+  term: GT-UTL-WORK-ORDER
+  metric: overdue_work_orders
+  products: [DP-UTL-004]
+- id: KPI-UTL-VEG-OVERDUE
+  name: Spans overdue for trim
+  definition: "Share of inspected spans past their trim cycle"
+  formula: "overdue spans ÷ inspected spans"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 8, max: 25 }
+  window: {}
+  term: GT-UTL-TRIM-CYCLE
+  metric: spans_overdue_pct
+  products: [DP-UTL-007]
+- id: KPI-UTL-TRIM-COMP
+  name: Trim cycle compliance
+  definition: "Share of inspected spans trimmed within their cycle"
+  formula: "1 − overdue spans ÷ inspected spans"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 75, max: 92 }
+  window: {}
+  term: GT-UTL-TRIM-CYCLE
+  metric: trim_cycle_compliance
+  products: [DP-UTL-007]
+- id: KPI-UTL-VEG-RISK
+  name: Vegetation risk score
+  definition: "Mean inspector risk score across inspected spans"
+  formula: "mean span risk score (0-100)"
+  unit: "score"
+  direction: lower_is_better
+  target: { min: 30, max: 50 }
+  window: {}
+  term: GT-UTL-VEG-RISK
+  metric: avg_veg_risk
+  products: [DP-UTL-007]
+- id: KPI-UTL-DIGITAL
+  name: Digital adoption rate
+  definition: "Share of active customers enrolled in paperless billing"
+  formula: "paperless active customers ÷ active customers"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 40, max: 55 }
+  window: {}
+  term: GT-UTL-DIGITAL-ADOPTION
+  metric: digital_adoption_rate
+  products: [DP-UTL-001]
+- id: KPI-UTL-CHURN
+  name: Churn risk score
+  definition: "Average model churn risk across active customers"
+  formula: "mean churn risk score (0-100) of active customers"
+  unit: "score"
+  direction: lower_is_better
+  target: { min: 20, max: 40 }
+  window: {}
+  term: GT-UTL-CHURN-RISK
+  metric: avg_churn_risk
+  products: [DP-UTL-001]
+- id: KPI-UTL-HIGH-CHURN
+  name: High churn-risk customers
+  definition: "Share of active customers with a churn risk score of 60 or more"
+  formula: "active customers with churn score ≥ 60 ÷ active customers"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 1, max: 8 }
+  window: {}
+  term: GT-UTL-CHURN-RISK
+  metric: high_churn_risk_pct
+  products: [DP-UTL-001]
+- id: KPI-UTL-BILL
+  name: Average monthly bill
+  definition: "Average billed amount per residential statement"
+  formula: "sum of billed amount ÷ number of residential statements"
+  unit: "USD"
+  direction: target_band
+  target: { min: 120, max: 146 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-UTL-BILL
+  metric: avg_monthly_bill
+  products: [DP-UTL-005]
+- id: KPI-UTL-ARREARS
+  name: Arrears balance
+  definition: "Past-due balance carried on statements issued in the period (governed customer sample)"
+  formula: "sum of arrears on statements"
+  unit: "USD"
+  direction: lower_is_better
+  target: { min: 120000, max: 220000 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-UTL-ARREARS
+  metric: arrears_balance
+  products: [DP-UTL-005]
+- id: KPI-UTL-DSO
+  name: Days sales outstanding
+  definition: "Billed-amount-weighted days from statement to payment"
+  formula: "Σ(billed × days to pay, unpaid = 90) ÷ Σ billed, statements older than 60 days"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 28, max: 45 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-UTL-DSO
+  metric: dso_days
+  products: [DP-UTL-005]
+- id: KPI-UTL-BILLS
+  name: Bills issued
+  definition: "Billing statements issued in the month (governed customer sample)"
+  formula: "count of statements"
+  unit: "statements"
+  direction: target_band
+  target: { min: 4500, max: 7000 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-UTL-BILL
+  metric: bills_issued
+  products: [DP-UTL-005]
+- id: KPI-UTL-EST-BILL
+  name: Estimated bill rate
+  definition: "Share of bills based on estimated reads"
+  formula: "estimated statements ÷ statements issued"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 1, max: 6.5 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-UTL-ESTIMATED-BILL
+  metric: estimated_bill_rate
+  products: [DP-UTL-005]
+- id: KPI-UTL-COLLECT
+  name: Collections rate
+  definition: "Share of billed revenue collected within 60 days"
+  formula: "amount paid within 60 days ÷ amount billed, statements older than 60 days"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 88, max: 98 }
+  window: { last: { n: 1, unit: quarter } }
+  term: GT-UTL-COLLECTIONS
+  metric: collections_rate
+  products: [DP-UTL-005]
+- id: KPI-UTL-KWH
+  name: Daily consumption
+  definition: "Average kWh per premise per day"
+  formula: "sum of kWh ÷ premise-days"
+  unit: "kWh"
+  direction: target_band
+  target: { min: 30, max: 45 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-UTL-KWH
+  metric: daily_kwh
+  products: [DP-UTL-003]
+- id: KPI-UTL-PEAK
+  name: Peak demand
+  definition: "Average daily peak 15-minute demand per premise"
+  formula: "mean of daily maximum 15-minute kW"
+  unit: "kW"
+  direction: target_band
+  target: { min: 2.8, max: 4.6 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-UTL-PEAK-DEMAND
+  metric: peak_demand_kw
+  products: [DP-UTL-003]
+- id: KPI-UTL-AMI-READ
+  name: AMI read success rate
+  definition: "Share of 15-minute interval reads received and valid"
+  formula: "valid intervals ÷ expected intervals"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 98.5, max: 99.9 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-UTL-READ-SUCCESS
+  metric: read_success_rate
+  products: [DP-UTL-003]
+- id: KPI-UTL-EST-READ
+  name: Estimated reads
+  definition: "Share of intervals that had to be estimated"
+  formula: "100 − read success rate"
+  unit: "%"
+  direction: lower_is_better
+  target: { min: 0.1, max: 1.5 }
+  window: { last: { n: 1, unit: month } }
+  term: GT-UTL-READ-SUCCESS
+  metric: estimated_read_pct
+  products: [DP-UTL-003]
+- id: KPI-UTL-SPEND
+  name: Total spend
+  definition: "All purchase-order spend in the fiscal year to date"
+  formula: "sum of PO line spend"
+  unit: "USD"
+  direction: target_band
+  target: { min: 60000000, max: 120000000 }
+  window: { ytd: true }
+  term: GT-UTL-SPEND
+  metric: total_spend
+  products: [DP-UTL-006]
+- id: KPI-UTL-SUC
+  name: Spend under contract
+  definition: "Share of spend placed against a framework contract"
+  formula: "on-contract spend ÷ total spend"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 78, max: 86 }
+  window: { ytd: true }
+  term: GT-UTL-CONTRACT-COMPLIANCE
+  metric: spend_under_contract_pct
+  products: [DP-UTL-006]
+- id: KPI-UTL-MAVERICK
+  name: Maverick spend
+  definition: "Spend placed outside a framework contract"
+  formula: "sum of spend where not on contract"
+  unit: "USD"
+  direction: lower_is_better
+  target: { min: 10000000, max: 25000000 }
+  window: { ytd: true }
+  term: GT-UTL-MAVERICK-SPEND
+  metric: maverick_spend
+  products: [DP-UTL-006]
+- id: KPI-UTL-OTIF
+  name: Supplier OTIF
+  definition: "Share of received PO lines delivered on time and in full"
+  formula: "OTIF lines ÷ received lines"
+  unit: "%"
+  direction: higher_is_better
+  target: { min: 85, max: 97 }
+  window: { ytd: true }
+  term: GT-UTL-OTIF
+  metric: otif_pct
+  products: [DP-UTL-006]
+- id: KPI-UTL-PO-CYCLE
+  name: PO cycle time
+  definition: "Average days from PO creation to goods receipt"
+  formula: "mean of receipt date − PO date"
+  unit: "days"
+  direction: lower_is_better
+  target: { min: 15, max: 30 }
+  window: { ytd: true }
+  term: GT-UTL-PO-CYCLE
+  metric: po_cycle_days
+  products: [DP-UTL-006]

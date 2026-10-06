@@ -1,0 +1,86 @@
+name: BILLING_AR
+description: Billing statements, receivables and collections
+tables:
+  - { alias: b, fqn: CONFORMED_GOLD.FCT_BILLING, pk: statement_key }
+  - { alias: c, fqn: CONFORMED_GOLD.DIM_CUSTOMER, pk: customer_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: b.customer_key, to: c.customer_key }
+  - { from: b.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: c.region, label: Region, synonyms: [territory, area], term: GT-UTL-REGION }
+  - { name: rate_class, expr: c.rate_class, label: Rate class, synonyms: [tariff, rate], term: GT-UTL-RATE-CLASS }
+  - { name: segment, expr: c.segment, label: Segment, synonyms: [customer type] }
+  - { name: estimated, expr: b.estimated, label: Estimated bill, synonyms: [estimated read bill] }
+  - { name: mature_statement, expr: b.mature, label: Statement older than 60 days }
+  - { name: customer_email, expr: c.email, label: Customer email, synonyms: [email] }
+time_dimensions:
+  - { name: statement_date, expr: d.date, default: true }
+facts:
+  - { name: billed_amount, expr: b.billed_amount }
+  - { name: arrears_amount, expr: b.arrears_amount }
+metrics:
+  - name: avg_monthly_bill
+    label: Average monthly bill
+    expr: AVG(b.billed_amount)
+    unit: USD
+    decimals: 2
+    synonyms: [average bill, typical bill, mean bill]
+    term: GT-UTL-BILL
+    description: Mean billed amount per statement
+    default_filters: [ { rule: BR-UTL-020 } ]
+  - name: billed_revenue
+    label: Billed revenue
+    expr: SUM(b.billed_amount)
+    unit: USD
+    decimals: 0
+    synonyms: [revenue billed, billings]
+    term: GT-UTL-BILL
+    description: Total billed amount on statements issued in the period
+  - name: arrears_balance
+    label: Arrears balance
+    expr: SUM(b.arrears_amount)
+    unit: USD
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [past due, overdue balance, arrears]
+    term: GT-UTL-ARREARS
+    description: Past-due balance carried on statements issued in the period
+  - name: bills_issued
+    label: Bills issued
+    expr: COUNT(*)
+    unit: statements
+    decimals: 0
+    synonyms: [statements issued, number of bills]
+    term: GT-UTL-BILL
+    description: Billing statements issued in the period
+  - name: estimated_bill_rate
+    label: Estimated bill rate
+    expr: 100.0 * AVG(CASE WHEN b.estimated THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 2
+    direction: lower_is_better
+    synonyms: [estimated bills, estimate rate]
+    term: GT-UTL-ESTIMATED-BILL
+    description: Share of statements based on estimated reads
+  - name: collections_rate
+    label: Collections rate
+    expr: 100.0 * SUM(b.paid_within_60d_amount) / SUM(b.billed_amount)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [collection rate, cash collected, collections]
+    term: GT-UTL-COLLECTIONS
+    description: Share of billed amount collected within 60 days of the statement
+    default_filters: [ { rule: BR-UTL-021 } ]
+  - name: dso_days
+    label: Days sales outstanding
+    expr: SUM(b.billed_amount * coalesce(b.days_to_pay, 90)) / SUM(b.billed_amount)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [dso, days outstanding, receivable days]
+    term: GT-UTL-DSO
+    description: Billed-amount-weighted days from statement to payment (unpaid statements count as 90 days)
+    default_filters: [ { rule: BR-UTL-021 } ]
+products: [DP-UTL-005]

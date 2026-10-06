@@ -1,0 +1,57 @@
+name: WORK_MANAGEMENT
+description: Preventive and corrective maintenance work orders by due date
+tables:
+  - { alias: w, fqn: CONFORMED_GOLD.FCT_WORK_ORDER, pk: work_order_key }
+  - { alias: a, fqn: CONFORMED_GOLD.DIM_ASSET, pk: asset_key }
+  - { alias: f, fqn: CONFORMED_GOLD.DIM_FEEDER, pk: feeder_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: w.asset_key, to: a.asset_key }
+  - { from: w.feeder_key, to: f.feeder_key }
+  - { from: w.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: f.region, label: Region, synonyms: [territory, area], term: GT-UTL-REGION }
+  - { name: feeder, expr: f.feeder_id, label: Feeder, synonyms: [circuit] }
+  - { name: asset_class, expr: a.asset_class, label: Asset class, synonyms: [asset type] }
+  - { name: wo_type, expr: w.wo_type, label: Work order type, synonyms: [maintenance type, pm or cm] }
+  - { name: wo_status, expr: w.status, label: Status, synonyms: [open or closed] }
+time_dimensions:
+  - { name: due_date, expr: d.date, default: true }
+facts:
+  - { name: labour_hours, expr: w.labour_hours }
+metrics:
+  - name: pm_compliance_pct
+    label: PM compliance
+    expr: 100.0 * AVG(CASE WHEN w.wo_type = 'PM' THEN CASE WHEN w.completed_on_time THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [preventive maintenance compliance, pm on time, maintenance compliance]
+    term: GT-UTL-PM-COMPLIANCE
+    description: Share of preventive work orders completed on or before their due date
+  - name: overdue_work_orders
+    label: Overdue work orders
+    expr: COUNT_IF(w.overdue)
+    unit: work orders
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [maintenance backlog, overdue maintenance, backlog]
+    term: GT-UTL-WORK-ORDER
+    description: Open work orders past their due date as of the reporting date
+  - name: work_orders
+    label: Work orders
+    expr: COUNT(*)
+    unit: work orders
+    decimals: 0
+    synonyms: [number of work orders, maintenance jobs]
+    term: GT-UTL-WORK-ORDER
+    description: Count of work orders due in the period
+  - name: maintenance_labour_hours
+    label: Maintenance labour hours
+    expr: SUM(w.labour_hours)
+    unit: hours
+    decimals: 0
+    synonyms: [labour hours, crew hours]
+    term: GT-UTL-WORK-ORDER
+    description: Labour hours booked to work orders
+products: [DP-UTL-004]

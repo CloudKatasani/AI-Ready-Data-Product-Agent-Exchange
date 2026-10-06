@@ -1,0 +1,378 @@
+# Scripted scenarios for Northvale Energy — ported from AI-Ready `scenarios.ts` and the Marketplace
+# AG-UTL-001/002 and AG-ENG-001 demo exchanges. Numbers come from golden.json; `expect` holds shape
+# assertions only. Together the 23 scenarios cover all 15 patterns (04 §6).
+
+# ================================================================ AG-UTL-002 Reliability Analyst
+- id: SC-UTL-001
+  agent: AG-UTL-002
+  pattern: 3
+  question: "What was SAIDI by region last quarter?"
+  paraphrases:
+    - "What was SAIDI by region last quarter, excluding major event days?"
+    - "saidi per region last qtr"
+    - "outage minutes per customer by territory for Q3"
+  kind: answer
+  query: { view: RELIABILITY, metrics: [saidi], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: saidi, dir: desc }] }
+  answer:
+    headline: "{{top.region}} had the highest SAIDI last quarter at {{top.saidi}} minutes — {{vsTarget.top}} target."
+    narrative: "Major event days are excluded (BR-UTL-012). {{bottom.region}} was lowest at {{bottom.saidi}} minutes across {{rows}} regions."
+    chart: bar
+  followups: ["Which feeders drove East?", "Include major event days", "Trend over the last 4 quarters"]
+  expect: { rows: 5, top: { region: East }, rules: [BR-UTL-012] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-UTL-002
+  agent: AG-UTL-002
+  pattern: 10
+  question: "What was SAIDI by region last quarter, including major event days?"
+  paraphrases:
+    - "SAIDI by region last quarter including major events"
+    - "saidi per region last qtr all days"
+  kind: answer
+  query: { view: RELIABILITY, metrics: [saidi], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: saidi, dir: desc }] }
+  answer:
+    headline: "Including major event days, {{top.region}} had the highest SAIDI last quarter at {{top.saidi}} minutes."
+    narrative: "You asked for all days, so the major-event-day exclusion in BR-UTL-012 is not applied. Storm days reorder the ranking — compare with the standard view that excludes them."
+    chart: bar
+  followups: ["Exclude major event days", "Which storm days drove North?"]
+  expect: { rows: 5, top: { region: North } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-UTL-003
+  agent: AG-UTL-002
+  pattern: 5
+  question: "Which 10 feeders had the most customer minutes interrupted last quarter?"
+  paraphrases:
+    - "Top 10 worst feeders by customer minutes last quarter"
+    - "worst circuits by cmi last qtr"
+  kind: answer
+  query: { view: RELIABILITY, metrics: [customer_minutes_interrupted], dimensions: [feeder], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: customer_minutes_interrupted, dir: desc }], limit: 10, analysis: rank }
+  answer:
+    headline: "{{top.feeder}} was the worst feeder last quarter with {{top.customer_minutes_interrupted}} customer minutes interrupted."
+    narrative: "Ranked over {{rows}} feeders, excluding major event days (BR-UTL-012). The worst feeders are the first candidates for vegetation and asset reviews."
+    chart: bar
+  followups: ["What caused outages on F-2207?", "Asset health on these feeders"]
+  expect: { rows: 10, top: { feeder: F-2207 }, rules: [BR-UTL-012] }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-UTL-004
+  agent: AG-UTL-002
+  pattern: 6
+  question: "What is driving customer minutes interrupted last quarter, by cause?"
+  paraphrases:
+    - "Which outage causes contribute most to customer minutes?"
+    - "cmi by cause code last quarter"
+  kind: answer
+  query: { view: RELIABILITY, metrics: [customer_minutes_interrupted], dimensions: [cause], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: customer_minutes_interrupted, dir: desc }], analysis: contribution }
+  answer:
+    headline: "{{top.cause}} was the largest driver of customer minutes last quarter at {{top.customer_minutes_interrupted}} minutes."
+    narrative: "Total customer minutes interrupted were {{total.customer_minutes_interrupted}} across {{rows}} causes, excluding major event days (BR-UTL-012)."
+    chart: bar
+  followups: ["Tree outages by feeder", "Restoration time by cause"]
+  expect: { rules: [BR-UTL-012] }
+
+- id: SC-UTL-005
+  agent: AG-UTL-002
+  pattern: 15
+  question: "What percentage of our spend this year was under contract?"
+  paraphrases:
+    - "How much procurement spend is on contract?"
+  kind: redirect
+  query: null
+  redirect_to: AG-UTL-003
+  answer:
+    headline: "That's a procurement question — the Procurement Copilot answers it."
+    narrative: "I cover outage and reliability performance. The Procurement Copilot is certified on procurement spend and contract compliance."
+    chart: none
+  followups: ["Ask the Procurement Copilot", "What can you answer?"]
+
+- id: SC-UTL-006
+  agent: AG-UTL-002
+  pattern: 15
+  question: "Dispatch a crew to F-2207."
+  paraphrases:
+    - "Send a crew out to feeder F-2207"
+    - "Can you schedule crew dispatch for the worst feeder?"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't dispatch crews — that is outside what this agent is allowed to do."
+    narrative: "Crew dispatch is handled by grid operations in the outage management system. I can show you the reliability record for that feeder so the dispatcher has the evidence."
+    chart: none
+  followups: ["Reliability on F-2207 last quarter", "Worst feeders by customer minutes"]
+
+- id: SC-UTL-007
+  agent: AG-UTL-002
+  pattern: 4
+  question: "How has SAIDI trended month by month this year?"
+  paraphrases:
+    - "Monthly SAIDI year to date"
+    - "saidi trend ytd by month"
+  kind: answer
+  query: { view: RELIABILITY, metrics: [saidi], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "System SAIDI is {{total.saidi}} minutes year to date — {{vsTarget.top}} target."
+    narrative: "Monthly SAIDI over {{rows}} months, excluding major event days (BR-UTL-012)."
+    chart: line
+  followups: ["SAIDI by region last quarter", "Which causes drove the peak month?"]
+  expect: { rules: [BR-UTL-012] }
+
+# ================================================================ AG-UTL-004 Grid Asset Advisor
+- id: SC-UTL-008
+  agent: AG-UTL-004
+  pattern: 8
+  question: "How are our assets distributed across condition bands?"
+  paraphrases:
+    - "How many assets are in each condition band?"
+    - "asset health band distribution"
+  kind: answer
+  query: { view: ASSET_HEALTH, metrics: [asset_count], dimensions: [condition_band], orderBy: [{ field: asset_count, dir: desc }], analysis: distribution }
+  answer:
+    headline: "Most assets sit in the {{top.condition_band}} band ({{top.asset_count}} assets)."
+    narrative: "{{total.asset_count}} assets across {{rows}} condition bands; the Poor band is scored from the asset health index."
+    chart: bar
+  followups: ["Poor-condition assets by asset class", "Which feeders have the most poor assets?"]
+  expect: { rows: 3 }
+
+- id: SC-UTL-009
+  agent: AG-UTL-004
+  pattern: 2
+  question: "Is PM compliance within target this year?"
+  paraphrases:
+    - "Are we hitting our preventive maintenance compliance target year to date?"
+    - "pm compliance vs target ytd"
+  kind: answer
+  query: { view: WORK_MANAGEMENT, metrics: [pm_compliance_pct], timeRange: { ytd: true }, analysis: compare_target }
+  answer:
+    headline: "PM compliance is {{top.pm_compliance_pct}}% year to date — {{vsTarget.top}} target."
+    narrative: "Preventive work orders completed on time as a share of preventive work orders due this year."
+    chart: kpi
+  followups: ["PM compliance by region", "How big is the maintenance backlog?"]
+  expect: { rows: 1 }
+
+- id: SC-UTL-010
+  agent: AG-UTL-004
+  pattern: 9
+  question: "How does asset health compare across vintage bands?"
+  paraphrases:
+    - "Compare asset health index by install era"
+    - "ahi by age band"
+  kind: answer
+  query: { view: ASSET_HEALTH, metrics: [avg_asset_health, poor_condition_pct], dimensions: [vintage_band], orderBy: [{ field: avg_asset_health, dir: asc }] }
+  answer:
+    headline: "{{top.vintage_band}} assets have the lowest health index at {{top.avg_asset_health}}."
+    narrative: "{{top.poor_condition_pct}}% of {{top.vintage_band}} assets are in poor condition, versus {{bottom.poor_condition_pct}}% for {{bottom.vintage_band}}."
+    chart: bar
+  followups: ["Same comparison for transformers only", "Poor assets by region"]
+
+- id: SC-UTL-011
+  agent: AG-UTL-004
+  pattern: 11
+  question: "How big is the maintenance backlog by region?"
+  paraphrases:
+    - "overdue maintenance per territory"
+    - "backlog by area"
+  kind: answer
+  query: { view: WORK_MANAGEMENT, metrics: [overdue_work_orders], dimensions: [region], orderBy: [{ field: overdue_work_orders, dir: desc }] }
+  answer:
+    headline: "{{top.region}} has the largest maintenance backlog with {{top.overdue_work_orders}} overdue work orders."
+    narrative: "\"Maintenance backlog\" maps to overdue work orders: open work orders past their due date. {{total.overdue_work_orders}} are overdue across {{rows}} regions."
+    chart: bar
+  followups: ["Split by PM vs CM", "PM compliance by region"]
+  expect: { rows: 5 }
+  personas_expect: { A: { kind: decline } }
+
+# ================================================================ AG-UTL-001 Customer Insights
+- id: SC-UTL-012
+  agent: AG-UTL-001
+  pattern: 3
+  question: "What is our digital adoption rate by region?"
+  paraphrases:
+    - "Which region has the highest paperless rate?"
+    - "ebill adoption by territory"
+  kind: answer
+  query: { view: CUSTOMER_360, metrics: [digital_adoption_rate], dimensions: [region], orderBy: [{ field: digital_adoption_rate, dir: desc }] }
+  answer:
+    headline: "{{top.region}} leads digital adoption at {{top.digital_adoption_rate}}% of active customers."
+    narrative: "{{bottom.region}} trails at {{bottom.digital_adoption_rate}}%. Adoption counts active customers enrolled in paperless billing."
+    chart: bar
+  followups: ["Digital adoption by segment", "Churn risk by region"]
+  expect: { rows: 5, top: { region: Central } }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-UTL-013
+  agent: AG-UTL-001
+  pattern: 12
+  question: "Which five active customers have the highest churn risk?"
+  paraphrases:
+    - "Top 5 customers most likely to churn"
+    - "highest attrition risk customers"
+  kind: answer
+  query: { view: CUSTOMER_360, metrics: [avg_churn_risk], dimensions: [customer_name], filters: [{ dimension: customer_status, op: "=", value: Active }], orderBy: [{ field: avg_churn_risk, dir: desc }], limit: 5, analysis: rank }
+  answer:
+    headline: "The highest churn-risk active customer scores {{top.avg_churn_risk}}."
+    narrative: "Customer names are masked unless your persona is cleared for PII under the masking policy. Showing the top {{rows}} active customers by churn risk score."
+    chart: table
+  followups: ["Churn risk by segment", "High churn-risk share by region"]
+  expect: { rows: 5 }
+  personas_expect: { A: { masked: [customer_name], rowFiltered: true }, D: { masked: [] } }
+
+- id: SC-UTL-014
+  agent: AG-UTL-001
+  pattern: 14
+  question: "What is our days sales outstanding this quarter?"
+  paraphrases:
+    - "What is our DSO this quarter?"
+    - "receivable days last quarter"
+  kind: answer
+  query: { view: BILLING_AR, metrics: [dso_days], timeRange: { last: { n: 1, unit: quarter } } }
+  answer:
+    headline: "DSO was {{top.dso_days}} days last quarter — {{vsTarget.top}} target."
+    narrative: "Billing & Receivables is still in certification, so treat this figure as provisional. The receivables rule BR-UTL-021 is applied."
+    chart: kpi
+  followups: ["Collections rate by region", "When will Billing & Receivables be certified?"]
+  expect: { rows: 1, certified: false, rules: [BR-UTL-021] }
+  personas_expect: { A: { kind: decline } }
+
+- id: SC-UTL-015
+  agent: AG-UTL-001
+  pattern: 13
+  question: "What was average daily consumption by region last month?"
+  paraphrases:
+    - "daily kwh by territory last month"
+    - "average usage per region for September"
+  kind: answer
+  query: { view: METERING, metrics: [daily_kwh], dimensions: [region], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: daily_kwh, dir: desc }] }
+  answer:
+    headline: "{{top.region}} had the highest average daily consumption last month at {{top.daily_kwh}} kWh."
+    narrative: "Average kWh per meter-day across {{rows}} regions you are entitled to see; region row-access policy applies."
+    chart: bar
+  followups: ["Consumption by premise type", "Peak demand by rate class"]
+  expect: { rows: 5 }
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-UTL-016
+  agent: AG-UTL-001
+  pattern: 4
+  question: "How did the AMI read success rate trend day by day last quarter?"
+  paraphrases:
+    - "daily meter read rate last quarter"
+    - "ami performance trend last qtr"
+  kind: answer
+  query: { view: METERING, metrics: [read_success_rate], timeGrain: day, timeRange: { last: { n: 1, unit: quarter } }, analysis: trend }
+  answer:
+    headline: "AMI read success averaged {{total.read_success_rate}}% last quarter."
+    narrative: "Daily read success over {{rows}} days. Look for the late-August dip — the estimated-read and estimated-bill spikes follow it."
+    chart: line
+  followups: ["Read success by feeder", "Estimated reads by city"]
+  personas_expect: { A: { rowFiltered: true } }
+
+- id: SC-UTL-017
+  agent: AG-UTL-001
+  pattern: 11
+  question: "How are our bills looking?"
+  paraphrases:
+    - "bills update"
+  kind: clarify
+  query: null
+  answer:
+    headline: "\"Bills\" can mean a few things — which one do you need?"
+    narrative: "I can show the average monthly bill, the estimated bill rate, or bills issued. Pick one and a period."
+    chart: none
+  followups: ["Average monthly bill by region last quarter", "Estimated bill rate trend this year", "Bills issued last month"]
+
+# ================================================================ AG-UTL-003 Procurement Copilot
+- id: SC-UTL-018
+  agent: AG-UTL-003
+  pattern: 1
+  question: "What percentage of our spend this year was under contract?"
+  paraphrases:
+    - "contract compliance year to date"
+    - "on-contract spend share ytd"
+  kind: answer
+  query: { view: PROCUREMENT, metrics: [spend_under_contract_pct], timeRange: { ytd: true }, analysis: value }
+  answer:
+    headline: "{{top.spend_under_contract_pct}}% of spend this year was under contract."
+    narrative: "Spend on purchase-order lines placed against an active contract, as a share of total spend year to date."
+    chart: kpi
+  followups: ["Where is maverick spend highest?", "Contract compliance by category"]
+  expect: { rows: 1 }
+
+- id: SC-UTL-019
+  agent: AG-UTL-003
+  pattern: 5
+  question: "Which five suppliers have the worst OTIF this year?"
+  paraphrases:
+    - "Bottom 5 suppliers by on time in full"
+    - "worst delivery performance vendors ytd"
+  kind: answer
+  query: { view: PROCUREMENT, metrics: [otif_pct], dimensions: [supplier], timeRange: { ytd: true }, orderBy: [{ field: otif_pct, dir: asc }], limit: 5, analysis: rank }
+  answer:
+    headline: "{{top.supplier}} has the lowest OTIF this year at {{top.otif_pct}}%."
+    narrative: "The {{rows}} lowest-performing suppliers by on-time-in-full delivery year to date."
+    chart: bar
+  followups: ["PO cycle time by category", "Spend with these suppliers"]
+  expect: { rows: 5 }
+
+- id: SC-UTL-020
+  agent: AG-UTL-003
+  pattern: 6
+  question: "Where is our off-contract spend by commodity this year?"
+  paraphrases:
+    - "Where is maverick spend highest by category?"
+    - "non-compliant spend by material group"
+  kind: answer
+  query: { view: PROCUREMENT, metrics: [maverick_spend], dimensions: [category], timeRange: { ytd: true }, orderBy: [{ field: maverick_spend, dir: desc }], analysis: contribution }
+  answer:
+    headline: "{{top.category}} drives the most maverick spend this year at {{top.maverick_spend}}."
+    narrative: "Off-contract spend is maverick spend; commodity maps to spend category. Total maverick spend is {{total.maverick_spend}} across {{rows}} categories."
+    chart: bar
+  followups: ["Maverick spend by supplier", "Contract compliance trend"]
+  expect: { rows: 8 }
+
+- id: SC-UTL-021
+  agent: AG-UTL-003
+  pattern: 7
+  question: "How has PO cycle time changed quarter over quarter this year?"
+  paraphrases:
+    - "PO to receipt time by quarter ytd"
+    - "is our lead time improving quarter on quarter?"
+  kind: answer
+  query: { view: PROCUREMENT, metrics: [po_cycle_days], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  answer:
+    headline: "PO cycle time moved {{delta.po_cycle_days}} days versus the previous quarter."
+    narrative: "Average days from purchase order to receipt for each of the {{rows}} quarters this year."
+    chart: line
+  followups: ["Cycle time by category", "Which suppliers have the worst OTIF?"]
+  expect: { rows: 3 }
+
+# ================================================================ AG-UTL-005 Data Steward Assistant (no semantic views)
+- id: SC-UTL-022
+  agent: AG-UTL-005
+  pattern: 15
+  question: "What can you answer?"
+  paraphrases:
+    - "What can you help me with?"
+    - "help"
+  kind: help
+  query: null
+  answer:
+    headline: "I explain governance across the data estate — I don't analyse business KPIs."
+    narrative: "Ask me what a glossary term or metric means, the certification status of a data product, or where governance gaps such as missing stewards or masking sit. For KPI numbers, ask the domain agents."
+    chart: none
+  followups: ["Which products are not yet certified?", "What does SAIDI mean?", "Which critical data elements lack a steward?"]
+
+- id: SC-UTL-023
+  agent: AG-UTL-005
+  pattern: 15
+  question: "Approve the access request for Billing & Receivables."
+  paraphrases:
+    - "Grant me access to DP-UTL-005"
+    - "Can you approve my access request?"
+  kind: decline
+  query: null
+  answer:
+    headline: "I can't approve access requests — agents act, humans decide."
+    narrative: "Access to a data product is granted only by its owner or steward through the access workflow. I can show you the request status and who can approve it."
+    chart: none
+  followups: ["Who can approve access to Billing & Receivables?", "What is the certification status of Billing & Receivables?"]

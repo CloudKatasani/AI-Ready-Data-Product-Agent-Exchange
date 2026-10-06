@@ -1,0 +1,64 @@
+name: VEGETATION
+description: Span-level vegetation inspection and trim-cycle status
+tables:
+  - { alias: v, fqn: CONFORMED_GOLD.FCT_VEG_SPAN, pk: span_key }
+  - { alias: f, fqn: CONFORMED_GOLD.DIM_FEEDER, pk: feeder_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: v.feeder_key, to: f.feeder_key }
+  - { from: v.date_key, to: d.date_key }
+dimensions:
+  - { name: region, expr: f.region, label: Region, synonyms: [territory, area], term: GT-UTL-REGION }
+  - { name: feeder, expr: f.feeder_id, label: Feeder, synonyms: [circuit] }
+  - { name: species, expr: v.species, label: Species, synonyms: [tree species] }
+  - { name: cycle_years, expr: v.cycle_years, label: Trim cycle (years), synonyms: [cycle, trim cycle] }
+time_dimensions:
+  - { name: inspected_date, expr: d.date, default: true }
+facts:
+  - { name: risk_score, expr: v.risk_score }
+metrics:
+  - name: spans_overdue_pct
+    label: Spans overdue for trim
+    expr: 100.0 * AVG(CASE WHEN v.overdue THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [overdue spans, trim backlog, spans past cycle]
+    term: GT-UTL-TRIM-CYCLE
+    description: Share of inspected spans past their trim cycle
+  - name: trim_cycle_compliance
+    label: Trim cycle compliance
+    expr: 100.0 - 100.0 * AVG(CASE WHEN v.overdue THEN 1 ELSE 0 END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [cycle compliance, trimmed on cycle]
+    term: GT-UTL-TRIM-CYCLE
+    description: Share of inspected spans trimmed within their cycle
+  - name: avg_veg_risk
+    label: Vegetation risk score
+    expr: AVG(v.risk_score)
+    unit: score
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [vegetation risk, tree risk, encroachment risk]
+    term: GT-UTL-VEG-RISK
+    description: Mean inspector risk score (0-100) across inspected spans
+  - name: spans_inspected
+    label: Spans inspected
+    expr: COUNT(*)
+    unit: spans
+    decimals: 0
+    synonyms: [inspections, number of spans]
+    term: GT-UTL-SPAN
+    description: Spans inspected in the period
+  - name: high_risk_spans
+    label: High-risk spans
+    expr: COUNT_IF(v.risk_score >= 70)
+    unit: spans
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [risky spans, critical spans]
+    term: GT-UTL-VEG-RISK
+    description: Spans with a risk score of 70 or more
+products: [DP-UTL-007]

@@ -1,0 +1,33 @@
+# Silver/Gold object metadata for Explorer display and lineage (upstream edges).
+objects:
+  - { fqn: CURATED_SILVER.SUBSTATION, kind: DYNAMIC TABLE, description: "Conformed substations", target_lag: 1 day, upstream: [RAW_BRONZE.GIS_SUBSTATION], grain: one row per substation }
+  - { fqn: CURATED_SILVER.FEEDER, kind: DYNAMIC TABLE, description: "Conformed feeders with customers served", target_lag: 1 day, upstream: [RAW_BRONZE.GIS_FEEDER], grain: one row per feeder }
+  - { fqn: CURATED_SILVER.CREW, kind: DYNAMIC TABLE, description: "Restoration crews", target_lag: 1 day, upstream: [RAW_BRONZE.OMS_CREW], grain: one row per crew }
+  - { fqn: CURATED_SILVER.OUTAGE_EVENT, kind: DYNAMIC TABLE, description: "Deduplicated sustained outages with customer minutes", target_lag: 5 minutes, upstream: [RAW_BRONZE.OMS_OUTAGE_EVENTS], grain: one row per outage }
+  - { fqn: CURATED_SILVER.ASSET, kind: DYNAMIC TABLE, description: "Conformed grid assets", target_lag: 1 hour, upstream: [RAW_BRONZE.EAM_ASSET], grain: one row per asset }
+  - { fqn: CURATED_SILVER.WORK_ORDER, kind: DYNAMIC TABLE, description: "Maintenance work orders", target_lag: 1 hour, upstream: [RAW_BRONZE.EAM_WORK_ORDER], grain: one row per work order }
+  - { fqn: CURATED_SILVER.VEGETATION_SPAN, kind: DYNAMIC TABLE, description: "Latest inspection per span", target_lag: 1 day, upstream: [RAW_BRONZE.VEG_SPAN_INSPECTION], grain: one row per span }
+  - { fqn: CURATED_SILVER.FEEDER_LOAD, kind: DYNAMIC TABLE, description: "Daily feeder load", target_lag: 1 hour, upstream: [RAW_BRONZE.SCADA_FEEDER_LOAD], grain: one row per reading }
+  - { fqn: CURATED_SILVER.CUSTOMER, kind: DYNAMIC TABLE, description: "Customer master, deduplicated and conformed", target_lag: 15 minutes, upstream: [RAW_BRONZE.CIS_CUSTOMER], grain: one row per customer }
+  - { fqn: CURATED_SILVER.PREMISE, kind: DYNAMIC TABLE, description: "Service premises and meters", target_lag: 15 minutes, upstream: [RAW_BRONZE.CIS_PREMISE], grain: one row per premise }
+  - { fqn: CURATED_SILVER.METER_READ_DAILY, kind: DYNAMIC TABLE, description: "One daily read per meter per day", target_lag: 15 minutes, upstream: [RAW_BRONZE.AMI_DAILY_READ], grain: one row per meter per day }
+  - { fqn: CURATED_SILVER.BILLING_STATEMENT, kind: DYNAMIC TABLE, description: "Billing statements", target_lag: 1 hour, upstream: [RAW_BRONZE.BILL_STATEMENT], grain: one row per statement }
+  - { fqn: CURATED_SILVER.PAYMENT, kind: DYNAMIC TABLE, description: "Payments applied to statements", target_lag: 1 hour, upstream: [RAW_BRONZE.BILL_PAYMENT], grain: one row per payment }
+  - { fqn: CURATED_SILVER.CONTACT_INTERACTION, kind: DYNAMIC TABLE, description: "Contact-centre interactions", target_lag: 1 hour, upstream: [RAW_BRONZE.CC_INTERACTION], grain: one row per interaction }
+  - { fqn: CURATED_SILVER.SUPPLIER, kind: DYNAMIC TABLE, description: "Supplier master", target_lag: 1 day, upstream: [RAW_BRONZE.ERP_SUPPLIER], grain: one row per supplier }
+  - { fqn: CURATED_SILVER.CONTRACT, kind: DYNAMIC TABLE, description: "Framework contracts", target_lag: 1 day, upstream: [RAW_BRONZE.ERP_CONTRACT], grain: one row per contract }
+  - { fqn: CURATED_SILVER.PURCHASE_ORDER_LINE, kind: DYNAMIC TABLE, description: "PO lines with receipt outcome and cycle time", target_lag: 1 hour, upstream: [RAW_BRONZE.ERP_PO_LINE], grain: one row per PO line }
+  - { fqn: CONFORMED_GOLD.DIM_DATE, kind: TABLE, description: "Calendar 2019-2026", upstream: [CURATED_SILVER.OUTAGE_EVENT], grain: one row per day }
+  - { fqn: CONFORMED_GOLD.DIM_FEEDER, kind: TABLE, description: "Feeder dimension with customers-served denominators", target_lag: 1 day, upstream: [CURATED_SILVER.FEEDER, CURATED_SILVER.SUBSTATION], grain: one row per feeder }
+  - { fqn: CONFORMED_GOLD.DIM_CREW, kind: TABLE, description: "Crew dimension", target_lag: 1 day, upstream: [CURATED_SILVER.CREW], grain: one row per crew }
+  - { fqn: CONFORMED_GOLD.DIM_ASSET, kind: TABLE, description: "Asset dimension with condition and vintage bands", target_lag: 1 hour, upstream: [CURATED_SILVER.ASSET, CONFORMED_GOLD.DIM_FEEDER], grain: one row per asset }
+  - { fqn: CONFORMED_GOLD.DIM_CUSTOMER, kind: TABLE, description: "Conformed customer dimension", target_lag: 15 minutes, upstream: [CURATED_SILVER.CUSTOMER], grain: one row per customer }
+  - { fqn: CONFORMED_GOLD.DIM_PREMISE, kind: TABLE, description: "Premise dimension", target_lag: 15 minutes, upstream: [CURATED_SILVER.PREMISE, CONFORMED_GOLD.DIM_CUSTOMER, CONFORMED_GOLD.DIM_FEEDER], grain: one row per premise }
+  - { fqn: CONFORMED_GOLD.DIM_SUPPLIER, kind: TABLE, description: "Supplier dimension", target_lag: 1 day, upstream: [CURATED_SILVER.SUPPLIER], grain: one row per supplier }
+  - { fqn: CONFORMED_GOLD.FCT_OUTAGE, kind: DYNAMIC TABLE, description: "Sustained outage fact (IEEE 1366 event grain)", target_lag: 5 minutes, upstream: [CURATED_SILVER.OUTAGE_EVENT, CONFORMED_GOLD.DIM_FEEDER, CONFORMED_GOLD.DIM_CREW], grain: one row per outage }
+  - { fqn: CONFORMED_GOLD.FCT_DAILY_USAGE, kind: DYNAMIC TABLE, description: "Daily usage and read quality per premise", target_lag: 15 minutes, upstream: [CURATED_SILVER.METER_READ_DAILY, CONFORMED_GOLD.DIM_PREMISE], grain: one row per premise per day }
+  - { fqn: CONFORMED_GOLD.FCT_BILLING, kind: DYNAMIC TABLE, description: "Statements with payments within 60 days", target_lag: 1 hour, upstream: [CURATED_SILVER.BILLING_STATEMENT, CURATED_SILVER.PAYMENT, CONFORMED_GOLD.DIM_CUSTOMER], grain: one row per statement }
+  - { fqn: CONFORMED_GOLD.FCT_PO_SPEND, kind: DYNAMIC TABLE, description: "PO line spend fact", target_lag: 1 hour, upstream: [CURATED_SILVER.PURCHASE_ORDER_LINE, CONFORMED_GOLD.DIM_SUPPLIER], grain: one row per PO line }
+  - { fqn: CONFORMED_GOLD.FCT_WORK_ORDER, kind: DYNAMIC TABLE, description: "Work order fact with on-time and overdue flags", target_lag: 1 hour, upstream: [CURATED_SILVER.WORK_ORDER, CONFORMED_GOLD.DIM_ASSET], grain: one row per work order }
+  - { fqn: CONFORMED_GOLD.FCT_VEG_SPAN, kind: DYNAMIC TABLE, description: "Span trim status fact", target_lag: 1 day, upstream: [CURATED_SILVER.VEGETATION_SPAN, CONFORMED_GOLD.DIM_FEEDER], grain: one row per span }
+  - { fqn: CONFORMED_GOLD.FCT_CONTACT, kind: DYNAMIC TABLE, description: "Contact-centre interaction fact", target_lag: 1 hour, upstream: [CURATED_SILVER.CONTACT_INTERACTION, CONFORMED_GOLD.DIM_CUSTOMER], grain: one row per interaction }

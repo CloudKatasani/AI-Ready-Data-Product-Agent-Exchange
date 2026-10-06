@@ -1,0 +1,344 @@
+# Verified queries — curated question -> MetricQuery pairs, ported from AI-Ready `context.ts` and the
+# Marketplace demo exchanges. Every query compiles through compileMetricQuery() on the named view.
+# BILLING_AR deliberately has only 5 active entries and no active DSO query: the DP-UTL-005
+# certification story (gate 4) activates VQ-UTL-049..051 via FIX-1.
+
+# ---------------------------------------------------------------- RELIABILITY (AG-UTL-002)
+- id: VQ-UTL-001
+  question: "What was SAIDI by region last quarter?"
+  query: { view: RELIABILITY, metrics: [saidi], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: saidi, dir: desc }] }
+  agent: AG-UTL-002
+  verified_by: utilities:reliability-analyst
+  verified_at: 2026-07-06
+- id: VQ-UTL-002
+  question: "What is SAIFI year to date excluding major event days?"
+  query: { view: RELIABILITY, metrics: [saifi], timeRange: { ytd: true } }
+  agent: AG-UTL-002
+  verified_by: utilities:reliability-analyst
+  verified_at: 2026-07-08
+- id: VQ-UTL-003
+  question: "What is CAIDI by region this year?"
+  query: { view: RELIABILITY, metrics: [caidi], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: caidi, dir: desc }] }
+  agent: AG-UTL-002
+  verified_by: utilities:reliability-analyst
+  verified_at: 2026-07-13
+- id: VQ-UTL-004
+  question: "Top 10 worst feeders by customer minutes interrupted last quarter"
+  query: { view: RELIABILITY, metrics: [customer_minutes_interrupted], dimensions: [feeder], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: customer_minutes_interrupted, dir: desc }], limit: 10, analysis: rank }
+  agent: AG-UTL-002
+  verified_by: utilities:reliability-analyst
+  verified_at: 2026-07-20
+- id: VQ-UTL-005
+  question: "Customers interrupted by outage cause year to date"
+  query: { view: RELIABILITY, metrics: [customers_interrupted], dimensions: [cause], timeRange: { ytd: true }, orderBy: [{ field: customers_interrupted, dir: desc }], analysis: contribution }
+  agent: AG-UTL-002
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-07-27
+- id: VQ-UTL-006
+  question: "How many outages were caused by trees last quarter?"
+  query: { view: RELIABILITY, metrics: [tree_outages], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-UTL-002
+  verified_by: utilities:reliability-analyst
+  verified_at: 2026-08-03
+- id: VQ-UTL-007
+  question: "SAIDI by month this year"
+  query: { view: RELIABILITY, metrics: [saidi], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-UTL-002
+  verified_by: utilities:reliability-analyst
+  verified_at: 2026-08-10
+- id: VQ-UTL-008
+  question: "Which substations had the most customer minutes interrupted this year?"
+  query: { view: RELIABILITY, metrics: [customer_minutes_interrupted], dimensions: [substation], timeRange: { ytd: true }, orderBy: [{ field: customer_minutes_interrupted, dir: desc }], limit: 10, analysis: rank }
+  agent: AG-UTL-002
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-08-17
+- id: VQ-UTL-009
+  question: "Average restoration time by crew type last quarter"
+  query: { view: RELIABILITY, metrics: [avg_restoration_minutes], dimensions: [crew_type], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-UTL-002
+  verified_by: utilities:reliability-analyst
+  verified_at: 2026-08-24
+- id: VQ-UTL-010
+  question: "How many customers were interrupted on major event days this year?"
+  query: { view: RELIABILITY, metrics: [customers_interrupted], timeRange: { ytd: true }, filters: [{ dimension: major_event_day, op: "=", value: true }] }
+  agent: AG-UTL-002
+  verified_by: utilities:reliability-analyst
+  verified_at: 2026-08-31
+- id: VQ-UTL-011
+  question: "SAIFI by quarter for the last four quarters"
+  query: { view: RELIABILITY, metrics: [saifi], timeGrain: quarter, timeRange: { last: { n: 4, unit: quarter } }, analysis: trend }
+  agent: AG-UTL-002
+  verified_by: utilities:reliability-analyst
+  verified_at: 2026-09-07
+- id: VQ-UTL-012
+  question: "Outage count by cause last quarter"
+  query: { view: RELIABILITY, metrics: [outage_count], dimensions: [cause], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: outage_count, dir: desc }] }
+  agent: AG-UTL-002
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-09-14
+
+# ---------------------------------------------------------------- ASSET_HEALTH (AG-UTL-004)
+- id: VQ-UTL-013
+  question: "Asset health index by asset class"
+  query: { view: ASSET_HEALTH, metrics: [avg_asset_health], dimensions: [asset_class], orderBy: [{ field: avg_asset_health, dir: asc }] }
+  agent: AG-UTL-004
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-07-09
+- id: VQ-UTL-014
+  question: "What share of assets are in poor condition by region?"
+  query: { view: ASSET_HEALTH, metrics: [poor_condition_pct], dimensions: [region], orderBy: [{ field: poor_condition_pct, dir: desc }] }
+  agent: AG-UTL-004
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-07-16
+- id: VQ-UTL-015
+  question: "How many assets are in each condition band?"
+  query: { view: ASSET_HEALTH, metrics: [asset_count], dimensions: [condition_band], analysis: distribution }
+  agent: AG-UTL-004
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-07-23
+- id: VQ-UTL-016
+  question: "Which feeders have the most poor-condition assets?"
+  query: { view: ASSET_HEALTH, metrics: [poor_condition_assets], dimensions: [feeder], orderBy: [{ field: poor_condition_assets, dir: desc }], limit: 10, analysis: rank }
+  agent: AG-UTL-004
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-08-06
+- id: VQ-UTL-017
+  question: "Asset health by vintage band for high-criticality assets"
+  query: { view: ASSET_HEALTH, metrics: [avg_asset_health], dimensions: [vintage_band], filters: [{ dimension: criticality, op: "=", value: High }] }
+  agent: AG-UTL-004
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-08-20
+
+# ---------------------------------------------------------------- WORK_MANAGEMENT (AG-UTL-004)
+- id: VQ-UTL-018
+  question: "PM compliance this year by region"
+  query: { view: WORK_MANAGEMENT, metrics: [pm_compliance_pct], dimensions: [region], timeRange: { ytd: true }, orderBy: [{ field: pm_compliance_pct, dir: asc }] }
+  agent: AG-UTL-004
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-07-10
+- id: VQ-UTL-019
+  question: "How many work orders are overdue?"
+  query: { view: WORK_MANAGEMENT, metrics: [overdue_work_orders] }
+  agent: AG-UTL-004
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-07-24
+- id: VQ-UTL-020
+  question: "Overdue work orders by region and work order type"
+  query: { view: WORK_MANAGEMENT, metrics: [overdue_work_orders], dimensions: [region, wo_type], orderBy: [{ field: overdue_work_orders, dir: desc }] }
+  agent: AG-UTL-004
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-08-07
+- id: VQ-UTL-021
+  question: "PM compliance by month this year"
+  query: { view: WORK_MANAGEMENT, metrics: [pm_compliance_pct], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-UTL-004
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-08-21
+- id: VQ-UTL-022
+  question: "Maintenance labour hours by asset class last quarter"
+  query: { view: WORK_MANAGEMENT, metrics: [maintenance_labour_hours], dimensions: [asset_class], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: maintenance_labour_hours, dir: desc }] }
+  agent: AG-UTL-004
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-09-04
+
+# ---------------------------------------------------------------- VEGETATION (no production agent yet; DP-UTL-007 in development)
+- id: VQ-UTL-023
+  question: "What share of spans are overdue for trimming by region?"
+  query: { view: VEGETATION, metrics: [spans_overdue_pct], dimensions: [region], orderBy: [{ field: spans_overdue_pct, dir: desc }] }
+  verified_by: utilities:reliability-analyst
+  verified_at: 2026-07-14
+- id: VQ-UTL-024
+  question: "Trim cycle compliance by region"
+  query: { view: VEGETATION, metrics: [trim_cycle_compliance], dimensions: [region], orderBy: [{ field: trim_cycle_compliance, dir: asc }] }
+  verified_by: utilities:reliability-analyst
+  verified_at: 2026-07-28
+- id: VQ-UTL-025
+  question: "Vegetation risk by feeder"
+  query: { view: VEGETATION, metrics: [avg_veg_risk], dimensions: [feeder], orderBy: [{ field: avg_veg_risk, dir: desc }], limit: 10, analysis: rank }
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-08-11
+- id: VQ-UTL-026
+  question: "High-risk spans by tree species"
+  query: { view: VEGETATION, metrics: [high_risk_spans], dimensions: [species], orderBy: [{ field: high_risk_spans, dir: desc }] }
+  verified_by: utilities:reliability-analyst
+  verified_at: 2026-08-25
+- id: VQ-UTL-027
+  question: "Spans inspected by month this year"
+  query: { view: VEGETATION, metrics: [spans_inspected], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-09-08
+
+# ---------------------------------------------------------------- CUSTOMER_360 (AG-UTL-001)
+- id: VQ-UTL-028
+  question: "How many active customers do we have?"
+  query: { view: CUSTOMER_360, metrics: [active_customers] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-07-03
+- id: VQ-UTL-029
+  question: "What is our digital adoption rate by region?"
+  query: { view: CUSTOMER_360, metrics: [digital_adoption_rate], dimensions: [region], orderBy: [{ field: digital_adoption_rate, dir: desc }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-07-10
+- id: VQ-UTL-030
+  question: "How many active customers are enrolled in paperless billing?"
+  query: { view: CUSTOMER_360, metrics: [active_customers], dimensions: [digital_enrolled] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-07-17
+- id: VQ-UTL-031
+  question: "Average churn risk score by segment"
+  query: { view: CUSTOMER_360, metrics: [avg_churn_risk], dimensions: [segment], orderBy: [{ field: avg_churn_risk, dir: desc }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-07-31
+- id: VQ-UTL-032
+  question: "Average churn risk by rate class"
+  query: { view: CUSTOMER_360, metrics: [avg_churn_risk], dimensions: [rate_class], orderBy: [{ field: avg_churn_risk, dir: desc }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-08-14
+- id: VQ-UTL-033
+  question: "What share of active customers are high churn risk by region?"
+  query: { view: CUSTOMER_360, metrics: [high_churn_risk_pct], dimensions: [region], orderBy: [{ field: high_churn_risk_pct, dir: desc }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-08-28
+- id: VQ-UTL-034
+  question: "Number of customers per rate class"
+  query: { view: CUSTOMER_360, metrics: [active_customers], dimensions: [rate_class] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-11
+
+# ---------------------------------------------------------------- METERING (AG-UTL-001)
+- id: VQ-UTL-035
+  question: "What is the AMI read success rate this month?"
+  query: { view: METERING, metrics: [read_success_rate], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-07-07
+- id: VQ-UTL-036
+  question: "Daily AMI read success rate last quarter"
+  query: { view: METERING, metrics: [read_success_rate], timeGrain: day, timeRange: { last: { n: 1, unit: quarter } }, analysis: trend }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-02
+- id: VQ-UTL-037
+  question: "Peak demand by rate class last month"
+  query: { view: METERING, metrics: [peak_demand_kw], dimensions: [rate_class], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: peak_demand_kw, dir: desc }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-07-21
+- id: VQ-UTL-038
+  question: "Average daily kWh by premise type"
+  query: { view: METERING, metrics: [daily_kwh], dimensions: [premise_type], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-08-04
+- id: VQ-UTL-039
+  question: "Share of estimated reads by city last month"
+  query: { view: METERING, metrics: [estimated_read_pct], dimensions: [city], timeRange: { last: { n: 1, unit: month } }, orderBy: [{ field: estimated_read_pct, dir: desc }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-08-18
+- id: VQ-UTL-040
+  question: "Daily consumption trend for September"
+  query: { view: METERING, metrics: [daily_kwh], timeGrain: day, timeRange: { last: { n: 1, unit: month } }, analysis: trend }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-15
+
+# ---------------------------------------------------------------- PROCUREMENT (AG-UTL-003)
+- id: VQ-UTL-041
+  question: "What percentage of spend this year was under contract?"
+  query: { view: PROCUREMENT, metrics: [spend_under_contract_pct], timeRange: { ytd: true } }
+  agent: AG-UTL-003
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-07-02
+- id: VQ-UTL-042
+  question: "Which suppliers have the lowest OTIF this year?"
+  query: { view: PROCUREMENT, metrics: [otif_pct], dimensions: [supplier], timeRange: { ytd: true }, orderBy: [{ field: otif_pct, dir: asc }], limit: 10, analysis: rank }
+  agent: AG-UTL-003
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-07-16
+- id: VQ-UTL-043
+  question: "Where is maverick spend highest by category?"
+  query: { view: PROCUREMENT, metrics: [maverick_spend], dimensions: [category], timeRange: { ytd: true }, orderBy: [{ field: maverick_spend, dir: desc }], analysis: contribution }
+  agent: AG-UTL-003
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-07-30
+- id: VQ-UTL-044
+  question: "Total spend by category this year"
+  query: { view: PROCUREMENT, metrics: [total_spend], dimensions: [category], timeRange: { ytd: true }, orderBy: [{ field: total_spend, dir: desc }] }
+  agent: AG-UTL-003
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-08-13
+- id: VQ-UTL-045
+  question: "Average PO cycle time by quarter this year"
+  query: { view: PROCUREMENT, metrics: [po_cycle_days], timeGrain: quarter, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-UTL-003
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-08-27
+- id: VQ-UTL-046
+  question: "Spend under contract for preferred suppliers this year"
+  query: { view: PROCUREMENT, metrics: [spend_under_contract_pct], dimensions: [preferred_supplier], timeRange: { ytd: true } }
+  agent: AG-UTL-003
+  verified_by: utilities:grid-dpo
+  verified_at: 2026-09-10
+
+# ---------------------------------------------------------------- BILLING_AR (AG-UTL-001) — 5 active, none for DSO
+- id: VQ-UTL-047
+  question: "What was the average monthly residential bill last quarter by region?"
+  query: { view: BILLING_AR, metrics: [avg_monthly_bill], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, filters: [{ dimension: segment, op: "=", value: Residential }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-07-06
+- id: VQ-UTL-048
+  question: "How many bills were issued last month?"
+  query: { view: BILLING_AR, metrics: [bills_issued], timeRange: { last: { n: 1, unit: month } } }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-07-20
+- id: VQ-UTL-052
+  question: "Collections rate last quarter by region"
+  query: { view: BILLING_AR, metrics: [collections_rate], dimensions: [region], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: collections_rate, dir: asc }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-08-03
+- id: VQ-UTL-053
+  question: "Estimated bill rate trend by month this year"
+  query: { view: BILLING_AR, metrics: [estimated_bill_rate], timeGrain: month, timeRange: { ytd: true }, analysis: trend }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-08-17
+- id: VQ-UTL-054
+  question: "Arrears balance by segment last quarter"
+  query: { view: BILLING_AR, metrics: [arrears_balance], dimensions: [segment], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: arrears_balance, dir: desc }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-08-31
+
+# ---------------------------------------------------------------- BILLING_AR DSO — pending certification FIX-1 (DP-UTL-005)
+- id: VQ-UTL-049
+  question: "What is our days sales outstanding this quarter?"
+  query: { view: BILLING_AR, metrics: [dso_days], timeRange: { last: { n: 1, unit: quarter } } }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-22
+  status: pending_fix
+- id: VQ-UTL-050
+  question: "DSO trend by month for the last six months"
+  query: { view: BILLING_AR, metrics: [dso_days], timeGrain: month, timeRange: { last: { n: 6, unit: month } }, analysis: trend }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-22
+  status: pending_fix
+- id: VQ-UTL-051
+  question: "Days sales outstanding by segment last quarter"
+  query: { view: BILLING_AR, metrics: [dso_days], dimensions: [segment], timeRange: { last: { n: 1, unit: quarter } }, orderBy: [{ field: dso_days, dir: desc }] }
+  agent: AG-UTL-001
+  verified_by: utilities:customer-steward
+  verified_at: 2026-09-22
+  status: pending_fix

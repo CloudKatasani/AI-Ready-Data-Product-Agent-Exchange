@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "sensitivity_classes": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "class": {
+            "type": "string",
+            "enum": [
+              "PII",
+              "PHI",
+              "PCI",
+              "CPNI",
+              "NPI",
+              "GOV_ID",
+              "TRADE_SECRET"
+            ]
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "class",
+          "description"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "masking_policies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^MASK_[A-Z_]+$"
+          },
+          "class": {
+            "type": "string",
+            "enum": [
+              "PII",
+              "PHI",
+              "PCI",
+              "CPNI",
+              "NPI",
+              "GOV_ID",
+              "TRADE_SECRET"
+            ]
+          },
+          "macro": {
+            "type": "string",
+            "enum": [
+              "mask_pii",
+              "mask_email",
+              "mask_phone",
+              "mask_pci",
+              "mask_gov_id",
+              "mask_redact"
+            ]
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "class",
+          "macro",
+          "description"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "row_access_policies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^RAP_[A-Z_]+$"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "bindings": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "object": {
+                  "type": "string",
+                  "pattern": "^[A-Z][A-Z0-9_]*\\.[A-Z][A-Z0-9_]*$"
+                },
+                "column": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "object",
+                "column"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "id",
+          "dimension",
+          "description",
+          "bindings"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "column_tags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "column": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*\\.[A-Z][A-Z0-9_]*\\.[a-z_][a-z0-9_]*$"
+          },
+          "classes": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "PII",
+                "PHI",
+                "PCI",
+                "CPNI",
+                "NPI",
+                "GOV_ID",
+                "TRADE_SECRET"
+              ]
+            }
+          },
+          "cde": {
+            "default": false,
+            "type": "boolean"
+          },
+          "masking": {
+            "type": "string",
+            "pattern": "^MASK_[A-Z_]+$"
+          },
+          "mask_pending_fix": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "column"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "grants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "persona": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^DP-[A-Z]{2,4}-\\d{3}$"
+            }
+          },
+          "agents": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^AG-[A-Z]{2,4}-\\d{3}$"
+            }
+          }
+        },
+        "required": [
+          "persona",
+          "products"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "public_products": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^DP-[A-Z]{2,4}-\\d{3}$"
+      }
+    }
+  },
+  "required": [
+    "sensitivity_classes",
+    "masking_policies",
+    "row_access_policies",
+    "column_tags",
+    "grants"
+  ],
+  "additionalProperties": false
+}

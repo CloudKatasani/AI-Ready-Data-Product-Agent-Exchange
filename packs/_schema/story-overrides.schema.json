@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "story": {
+        "type": "string"
+      },
+      "step": {
+        "type": "string"
+      },
+      "say": {
+        "type": "string"
+      },
+      "do": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "required": [
+      "story",
+      "step"
+    ],
+    "additionalProperties": false
+  }
+}

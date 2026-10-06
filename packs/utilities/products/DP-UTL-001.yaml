@@ -1,0 +1,25 @@
+id: DP-UTL-001
+name: Customer 360
+domain: Customer
+archetype: ENTITY_MASTER
+initial_status: CERTIFIED
+seed_stage: 12
+version: 2.3.0
+owner: utilities:grid-dpo
+steward: utilities:customer-steward
+description: One trusted view of every customer — account, rate class, digital enrolment and churn risk.
+purpose: Give customer, billing and marketing teams one certified customer record for reporting, outreach and agents.
+decision: { persona: Director of Customer Experience, decision: "Which regions get the next paperless-billing campaign", cadence: Quarterly, workaround: "CIS extracts reconciled by hand in spreadsheets", consequence: "Campaign budget spent where adoption is already high" }
+sample_questions: ["What is our digital adoption rate by region?", "How many active customers are high churn risk?", "Average churn risk by rate class"]
+semantic_view: CUSTOMER_360
+output_ports:
+  - { kind: semantic, ref: CUSTOMER_360 }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_UTL_001_CUSTOMER_360 }
+  - { kind: agent, ref: AG-UTL-001 }
+sla: { freshness_minutes: 1440, availability_pct: 99.5, max_null_rate_pct: 1.0 }
+kpis: [KPI-UTL-DIGITAL, KPI-UTL-CHURN, KPI-UTL-HIGH-CHURN]
+upstream: [CONFORMED_GOLD.DIM_CUSTOMER]
+consumers: [Customer care, Marketing, Customer Insights agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-UTL-001

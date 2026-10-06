@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^DQ-[A-Z]{2,4}-\\d{3}$"
+      },
+      "object": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9_]*\\.[A-Z][A-Z0-9_]*$"
+      },
+      "column": {
+        "type": "string",
+        "pattern": "^[a-z_][a-z0-9_]*$"
+      },
+      "dimension": {
+        "type": "string",
+        "enum": [
+          "completeness",
+          "validity",
+          "uniqueness",
+          "timeliness",
+          "consistency",
+          "accuracy"
+        ]
+      },
+      "assertion": {
+        "type": "string",
+        "pattern": "^(null_rate|distinct_ratio|dup_rate|min|max|regex_rate|invalid_rate|freshness_min|row_count)\\s*(<=|>=|<|>|==)\\s*-?\\d+(\\.\\d+)?$"
+      },
+      "pattern": {
+        "type": "string"
+      },
+      "allowed": {
+        "type": "array",
+        "items": {
+          "type": [
+            "string",
+            "number",
+            "boolean"
+          ]
+        }
+      },
+      "severity": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high",
+          "critical"
+        ]
+      },
+      "alert_route": {
+        "type": "string",
+        "enum": [
+          "steward",
+          "owner",
+          "engineering"
+        ]
+      },
+      "description": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "object",
+      "dimension",
+      "assertion",
+      "severity",
+      "alert_route",
+      "description"
+    ],
+    "additionalProperties": false
+  }
+}

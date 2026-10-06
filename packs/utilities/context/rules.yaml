@@ -1,0 +1,180 @@
+# Northvale Energy business rules (synthetic). Rules with an `apply` block are applied by the metric
+# compiler as default filters; the rest are definitions, thresholds and policies cited in answers.
+
+# ── Reliability ─────────────────────────────────────────────────────────────────────────────────────
+- id: BR-UTL-001
+  domain: Reliability
+  text: "Only sustained interruptions (more than 5 minutes) count toward SAIDI, SAIFI and CAIDI; momentary interruptions are excluded at source."
+  kind: definition
+  metric: outage_count
+  source_doc: DOC-UTL-RELIABILITY-STD
+
+- id: BR-UTL-002
+  domain: Reliability
+  text: "Customers served is the count of customers connected to each feeder at the end of the reporting period; SAIDI and SAIFI use the feeder, substation, region or system total that matches the slice being reported."
+  kind: definition
+  metric: saidi
+  source_doc: DOC-UTL-RELIABILITY-STD
+
+- id: BR-UTL-003
+  domain: Reliability
+  text: "CAIDI is derived as customer minutes interrupted divided by customers interrupted (equivalently SAIDI ÷ SAIFI); it is never averaged across feeders or regions."
+  kind: definition
+  metric: caidi
+  source_doc: DOC-UTL-RELIABILITY-STD
+
+- id: BR-UTL-005
+  domain: Reliability
+  text: "A major event day is any day whose daily SAIDI exceeds exp(α + 2.5β), computed over the trailing five years of daily SAIDI (IEEE 1366 2.5-beta method)."
+  kind: definition
+  source_doc: DOC-UTL-RELIABILITY-STD
+
+- id: BR-UTL-006
+  domain: Reliability
+  text: "A tree-caused outage is a sustained outage whose confirmed cause code is VEG (tree contact); outages with an unknown cause are never reassigned to vegetation."
+  kind: definition
+  metric: tree_outages
+  source_doc: DOC-UTL-VEG-PROGRAM
+
+- id: BR-UTL-012
+  domain: Reliability
+  text: "Reliability indices exclude IEEE 2.5-beta major event days unless explicitly requested."
+  kind: filter
+  metric: saidi
+  source_doc: DOC-UTL-RELIABILITY-STD
+  apply:
+    filter: { dimension: major_event_day, op: "=", value: false }
+    unless_question_mentions: [including major events, including major event days, all days, including storms]
+
+# ── Vegetation ──────────────────────────────────────────────────────────────────────────────────────
+- id: BR-UTL-007
+  domain: Vegetation
+  text: "Distribution spans are trimmed on a 3-, 4- or 5-year cycle set by species growth rate and exposure. A span is overdue when its last trim date plus its cycle is before the reporting date."
+  kind: definition
+  metric: spans_overdue_pct
+  source_doc: DOC-UTL-VEG-PROGRAM
+
+- id: BR-UTL-008
+  domain: Vegetation
+  text: "Spans with an inspector risk score of 70 or more are high risk and are scheduled for hot-spot trimming within 90 days, ahead of their cycle."
+  kind: threshold
+  metric: high_risk_spans
+  source_doc: DOC-UTL-VEG-PROGRAM
+
+# ── Assets & work management ────────────────────────────────────────────────────────────────────────
+- id: BR-UTL-009
+  domain: Assets
+  text: "Asset condition bands: health score below 40 is Poor, 40 to 69 is Fair, 70 and above is Good. Poor-condition, high-criticality assets are prioritised for replacement."
+  kind: threshold
+  metric: poor_condition_pct
+  source_doc: DOC-UTL-ASSET-STRATEGY
+
+- id: BR-UTL-010
+  domain: Work management
+  text: "A preventive-maintenance work order counts as on time only when it is completed on or before its due date; open work orders past their due date are overdue and count against PM compliance."
+  kind: definition
+  metric: pm_compliance_pct
+  source_doc: DOC-UTL-ASSET-STRATEGY
+
+# ── Metering ────────────────────────────────────────────────────────────────────────────────────────
+- id: BR-UTL-014
+  domain: Metering
+  text: "Intervals flagged estimated or missing do not count as successful reads; read success is valid intervals divided by expected intervals."
+  kind: definition
+  metric: read_success_rate
+  source_doc: DOC-UTL-AMI-OPERATIONS
+
+# ── Customer & billing ──────────────────────────────────────────────────────────────────────────────
+- id: BR-UTL-016
+  domain: Customer
+  text: "An active customer has an account status of Active in the customer information system; digital adoption and churn metrics are measured over active customers only."
+  kind: definition
+  metric: active_customers
+  source_doc: DOC-UTL-DATA-GOVERNANCE
+
+- id: BR-UTL-017
+  domain: Customer
+  text: "Residential means rate classes RS-1 and RS-TOU; Small business means GS-1; Commercial & industrial means GS-2."
+  kind: definition
+  source_doc: DOC-UTL-TARIFF-BOOK
+
+- id: BR-UTL-018
+  domain: Billing
+  text: "An estimated bill is a statement rendered on an estimated rather than actual meter read; it is trued up on the next actual read."
+  kind: definition
+  metric: estimated_bill_rate
+  source_doc: DOC-UTL-TARIFF-BOOK
+
+- id: BR-UTL-019
+  domain: Billing
+  text: "Average monthly bill excludes past-due balances and one-off fees; it is the mean billed amount per statement."
+  kind: definition
+  metric: avg_monthly_bill
+  source_doc: DOC-UTL-TARIFF-BOOK
+
+- id: BR-UTL-020
+  domain: Billing
+  text: "Average monthly bill is reported for residential statements only unless the question asks for all customers."
+  kind: filter
+  metric: avg_monthly_bill
+  source_doc: DOC-UTL-TARIFF-BOOK
+  apply:
+    filter: { dimension: segment, op: "=", value: Residential }
+    unless_question_mentions: [all customers, including commercial]
+
+- id: BR-UTL-021
+  domain: Billing
+  text: "Collections and DSO only include statements more than 60 days old, so the collection window is complete."
+  kind: filter
+  metric: collections_rate
+  source_doc: DOC-UTL-CREDIT-COLLECTIONS
+  apply:
+    filter: { dimension: mature_statement, op: "=", value: true }
+    unless_question_mentions: []
+
+- id: BR-UTL-022
+  domain: Billing
+  text: "Collections rate counts payments received within 60 days of the statement date; DSO counts statements still unpaid after 60 days as 90 days outstanding."
+  kind: definition
+  metric: dso_days
+  source_doc: DOC-UTL-CREDIT-COLLECTIONS
+
+# ── Supply chain ────────────────────────────────────────────────────────────────────────────────────
+- id: BR-UTL-023
+  domain: Supply chain
+  text: "Maverick spend is any purchase-order spend not placed against an active framework contract, including emergency and spot purchases. Spend under contract is on-contract spend divided by total spend."
+  kind: definition
+  metric: maverick_spend
+  source_doc: DOC-UTL-PROCUREMENT-POLICY
+
+- id: BR-UTL-024
+  domain: Supply chain
+  text: "OTIF is measured per received PO line: delivered on or before the promised date and in full quantity. Suppliers below 90% OTIF for a quarter enter a performance improvement plan."
+  kind: threshold
+  metric: otif_pct
+  source_doc: DOC-UTL-PROCUREMENT-POLICY
+
+# ── Governance policies ─────────────────────────────────────────────────────────────────────────────
+- id: BR-UTL-004
+  domain: Governance
+  text: "Customer names, emails, phone numbers, street addresses and contact notes are PII and are masked for every persona without PII clearance, in every surface including agent answers."
+  kind: policy
+  source_doc: DOC-UTL-DATA-GOVERNANCE
+
+- id: BR-UTL-011
+  domain: Governance
+  text: "Regional personas see only rows for their own service region; region totals and system totals are not disclosed to them."
+  kind: policy
+  source_doc: DOC-UTL-DATA-GOVERNANCE
+
+- id: BR-UTL-013
+  domain: Governance
+  text: "Agents answer with aggregates only. Requests for an individual customer's bill, usage, contact details or account history are declined and redirected to the customer care process."
+  kind: policy
+  source_doc: DOC-UTL-DATA-GOVERNANCE
+
+- id: BR-UTL-015
+  domain: Governance
+  text: "Contract prices, rates and spend ceilings are commercially confidential; procurement answers report spend and compliance only."
+  kind: policy
+  source_doc: DOC-UTL-PROCUREMENT-POLICY

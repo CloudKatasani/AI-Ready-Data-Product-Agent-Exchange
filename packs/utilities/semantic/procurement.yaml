@@ -1,0 +1,73 @@
+name: PROCUREMENT
+description: Purchase-order spend, contract compliance and supplier delivery
+tables:
+  - { alias: s, fqn: CONFORMED_GOLD.FCT_PO_SPEND, pk: po_line_key }
+  - { alias: p, fqn: CONFORMED_GOLD.DIM_SUPPLIER, pk: supplier_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+relationships:
+  - { from: s.supplier_key, to: p.supplier_key }
+  - { from: s.date_key, to: d.date_key }
+dimensions:
+  - { name: supplier, expr: p.supplier_name, label: Supplier, synonyms: [vendor], term: GT-UTL-SUPPLIER }
+  - { name: category, expr: s.category, label: Spend category, synonyms: [commodity, material group, spend category] }
+  - { name: on_contract, expr: s.on_contract, label: On contract, synonyms: [contracted, compliant] }
+  - { name: preferred_supplier, expr: p.preferred, label: Preferred supplier, synonyms: [preferred vendor] }
+time_dimensions:
+  - { name: po_date, expr: d.date, default: true }
+facts:
+  - { name: spend_usd, expr: s.spend_usd }
+  - { name: cycle_days, expr: s.cycle_days }
+metrics:
+  - name: total_spend
+    label: Total spend
+    expr: SUM(s.spend_usd)
+    unit: USD
+    decimals: 0
+    synonyms: [spend, purchases, po spend]
+    term: GT-UTL-SPEND
+    description: Total purchase-order line spend
+  - name: spend_under_contract_pct
+    label: Spend under contract
+    expr: 100.0 * SUM(CASE WHEN s.on_contract THEN s.spend_usd ELSE 0 END) / SUM(s.spend_usd)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [contract compliance, on-contract spend, contracted spend]
+    term: GT-UTL-CONTRACT-COMPLIANCE
+    description: Share of spend placed against a framework contract
+  - name: maverick_spend
+    label: Maverick spend
+    expr: SUM(CASE WHEN NOT s.on_contract THEN s.spend_usd ELSE 0 END)
+    unit: USD
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [off-contract spend, non-compliant spend]
+    term: GT-UTL-MAVERICK-SPEND
+    description: Spend placed outside a framework contract
+  - name: otif_pct
+    label: Supplier OTIF
+    expr: 100.0 * AVG(CASE WHEN s.received THEN CASE WHEN s.otif THEN 1 ELSE 0 END END)
+    unit: '%'
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [otif, on time in full, delivery performance]
+    term: GT-UTL-OTIF
+    description: Share of received PO lines delivered on time and in full
+  - name: po_cycle_days
+    label: PO cycle time
+    expr: AVG(s.cycle_days)
+    unit: days
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [cycle time, po to receipt, lead time]
+    term: GT-UTL-PO-CYCLE
+    description: Mean days from PO creation to goods receipt
+  - name: po_lines
+    label: PO lines
+    expr: COUNT(*)
+    unit: lines
+    decimals: 0
+    synonyms: [purchase order lines, number of pos]
+    term: GT-UTL-SPEND
+    description: Count of purchase-order lines
+products: [DP-UTL-006]

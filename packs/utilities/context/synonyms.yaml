@@ -1,0 +1,169 @@
+# Northvale Energy synonyms (synthetic): utility jargon → governed metric, dimension, value or glossary term.
+
+# ── Reliability ─────────────────────────────────────────────────────────────────────────────────────
+- term: SAIDI
+  synonyms: [outage minutes per customer, minutes off supply, average interruption duration, reliability minutes]
+  maps_to: { kind: metric, ref: saidi }
+- term: SAIFI
+  synonyms: [interruption frequency, how often customers lose power, interruptions per customer]
+  maps_to: { kind: metric, ref: saifi }
+- term: CAIDI
+  synonyms: [average restoration per customer, customer restoration time]
+  maps_to: { kind: metric, ref: caidi }
+- term: Customer minutes interrupted
+  synonyms: [CMI, customer minutes, customer outage minutes]
+  maps_to: { kind: metric, ref: customer_minutes_interrupted }
+- term: Customers interrupted
+  synonyms: [CI, customers out, customers affected, customers who lost power]
+  maps_to: { kind: metric, ref: customers_interrupted }
+- term: Sustained outages
+  synonyms: [outages, interruptions, power cuts, blackouts, lights out]
+  maps_to: { kind: metric, ref: outage_count }
+- term: Average restoration time
+  synonyms: [time to restore, ETR performance, outage duration, how long outages last]
+  maps_to: { kind: metric, ref: avg_restoration_minutes }
+- term: Tree-caused outages
+  synonyms: [tree outages, vegetation outages, tree-related outages, trees on lines]
+  maps_to: { kind: metric, ref: tree_outages }
+- term: Major event day
+  synonyms: [storm days, MED, major events, catastrophic days, excluded days]
+  maps_to: { kind: dimension, ref: major_event_day }
+- term: Outage cause
+  synonyms: [cause code, root cause, why the power went out]
+  maps_to: { kind: dimension, ref: cause }
+- term: Tree contact
+  synonyms: [vegetation contact, tree on line, tree caused, veg]
+  maps_to: { kind: value, ref: cause=Tree contact }
+- term: Weather - wind
+  synonyms: [wind damage, high winds, windstorm]
+  maps_to: { kind: value, ref: cause=Weather - wind }
+- term: Equipment failure
+  synonyms: [equipment fault, failed equipment, asset failure]
+  maps_to: { kind: value, ref: cause=Equipment failure }
+- term: Feeder
+  synonyms: [circuit, line, distribution circuit, worst circuits]
+  maps_to: { kind: dimension, ref: feeder }
+- term: Substation
+  synonyms: [sub, station, substations]
+  maps_to: { kind: dimension, ref: substation }
+- term: Region
+  synonyms: [territory, service territory, service area, district]
+  maps_to: { kind: dimension, ref: region }
+- term: East
+  synonyms: [eastern region, east territory]
+  maps_to: { kind: value, ref: region=East }
+- term: North
+  synonyms: [northern region, north territory]
+  maps_to: { kind: value, ref: region=North }
+- term: Customers served
+  synonyms: [customer base, customers connected, customer count served]
+  maps_to: { kind: term, ref: GT-UTL-CUSTOMERS-SERVED }
+- term: Contractor crew
+  synonyms: [contract crews, contractors, mutual assistance crews]
+  maps_to: { kind: value, ref: crew_type=Contractor }
+
+# ── Vegetation ──────────────────────────────────────────────────────────────────────────────────────
+- term: Spans overdue for trim
+  synonyms: [trim backlog, overdue trimming, spans past cycle, vegetation backlog]
+  maps_to: { kind: metric, ref: spans_overdue_pct }
+- term: Trim cycle compliance
+  synonyms: [cycle compliance, on-cycle trimming, trimmed on time]
+  maps_to: { kind: metric, ref: trim_cycle_compliance }
+- term: Vegetation risk
+  synonyms: [encroachment, tree risk, hazard trees, veg risk]
+  maps_to: { kind: metric, ref: avg_veg_risk }
+- term: Span
+  synonyms: [line span, pole-to-pole span]
+  maps_to: { kind: term, ref: GT-UTL-SPAN }
+
+# ── Assets & work ───────────────────────────────────────────────────────────────────────────────────
+- term: Asset health index
+  synonyms: [AHI, asset condition, health score, condition index]
+  maps_to: { kind: metric, ref: avg_asset_health }
+- term: Transformer
+  synonyms: [transformers, distribution transformer, pole-top transformer]
+  maps_to: { kind: value, ref: asset_class=Transformer }
+- term: PM compliance
+  synonyms: [preventive maintenance on time, PM completion, planned maintenance compliance]
+  maps_to: { kind: metric, ref: pm_compliance_pct }
+- term: Overdue work orders
+  synonyms: [maintenance backlog, overdue jobs, late work orders, WO backlog]
+  maps_to: { kind: metric, ref: overdue_work_orders }
+- term: Corrective maintenance
+  synonyms: [CM, reactive maintenance, break-fix]
+  maps_to: { kind: value, ref: wo_type=CM }
+
+# ── Metering ────────────────────────────────────────────────────────────────────────────────────────
+- term: AMI read success rate
+  synonyms: [read rate, smart meter read rate, AMI performance, meter communication rate]
+  maps_to: { kind: metric, ref: read_success_rate }
+- term: Daily consumption
+  synonyms: [usage, load, energy use, kWh per day, consumption]
+  maps_to: { kind: metric, ref: daily_kwh }
+- term: Peak demand
+  synonyms: [max demand, peak load, kW peak, kW demand]
+  maps_to: { kind: metric, ref: peak_demand_kw }
+- term: Smart meter
+  synonyms: [AMI meter, interval meter, meter]
+  maps_to: { kind: term, ref: GT-UTL-METER }
+
+# ── Customer & billing ──────────────────────────────────────────────────────────────────────────────
+- term: Active customers
+  synonyms: [active accounts, ratepayers, account holders, number of customers]
+  maps_to: { kind: metric, ref: active_customers }
+- term: Digital adoption rate
+  synonyms: [e-bill adoption, paperless rate, ebill uptake, paperless billing rate]
+  maps_to: { kind: metric, ref: digital_adoption_rate }
+- term: Paperless
+  synonyms: [e-bill, ebill, electronic bill, digital bill]
+  maps_to: { kind: dimension, ref: digital_enrolled }
+- term: Churn risk
+  synonyms: [attrition risk, likely to leave, account closure risk]
+  maps_to: { kind: metric, ref: avg_churn_risk }
+- term: Residential
+  synonyms: [homes, households, residential customers, domestic]
+  maps_to: { kind: value, ref: segment=Residential }
+- term: Rate class
+  synonyms: [tariff, rate code, rate schedule]
+  maps_to: { kind: dimension, ref: rate_class }
+- term: Average monthly bill
+  synonyms: [typical bill, average bill, bill amount, what customers pay]
+  maps_to: { kind: metric, ref: avg_monthly_bill }
+- term: Arrears balance
+  synonyms: [past due, overdue balance, debt, outstanding balance, arrearages]
+  maps_to: { kind: metric, ref: arrears_balance }
+- term: Collections rate
+  synonyms: [cash collected, collection rate, collections performance]
+  maps_to: { kind: metric, ref: collections_rate }
+- term: Days sales outstanding
+  synonyms: [DSO, debtor days, receivable days, days to pay]
+  maps_to: { kind: metric, ref: dso_days }
+- term: Estimated bill rate
+  synonyms: [estimated bills, estimates, bills on estimated reads]
+  maps_to: { kind: metric, ref: estimated_bill_rate }
+
+# ── Supply chain ────────────────────────────────────────────────────────────────────────────────────
+- term: Supplier
+  synonyms: [vendor, vendors, supplier name]
+  maps_to: { kind: dimension, ref: supplier }
+- term: Total spend
+  synonyms: [PO spend, purchases, procurement spend, money spent with suppliers]
+  maps_to: { kind: metric, ref: total_spend }
+- term: Spend under contract
+  synonyms: [contract compliance, on-contract spend, contracted spend]
+  maps_to: { kind: metric, ref: spend_under_contract_pct }
+- term: Maverick spend
+  synonyms: [off-contract spend, rogue spend, leakage, spot buys]
+  maps_to: { kind: metric, ref: maverick_spend }
+- term: Supplier OTIF
+  synonyms: [OTIF, on time in full, vendor delivery, delivery performance]
+  maps_to: { kind: metric, ref: otif_pct }
+- term: PO cycle time
+  synonyms: [lead time, PO to receipt, order cycle]
+  maps_to: { kind: metric, ref: po_cycle_days }
+- term: Fleet
+  synonyms: [vehicles, trucks, bucket trucks]
+  maps_to: { kind: value, ref: category=Fleet }
+- term: Vegetation services
+  synonyms: [tree trimming contractors, tree services, vegetation contractors]
+  maps_to: { kind: value, ref: category=Vegetation services }

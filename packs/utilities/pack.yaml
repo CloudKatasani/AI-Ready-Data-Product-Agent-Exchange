@@ -1,0 +1,48 @@
+id: utilities
+name: Utilities
+version: 1.0.0
+depth: deep
+code: UTL
+industry: Electric & gas utility
+company:
+  name: Northvale Energy
+  short: NVE
+  hq: Ridgeport
+  description: Investor-owned electric utility serving 1.4M customers across five service regions
+database: NVE_AI_PLATFORM
+locale: en-US
+currency: USD
+asOf: 2026-09-30
+seed: 20261003
+regions: [North, South, East, West, Central]
+overridable:
+  regions: true
+  companyName: true
+  terms: [feeder, service territory, substation]
+home:
+  heroQuestion: "What was SAIDI by region last quarter, excluding major event days?"
+  heroAgent: AG-UTL-002
+  headlineKpis: [KPI-UTL-SAIDI, KPI-UTL-SAIFI, KPI-UTL-DSO, KPI-UTL-AMI-READ]
+  theatreScenarios: [SC-UTL-001, SC-UTL-007, SC-UTL-012]
+icon: zap
+hook: Reliability, customer and grid asset data — governed for AI
+story_roles:
+  heroScenario: SC-UTL-001
+  certDemoProduct: DP-UTL-005
+  lifecycleDemoProduct: DP-UTL-007
+  incidentForStory: INC-UTL-LATE-FEED
+  knockoutKpi: KPI-UTL-SAIDI
+  qualityFixAgent: AG-UTL-001
+lint_terms:
+  - Northvale
+  - Ridgeport
+  - SAIDI
+  - SAIFI
+  - CAIDI
+  - feeder
+  - substation
+  - vegetation
+  - outage
+  - kWh
+  - AMI
+  - arrears

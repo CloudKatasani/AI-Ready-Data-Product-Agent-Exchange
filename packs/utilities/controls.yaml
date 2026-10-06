@@ -1,0 +1,128 @@
+# Control library for Northvale Energy (fictional). Regulators and jurisdictions are invented;
+# frameworks are named for the public standards they are modelled on. Illustrative, not legal advice.
+jurisdictions:
+  - { id: JUR-NVE-STATE, name: "State of Calloway (service territory)", regulator: "Calloway Public Utilities Commission" }
+  - { id: JUR-NVE-WEST, name: "Westmark County franchise area", regulator: "Westmark Energy Regulatory Board" }
+  - { id: JUR-NVE-FED, name: "Federal bulk electric system", regulator: "Regional Reliability Coordinator (NERC-style)" }
+  - { id: JUR-NVE-CORP, name: "Corporate policy", regulator: "Northvale Audit & Risk Committee" }
+
+controls:
+  - id: CTL-UTL-001
+    name: Reliability index reporting
+    framework: IEEE 1366
+    description: >-
+      SAIDI, SAIFI and CAIDI are calculated from sustained interruptions only (longer than five minutes), with
+      major event days identified by the 2.5-beta method and reported both including and excluding them. Every
+      filed figure must trace to a certified product version and metric definition.
+    jurisdiction: JUR-NVE-STATE
+    applies_to: { domains: [outage-reliability] }
+    evidence: Certified product version, metric definition and lineage from OMS outage events to the filed index.
+    stage: 11
+  - id: CTL-UTL-002
+    name: Customer personal data protection
+    framework: State consumer privacy act (CCPA-style)
+    description: >-
+      Customer names, addresses, emails and phone numbers are masked for every persona without PII clearance and are
+      never released to agents or analytical outputs unless a documented purpose requires them.
+    jurisdiction: JUR-NVE-STATE
+    applies_to: { classes: [PII], domains: [customer, billing-revenue] }
+    evidence: Masking policy attachment report for every PII-tagged column and a sample of masked query logs.
+    stage: 6
+  - id: CTL-UTL-003
+    name: Payment card data protection
+    framework: PCI DSS v4.0
+    description: >-
+      Card numbers are stored only in the payment Silver table, shown last-four only via MASK_PCI, and never land in
+      Gold facts, data products or agent answers.
+    jurisdiction: JUR-NVE-CORP
+    applies_to: { classes: [PCI], domains: [billing-revenue] }
+    evidence: Column classification scan showing PCI only in CURATED_SILVER.PAYMENT and masking attached.
+    stage: 6
+  - id: CTL-UTL-004
+    name: Billing and payment record retention
+    framework: Records retention schedule
+    description: >-
+      Billing statements and payment records are retained for seven years from statement date and then destroyed;
+      history in the platform is append-only so retained records cannot be silently altered.
+    jurisdiction: JUR-NVE-STATE
+    applies_to: { domains: [billing-revenue] }
+    evidence: Retention configuration per object and the most recent purge certificate.
+    stage: 9
+  - id: CTL-UTL-005
+    name: Receivables financial reporting controls
+    framework: SOX-style ICFR
+    description: >-
+      Billed revenue, arrears, collections rate and DSO used in financial reporting come from one certified product
+      with a reconciled metric definition; changes to these definitions require a versioned contract and owner approval.
+    jurisdiction: JUR-NVE-CORP
+    applies_to: { domains: [billing-revenue] }
+    evidence: Reconciliation of billed revenue to the general ledger and the approved contract version history.
+    stage: 11
+  - id: CTL-UTL-006
+    name: Critical infrastructure data handling
+    framework: NERC CIP-style (CIP-011 information protection)
+    description: >-
+      Detailed substation, feeder topology and asset location data is classified as critical infrastructure
+      information; it is shared only in aggregate outside grid operations and never exposed to external parties.
+    jurisdiction: JUR-NVE-FED
+    applies_to: { domains: [outage-reliability, grid-assets] }
+    evidence: Access review of grid products and a list of personas entitled to feeder- and asset-level detail.
+    stage: 6
+  - id: CTL-UTL-007
+    name: Supplier due diligence
+    framework: Third-party risk management policy
+    description: >-
+      Suppliers are onboarded only after tax identity, sanctions and financial checks; supplier tax ids are classified
+      GOV_ID and masked outside procurement stewardship.
+    jurisdiction: JUR-NVE-CORP
+    applies_to: { classes: [GOV_ID], domains: [supply-chain] }
+    evidence: Due diligence completion status per active supplier and masking on DIM_SUPPLIER.tax_id.
+    stage: 4
+  - id: CTL-UTL-008
+    name: Interval metering data access
+    framework: State smart-meter data access rule
+    description: >-
+      Premise-level interval and daily consumption may be disclosed only to the customer of record or an authorised
+      agent; analytical products expose consumption aggregated to region, feeder, rate class or city.
+    jurisdiction: JUR-NVE-STATE
+    applies_to: { classes: [PII], domains: [metering] }
+    evidence: Agent manifests with refuse_customer_level guardrail and aggregate-only output ports for metering.
+    stage: 6
+  - id: CTL-UTL-009
+    name: Fair credit and collections decisions
+    framework: State utility customer protection rules
+    description: >-
+      Collections, payment arrangement and disconnection decisions are made by a named human; any automated score is
+      explainable and overridable. Agents never recommend disconnection of an individual account.
+    jurisdiction: JUR-NVE-STATE
+    applies_to: { domains: [billing-revenue, customer] }
+    evidence: Agent out-of-scope list, refusal test results and the decision log for payment arrangements.
+    stage: 10
+  - id: CTL-UTL-010
+    name: Critical data element ownership
+    framework: Enterprise data governance policy
+    description: >-
+      Every critical data element has a named owner and steward, at least one executable data quality rule and a
+      glossary term before the product that exposes it can be certified.
+    jurisdiction: JUR-NVE-CORP
+    applies_to: { domains: [customer, billing-revenue, metering, outage-reliability, grid-assets, supply-chain] }
+    evidence: CDE register with owners, linked DQ rules and their latest results.
+    stage: 8
+  - id: CTL-UTL-011
+    name: Data residency
+    framework: Corporate information security standard
+    description: Customer and metering data are processed and stored within the primary operating region only.
+    jurisdiction: JUR-NVE-CORP
+    applies_to: { classes: [PII], domains: [customer, metering] }
+    evidence: Platform region configuration and storage location report.
+    stage: 5
+  - id: CTL-UTL-012
+    name: Vegetation clearance compliance
+    framework: State vegetation management rule (FAC-003-style)
+    description: >-
+      Overhead distribution spans are trimmed within their assigned 3–5 year cycle; overdue spans and off-cycle
+      hot-spot work are reported to the commission annually.
+    jurisdiction: JUR-NVE-STATE
+    applies_to: { domains: [grid-assets] }
+    evidence: Span-level trim history and overdue span report from the vegetation product.
+    stage: 11

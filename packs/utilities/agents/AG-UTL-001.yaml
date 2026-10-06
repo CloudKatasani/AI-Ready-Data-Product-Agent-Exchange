@@ -1,0 +1,44 @@
+id: AG-UTL-001
+name: Customer Insights
+domain: Customer
+status: PRODUCTION
+owner: utilities:grid-dpo
+on_call: Customer Data Ops
+avatar: { icon: users, hue: 265 }
+capability: "Answers questions on digital adoption, churn risk, bills, receivables, consumption and AMI read quality."
+personas_served: [Director of Customer Experience, VP Revenue Operations, Regional Operations Manager]
+out_of_scope: ["individual customer account lookups", "credit decisions or disconnection orders", "rate case filings", "marketing message drafting"]
+products:
+  - { id: DP-UTL-001, columns: "*" }
+  - { id: DP-UTL-003, columns: "*" }
+  - { id: DP-UTL-005, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [CUSTOMER_360, METERING, BILLING_AR], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-UTL-TARIFF-BOOK, DOC-UTL-CREDIT-COLLECTIONS, DOC-UTL-AMI-OPERATIONS, DOC-UTL-DATA-GOVERNANCE] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+  - { tool: request_access_link }
+kpi_coverage:
+  - { kpi: KPI-UTL-DIGITAL, grains: [], slices: [region, rate_class, segment], depth: rank_drivers }
+  - { kpi: KPI-UTL-CHURN, grains: [], slices: [region, rate_class, segment], depth: explain }
+  - { kpi: KPI-UTL-HIGH-CHURN, grains: [], slices: [region, segment], depth: value }
+  - { kpi: KPI-UTL-KWH, grains: [day, week, month], slices: [region, rate_class, premise_type, city], depth: trend }
+  - { kpi: KPI-UTL-PEAK, grains: [day, week, month], slices: [region, rate_class, premise_type], depth: trend }
+  - { kpi: KPI-UTL-AMI-READ, grains: [day, week, month], slices: [region, feeder, city], depth: rank_drivers }
+  - { kpi: KPI-UTL-EST-READ, grains: [day, week, month], slices: [region, city], depth: trend }
+  - { kpi: KPI-UTL-BILL, grains: [month, quarter], slices: [region, rate_class], depth: trend }
+  - { kpi: KPI-UTL-DSO, grains: [month, quarter], slices: [region, segment], depth: explain }
+  - { kpi: KPI-UTL-COLLECT, grains: [month, quarter], slices: [region, segment], depth: explain }
+  - { kpi: KPI-UTL-EST-BILL, grains: [month, quarter], slices: [region], depth: trend }
+  - { kpi: KPI-UTL-ARREARS, grains: [month, quarter], slices: [region, segment], depth: rank_drivers }
+  - { kpi: KPI-UTL-BILLS, grains: [month], slices: [region], depth: value }
+instructions: [INS-UTL-001-P, INS-UTL-001-R, INS-UTL-001-G, INS-UTL-001-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: masked, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-UTL-012, SC-UTL-013, SC-UTL-014, SC-UTL-015, SC-UTL-016, SC-UTL-017]
+quality_fix:
+  feedback_question: "What share of active customers have gone green?"
+  fix: { type: synonym, payload: { term: gone green, synonyms: [go green, gone paperless], maps_to: { kind: metric, ref: digital_adoption_rate } } }
+  eval_before_pct: 88
+  eval_after_pct: 94

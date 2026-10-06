@@ -1,11 +1,13 @@
 /**
  * Invariant I01 lint: no industry, company, KPI or column name from any pack may appear in src/.
  *
- * Phase 0 status: the scanner is in place; term extraction is schema-aware and arrives with the pack
- * schema in Phase 1 (`extractTerms` below). With no packs installed the lint passes trivially.
+ * Terms come from validator category 10 (`lintTerms`): company, products, agents, KPIs, views, tables,
+ * personas, domains and each pack's `lint_terms`.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { readPack } from '../../src/lib/packs/loader';
+import { lintTerms } from '../../src/lib/packs/validate/policy-checks';
 
 const ROOT = process.cwd();
 const PACKS_DIR = join(ROOT, 'packs');
@@ -27,12 +29,10 @@ export function packDirs(packsDir = PACKS_DIR): string[] {
     .map((name) => join(packsDir, name));
 }
 
-/**
- * Domain terms declared by a pack (company, industry, KPI, column and entity names).
- * Phase 1 replaces this with schema-aware extraction via the Zod pack loader (`src/lib/packs/schema.ts`).
- */
-export function extractTerms(_packDir: string): string[] {
-  return [];
+/** Domain terms declared by a pack. A pack that fails to load contributes its directory name only. */
+export function extractTerms(packDir: string): string[] {
+  const { pack } = readPack(packDir);
+  return pack ? lintTerms(pack) : [packDir.split('/').pop() ?? packDir];
 }
 
 function escape(term: string): string {

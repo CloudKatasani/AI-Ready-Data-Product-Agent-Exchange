@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "domains": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
+          },
+          "entities": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "owner",
+          "entities"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "backbone": {
+      "type": "object",
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "domain": {
+                "type": "string"
+              },
+              "golden_source": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9_]*\\.[A-Z][A-Z0-9_]*$"
+              }
+            },
+            "required": [
+              "name",
+              "description",
+              "key",
+              "domain"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "cardinality": {
+                "type": "string",
+                "enum": [
+                  "1:1",
+                  "1:N",
+                  "N:1",
+                  "N:M"
+                ]
+              },
+              "via": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "cardinality"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "entities",
+        "links"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "domains",
+    "backbone"
+  ],
+  "additionalProperties": false
+}

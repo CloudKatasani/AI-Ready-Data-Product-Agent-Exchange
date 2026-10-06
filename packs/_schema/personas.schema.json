@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "minItems": 5,
+  "maxItems": 5,
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
+      },
+      "archetype": {
+        "type": "string",
+        "enum": [
+          "A",
+          "B",
+          "C",
+          "D",
+          "E"
+        ]
+      },
+      "name": {
+        "type": "string"
+      },
+      "title": {
+        "type": "string"
+      },
+      "domain": {
+        "type": "string"
+      },
+      "roles": {
+        "minItems": 1,
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "DATA_CONSUMER",
+            "ANALYST",
+            "DOMAIN_PRODUCT_OWNER",
+            "DATA_ENGINEER",
+            "DATA_STEWARD",
+            "GOVERNANCE_COUNCIL",
+            "PRIVACY_OFFICER",
+            "EXECUTIVE",
+            "PORTFOLIO_LEAD",
+            "PLATFORM_ADMIN"
+          ]
+        }
+      },
+      "row_filter": {
+        "type": "object",
+        "properties": {
+          "dimension": {
+            "type": "string"
+          },
+          "allowed": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "dimension",
+          "allowed"
+        ],
+        "additionalProperties": false
+      },
+      "unmasked": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "PII",
+            "PHI",
+            "PCI",
+            "CPNI",
+            "NPI",
+            "GOV_ID",
+            "TRADE_SECRET"
+          ]
+        }
+      },
+      "aggregates_only": {
+        "default": false,
+        "type": "boolean"
+      },
+      "cares": {
+        "type": "string"
+      },
+      "sees": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "id",
+      "archetype",
+      "name",
+      "title",
+      "domain",
+      "roles",
+      "unmasked",
+      "cares",
+      "sees"
+    ],
+    "additionalProperties": false
+  }
+}

@@ -1,0 +1,24 @@
+id: DP-UTL-007
+name: Vegetation Risk
+domain: Grid Assets
+archetype: CONSUMER_ALIGNED
+initial_status: IN_DEVELOPMENT
+seed_stage: 6
+version: 0.4.0
+owner: utilities:grid-dpo
+steward: utilities:customer-steward
+description: Span-level trim status and inspector risk joined to feeders, to prioritise vegetation work.
+purpose: Prioritise trimming where overdue spans coincide with tree-caused outages.
+decision: { persona: Vegetation Program Manager, decision: "Which feeders get off-cycle trimming crews next month", cadence: Monthly, workaround: "Contractor inspection PDFs cross-checked against outage tickets", consequence: "Crews trim on calendar rotation while F-2207-style hot spots keep failing" }
+sample_questions: ["How many spans are overdue for trimming?", "Vegetation risk by feeder", "Trim cycle compliance by region"]
+semantic_view: VEGETATION
+output_ports:
+  - { kind: semantic, ref: VEGETATION }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_UTL_007_VEGETATION_RISK }
+sla: { freshness_minutes: 10080, availability_pct: 98.0, max_null_rate_pct: 2.0 }
+kpis: [KPI-UTL-VEG-OVERDUE, KPI-UTL-TRIM-COMP, KPI-UTL-VEG-RISK, KPI-UTL-TREE-OUTAGES]
+upstream: [CONFORMED_GOLD.FCT_VEG_SPAN, CONFORMED_GOLD.DIM_FEEDER]
+consumers: [Vegetation management]
+lifecycle_seed: { artifacts: auto, open_proposals: true }
+certification_script: null
+value_case: VC-UTL-007

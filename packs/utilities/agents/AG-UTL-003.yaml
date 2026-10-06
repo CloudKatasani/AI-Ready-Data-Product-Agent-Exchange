@@ -1,0 +1,28 @@
+id: AG-UTL-003
+name: Procurement Copilot
+domain: Supply Chain
+status: PRODUCTION
+owner: utilities:grid-dpo
+on_call: Supply Chain Analytics
+avatar: { icon: package, hue: 32 }
+capability: "Answers questions on spend, contract compliance, maverick spend, supplier OTIF and PO cycle time."
+personas_served: [Chief Procurement Officer, Category Manager]
+out_of_scope: ["raising or approving purchase orders", "supplier contract negotiation", "invoice payment status", "supplier bank details"]
+products:
+  - { id: DP-UTL-006, columns: "*" }
+tools:
+  - { tool: semantic_query, views: [PROCUREMENT], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-UTL-PROCUREMENT-POLICY] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-UTL-SPEND, grains: [month, quarter, year], slices: [category, supplier], depth: rank_drivers }
+  - { kpi: KPI-UTL-SUC, grains: [month, quarter, year], slices: [category, supplier], depth: explain }
+  - { kpi: KPI-UTL-MAVERICK, grains: [month, quarter, year], slices: [category, supplier], depth: rank_drivers }
+  - { kpi: KPI-UTL-OTIF, grains: [month, quarter], slices: [supplier, category], depth: rank_drivers }
+  - { kpi: KPI-UTL-PO-CYCLE, grains: [month, quarter], slices: [category, supplier], depth: trend }
+instructions: [INS-UTL-003-P, INS-UTL-003-R, INS-UTL-003-G, INS-UTL-003-O]
+guardrails: { citations_required: true, refuse_customer_level: false, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.05, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-UTL-018, SC-UTL-019, SC-UTL-020, SC-UTL-021]

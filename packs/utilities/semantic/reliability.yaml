@@ -1,0 +1,115 @@
+name: RELIABILITY
+description: Distribution reliability indices (IEEE 1366) at outage-event grain
+tables:
+  - { alias: o, fqn: CONFORMED_GOLD.FCT_OUTAGE, pk: outage_key }
+  - { alias: f, fqn: CONFORMED_GOLD.DIM_FEEDER, pk: feeder_key }
+  - { alias: d, fqn: CONFORMED_GOLD.DIM_DATE, pk: date_key }
+  - { alias: c, fqn: CONFORMED_GOLD.DIM_CREW, pk: crew_key }
+relationships:
+  - { from: o.feeder_key, to: f.feeder_key }
+  - { from: o.date_key, to: d.date_key }
+  - { from: o.crew_key, to: c.crew_key }
+dimensions:
+  - { name: region, expr: f.region, label: Region, synonyms: [territory, service territory, area], term: GT-UTL-REGION }
+  - { name: feeder, expr: f.feeder_id, label: Feeder, synonyms: [circuit, line], term: GT-UTL-FEEDER }
+  - { name: substation, expr: f.substation_id, label: Substation, synonyms: [sub, station] }
+  - { name: cause, expr: o.cause, label: Outage cause, synonyms: [outage cause, cause code, reason], term: GT-UTL-CAUSE }
+  - { name: major_event_day, expr: o.major_event_day, label: Major event day, synonyms: [major event, storm day, med], term: GT-UTL-MED }
+  - { name: crew_type, expr: c.crew_type, label: Crew type, synonyms: [contractor crew, internal crew] }
+time_dimensions:
+  - { name: outage_date, expr: d.date, default: true }
+facts:
+  - { name: customer_minutes, expr: o.customer_minutes, description: Customer minutes interrupted per event }
+  - { name: customers_affected, expr: o.customers_affected, description: Customers interrupted per event }
+  - { name: duration_min, expr: o.duration_min, description: Restoration time per event in minutes }
+metrics:
+  - name: saidi
+    label: SAIDI
+    expr: SUM(o.customer_minutes) / MAX(f.system_customers_served)
+    scope_exprs:
+      - { dimension: feeder, expr: SUM(o.customer_minutes) / MAX(f.customers_served) }
+      - { dimension: substation, expr: SUM(o.customer_minutes) / MAX(f.substation_customers_served) }
+      - { dimension: region, expr: SUM(o.customer_minutes) / MAX(f.region_customers_served) }
+    unit: minutes
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [outage minutes per customer, average interruption duration, system average interruption duration index]
+    term: GT-UTL-SAIDI
+    description: Customer minutes interrupted divided by customers served
+    default_filters: [ { rule: BR-UTL-012 } ]
+    naive_expr: AVG(o.duration_min)
+  - name: saifi
+    label: SAIFI
+    expr: SUM(o.customers_affected) / MAX(f.system_customers_served)
+    scope_exprs:
+      - { dimension: feeder, expr: SUM(o.customers_affected) / MAX(f.customers_served) }
+      - { dimension: substation, expr: SUM(o.customers_affected) / MAX(f.substation_customers_served) }
+      - { dimension: region, expr: SUM(o.customers_affected) / MAX(f.region_customers_served) }
+    unit: interruptions
+    decimals: 3
+    direction: lower_is_better
+    synonyms: [interruption frequency, interruptions per customer, system average interruption frequency index]
+    term: GT-UTL-SAIFI
+    description: Customers interrupted divided by customers served
+    default_filters: [ { rule: BR-UTL-012 } ]
+    naive_expr: COUNT(*) / COUNT(DISTINCT o.feeder_key)
+  - name: caidi
+    label: CAIDI
+    expr: SUM(o.customer_minutes) / SUM(o.customers_affected)
+    unit: minutes
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [restoration time per customer, customer average interruption duration index]
+    term: GT-UTL-CAIDI
+    description: Average minutes to restore an interrupted customer
+    default_filters: [ { rule: BR-UTL-012 } ]
+    naive_expr: AVG(o.duration_min)
+  - name: customers_interrupted
+    label: Customers interrupted
+    expr: SUM(o.customers_affected)
+    unit: customers
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [customer interruptions, ci]
+    term: GT-UTL-CI
+    description: Total customer interruptions from sustained outages
+    default_filters: [ { rule: BR-UTL-012 } ]
+  - name: customer_minutes_interrupted
+    label: Customer minutes interrupted
+    expr: SUM(o.customer_minutes)
+    unit: minutes
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [cmi, customer minutes]
+    term: GT-UTL-CMI
+    description: Total customer minutes of interruption
+    default_filters: [ { rule: BR-UTL-012 } ]
+  - name: outage_count
+    label: Sustained outages
+    expr: COUNT(*)
+    unit: events
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [outages, number of outages, outage events]
+    term: GT-UTL-OUTAGE
+    description: Count of sustained outage events (longer than five minutes)
+  - name: tree_outages
+    label: Tree-caused outages
+    expr: COUNT_IF(o.cause_code = 'VEG')
+    unit: events
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [tree outages, vegetation outages, tree contact outages]
+    term: GT-UTL-VEG-OUTAGE
+    description: Sustained outages caused by tree contact
+  - name: avg_restoration_minutes
+    label: Average restoration time
+    expr: AVG(o.duration_min)
+    unit: minutes
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [restoration time, time to restore, outage duration]
+    term: GT-UTL-RESTORATION
+    description: Mean event duration from outage start to restoration
+    default_filters: [ { rule: BR-UTL-012 } ]
+products: [DP-UTL-002]

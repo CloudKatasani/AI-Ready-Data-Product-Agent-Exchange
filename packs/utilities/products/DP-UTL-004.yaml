@@ -1,0 +1,26 @@
+id: DP-UTL-004
+name: Grid Asset Health
+domain: Grid Assets
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 1.3.0
+owner: utilities:grid-dpo
+steward: utilities:customer-steward
+description: Asset condition, vintage and criticality with preventive and corrective maintenance performance.
+purpose: Prioritise capital replacement and maintenance where poor condition meets high criticality.
+decision: { persona: Director of Asset Management, decision: "Which asset classes and feeders enter next year's replacement programme", cadence: Annually with quarterly review, workaround: "EAM exports joined to GIS in a desktop database", consequence: "Replacement spend chases age rather than condition and risk" }
+sample_questions: ["Asset health index by asset class", "PM compliance this year by region", "How many work orders are overdue?"]
+semantic_view: ASSET_HEALTH
+output_ports:
+  - { kind: semantic, ref: ASSET_HEALTH }
+  - { kind: semantic, ref: WORK_MANAGEMENT }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_UTL_004_GRID_ASSET_HEALTH }
+  - { kind: agent, ref: AG-UTL-004 }
+sla: { freshness_minutes: 1440, availability_pct: 99.0, max_null_rate_pct: 1.0 }
+kpis: [KPI-UTL-AHI, KPI-UTL-POOR-ASSETS, KPI-UTL-PM-COMP, KPI-UTL-WO-BACKLOG]
+upstream: [CONFORMED_GOLD.DIM_ASSET, CONFORMED_GOLD.FCT_WORK_ORDER, CONFORMED_GOLD.DIM_FEEDER]
+consumers: [Asset management, Maintenance planning, Grid Asset Advisor agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-UTL-004

@@ -1,0 +1,346 @@
+# Bronze source tables for Northvale Energy (NVE_AI_PLATFORM).
+# Converted from AI-Ready utilities generators.config.ts / catalog.ts and Marketplace DP-UTL-001.
+# Network tables (substations, feeders, outages, PO lines) are full populations at every scale so
+# reliability and spend indices stay calibrated; customer-side tables scale S/M/L.
+tables:
+  - name: GIS_SUBSTATION
+    system: GIS
+    description: Distribution substations from the GIS network model
+    key: substation_id
+    rows: { S: 24, M: 24, L: 24 }
+    columns:
+      - { name: substation_id, type: VARCHAR, gen: { seq: { prefix: "SUB-", pad: 2 } } }
+      - { name: substation_name, type: VARCHAR, gen: { template: "Substation {substation_id}" }, dirty: false }
+      - { name: region, type: VARCHAR, gen: { choice: { values: [North, South, East, West, Central], weights: [26, 18, 20, 16, 20] } }, dirty: false }
+      - { name: commissioned_year, type: INTEGER, gen: { uniform: { min: 1958, max: 2019 } } }
+    plant:
+      - id: P-UTL-01
+        description: "SUB-07 sits in East (anchors the F-2207 vegetation pattern)"
+        where: { substation_id: SUB-07 }
+        adjust: { region: { set: East } }
+
+  - name: GIS_FEEDER
+    system: GIS
+    description: Distribution feeders (circuits) with connectivity-model customer counts
+    key: feeder_id
+    rows: { S: 120, M: 120, L: 120 }
+    cdc_noise: { duplicate_updates_pct: 2 }
+    columns:
+      - { name: feeder_id, type: VARCHAR, gen: { seq: { prefix: "F-2", pad: 3, start: 101 } } }
+      - { name: substation_id, type: VARCHAR, gen: { fk: { table: GIS_SUBSTATION, column: substation_id } } }
+      - { name: region, type: VARCHAR, gen: { derive_from: { fk_column: substation_id, parent_column: region } }, dirty: false }
+      - { name: voltage_kv, type: DOUBLE, gen: { choice: { values: [4.16, 12.47, 13.2, 34.5], weights: [10, 55, 25, 10] } } }
+      - { name: circuit_miles, type: DOUBLE, gen: { lognormal: { mu: 3.3, sigma: 0.5, min: 4, max: 120, decimals: 1 } } }
+      - { name: customers_served, type: INTEGER, gen: { uniform: { min: 6200, max: 16800 } } }
+      - { name: overhead_pct, type: INTEGER, gen: { uniform: { min: 35, max: 95 } } }
+      - { name: install_year, type: INTEGER, gen: { uniform: { min: 1962, max: 2018 } } }
+    plant:
+      - id: P-UTL-02
+        description: "F-2207 is an East overhead feeder fed from SUB-07"
+        where: { feeder_id: F-2207 }
+        adjust: { substation_id: { set: SUB-07 }, region: { set: East }, overhead_pct: { set: 92 } }
+
+  - name: OMS_CREW
+    system: OMS
+    description: Restoration crews (internal and contractor)
+    key: crew_id
+    rows: { S: 40, M: 40, L: 40 }
+    columns:
+      - { name: crew_id, type: VARCHAR, gen: { seq: { prefix: "CRW-", pad: 3 } } }
+      - { name: crew_lead, type: VARCHAR, gen: { person: full }, tags: [PII] }
+      - { name: home_region, type: VARCHAR, gen: { choice: { values: [North, South, East, West, Central] } }, dirty: false }
+      - { name: contractor_flag, type: BOOLEAN, gen: { bernoulli: 0.3 } }
+
+  - name: OMS_OUTAGE_EVENTS
+    system: OMS
+    description: Sustained outage events from the outage management system (IEEE 1366 event grain)
+    key: outage_id
+    rows: { S: 15000, M: 15000, L: 15000 }
+    loaded_at_from: start_ts
+    cdc_noise: { duplicate_updates_pct: 3, deletes_pct: 0.5, dirty_strings_pct: 4, late_arrivals_pct: 1 }
+    columns:
+      - { name: outage_id, type: VARCHAR, gen: { seq: { prefix: "OUT-", pad: 7 } } }
+      - { name: feeder_id, type: VARCHAR, gen: { fk: { table: GIS_FEEDER, column: feeder_id, dist: zipf, s: 0.35 } } }
+      - { name: start_ts, type: TIMESTAMP, gen: { datetime: { from: "2024-01-01", to: asOf, seasonality: { month: [1.3, 1.2, 1.0, 0.9, 1.0, 1.2, 1.5, 1.6, 1.3, 1.0, 1.0, 1.2] } } } }
+      - { name: duration_min, type: INTEGER, gen: { lognormal: { mu: 4.45, sigma: 0.75, min: 6, max: 4320 } } }
+      - { name: customers_affected, type: INTEGER, gen: { lognormal: { mu: 4.95, sigma: 1.05, min: 1, max: 9000 } } }
+      - { name: cause_code, type: VARCHAR, gen: { choice: { values: [VEG, EQUIP, ANIMAL, WIND, LIGHTNING, VEHICLE, UNKNOWN], weights: [27, 22, 14, 12, 9, 6, 10] } } }
+      - { name: major_event_day, type: BOOLEAN, gen: { const: false } }
+      - { name: crew_id, type: VARCHAR, gen: { fk: { table: OMS_CREW, column: crew_id } } }
+      - { name: crew_notes, type: VARCHAR, gen: { template: "{cause_code} on {feeder_id}; restored by {crew_id}" } }
+    plant:
+      - id: P-UTL-16
+        description: "Overgrown spans on F-2207 attract a cluster of tree-contact outages in Q3 2026"
+        where: { cause_code: VEG }
+        window: { column: start_ts, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { feeder_id: { set: F-2207, pct: 10 } }
+      - id: P-UTL-03
+        description: "Feeder F-2207 in East has 3x outage minutes from vegetation in Q3 2026"
+        where: { feeder_id: F-2207 }
+        window: { column: start_ts, from: "2026-07-01", to: "2026-09-30" }
+        adjust: { duration_min: { multiply: 3.0 }, customers_affected: { multiply: 2.0 }, cause_code: { set: VEG, pct: 70 } }
+      - id: P-UTL-04
+        description: "Major event day 2025-04-03 (spring windstorm)"
+        window: { column: start_ts, from: "2025-04-03", to: "2025-04-03" }
+        adjust: { major_event_day: { set: true }, duration_min: { multiply: 6 }, customers_affected: { multiply: 4 }, cause_code: { set: WIND, pct: 70 } }
+      - id: P-UTL-05
+        description: "Major event day 2025-07-29 (derecho)"
+        window: { column: start_ts, from: "2025-07-29", to: "2025-07-29" }
+        adjust: { major_event_day: { set: true }, duration_min: { multiply: 7 }, customers_affected: { multiply: 5 }, cause_code: { set: WIND, pct: 60 } }
+      - id: P-UTL-06
+        description: "Major event day 2025-12-11 (ice storm)"
+        window: { column: start_ts, from: "2025-12-11", to: "2025-12-11" }
+        adjust: { major_event_day: { set: true }, duration_min: { multiply: 8 }, customers_affected: { multiply: 4 }, cause_code: { set: VEG, pct: 60 } }
+      - id: P-UTL-07
+        description: "Major event day 2026-02-16 (snow and ice)"
+        window: { column: start_ts, from: "2026-02-16", to: "2026-02-16" }
+        adjust: { major_event_day: { set: true }, duration_min: { multiply: 6 }, customers_affected: { multiply: 4 } }
+      - id: P-UTL-08
+        description: "Major event day 2026-08-14 (thunderstorm complex in Q3 2026 — changes the hero answer when included)"
+        window: { column: start_ts, from: "2026-08-14", to: "2026-08-14" }
+        adjust: { major_event_day: { set: true }, duration_min: { multiply: 7 }, customers_affected: { multiply: 5 }, cause_code: { set: LIGHTNING, pct: 50 } }
+      - id: P-UTL-09
+        description: "Animal-caused outages spike on South feeders in spring 2026"
+        where: { cause_code: ANIMAL }
+        window: { column: start_ts, from: "2026-03-01", to: "2026-05-31" }
+        adjust: { customers_affected: { multiply: 1.6 } }
+
+  - name: EAM_ASSET
+    system: EAM
+    description: Grid assets (transformers, poles, switches, reclosers) from enterprise asset management
+    key: asset_id
+    rows: { S: 3000, M: 12000, L: 60000 }
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 3 }
+    columns:
+      - { name: asset_id, type: VARCHAR, gen: { seq: { prefix: "AST-", pad: 6 } } }
+      - { name: feeder_id, type: VARCHAR, gen: { fk: { table: GIS_FEEDER, column: feeder_id } } }
+      - { name: asset_class, type: VARCHAR, gen: { choice: { values: [Transformer, Pole, Switch, Recloser, Regulator, Capacitor], weights: [30, 40, 10, 8, 6, 6] } } }
+      - { name: manufacturer, type: VARCHAR, gen: { company: true } }
+      - { name: install_year, type: INTEGER, gen: { uniform: { min: 1965, max: 2025 } } }
+      - { name: health_score, type: DOUBLE, gen: { normal: { mean: 69, sd: 17, min: 5, max: 100, decimals: 1 } } }
+      - { name: criticality, type: VARCHAR, gen: { choice: { values: [High, Medium, Low], weights: [15, 45, 40] } } }
+    plant:
+      - id: P-UTL-10
+        description: "Older assets on F-2207 are in poor condition"
+        where: { feeder_id: F-2207 }
+        adjust: { health_score: { multiply: 0.65 } }
+
+  - name: EAM_WORK_ORDER
+    system: EAM
+    description: Preventive (PM) and corrective (CM) maintenance work orders
+    key: work_order_id
+    rows: { S: 10000, M: 40000, L: 200000 }
+    loaded_at_from: due_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.3, dirty_strings_pct: 2 }
+    columns:
+      - { name: work_order_id, type: VARCHAR, gen: { seq: { prefix: "WO-", pad: 7 } } }
+      - { name: asset_id, type: VARCHAR, gen: { fk: { table: EAM_ASSET, column: asset_id } } }
+      - { name: wo_type, type: VARCHAR, gen: { choice: { values: [PM, CM], weights: [68, 32] } } }
+      - { name: due_date, type: DATE, gen: { date: { from: "2024-01-01", to: asOf } } }
+      - { name: completed_date, type: DATE, gen: { date_offset: { from_column: due_date, days: { min: -30, max: 4 }, clamp_to_as_of: true } }, null_pct: 4 }
+      - { name: status, type: VARCHAR, gen: { choice: { values: [CLOSED, CLOSED, CLOSED, OPEN], weights: [40, 30, 22, 8] } } }
+      - { name: labour_hours, type: DOUBLE, gen: { lognormal: { mu: 1.6, sigma: 0.6, min: 0.5, max: 80, decimals: 1 } } }
+      - { name: planner, type: VARCHAR, gen: { person: full }, tags: [PII] }
+
+  - name: VEG_SPAN_INSPECTION
+    system: Vegetation management
+    description: Span-level vegetation inspections and trim history
+    key: span_id
+    rows: { S: 3000, M: 9000, L: 30000 }
+    loaded_at_from: inspected_date
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 5 }
+    columns:
+      - { name: span_id, type: VARCHAR, gen: { seq: { prefix: "SPN-", pad: 6 } } }
+      - { name: feeder_id, type: VARCHAR, gen: { fk: { table: GIS_FEEDER, column: feeder_id } } }
+      - { name: last_trim_date, type: DATE, gen: { date: { from: "2022-06-01", to: asOf } } }
+      - { name: cycle_years, type: INTEGER, gen: { choice: { values: [3, 4, 5], weights: [30, 50, 20] } } }
+      - { name: inspected_date, type: DATE, gen: { date: { from: "2025-10-01", to: asOf } } }
+      - { name: risk_score, type: DOUBLE, gen: { normal: { mean: 41, sd: 18, min: 0, max: 100, decimals: 1 } } }
+      - { name: species, type: VARCHAR, gen: { choice: { values: [Oak, Maple, Pine, Poplar, Ash, Mixed], weights: [20, 22, 14, 12, 8, 24] } } }
+      - { name: inspector_notes, type: VARCHAR, gen: { template: "{species} encroachment near {feeder_id}" } }
+    plant:
+      - id: P-UTL-11
+        description: "F-2207 spans are overdue and high risk"
+        where: { feeder_id: F-2207 }
+        adjust: { last_trim_date: { set: 18000 }, risk_score: { add: 35 } }
+
+  - name: SCADA_FEEDER_LOAD
+    system: SCADA / ADMS
+    description: Daily feeder peak and average load from SCADA historian
+    key: reading_id
+    rows: { S: 8000, M: 40000, L: 120000 }
+    loaded_at_from: reading_date
+    cdc_noise: { duplicate_updates_pct: 2, late_arrivals_pct: 2 }
+    columns:
+      - { name: reading_id, type: VARCHAR, gen: { seq: { prefix: "LD-", pad: 8 } } }
+      - { name: feeder_id, type: VARCHAR, gen: { fk: { table: GIS_FEEDER, column: feeder_id } } }
+      - { name: reading_date, type: DATE, gen: { date: { from: "2025-10-01", to: asOf, seasonality: { month: [1.1, 1.0, 0.9, 0.8, 0.9, 1.2, 1.4, 1.4, 1.1, 0.9, 0.9, 1.0] } } } }
+      - { name: peak_mw, type: DOUBLE, gen: { normal: { mean: 9.5, sd: 2.6, min: 1, max: 24, decimals: 2 } } }
+      - { name: avg_mw, type: DOUBLE, gen: { formula: "peak_mw * 0.62", decimals: 2 } }
+
+  - name: CIS_CUSTOMER
+    system: CIS (DB2 via CDC)
+    description: Customer master from the customer information system
+    key: customer_no
+    rows: { S: 2000, M: 20000, L: 200000 }
+    loaded_at_from: open_date
+    cdc_noise: { duplicate_updates_pct: 5, deletes_pct: 0.4, dirty_strings_pct: 6, late_arrivals_pct: 1 }
+    columns:
+      - { name: customer_no, type: VARCHAR, gen: { seq: { prefix: "C", pad: 9 } } }
+      - { name: first_name, type: VARCHAR, gen: { person: first }, tags: [PII] }
+      - { name: last_name, type: VARCHAR, gen: { person: last }, tags: [PII] }
+      - { name: email, type: VARCHAR, gen: { email: { first: first_name, last: last_name, domain: examplemail.com } }, tags: [PII], null_pct: 8 }
+      - { name: phone, type: VARCHAR, gen: { phone: true }, tags: [PII], null_pct: 5 }
+      - { name: street_address, type: VARCHAR, gen: { address: true }, tags: [PII] }
+      - { name: region, type: VARCHAR, gen: { choice: { values: [North, South, East, West, Central], weights: [26, 18, 20, 16, 20] } } }
+      - { name: rate_code, type: VARCHAR, gen: { choice: { values: [RS-1, RS-TOU, GS-1, GS-2], weights: [70, 15, 11, 4] } } }
+      - { name: status_code, type: VARCHAR, gen: { choice: { values: [A, I], weights: [94, 6] } }, dirty: false }
+      - { name: paperless_flag, type: VARCHAR, gen: { choice: { values: [Y, N], weights: [47, 53] } }, dirty: false }
+      - { name: churn_score, type: DOUBLE, gen: { normal: { mean: 29, sd: 17, min: 0, max: 100, decimals: 1 } } }
+      - { name: open_date, type: DATE, gen: { date: { from: "1995-01-01", to: "2026-08-31" } } }
+    plant:
+      - id: P-UTL-12
+        description: "Digital adoption is markedly higher in Central"
+        where: { region: Central }
+        adjust: { paperless_flag: { set: Y, pct: 30 } }
+
+  - name: CIS_PREMISE
+    system: CIS (DB2 via CDC)
+    description: Service premises and their meters
+    key: premise_id
+    rows: { S: 2100, M: 21000, L: 210000 }
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 3 }
+    columns:
+      - { name: premise_id, type: VARCHAR, gen: { seq: { prefix: "PRM-", pad: 8 } } }
+      - { name: customer_no, type: VARCHAR, gen: { fk: { table: CIS_CUSTOMER, column: customer_no } } }
+      - { name: meter_id, type: VARCHAR, gen: { seq: { prefix: "MTR-", pad: 8 } } }
+      - { name: feeder_id, type: VARCHAR, gen: { fk: { table: GIS_FEEDER, column: feeder_id } } }
+      - { name: premise_type, type: VARCHAR, gen: { choice: { values: [Single family, Multi family, Commercial, Industrial], weights: [62, 22, 13, 3] } } }
+      - { name: city, type: VARCHAR, gen: { choice: { values: [Ridgeport, Lakeport, Ashbury, Brayton, Cedar Falls, Millbrook, Harlow, Westvale] } } }
+      - { name: ami_enabled, type: BOOLEAN, gen: { bernoulli: 0.96 } }
+
+  - name: AMI_DAILY_READ
+    system: AMI head-end
+    description: Daily roll-up of 15-minute interval reads per meter
+    key: read_id
+    rows: { S: 15000, M: 150000, L: 1500000 }
+    loaded_at_from: read_date
+    cdc_noise: { duplicate_updates_pct: 2, late_arrivals_pct: 3 }
+    columns:
+      - { name: read_id, type: VARCHAR, gen: { seq: { prefix: "R", pad: 10 } } }
+      - { name: meter_id, type: VARCHAR, gen: { fk: { table: CIS_PREMISE, column: meter_id } } }
+      - { name: read_date, type: DATE, gen: { date: { from: "2026-06-02", to: asOf } } }
+      - { name: kwh, type: DOUBLE, gen: { lognormal: { mu: 3.45, sigma: 0.55, min: 0.5, max: 4000, decimals: 2 } } }
+      - { name: peak_kw, type: DOUBLE, gen: { formula: "kwh / 24 * 2.4", decimals: 2 } }
+      - { name: intervals_expected, type: INTEGER, gen: { const: 96 } }
+      - { name: intervals_valid, type: INTEGER, gen: { normal: { mean: 95.2, sd: 1.6, min: 60, max: 96 } } }
+    plant:
+      - id: P-UTL-13
+        description: "Read success dips in late August 2026 after a head-end firmware push"
+        window: { column: read_date, from: "2026-08-20", to: "2026-08-27" }
+        adjust: { intervals_valid: { add: -9, pct: 60 } }
+
+  - name: BILL_STATEMENT
+    system: CIS billing
+    description: Monthly billing statements
+    key: statement_id
+    rows: { S: 12000, M: 120000, L: 1200000 }
+    loaded_at_from: statement_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.3, late_arrivals_pct: 1 }
+    columns:
+      - { name: statement_id, type: VARCHAR, gen: { seq: { prefix: "ST-", pad: 9 } } }
+      - { name: customer_no, type: VARCHAR, gen: { fk: { table: CIS_CUSTOMER, column: customer_no } } }
+      - { name: statement_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf, seasonality: { weekday: [1, 1, 1, 1, 1, 0.1, 0.1] } } } }
+      - { name: billed_amount, type: DOUBLE, gen: { lognormal: { mu: 4.82, sigma: 0.32, min: 12, max: 6000, decimals: 2 } } }
+      - { name: arrears_amount, type: DOUBLE, gen: { formula: "if(billed_amount > 175, billed_amount * 0.35, 0)", decimals: 2 } }
+      - { name: estimated_flag, type: BOOLEAN, gen: { bernoulli: 0.032 } }
+      - { name: due_date, type: DATE, gen: { date_offset: { from_column: statement_date, days: { min: 21, max: 21 } } } }
+    plant:
+      - id: P-UTL-14
+        description: "Estimated bills spike in August 2026 (AMI firmware issue)"
+        window: { column: statement_date, from: "2026-08-15", to: "2026-09-10" }
+        adjust: { estimated_flag: { set: true, pct: 8 } }
+
+  - name: BILL_PAYMENT
+    system: CIS billing
+    description: Payments applied to statements (at most one payment per statement)
+    key: payment_id
+    rows: { S: 11820, M: 118200, L: 1182000 }
+    loaded_at_from: payment_date
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 3 }
+    columns:
+      - { name: payment_id, type: VARCHAR, gen: { seq: { prefix: "PAY-", pad: 9 } } }
+      - { name: statement_id, type: VARCHAR, gen: { fk: { table: BILL_STATEMENT, column: statement_id, dist: sequential } } }
+      - { name: statement_date, type: DATE, gen: { derive_from: { fk_column: statement_id, parent_column: statement_date } } }
+      - { name: statement_billed, type: DOUBLE, gen: { derive_from: { fk_column: statement_id, parent_column: billed_amount } } }
+      - { name: payment_date, type: DATE, gen: { date_offset: { from_column: statement_date, days: { min: 3, max: 62 }, clamp_to_as_of: true } } }
+      - { name: pay_ratio, type: DOUBLE, gen: { choice: { values: [1.0, 0.6], weights: [95, 5] } } }
+      - { name: amount, type: DOUBLE, gen: { formula: "statement_billed * pay_ratio", decimals: 2 } }
+      - { name: channel, type: VARCHAR, gen: { choice: { values: [Autopay, Online, Mail, Walk-in, Phone], weights: [38, 34, 14, 6, 8] } } }
+      - { name: card_number, type: VARCHAR, gen: { template: "4111-0000-{payment_id}" }, tags: [PCI], dirty: false }
+
+  - name: CC_INTERACTION
+    system: Contact centre
+    description: Contact-centre interactions with free-text agent notes
+    key: interaction_id
+    rows: { S: 3000, M: 30000, L: 300000 }
+    loaded_at_from: interaction_ts
+    cdc_noise: { duplicate_updates_pct: 2, dirty_strings_pct: 5 }
+    columns:
+      - { name: interaction_id, type: VARCHAR, gen: { seq: { prefix: "INT-", pad: 8 } } }
+      - { name: customer_no, type: VARCHAR, gen: { fk: { table: CIS_CUSTOMER, column: customer_no } } }
+      - { name: interaction_ts, type: TIMESTAMP, gen: { datetime: { from: "2025-10-01", to: asOf, business_hours: true } } }
+      - { name: channel, type: VARCHAR, gen: { choice: { values: [Phone, Chat, Email, IVR], weights: [52, 23, 10, 15] } } }
+      - { name: reason, type: VARCHAR, gen: { choice: { values: [High bill, Outage, Payment arrangement, Move in/out, Meter issue, Other], weights: [28, 18, 16, 14, 10, 14] } } }
+      - { name: handle_seconds, type: INTEGER, gen: { lognormal: { mu: 5.9, sigma: 0.5, min: 30, max: 5400 } } }
+      - { name: csat, type: INTEGER, gen: { choice: { values: [1, 2, 3, 4, 5], weights: [6, 8, 16, 34, 36] } } }
+      - { name: agent_notes, type: VARCHAR, gen: { template: "Customer {customer_no} called about {reason}" }, tags: [PII] }
+
+  - name: ERP_SUPPLIER
+    system: ERP procurement
+    description: Supplier master
+    key: supplier_id
+    rows: { S: 60, M: 60, L: 60 }
+    cdc_noise: { duplicate_updates_pct: 3, dirty_strings_pct: 5 }
+    columns:
+      - { name: supplier_id, type: VARCHAR, gen: { seq: { prefix: "SUP-", pad: 4 } } }
+      - { name: supplier_name, type: VARCHAR, gen: { company: true } }
+      - { name: category, type: VARCHAR, gen: { choice: { values: [Transformers, Poles & crossarms, Meters, Conductor & cable, Fleet, Vegetation services, Substation equipment, IT & software], weights: [12, 16, 10, 14, 10, 12, 12, 14] } } }
+      - { name: preferred_flag, type: BOOLEAN, gen: { bernoulli: 0.4 } }
+      - { name: tax_id, type: VARCHAR, gen: { template: "98-{supplier_id}" }, tags: [GOV_ID], dirty: false }
+      - { name: contact_email, type: VARCHAR, gen: { template: "ap@{supplier_id}.example.com" }, tags: [PII], dirty: false }
+
+  - name: ERP_CONTRACT
+    system: ERP procurement
+    description: Supplier framework contracts
+    key: contract_id
+    rows: { S: 90, M: 90, L: 90 }
+    columns:
+      - { name: contract_id, type: VARCHAR, gen: { seq: { prefix: "CTR-", pad: 4 } } }
+      - { name: supplier_id, type: VARCHAR, gen: { fk: { table: ERP_SUPPLIER, column: supplier_id } } }
+      - { name: start_date, type: DATE, gen: { date: { from: "2023-01-01", to: "2025-12-31" } } }
+      - { name: end_date, type: DATE, gen: { date_offset: { from_column: start_date, days: { min: 365, max: 1460 } } } }
+      - { name: ceiling_usd, type: DOUBLE, gen: { lognormal: { mu: 14.2, sigma: 0.8, min: 100000, decimals: 0 } } }
+
+  - name: ERP_PO_LINE
+    system: ERP procurement
+    description: Purchase order lines with goods-receipt outcome
+    key: po_line_id
+    rows: { S: 30000, M: 30000, L: 30000 }
+    loaded_at_from: po_date
+    cdc_noise: { duplicate_updates_pct: 4, deletes_pct: 0.5, dirty_strings_pct: 4, late_arrivals_pct: 1 }
+    columns:
+      - { name: po_line_id, type: VARCHAR, gen: { seq: { prefix: "PO-", pad: 8 } } }
+      - { name: supplier_id, type: VARCHAR, gen: { fk: { table: ERP_SUPPLIER, column: supplier_id, dist: zipf, s: 0.8 } } }
+      - { name: category, type: VARCHAR, gen: { derive_from: { fk_column: supplier_id, parent_column: category } } }
+      - { name: po_date, type: DATE, gen: { date: { from: "2025-01-01", to: asOf } } }
+      - { name: spend_usd, type: DOUBLE, gen: { lognormal: { mu: 8.1, sigma: 1.2, min: 50, max: 2500000, decimals: 2 } } }
+      - { name: on_contract, type: BOOLEAN, gen: { bernoulli: 0.87 } }
+      - { name: receipt_date, type: DATE, gen: { date_offset: { from_column: po_date, days: { min: 6, max: 40 }, clamp_to_as_of: true } } }
+      - { name: on_time_in_full, type: BOOLEAN, gen: { bernoulli: 0.91 } }
+      - { name: buyer, type: VARCHAR, gen: { person: full }, tags: [PII] }
+    plant:
+      - id: P-UTL-15
+        description: "Fleet and vegetation services spend is mostly off-contract (maverick spend driver)"
+        where: { category: { in: [Fleet, Vegetation services] } }
+        adjust: { on_contract: { set: false, pct: 40 } }

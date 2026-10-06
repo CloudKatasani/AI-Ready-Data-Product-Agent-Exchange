@@ -2,7 +2,7 @@
   "name": "keystone",
   "version": "0.0.0",
   "private": true,
-  "description": "AI-Ready Data Product & Agent Exchange — cross-industry customer-demo prototype",
+  "description": "AI-Ready Data Product & Agent Exchange \u2014 cross-industry customer-demo prototype",
   "type": "module",
   "packageManager": "pnpm@10.28.0",
   "engines": {
@@ -18,7 +18,10 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "db:generate": "prisma generate",
-    "check": "pnpm typecheck && pnpm lint && pnpm test"
+    "check": "pnpm typecheck && pnpm lint && pnpm test",
+    "warehouse:build": "tsx scripts/warehouse-build.ts",
+    "pack:validate": "tsx scripts/pack-validate.ts",
+    "pack:schema": "tsx scripts/pack-schema.ts"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -32,6 +35,7 @@
     ]
   },
   "dependencies": {
+    "@duckdb/node-api": "1.5.6-r.1",
     "@prisma/client": "^6.19.3",
     "@radix-ui/react-popover": "^1.1.23",
     "@radix-ui/react-slot": "^1.3.3",

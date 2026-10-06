@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^BR-[A-Z]{2,4}-\\d{3}$"
+      },
+      "domain": {
+        "type": "string"
+      },
+      "text": {
+        "type": "string"
+      },
+      "kind": {
+        "type": "string",
+        "enum": [
+          "filter",
+          "definition",
+          "threshold",
+          "policy"
+        ]
+      },
+      "metric": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "source_doc": {
+        "type": "string",
+        "pattern": "^DOC-[A-Z]{2,4}-[A-Z0-9-]+$"
+      },
+      "apply": {
+        "type": "object",
+        "properties": {
+          "filter": {
+            "type": "object",
+            "properties": {
+              "dimension": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "op": {
+                "type": "string",
+                "enum": [
+                  "=",
+                  "!=",
+                  "in",
+                  "not in",
+                  ">",
+                  "<",
+                  ">=",
+                  "<="
+                ]
+              },
+              "value": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": [
+                        "string",
+                        "number"
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "required": [
+              "dimension",
+              "op",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "unless_question_mentions": {
+            "default": [],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "filter"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "id",
+      "domain",
+      "text",
+      "kind",
+      "source_doc"
+    ],
+    "additionalProperties": false
+  }
+}

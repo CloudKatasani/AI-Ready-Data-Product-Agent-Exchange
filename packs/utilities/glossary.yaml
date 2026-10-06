@@ -1,0 +1,669 @@
+# Northvale Energy business glossary (synthetic). Ported from the AI-Ready utilities glossary and the
+# ADPM utility-energy pack; ids, owners and mappings adapted to this pack's personas, warehouse and semantic views.
+
+# ── Reliability ─────────────────────────────────────────────────────────────────────────────────────
+- id: GT-UTL-SAIDI
+  name: SAIDI
+  definition: "System Average Interruption Duration Index: the average outage minutes per customer served over a period."
+  formula: "Sum of customer minutes interrupted ÷ customers served, excluding major event days (IEEE 1366)"
+  domain: Reliability
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [outage minutes per customer, average interruption duration, system average interruption duration index]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_OUTAGE.customer_minutes, CONFORMED_GOLD.DIM_FEEDER.system_customers_served, CONFORMED_GOLD.DIM_FEEDER.region_customers_served]
+    metrics: [saidi]
+
+- id: GT-UTL-SAIFI
+  name: SAIFI
+  definition: "System Average Interruption Frequency Index: how often the average customer experienced a sustained interruption."
+  formula: "Sum of customers interrupted ÷ customers served, excluding major event days"
+  domain: Reliability
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [interruption frequency, interruptions per customer]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_OUTAGE.customers_affected, CONFORMED_GOLD.DIM_FEEDER.system_customers_served]
+    metrics: [saifi]
+
+- id: GT-UTL-CAIDI
+  name: CAIDI
+  definition: "Customer Average Interruption Duration Index: the average restoration time for customers who were interrupted."
+  formula: "SAIDI ÷ SAIFI (equivalently customer minutes interrupted ÷ customers interrupted)"
+  domain: Reliability
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [restoration time per customer, customer average interruption duration index]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_OUTAGE.customer_minutes, CONFORMED_GOLD.FCT_OUTAGE.customers_affected]
+    metrics: [caidi]
+
+- id: GT-UTL-MED
+  name: Major Event Day
+  definition: "A day whose daily SAIDI exceeds the IEEE 1366 2.5-beta threshold. Reliability indices are normally reported excluding these days so performance is comparable year to year."
+  formula: "Daily SAIDI > exp(α + 2.5β) over the trailing five years of daily SAIDI"
+  domain: Reliability
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [MED, storm day, major event]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_OUTAGE.major_event_day, CURATED_SILVER.OUTAGE_EVENT.major_event_day]
+    metrics: []
+
+- id: GT-UTL-CMI
+  name: Customer Minutes Interrupted
+  definition: "Customers interrupted multiplied by the duration of the interruption, summed across sustained outage events."
+  formula: "Σ customers interrupted × duration (minutes)"
+  domain: Reliability
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [CMI, customer minutes]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_OUTAGE.customer_minutes, CURATED_SILVER.OUTAGE_EVENT.customer_minutes]
+    metrics: [customer_minutes_interrupted, saidi]
+
+- id: GT-UTL-CI
+  name: Customers Interrupted
+  definition: "The number of customer interruptions caused by sustained outages; a customer interrupted twice counts twice."
+  formula: "Σ customers affected per sustained outage event"
+  domain: Reliability
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [CI, customer interruptions]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_OUTAGE.customers_affected]
+    metrics: [customers_interrupted, saifi]
+
+- id: GT-UTL-CUSTOMERS-SERVED
+  name: Customers Served
+  definition: "The count of customers connected to a feeder at the end of the reporting period; the denominator for SAIDI and SAIFI at feeder, substation, region and system scope."
+  formula: "customers_served per feeder, summed to substation, region or system"
+  domain: Reliability
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [customers connected, customer base, customer count served]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_FEEDER.customers_served, CONFORMED_GOLD.DIM_FEEDER.substation_customers_served, CONFORMED_GOLD.DIM_FEEDER.region_customers_served, CONFORMED_GOLD.DIM_FEEDER.system_customers_served]
+    metrics: [saidi, saifi]
+
+- id: GT-UTL-OUTAGE
+  name: Sustained Outage
+  definition: "An unplanned loss of supply to one or more customers lasting more than five minutes, recorded as one event in the outage management system."
+  formula: "One row per outage_id where duration_min > 5"
+  domain: Reliability
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [outage, interruption, power cut, blackout]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_OUTAGE.outage_id, CONFORMED_GOLD.FCT_OUTAGE.duration_min, CONFORMED_GOLD.FCT_OUTAGE.start_ts]
+    metrics: [outage_count]
+
+- id: GT-UTL-RESTORATION
+  name: Restoration Time
+  definition: "Minutes from the start of a sustained outage until supply is restored to all affected customers."
+  formula: "Mean duration_min across sustained outage events"
+  domain: Reliability
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [time to restore, outage duration, restoration]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_OUTAGE.duration_min]
+    metrics: [avg_restoration_minutes]
+
+- id: GT-UTL-CAUSE
+  name: Outage Cause
+  definition: "The confirmed root cause of a sustained outage, coded by field crews (tree contact, equipment failure, animal, wind, lightning, vehicle accident or unknown)."
+  formula: "Decoded from cause_code: VEG, EQUIP, ANIMAL, WIND, LIGHTNING, VEHICLE, UNKNOWN"
+  domain: Reliability
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [cause code, outage reason]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_OUTAGE.cause, CONFORMED_GOLD.FCT_OUTAGE.cause_code, CURATED_SILVER.OUTAGE_EVENT.cause_code]
+    metrics: [tree_outages]
+
+- id: GT-UTL-VEG-OUTAGE
+  name: Tree-Caused Outage
+  definition: "A sustained outage whose confirmed cause is tree or vegetation contact with a line."
+  formula: "Count of sustained outages where cause_code = VEG"
+  domain: Reliability
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [tree outage, vegetation outage, tree contact outage]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_OUTAGE.cause_code]
+    metrics: [tree_outages]
+
+- id: GT-UTL-FEEDER
+  name: Feeder
+  definition: "A distribution circuit leaving a substation that serves a group of premises; the primary unit of reliability and vegetation reporting."
+  domain: Grid assets
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [circuit, line, distribution circuit]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_FEEDER.feeder_id, CONFORMED_GOLD.DIM_FEEDER.circuit_miles, CONFORMED_GOLD.DIM_FEEDER.overhead_pct, CURATED_SILVER.FEEDER.feeder_id]
+    metrics: []
+
+- id: GT-UTL-SUBSTATION
+  name: Substation
+  definition: "A facility that steps transmission voltage down to distribution voltage and feeds one or more feeders."
+  domain: Grid assets
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [sub, station]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_FEEDER.substation_id, CONFORMED_GOLD.DIM_FEEDER.substation_name, CURATED_SILVER.SUBSTATION.substation_id]
+    metrics: []
+
+- id: GT-UTL-REGION
+  name: Service Region
+  definition: "One of Northvale's five operating regions (North, South, East, West, Central). Drives regional reporting and the regional row-access policy."
+  formula: "Feeder region for grid data; customer region for customer and billing data"
+  domain: Enterprise
+  owner: utilities:coo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [territory, service territory, area, region]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_FEEDER.region, CONFORMED_GOLD.DIM_CUSTOMER.region, CONFORMED_GOLD.DIM_PREMISE.region, CURATED_SILVER.FEEDER.region, CURATED_SILVER.CUSTOMER.region]
+    metrics: []
+
+- id: GT-UTL-CREW
+  name: Field Crew
+  definition: "An internal or contractor crew dispatched to restore outages and complete work orders."
+  domain: Grid operations
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [crew, line crew, contractor crew]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CREW.crew_id, CONFORMED_GOLD.DIM_CREW.crew_type, CONFORMED_GOLD.DIM_CREW.home_region]
+    metrics: []
+
+# ── Assets & work management ────────────────────────────────────────────────────────────────────────
+- id: GT-UTL-ASSET
+  name: Grid Asset
+  definition: "An in-service piece of distribution equipment (transformer, pole, switch, recloser, regulator or capacitor) attached to a feeder."
+  domain: Grid assets
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [asset, equipment]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_ASSET.asset_id, CONFORMED_GOLD.DIM_ASSET.asset_class, CONFORMED_GOLD.DIM_ASSET.install_year]
+    metrics: [asset_count]
+
+- id: GT-UTL-AHI
+  name: Asset Health Index
+  definition: "A 0–100 condition score for an asset combining inspection results, age and failure history. Below 40 is Poor, 40–69 Fair, 70 and above Good."
+  formula: "health_score per asset; condition band Poor < 40 ≤ Fair < 70 ≤ Good"
+  domain: Grid assets
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [AHI, asset health, condition score, health index]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_ASSET.health_score, CONFORMED_GOLD.DIM_ASSET.condition_band]
+    metrics: [avg_asset_health, poor_condition_pct, poor_condition_assets]
+
+- id: GT-UTL-WORK-ORDER
+  name: Work Order
+  definition: "A planned (PM) or corrective (CM) maintenance job against an asset, with a due date and booked labour hours. Open work orders past their due date are overdue."
+  formula: "overdue = completed_date IS NULL AND due_date < as-of date"
+  domain: Work management
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [WO, maintenance job, job]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORK_ORDER.work_order_id, CONFORMED_GOLD.FCT_WORK_ORDER.due_date, CONFORMED_GOLD.FCT_WORK_ORDER.overdue, CONFORMED_GOLD.FCT_WORK_ORDER.labour_hours]
+    metrics: [work_orders, overdue_work_orders, maintenance_labour_hours]
+
+- id: GT-UTL-PM-COMPLIANCE
+  name: PM Compliance
+  definition: "The share of preventive-maintenance work orders completed on or before their due date."
+  formula: "PM work orders completed on or before due date ÷ PM work orders due × 100"
+  domain: Work management
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [preventive maintenance compliance, PM on time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_WORK_ORDER.wo_type, CONFORMED_GOLD.FCT_WORK_ORDER.completed_on_time, CONFORMED_GOLD.FCT_WORK_ORDER.completed_date]
+    metrics: [pm_compliance_pct]
+
+# ── Vegetation ──────────────────────────────────────────────────────────────────────────────────────
+- id: GT-UTL-SPAN
+  name: Span
+  definition: "The stretch of overhead line between two poles; the unit of vegetation inspection and trimming."
+  domain: Vegetation
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [line span, pole span]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_VEG_SPAN.span_id, CONFORMED_GOLD.FCT_VEG_SPAN.inspected_date, CURATED_SILVER.VEGETATION_SPAN.span_id]
+    metrics: [spans_inspected]
+
+- id: GT-UTL-TRIM-CYCLE
+  name: Trim Cycle
+  definition: "The planned interval, three to five years, between vegetation trims on a span. A span is overdue when its last trim is older than its trim cycle."
+  formula: "overdue = last_trim_date + cycle_years < as-of date"
+  domain: Vegetation
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [trim backlog, overdue span, cycle compliance]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_VEG_SPAN.last_trim_date, CONFORMED_GOLD.FCT_VEG_SPAN.cycle_years, CONFORMED_GOLD.FCT_VEG_SPAN.next_trim_due, CONFORMED_GOLD.FCT_VEG_SPAN.overdue]
+    metrics: [spans_overdue_pct, trim_cycle_compliance]
+
+- id: GT-UTL-VEG-RISK
+  name: Vegetation Risk Score
+  definition: "An inspector-assigned 0–100 score of the likelihood that vegetation contacts the line before the next trim. Spans scoring 70 or more are high risk."
+  formula: "risk_score per inspected span; high risk ≥ 70"
+  domain: Vegetation
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: IN_REVIEW
+  cde: false
+  synonyms: [tree risk, encroachment risk]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_VEG_SPAN.risk_score, CONFORMED_GOLD.FCT_VEG_SPAN.species]
+    metrics: [avg_veg_risk, high_risk_spans]
+
+# ── Customer ────────────────────────────────────────────────────────────────────────────────────────
+- id: GT-UTL-CUSTOMER
+  name: Customer
+  definition: "A person or organisation with a service agreement for one or more premises."
+  formula: "One record per customer_no"
+  domain: Customer
+  owner: utilities:customer-steward
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [account holder, ratepayer, account]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.customer_no, CONFORMED_GOLD.DIM_CUSTOMER.open_date, CURATED_SILVER.CUSTOMER.customer_no]
+    metrics: [active_customers]
+
+- id: GT-UTL-ACTIVE-CUSTOMER
+  name: Active Customer
+  definition: "A customer whose account status is Active in the customer information system."
+  formula: "status = Active"
+  domain: Customer
+  owner: utilities:customer-steward
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [active account, live customer]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.status, CURATED_SILVER.CUSTOMER.status]
+    metrics: [active_customers]
+
+- id: GT-UTL-PREMISE
+  name: Premise
+  definition: "The physical service point at which supply is delivered and metered, linked to one customer, one meter and one feeder."
+  domain: Customer
+  owner: utilities:customer-steward
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [service point, service address, site]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_PREMISE.premise_id, CONFORMED_GOLD.DIM_PREMISE.premise_type, CONFORMED_GOLD.DIM_PREMISE.city]
+    metrics: []
+
+- id: GT-UTL-RATE-CLASS
+  name: Rate Class
+  definition: "The tariff a customer is billed under: RS-1 Residential, RS-TOU Residential time-of-use, GS-1 Small commercial, GS-2 Large commercial."
+  formula: "Conformed from the CIS rate code"
+  domain: Customer
+  owner: utilities:customer-steward
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [tariff, rate code, rate]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.rate_class, CONFORMED_GOLD.DIM_CUSTOMER.rate_label, CONFORMED_GOLD.DIM_PREMISE.rate_class, CURATED_SILVER.CUSTOMER.rate_code]
+    metrics: []
+
+- id: GT-UTL-SEGMENT
+  name: Customer Segment
+  definition: "A grouping of rate classes: Residential (RS-1, RS-TOU), Small business (GS-1) and Commercial & industrial (GS-2)."
+  formula: "Derived from rate class"
+  domain: Customer
+  owner: utilities:customer-steward
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [customer type, segment]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.segment, CONFORMED_GOLD.DIM_PREMISE.segment]
+    metrics: []
+
+- id: GT-UTL-DIGITAL-ADOPTION
+  name: Digital Adoption
+  definition: "The share of active customers enrolled in paperless billing."
+  formula: "Active customers with digital_enrolled = TRUE ÷ active customers × 100"
+  domain: Customer
+  owner: utilities:customer-steward
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [paperless, e-bill adoption, digital enrolment]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.digital_enrolled, CURATED_SILVER.CUSTOMER.paperless]
+    metrics: [digital_adoption_rate]
+
+- id: GT-UTL-CHURN-RISK
+  name: Churn Risk Score
+  definition: "Model score (0–100) estimating the likelihood a customer closes their account in the next 12 months. Scores of 60 or more are High risk. Draft: model card pending review."
+  formula: "Gradient-boosted model over arrears, contacts, usage trend and tenure; band High ≥ 60, Medium ≥ 35, else Low"
+  domain: Customer
+  owner: utilities:customer-steward
+  steward: utilities:customer-steward
+  status: DRAFT
+  cde: false
+  synonyms: [churn risk, attrition risk]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.churn_risk_score, CONFORMED_GOLD.DIM_CUSTOMER.churn_risk_band]
+    metrics: [avg_churn_risk, high_churn_risk_pct]
+
+- id: GT-UTL-PII
+  name: Personal Information (PII)
+  definition: "Any data that identifies a customer, employee or supplier contact — names, emails, phone numbers, street addresses and free-text notes. Masked for every persona without PII clearance."
+  domain: Governance
+  owner: utilities:customer-steward
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [personal data, personally identifiable information]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_CUSTOMER.full_name, CONFORMED_GOLD.DIM_CUSTOMER.email, CONFORMED_GOLD.DIM_CUSTOMER.phone, CONFORMED_GOLD.DIM_CUSTOMER.street_address, CONFORMED_GOLD.FCT_CONTACT.agent_notes]
+    metrics: []
+
+- id: GT-UTL-CDE
+  name: Critical Data Element
+  definition: "A data element whose accuracy directly affects regulatory reporting, billing or a certified KPI. Every CDE has a named owner, a steward and data-quality rules."
+  domain: Governance
+  owner: utilities:customer-steward
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [CDE, critical data]
+  mappings:
+    columns: []
+    metrics: []
+
+# ── Billing & receivables ───────────────────────────────────────────────────────────────────────────
+- id: GT-UTL-BILL
+  name: Monthly Bill
+  definition: "The billing statement issued to a customer each billing cycle, and the amount billed on it (excluding past-due balance)."
+  formula: "billed_amount per statement; average monthly bill = mean billed amount per residential statement"
+  domain: Billing
+  owner: utilities:customer-steward
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [bill, statement, average bill]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_BILLING.billed_amount, CONFORMED_GOLD.FCT_BILLING.statement_id, CONFORMED_GOLD.FCT_BILLING.statement_date]
+    metrics: [avg_monthly_bill, billed_revenue, bills_issued]
+
+- id: GT-UTL-ESTIMATED-BILL
+  name: Estimated Bill
+  definition: "A bill based on an estimated rather than an actual meter read; trued up on the next actual read."
+  formula: "estimated = TRUE"
+  domain: Billing
+  owner: utilities:customer-steward
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [estimate, estimated read bill]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_BILLING.estimated]
+    metrics: [estimated_bill_rate]
+
+- id: GT-UTL-ARREARS
+  name: Arrears Balance
+  definition: "The past-due amount carried on a customer's statement."
+  formula: "Σ arrears_amount on statements issued in the period"
+  domain: Billing
+  owner: utilities:customer-steward
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [past due, overdue balance, debt]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_BILLING.arrears_amount]
+    metrics: [arrears_balance]
+
+- id: GT-UTL-COLLECTIONS
+  name: Collections Rate
+  definition: "The share of billed revenue collected within 60 days of the statement date, measured on statements more than 60 days old."
+  formula: "Billed amount paid within 60 days ÷ billed amount × 100"
+  domain: Billing
+  owner: utilities:customer-steward
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [collection rate, cash collection]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_BILLING.paid_within_60d_amount, CONFORMED_GOLD.FCT_BILLING.billed_amount, CONFORMED_GOLD.FCT_BILLING.mature]
+    metrics: [collections_rate]
+
+- id: GT-UTL-DSO
+  name: Days Sales Outstanding
+  definition: "How many days, on average and weighted by billed amount, it takes to collect a statement. Unpaid statements count as 90 days."
+  formula: "Σ (billed amount × days to pay, 90 if unpaid) ÷ Σ billed amount, mature statements only"
+  domain: Billing
+  owner: utilities:customer-steward
+  steward: utilities:customer-steward
+  status: IN_REVIEW
+  cde: false
+  synonyms: [DSO, collection days, receivable days]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_BILLING.days_to_pay, CONFORMED_GOLD.FCT_BILLING.billed_amount]
+    metrics: [dso_days]
+
+# ── Metering ────────────────────────────────────────────────────────────────────────────────────────
+- id: GT-UTL-METER
+  name: Meter
+  definition: "The device installed at a premise that measures energy delivered; AMI meters report 96 fifteen-minute intervals per day."
+  domain: Metering
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [smart meter, AMI meter]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_PREMISE.meter_id, CONFORMED_GOLD.DIM_PREMISE.ami_enabled, CURATED_SILVER.METER_READ_DAILY.meter_id]
+    metrics: [meter_days]
+
+- id: GT-UTL-AMI
+  name: Advanced Metering Infrastructure
+  definition: "AMI — meters, network and head-end systems that report interval reads remotely on a schedule."
+  domain: Metering
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [AMI, smart metering]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_PREMISE.ami_enabled]
+    metrics: [read_success_rate]
+
+- id: GT-UTL-READ-SUCCESS
+  name: Read Success Rate
+  definition: "The share of expected 15-minute interval reads received and validated from AMI meters. Estimated or missing intervals do not count."
+  formula: "Valid intervals ÷ expected intervals × 100"
+  domain: Metering
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [read rate, AMI read performance]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_DAILY_USAGE.read_success_pct, CONFORMED_GOLD.FCT_DAILY_USAGE.intervals_valid, CONFORMED_GOLD.FCT_DAILY_USAGE.intervals_expected]
+    metrics: [read_success_rate, estimated_read_pct]
+
+- id: GT-UTL-KWH
+  name: Daily Consumption
+  definition: "Total kWh delivered to a premise in a calendar day."
+  formula: "Σ interval kWh per premise per day"
+  domain: Metering
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [usage, consumption, load, kWh]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_DAILY_USAGE.kwh, CURATED_SILVER.METER_READ_DAILY.kwh]
+    metrics: [daily_kwh]
+
+- id: GT-UTL-PEAK-DEMAND
+  name: Peak Demand
+  definition: "The highest average kW over any 15-minute interval in a day for a premise."
+  formula: "max(interval kWh × 4) per premise per day"
+  domain: Metering
+  owner: utilities:grid-dpo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [max demand, peak load]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_DAILY_USAGE.peak_kw]
+    metrics: [peak_demand_kw]
+
+# ── Supply chain ────────────────────────────────────────────────────────────────────────────────────
+- id: GT-UTL-SUPPLIER
+  name: Supplier
+  definition: "A company Northvale buys materials or services from, registered in the ERP supplier master."
+  domain: Supply chain
+  owner: utilities:coo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [vendor]
+  mappings:
+    columns: [CONFORMED_GOLD.DIM_SUPPLIER.supplier_id, CONFORMED_GOLD.DIM_SUPPLIER.supplier_name, CONFORMED_GOLD.DIM_SUPPLIER.preferred]
+    metrics: []
+
+- id: GT-UTL-CONTRACT
+  name: Framework Contract
+  definition: "An active outline agreement with a supplier that sets terms and a spend ceiling for a category."
+  domain: Supply chain
+  owner: utilities:coo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [outline agreement, framework agreement]
+  mappings:
+    columns: [CURATED_SILVER.CONTRACT.contract_id, CURATED_SILVER.CONTRACT.start_date, CURATED_SILVER.CONTRACT.end_date]
+    metrics: []
+
+- id: GT-UTL-SPEND
+  name: Total Spend
+  definition: "All purchase-order line spend in a period, before returns and credits."
+  formula: "Σ spend_usd"
+  domain: Supply chain
+  owner: utilities:coo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [spend, purchases, PO spend]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PO_SPEND.spend_usd, CONFORMED_GOLD.FCT_PO_SPEND.po_line_id]
+    metrics: [total_spend, po_lines]
+
+- id: GT-UTL-CONTRACT-COMPLIANCE
+  name: Spend Under Contract
+  definition: "The share of purchase-order spend placed against an active framework contract."
+  formula: "On-contract spend ÷ total spend × 100"
+  domain: Supply chain
+  owner: utilities:coo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: true
+  synonyms: [contract compliance, on-contract spend]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PO_SPEND.on_contract, CONFORMED_GOLD.FCT_PO_SPEND.spend_usd]
+    metrics: [spend_under_contract_pct]
+
+- id: GT-UTL-MAVERICK-SPEND
+  name: Maverick Spend
+  definition: "Spend placed with any supplier outside an active framework contract, including spot buys and emergency purchases."
+  formula: "Σ spend_usd where on_contract = FALSE"
+  domain: Supply chain
+  owner: utilities:coo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [off-contract spend, rogue spend, leakage]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PO_SPEND.on_contract, CONFORMED_GOLD.FCT_PO_SPEND.spend_usd]
+    metrics: [maverick_spend]
+
+- id: GT-UTL-OTIF
+  name: Supplier OTIF
+  definition: "The share of received PO lines a supplier delivered on or before the promised date and in full quantity."
+  formula: "Lines received on time and in full ÷ lines received × 100"
+  domain: Supply chain
+  owner: utilities:coo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [OTIF, on time in full, delivery performance]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PO_SPEND.otif, CONFORMED_GOLD.FCT_PO_SPEND.received]
+    metrics: [otif_pct]
+
+- id: GT-UTL-PO-CYCLE
+  name: PO Cycle Time
+  definition: "Days from purchase-order creation to goods receipt."
+  formula: "receipt date − PO date"
+  domain: Supply chain
+  owner: utilities:coo
+  steward: utilities:customer-steward
+  status: APPROVED
+  cde: false
+  synonyms: [cycle time, lead time]
+  mappings:
+    columns: [CONFORMED_GOLD.FCT_PO_SPEND.cycle_days, CONFORMED_GOLD.FCT_PO_SPEND.po_date]
+    metrics: [po_cycle_days]

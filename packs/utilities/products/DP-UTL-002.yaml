@@ -1,0 +1,25 @@
+id: DP-UTL-002
+name: Distribution Reliability
+domain: Outage & Reliability
+archetype: AGGREGATE
+initial_status: CERTIFIED
+seed_stage: 12
+version: 2.1.0
+owner: utilities:grid-dpo
+steward: utilities:customer-steward
+description: IEEE 1366 reliability indices at outage-event grain with feeders, regions, causes and major event day flags.
+purpose: Single governed source for SAIDI/SAIFI/CAIDI by feeder, region and cause.
+decision: { persona: Reliability Director, decision: "Which feeders get Q1 vegetation budget", cadence: Quarterly, workaround: "Analyst-built spreadsheet from OMS exports", consequence: "Budget misallocated to low-impact feeders" }
+sample_questions: ["SAIDI by region last quarter", "Top 10 worst feeders by customer minutes", "Is SAIFI within our regulatory target?"]
+semantic_view: RELIABILITY
+output_ports:
+  - { kind: semantic, ref: RELIABILITY }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_UTL_002_RELIABILITY }
+  - { kind: agent, ref: AG-UTL-002 }
+sla: { freshness_minutes: 60, availability_pct: 99.5, max_null_rate_pct: 0.5 }
+kpis: [KPI-UTL-SAIDI, KPI-UTL-SAIFI, KPI-UTL-CAIDI, KPI-UTL-CI, KPI-UTL-CMI, KPI-UTL-TREE-OUTAGES, KPI-UTL-RESTORE]
+upstream: [CONFORMED_GOLD.FCT_OUTAGE, CONFORMED_GOLD.DIM_FEEDER, CONFORMED_GOLD.DIM_CREW]
+consumers: [Regulatory affairs, Distribution operations, Reliability Analyst agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-UTL-002

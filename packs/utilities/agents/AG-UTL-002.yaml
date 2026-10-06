@@ -1,0 +1,31 @@
+id: AG-UTL-002
+name: Reliability Analyst
+domain: Outage & Reliability
+status: PRODUCTION
+owner: utilities:grid-dpo
+on_call: Grid Data Ops
+avatar: { icon: activity, hue: 210 }
+capability: "Answers questions on SAIDI/SAIFI/CAIDI, outage causes, restoration time and worst-performing feeders."
+personas_served: [Reliability Director, Regional Operations Manager, Reliability Analyst]
+out_of_scope: ["switching orders", "crew dispatch", "regulatory filing preparation", "customer-level outage history"]
+products:
+  - { id: DP-UTL-002, columns: "*" }
+  - { id: DP-UTL-004, columns: [feeder_id, asset_class, health_score, vintage_band] }
+tools:
+  - { tool: semantic_query, views: [RELIABILITY, ASSET_HEALTH], row_limit: 500 }
+  - { tool: search_context, corpora: [DOC-UTL-RELIABILITY-STD, DOC-UTL-VEG-PROGRAM] }
+  - { tool: get_definition }
+  - { tool: get_product_status }
+kpi_coverage:
+  - { kpi: KPI-UTL-SAIDI, grains: [month, quarter, year], slices: [region, feeder, cause], depth: rank_drivers }
+  - { kpi: KPI-UTL-SAIFI, grains: [month, quarter, year], slices: [region, cause], depth: explain }
+  - { kpi: KPI-UTL-CAIDI, grains: [month, quarter, year], slices: [region, cause, crew_type], depth: explain }
+  - { kpi: KPI-UTL-CI, grains: [month, quarter, year], slices: [region, cause], depth: value }
+  - { kpi: KPI-UTL-CMI, grains: [month, quarter, year], slices: [region, feeder, cause], depth: rank_drivers }
+  - { kpi: KPI-UTL-TREE-OUTAGES, grains: [month, quarter], slices: [region, feeder], depth: rank_drivers }
+  - { kpi: KPI-UTL-RESTORE, grains: [month, quarter], slices: [region, cause, crew_type, feeder], depth: rank_drivers }
+instructions: [INS-UTL-002-P, INS-UTL-002-R, INS-UTL-002-G, INS-UTL-002-O]
+guardrails: { citations_required: true, refuse_customer_level: true, pii_output: deny, max_followups: 3 }
+budgets: { cost_per_answer_usd: 0.06, p95_latency_ms: 8000, max_tool_rounds: 5 }
+eval: { golden_min: 0.92, groundedness_min: 1.0, boundary_min: 1.0, adversarial_min: 1.0, entitlement_min: 1.0 }
+scenarios: [SC-UTL-001, SC-UTL-002, SC-UTL-003, SC-UTL-004, SC-UTL-005, SC-UTL-006, SC-UTL-007]

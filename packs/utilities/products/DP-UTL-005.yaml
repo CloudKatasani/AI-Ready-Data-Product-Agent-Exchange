@@ -1,0 +1,29 @@
+id: DP-UTL-005
+name: Billing & Receivables
+domain: Billing & Revenue
+archetype: AGGREGATE
+initial_status: IN_CERTIFICATION
+seed_stage: 11
+version: 1.0.0-rc.1
+owner: utilities:grid-dpo
+steward: utilities:customer-steward
+description: Statements, receivables, DSO and collections for revenue operations.
+purpose: Give revenue operations and the Customer Insights agent a certified receivables view (DSO, collections).
+decision: { persona: VP Revenue Operations, decision: "Where to focus collections outreach and payment-arrangement offers", cadence: Monthly, workaround: "Aged-debt report rebuilt from CIS each month-end", consequence: "Arrears grow in segments nobody is watching" }
+sample_questions: ["What is our days sales outstanding this quarter?", "Collections rate last quarter by region", "Estimated bill rate trend"]
+semantic_view: BILLING_AR
+output_ports:
+  - { kind: semantic, ref: BILLING_AR }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_UTL_005_BILLING_RECEIVABLES }
+  - { kind: agent, ref: AG-UTL-001 }
+sla: { freshness_minutes: 1440, availability_pct: 99.5, max_null_rate_pct: 0.5 }
+kpis: [KPI-UTL-BILL, KPI-UTL-ARREARS, KPI-UTL-DSO, KPI-UTL-BILLS, KPI-UTL-EST-BILL, KPI-UTL-COLLECT]
+upstream: [CONFORMED_GOLD.FCT_BILLING, CONFORMED_GOLD.DIM_CUSTOMER]
+consumers: [Revenue operations, Treasury, Customer Insights agent]
+lifecycle_seed: { artifacts: auto }
+certification_script:
+  initial: { gate4: warn, gate6: fail }
+  fixes:
+    - { id: FIX-1, check: semantic.verified_queries, label: "Add 3 verified queries for DSO", effect: { overlay: VERIFIED_QUERY, keys: [VQ-UTL-049, VQ-UTL-050, VQ-UTL-051] } }
+    - { id: FIX-2, check: governance.masking, label: "Attach PII masking to customer email and phone", effect: { policy_attach: { policy: MASK_EMAIL, columns: [CONFORMED_GOLD.DIM_CUSTOMER.email, CONFORMED_GOLD.DIM_CUSTOMER.phone] } } }
+value_case: VC-UTL-005

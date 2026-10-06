@@ -1,0 +1,24 @@
+id: DP-UTL-003
+name: AMI Usage & Read Quality
+domain: Metering
+archetype: SOURCE_ALIGNED
+initial_status: CERTIFIED
+seed_stage: 12
+version: 1.1.0
+owner: utilities:grid-dpo
+steward: utilities:customer-steward
+description: Daily consumption, peak demand and interval read quality for every AMI premise.
+purpose: Load research, rate design and meter operations from one certified usage feed.
+decision: { persona: "Manager, Meter Operations", decision: "Which meter populations need a firmware rollback or field visit", cadence: Weekly, workaround: "Head-end exception reports e-mailed as CSV", consequence: "Estimated bills and customer complaints rise before anyone notices" }
+sample_questions: ["What is the AMI read success rate this month?", "Peak demand by rate class last month", "Average daily kWh by premise type"]
+semantic_view: METERING
+output_ports:
+  - { kind: semantic, ref: METERING }
+  - { kind: sql, ref: DATA_PRODUCTS.DP_UTL_003_AMI_USAGE }
+sla: { freshness_minutes: 30, availability_pct: 99.0, max_null_rate_pct: 0.5 }
+kpis: [KPI-UTL-KWH, KPI-UTL-PEAK, KPI-UTL-AMI-READ, KPI-UTL-EST-READ]
+upstream: [CONFORMED_GOLD.FCT_DAILY_USAGE, CONFORMED_GOLD.DIM_PREMISE]
+consumers: [Load research, Metering operations, Customer Insights agent]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: VC-UTL-003

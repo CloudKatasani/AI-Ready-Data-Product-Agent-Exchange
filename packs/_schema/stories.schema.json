@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "minItems": 6,
+  "maxItems": 6,
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      },
+      "title": {
+        "type": "string"
+      },
+      "minutes": {
+        "type": "integer",
+        "exclusiveMinimum": 0,
+        "maximum": 9007199254740991
+      },
+      "audience": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "doors": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "HOME",
+            "CONSUME",
+            "BUILD",
+            "RUN",
+            "STRATEGY"
+          ]
+        }
+      },
+      "steps": {
+        "minItems": 1,
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "pattern": "^[a-z]+\\d+$"
+            },
+            "title": {
+              "type": "string"
+            },
+            "go": {
+              "type": "object",
+              "properties": {
+                "route": {
+                  "type": "string"
+                },
+                "persona": {
+                  "type": "string",
+                  "enum": [
+                    "A",
+                    "B",
+                    "C",
+                    "D",
+                    "E"
+                  ]
+                },
+                "state": {
+                  "default": {},
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": [
+                      "string",
+                      "number",
+                      "boolean"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "route",
+                "persona"
+              ],
+              "additionalProperties": false
+            },
+            "targets": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "heroScenario",
+                  "certDemoProduct",
+                  "lifecycleDemoProduct",
+                  "incidentForStory",
+                  "knockoutKpi",
+                  "qualityFixAgent"
+                ]
+              }
+            },
+            "do": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "say": {
+              "type": "string"
+            },
+            "expect": {
+              "default": {},
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              }
+            },
+            "spotlight": {
+              "type": "string"
+            },
+            "checkpoint": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "id",
+            "title",
+            "go",
+            "do",
+            "say"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "required": [
+      "id",
+      "title",
+      "minutes",
+      "audience",
+      "doors",
+      "steps"
+    ],
+    "additionalProperties": false
+  }
+}

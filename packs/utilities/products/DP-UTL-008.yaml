@@ -1,0 +1,23 @@
+id: DP-UTL-008
+name: Customer Experience
+domain: Customer
+archetype: CONSUMER_ALIGNED
+initial_status: DRAFT
+seed_stage: 2
+version: 0.1.0
+owner: utilities:grid-dpo
+steward: null
+description: Contact-centre interactions, reasons and satisfaction joined to the customer record.
+purpose: Understand why customers call and where self-service would remove the call.
+decision: { persona: Contact Centre Director, decision: "Which call reasons to move to digital self-service first", cadence: Quarterly, workaround: "Telephony reports with no link to the customer record", consequence: "High-bill calls keep growing after rate changes" }
+sample_questions: ["Top call reasons last month", "Average handle time by channel"]
+semantic_view: null
+output_ports:
+  - { kind: sql, ref: DATA_PRODUCTS.DP_UTL_008_CUSTOMER_EXPERIENCE }
+sla: { freshness_minutes: 1440, availability_pct: 98.0, max_null_rate_pct: 2.0 }
+kpis: []
+upstream: [CONFORMED_GOLD.FCT_CONTACT]
+consumers: [Contact centre]
+lifecycle_seed: { artifacts: auto }
+certification_script: null
+value_case: null

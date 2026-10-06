@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "requests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^REQ-[A-Z]{2,4}-\\d{3}$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "requester": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
+          },
+          "decision": {
+            "type": "string"
+          },
+          "decider": {
+            "type": "string"
+          },
+          "cadence": {
+            "type": "string"
+          },
+          "workaround": {
+            "type": "string"
+          },
+          "questions": {
+            "minItems": 3,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "stakes": {
+            "type": "string"
+          },
+          "freshness": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SUBMITTED",
+              "IN_TRIAGE",
+              "APPROVED",
+              "MERGED",
+              "DECLINED"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "requester",
+          "decision",
+          "decider",
+          "cadence",
+          "workaround",
+          "questions",
+          "stakes",
+          "freshness",
+          "status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "demand_items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^DM-[A-Z]{2,4}-\\d{3}$"
+          },
+          "title": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "product",
+              "agent"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "requested_by": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
+          },
+          "votes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "kind",
+          "description",
+          "requested_by",
+          "votes"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "requests",
+    "demand_items"
+  ],
+  "additionalProperties": false
+}

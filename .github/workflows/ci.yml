@@ -31,6 +31,8 @@ jobs:
       - run: pnpm lint
       # 3. unit + invariants
       - run: pnpm test
+      # 4. pack:validate (all packs; builds warehouses at scale M)
+      - run: pnpm pack:validate
       # 7. build
       - run: pnpm build
       - uses: actions/upload-artifact@v4

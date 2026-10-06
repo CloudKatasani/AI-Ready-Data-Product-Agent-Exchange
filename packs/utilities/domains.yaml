@@ -1,0 +1,69 @@
+# Domains, conformed backbone entities and links (ported from ADPM utility-energy pack, adapted to the
+# Northvale warehouse). Owners are persona refs; golden sources are Gold objects in NVE_AI_PLATFORM.
+domains:
+  - id: customer
+    name: Customer
+    description: Who the customer is, where they take supply, how they are contactable and how they engage (digital adoption, churn risk, contact centre).
+    owner: utilities:customer-steward
+    entities: [Customer, Premise, Contact interaction]
+  - id: billing-revenue
+    name: Billing & Revenue
+    description: Statements, payments, receivables, arrears and collections, including estimated-read billing and revenue assurance.
+    owner: utilities:coo
+    entities: [Statement, Payment]
+  - id: metering
+    name: Metering
+    description: AMI meters, daily consumption and peak demand derived from 15-minute intervals, and read quality.
+    owner: utilities:grid-dpo
+    entities: [Meter, Daily read]
+  - id: outage-reliability
+    name: Outage & Reliability
+    description: Sustained interruptions, restoration, crews, major event days and IEEE 1366 reliability indices.
+    owner: utilities:grid-dpo
+    entities: [Outage, Crew, Feeder, Substation]
+  - id: grid-assets
+    name: Grid Assets
+    description: Distribution assets, condition and health index, maintenance work orders and vegetation spans along overhead lines.
+    owner: utilities:grid-dpo
+    entities: [Asset, Work order, Span]
+  - id: supply-chain
+    name: Supply Chain
+    description: Suppliers, framework contracts and purchase-order lines, including contract compliance and delivery performance.
+    owner: utilities:coo
+    entities: [Supplier, Contract, Purchase order line]
+
+backbone:
+  entities:
+    - { name: Customer, description: "A person or organisation with a supply account at Northvale", key: customer_no, domain: customer, golden_source: CONFORMED_GOLD.DIM_CUSTOMER }
+    - { name: Premise, description: "A physical service location that takes supply through one meter", key: premise_id, domain: customer, golden_source: CONFORMED_GOLD.DIM_PREMISE }
+    - { name: Contact interaction, description: "One contact-centre interaction (phone, chat, email or IVR) with a customer", key: interaction_id, domain: customer, golden_source: CONFORMED_GOLD.FCT_CONTACT }
+    - { name: Statement, description: "A billing statement issued to a customer for one billing period", key: statement_id, domain: billing-revenue, golden_source: CONFORMED_GOLD.FCT_BILLING }
+    - { name: Payment, description: "Money received and applied against a statement", key: payment_id, domain: billing-revenue, golden_source: CURATED_SILVER.PAYMENT }
+    - { name: Meter, description: "The AMI device measuring consumption at a premise", key: meter_id, domain: metering, golden_source: CONFORMED_GOLD.DIM_PREMISE }
+    - { name: Daily read, description: "One meter-day of consumption, peak demand and interval read quality", key: "meter_id, read_date", domain: metering, golden_source: CONFORMED_GOLD.FCT_DAILY_USAGE }
+    - { name: Substation, description: "A distribution substation feeding one or more feeders", key: substation_id, domain: outage-reliability, golden_source: CURATED_SILVER.SUBSTATION }
+    - { name: Feeder, description: "A distribution circuit leaving a substation, with customers served for IEEE 1366 denominators", key: feeder_id, domain: outage-reliability, golden_source: CONFORMED_GOLD.DIM_FEEDER }
+    - { name: Outage, description: "A sustained interruption of supply (longer than five minutes) on a feeder", key: outage_id, domain: outage-reliability, golden_source: CONFORMED_GOLD.FCT_OUTAGE }
+    - { name: Crew, description: "An internal or contractor restoration crew", key: crew_id, domain: outage-reliability, golden_source: CONFORMED_GOLD.DIM_CREW }
+    - { name: Asset, description: "A distribution asset (transformer, pole, switch, recloser, regulator, capacitor) on a feeder", key: asset_id, domain: grid-assets, golden_source: CONFORMED_GOLD.DIM_ASSET }
+    - { name: Work order, description: "Preventive or corrective maintenance raised against an asset", key: work_order_id, domain: grid-assets, golden_source: CONFORMED_GOLD.FCT_WORK_ORDER }
+    - { name: Span, description: "A section of overhead line between two structures, inspected and trimmed for vegetation clearance", key: span_id, domain: grid-assets, golden_source: CONFORMED_GOLD.FCT_VEG_SPAN }
+    - { name: Supplier, description: "A vendor of materials or services", key: supplier_id, domain: supply-chain, golden_source: CONFORMED_GOLD.DIM_SUPPLIER }
+    - { name: Contract, description: "A framework contract with a supplier and a spend ceiling", key: contract_id, domain: supply-chain, golden_source: CURATED_SILVER.CONTRACT }
+    - { name: Purchase order line, description: "One line of a purchase order with receipt outcome and cycle time", key: po_line_id, domain: supply-chain, golden_source: CONFORMED_GOLD.FCT_PO_SPEND }
+  links:
+    - { from: Customer, to: Premise, cardinality: 1:N, via: customer_no }
+    - { from: Customer, to: Statement, cardinality: 1:N, via: customer_no }
+    - { from: Customer, to: Contact interaction, cardinality: 1:N, via: customer_no }
+    - { from: Statement, to: Payment, cardinality: 1:N, via: statement_id }
+    - { from: Premise, to: Meter, cardinality: 1:1, via: meter_id }
+    - { from: Meter, to: Daily read, cardinality: 1:N, via: meter_id }
+    - { from: Premise, to: Feeder, cardinality: N:1, via: feeder_id }
+    - { from: Substation, to: Feeder, cardinality: 1:N, via: substation_id }
+    - { from: Feeder, to: Outage, cardinality: 1:N, via: feeder_id }
+    - { from: Crew, to: Outage, cardinality: 1:N, via: crew_id }
+    - { from: Feeder, to: Asset, cardinality: 1:N, via: feeder_id }
+    - { from: Asset, to: Work order, cardinality: 1:N, via: asset_id }
+    - { from: Feeder, to: Span, cardinality: 1:N, via: feeder_id }
+    - { from: Supplier, to: Contract, cardinality: 1:N, via: supplier_id }
+    - { from: Supplier, to: Purchase order line, cardinality: 1:N, via: supplier_id }

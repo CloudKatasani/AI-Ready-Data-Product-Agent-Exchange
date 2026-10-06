@@ -1,0 +1,54 @@
+name: ASSET_HEALTH
+description: Grid asset condition snapshot (one row per in-service asset)
+tables:
+  - { alias: a, fqn: CONFORMED_GOLD.DIM_ASSET, pk: asset_key }
+  - { alias: f, fqn: CONFORMED_GOLD.DIM_FEEDER, pk: feeder_key }
+relationships:
+  - { from: a.feeder_key, to: f.feeder_key }
+dimensions:
+  - { name: region, expr: f.region, label: Region, synonyms: [territory, area], term: GT-UTL-REGION }
+  - { name: feeder, expr: f.feeder_id, label: Feeder, synonyms: [circuit], term: GT-UTL-FEEDER }
+  - { name: asset_class, expr: a.asset_class, label: Asset class, synonyms: [asset type, equipment type] }
+  - { name: vintage_band, expr: a.vintage_band, label: Vintage, synonyms: [age band, install era] }
+  - { name: condition_band, expr: a.condition_band, label: Condition, synonyms: [condition, health band] }
+  - { name: criticality, expr: a.criticality, label: Criticality, synonyms: [risk class] }
+time_dimensions: []
+facts:
+  - { name: health_score, expr: a.health_score }
+metrics:
+  - name: avg_asset_health
+    label: Asset health index
+    expr: AVG(a.health_score)
+    unit: score
+    decimals: 1
+    direction: higher_is_better
+    synonyms: [asset health, health index, ahi, condition score]
+    term: GT-UTL-AHI
+    description: Mean condition score (0-100) across in-service assets
+  - name: poor_condition_pct
+    label: Assets in poor condition
+    expr: 100.0 * COUNT_IF(a.condition_band = 'Poor') / COUNT(*)
+    unit: '%'
+    decimals: 1
+    direction: lower_is_better
+    synonyms: [poor assets, share of poor condition assets]
+    term: GT-UTL-AHI
+    description: Share of assets with a health score below 40
+  - name: poor_condition_assets
+    label: Poor-condition assets
+    expr: COUNT_IF(a.condition_band = 'Poor')
+    unit: assets
+    decimals: 0
+    direction: lower_is_better
+    synonyms: [number of poor assets]
+    term: GT-UTL-AHI
+    description: Count of assets with a health score below 40
+  - name: asset_count
+    label: Assets
+    expr: COUNT(*)
+    unit: assets
+    decimals: 0
+    synonyms: [number of assets, asset inventory]
+    term: GT-UTL-ASSET
+    description: Count of in-service assets
+products: [DP-UTL-004]

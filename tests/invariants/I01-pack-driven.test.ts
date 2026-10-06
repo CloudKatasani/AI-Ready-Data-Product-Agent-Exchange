@@ -1,8 +1,39 @@
-import { describe, it } from 'vitest';
+import { mkdtempSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+import { listPackIds, packsDir } from '@/lib/packs/registry';
+import { extractTerms, scan } from '../../scripts/lint/no-domain-strings';
 
-// CLAUDE.md §4.1 — Pack-driven, engine-generic. Implemented in Phase 1.
+// CLAUDE.md §4.1 — Pack-driven, engine-generic.
+const SRC = join(process.cwd(), 'src');
+
+function sourceFiles(dir: string): string[] {
+  return readdirSync(dir).flatMap((name) => {
+    const p = join(dir, name);
+    return statSync(p).isDirectory() ? sourceFiles(p) : /\.(ts|tsx|css)$/.test(name) ? [p] : [];
+  });
+}
+
+const terms = listPackIds().flatMap((id) => extractTerms(join(packsDir(), id)));
+
 describe('I01 pack-driven, engine-generic', () => {
-  it.todo('no term from any installed pack (industry, company, KPI, column, entity names) appears in src/ — scripts/lint/no-domain-strings.ts reports zero violations');
-  it.todo('the lint fails when a pack term is planted in a src/ fixture file');
-  it.todo('every UI module reads industry content through getPack(), never from literals');
+  it('every installed pack contributes domain terms to the lint', () => {
+    for (const id of listPackIds()) expect(extractTerms(join(packsDir(), id)).length, id).toBeGreaterThan(20);
+  });
+
+  it('no term from any installed pack appears in src/', () => {
+    const violations = scan(terms, sourceFiles(SRC));
+    expect(violations.map((v) => `${v.file}:${v.line} ${v.term}`)).toEqual([]);
+  });
+
+  it('the lint fails when a pack term is planted in a source file', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'keystone-i01-'));
+    const file = join(dir, 'planted.tsx');
+    const planted = terms.find((t) => /^[A-Za-z][A-Za-z ]+$/.test(t)) ?? 'Planted Term';
+    writeFileSync(file, `export const label = '${planted}';\n`);
+    expect(scan(terms.length ? terms : [planted], [file])).toHaveLength(1);
+  });
+
+  it.todo('every UI module reads industry content through getPack(), never from literals (Phase 2 screens)');
 });

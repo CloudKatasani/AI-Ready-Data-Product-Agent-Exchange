@@ -1,0 +1,82 @@
+sensitivity_classes:
+  - { class: PII, description: "Personal information about customers, employees or contacts" }
+  - { class: PCI, description: "Payment card data" }
+  - { class: GOV_ID, description: "Government or tax identifiers" }
+
+masking_policies:
+  - { id: MASK_PII, class: PII, macro: mask_pii, description: "Replace personal data with ••• unless the persona is cleared for PII" }
+  - { id: MASK_EMAIL, class: PII, macro: mask_email, description: "Hash the local part of email addresses" }
+  - { id: MASK_PHONE, class: PII, macro: mask_phone, description: "Show only the last four digits of phone numbers" }
+  - { id: MASK_PCI, class: PCI, macro: mask_pci, description: "Show only the last four digits of card numbers" }
+  - { id: MASK_GOV_ID, class: GOV_ID, macro: mask_gov_id, description: "Show only the last four characters of tax identifiers" }
+
+row_access_policies:
+  - id: RAP_REGION
+    dimension: region
+    description: "Regional personas see only rows for their service region"
+    bindings:
+      - { object: CONFORMED_GOLD.DIM_FEEDER, column: region }
+      - { object: CONFORMED_GOLD.DIM_CUSTOMER, column: region }
+      - { object: CONFORMED_GOLD.DIM_PREMISE, column: region }
+      - { object: CURATED_SILVER.FEEDER, column: region }
+      - { object: CURATED_SILVER.CUSTOMER, column: region }
+
+column_tags:
+  # Customer PII — masked for every persona without PII clearance.
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.first_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.last_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.full_name, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.street_address, classes: [PII], masking: MASK_PII }
+  # Certification demo (DP-UTL-005 gate 6): email and phone masking is not attached until FIX-2.
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.email, classes: [PII], masking: MASK_EMAIL, mask_pending_fix: FIX-2 }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.phone, classes: [PII], masking: MASK_PHONE, mask_pending_fix: FIX-2 }
+  - { column: CONFORMED_GOLD.DIM_CREW.crew_lead, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.FCT_WORK_ORDER.planner, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.FCT_CONTACT.agent_notes, classes: [PII], masking: MASK_PII }
+  - { column: CONFORMED_GOLD.DIM_SUPPLIER.tax_id, classes: [GOV_ID], masking: MASK_GOV_ID }
+  - { column: CONFORMED_GOLD.DIM_SUPPLIER.contact_email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.CUSTOMER.first_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.CUSTOMER.last_name, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.CUSTOMER.email, classes: [PII], masking: MASK_EMAIL }
+  - { column: CURATED_SILVER.CUSTOMER.phone, classes: [PII], masking: MASK_PHONE }
+  - { column: CURATED_SILVER.CUSTOMER.street_address, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.PAYMENT.card_number, classes: [PCI], masking: MASK_PCI }
+  - { column: CURATED_SILVER.PURCHASE_ORDER_LINE.buyer, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.CREW.crew_lead, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.WORK_ORDER.planner, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.CONTACT_INTERACTION.agent_notes, classes: [PII], masking: MASK_PII }
+  - { column: CURATED_SILVER.SUPPLIER.tax_id, classes: [GOV_ID], masking: MASK_GOV_ID }
+  - { column: CURATED_SILVER.SUPPLIER.contact_email, classes: [PII], masking: MASK_EMAIL }
+  # Critical data elements (each has DQ rules in warehouse/dq).
+  - { column: CONFORMED_GOLD.FCT_OUTAGE.customers_affected, cde: true }
+  - { column: CONFORMED_GOLD.FCT_OUTAGE.duration_min, cde: true }
+  - { column: CONFORMED_GOLD.FCT_OUTAGE.major_event_day, cde: true }
+  - { column: CONFORMED_GOLD.DIM_FEEDER.customers_served, cde: true }
+  - { column: CONFORMED_GOLD.DIM_FEEDER.region, cde: true }
+  - { column: CONFORMED_GOLD.FCT_BILLING.billed_amount, cde: true }
+  - { column: CONFORMED_GOLD.FCT_BILLING.paid_within_60d_amount, cde: true }
+  - { column: CONFORMED_GOLD.FCT_DAILY_USAGE.read_success_pct, cde: true }
+  - { column: CONFORMED_GOLD.FCT_PO_SPEND.spend_usd, cde: true }
+  - { column: CONFORMED_GOLD.FCT_PO_SPEND.on_contract, cde: true }
+  - { column: CONFORMED_GOLD.DIM_ASSET.health_score, cde: true }
+  - { column: CONFORMED_GOLD.FCT_VEG_SPAN.last_trim_date, cde: true }
+  - { column: CONFORMED_GOLD.DIM_CUSTOMER.customer_no, cde: true }
+
+grants:
+  - persona: utilities:ops-manager-north
+    products: [DP-UTL-001, DP-UTL-002, DP-UTL-003]
+    agents: [AG-UTL-001, AG-UTL-002]
+  - persona: utilities:reliability-analyst
+    products: [DP-UTL-002, DP-UTL-003, DP-UTL-004, DP-UTL-007]
+    agents: [AG-UTL-002, AG-UTL-004]
+  - persona: utilities:grid-dpo
+    products: [DP-UTL-002, DP-UTL-003, DP-UTL-004, DP-UTL-006, DP-UTL-007]
+    agents: [AG-UTL-002, AG-UTL-003, AG-UTL-004]
+  - persona: utilities:customer-steward
+    products: [DP-UTL-001, DP-UTL-002, DP-UTL-003, DP-UTL-004, DP-UTL-005, DP-UTL-006, DP-UTL-007, DP-UTL-008]
+    agents: [AG-UTL-001, AG-UTL-002, AG-UTL-003, AG-UTL-004, AG-UTL-005]
+  - persona: utilities:coo
+    products: [DP-UTL-001, DP-UTL-002, DP-UTL-004, DP-UTL-006]
+    agents: [AG-UTL-001, AG-UTL-002, AG-UTL-003, AG-UTL-004]
+
+public_products: []
