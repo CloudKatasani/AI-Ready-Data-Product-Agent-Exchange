@@ -29,7 +29,15 @@ export function TopBar({ brand, pack, mode, personas, activePersonaId, onSwitchP
             {brand.productName.charAt(0)}
           </span>
         )}
-        <span data-testid="brand-name" className="truncate max-w-[22rem] lg:max-w-[36rem]">{brand.companyName ? `${brand.companyName} · ${brand.productName}` : brand.productName}</span>
+        {/* Product name is the header; the (white-label) company name sits beneath it in small type. */}
+        <span data-testid="brand-name" className="flex min-w-0 flex-col leading-tight">
+          <span className="truncate max-w-[22rem] text-base font-semibold lg:max-w-[36rem]">{brand.productName}</span>
+          {brand.companyName && (
+            <span data-testid="brand-company" className="truncate max-w-[22rem] text-xs font-normal text-muted-foreground lg:max-w-[36rem]">
+              {brand.companyName}
+            </span>
+          )}
+        </span>
       </Link>
       {locked ? (
         <span data-testid="active-pack" className="rounded-md border border-border px-2 py-1 text-sm">

@@ -1,4 +1,4 @@
-# Running Enterprise AI Ready - Data Products & Agents Exchange
+# Running Enterprise AI Ready - Data Products & Agents Platform
 
 ## Prerequisites
 - Node ≥ 22, pnpm 10 (`corepack enable`).

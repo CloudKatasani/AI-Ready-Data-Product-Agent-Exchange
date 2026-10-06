@@ -1,4 +1,4 @@
-# Enterprise AI Ready - Data Products & Agents Exchange
+# Enterprise AI Ready - Data Products & Agents Platform
 
 Codename `keystone` (package, env vars, file names).
 

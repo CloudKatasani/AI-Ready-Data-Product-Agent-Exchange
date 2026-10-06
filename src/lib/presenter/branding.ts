@@ -16,7 +16,7 @@ export interface Brand {
  * codename "keystone" stays in internal identifiers only (package, env vars, cookies, file names).
  */
 export const DEFAULT_BRAND: Brand = {
-  productName: 'Enterprise AI Ready - Data Products & Agents Exchange',
+  productName: 'Enterprise AI Ready - Data Products & Agents Platform',
   companyName: '',
   primary: '#1d4ed8',
   accent: '#0f766e',
